@@ -1,0 +1,24 @@
+FROM quay.io/quarkus/quarkus-distroless-image:2.0
+
+WORKDIR /app
+
+# Copy the native executable
+COPY --chmod=0755 target/cui-jwt-quarkus-integration-tests-*-runner /app/application
+
+# Copy certificates and health check script  
+COPY --chmod=0755 src/main/docker/health-check.sh /app/health-check.sh
+COPY --chmod=0644 src/main/docker/certificates/ /app/certificates/
+
+# Console logging only - no log files needed
+
+# Expose HTTPS port
+EXPOSE 8443
+
+# Health check using internal script (best practice - no external dependencies)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+  CMD /app/health-check.sh
+
+# Use default user from base image
+
+# Run the application
+ENTRYPOINT ["./application"]

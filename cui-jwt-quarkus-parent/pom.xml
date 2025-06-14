@@ -18,6 +18,7 @@
     <modules>
         <module>cui-jwt-quarkus</module>
         <module>cui-jwt-quarkus-deployment</module>
+        <module>cui-jwt-quarkus-integration-tests</module>
     </modules>
 
     <properties>

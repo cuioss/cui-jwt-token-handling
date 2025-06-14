@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  cui-jwt-integration-tests:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native
+    ports:
+      # Map external port 10443 to internal port 8443
+      - "10443:8443"
+    volumes:
+      # Mount certificates if needed for debugging
+      - ./src/main/docker/certificates:/app/certificates:ro
+    environment:
+      # Optional environment overrides
+      - QUARKUS_LOG_LEVEL=INFO
+    healthcheck:
+      # Use internal health check script (best practice)
+      test: ["CMD", "/app/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - jwt-test
+
+networks:
+  jwt-test:
+    driver: bridge

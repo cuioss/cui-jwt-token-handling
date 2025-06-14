@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  cui-jwt-integration:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native
+    ports:
+      - "10443:8443"
+    environment:
+      - QUARKUS_PROFILE=integration
+      - QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_FILE=/app/certificates/keystore.p12
+      - QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_PASSWORD=integration-test
+    volumes:
+      - ./src/main/docker/certificates:/app/certificates:ro
+    healthcheck:
+      test: ["CMD", "/app/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - jwt-network
+
+  # Optional: Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./src/main/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - jwt-network
+    depends_on:
+      - cui-jwt-integration
+
+networks:
+  jwt-network:
+    driver: bridge
