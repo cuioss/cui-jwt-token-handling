@@ -22,8 +22,6 @@ services:
     
     environment:
       - QUARKUS_LOG_LEVEL=INFO
-      - QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_FILE=/app/certificates/keystore.p12
-      - QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_PASSWORD=integration-test
     
     # OWASP Security hardening (production-grade)
     security_opt:

@@ -1,25 +1,24 @@
 #!/bin/bash
-# Script to generate certificates for JWT Quarkus integration testing
-# Generates localhost certificates with proper SAN for HTTPS testing
+# Script to generate PEM certificates for JWT Quarkus integration testing
+# Generates passwordless localhost certificates for secure container usage
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CERT_DIR="${SCRIPT_DIR}"
-KEYSTORE_PASSWORD="integration-test"
-TRUSTSTORE_PASSWORD="integration-test"
-KEY_PASSWORD="integration-test"
 CERT_DNAME="CN=localhost, OU=Integration Testing, O=CUI-JWT, L=Berlin, ST=Berlin, C=DE"
 CERT_VALIDITY=730
+TEMP_KEYSTORE="${CERT_DIR}/temp-keystore.p12"
+TEMP_PASSWORD="temp-$(date +%s)"
 
-echo "Generating certificates for JWT integration testing..."
+echo "Generating PEM certificates for JWT integration testing..."
 echo "Certificate directory: ${CERT_DIR}"
 
 # Clean up existing certificates
-rm -f "${CERT_DIR}/keystore.p12" "${CERT_DIR}/truststore.p12" "${CERT_DIR}/localhost.cer" "${CERT_DIR}/localhost.crt"
+rm -f "${CERT_DIR}/keystore.p12" "${CERT_DIR}/truststore.p12" "${CERT_DIR}/localhost.cer" "${CERT_DIR}/localhost.crt" "${CERT_DIR}/localhost.key"
 
-# Generate keystore with private key and self-signed certificate
-echo "Generating keystore with self-signed certificate..."
+# Generate temporary keystore with private key and self-signed certificate
+echo "Generating temporary keystore..."
 keytool -genkeypair \
   -alias localhost \
   -keyalg RSA \
@@ -27,47 +26,44 @@ keytool -genkeypair \
   -validity ${CERT_VALIDITY} \
   -dname "${CERT_DNAME}" \
   -ext san=dns:localhost,ip:127.0.0.1,ip:0.0.0.0 \
-  -keystore "${CERT_DIR}/keystore.p12" \
+  -keystore "${TEMP_KEYSTORE}" \
   -storetype PKCS12 \
-  -storepass "${KEYSTORE_PASSWORD}" \
-  -keypass "${KEY_PASSWORD}" 2>&1
+  -storepass "${TEMP_PASSWORD}" \
+  -keypass "${TEMP_PASSWORD}" 2>&1
 
-# Export certificate
-echo "Exporting certificate..."
-keytool -exportcert \
-  -alias localhost \
-  -file "${CERT_DIR}/localhost.cer" \
-  -keystore "${CERT_DIR}/keystore.p12" \
-  -storetype PKCS12 \
-  -storepass "${KEYSTORE_PASSWORD}" 2>&1
-
-# Create truststore
-echo "Creating truststore..."
-keytool -importcert \
-  -alias localhost \
-  -file "${CERT_DIR}/localhost.cer" \
-  -keystore "${CERT_DIR}/truststore.p12" \
-  -storetype PKCS12 \
-  -storepass "${TRUSTSTORE_PASSWORD}" \
-  -noprompt 2>&1
-
-# Export to PEM format for container usage
+# Export certificate in PEM format
 echo "Exporting certificate in PEM format..."
 keytool -exportcert \
   -alias localhost \
   -file "${CERT_DIR}/localhost.crt" \
-  -keystore "${CERT_DIR}/keystore.p12" \
+  -keystore "${TEMP_KEYSTORE}" \
   -storetype PKCS12 \
-  -storepass "${KEYSTORE_PASSWORD}" \
+  -storepass "${TEMP_PASSWORD}" \
   -rfc 2>&1
 
-echo "Certificate generation complete for JWT integration testing!"
+# Export private key in PEM format using openssl
+echo "Exporting private key in PEM format..."
+openssl pkcs12 -in "${TEMP_KEYSTORE}" \
+  -passin pass:"${TEMP_PASSWORD}" \
+  -nodes \
+  -nocerts \
+  -out "${CERT_DIR}/localhost.key" 2>&1
+
+# Set secure file permissions
+echo "Setting secure file permissions..."
+chmod 644 "${CERT_DIR}/localhost.crt"  # Certificate is public
+chmod 600 "${CERT_DIR}/localhost.key"  # Private key is restricted
+
+# Clean up temporary keystore
+rm -f "${TEMP_KEYSTORE}"
+
+echo "PEM certificate generation complete!"
 echo "Generated files:"
-echo "  - keystore.p12: Private key and certificate (password: ${KEYSTORE_PASSWORD})"
-echo "  - truststore.p12: Trust store for validation (password: ${TRUSTSTORE_PASSWORD})" 
-echo "  - localhost.cer: Certificate in DER format"
-echo "  - localhost.crt: Certificate in PEM format"
+echo "  - localhost.crt: Certificate in PEM format (public, readable)"
+echo "  - localhost.key: Private key in PEM format (restricted access)"
 echo ""
 echo "Certificate valid for ${CERT_VALIDITY} days (2 years)"
 echo "Subject: ${CERT_DNAME}"
 echo "SAN: dns:localhost,ip:127.0.0.1,ip:0.0.0.0"
+echo ""
+echo "Security: No passwords required - file permissions provide security"
