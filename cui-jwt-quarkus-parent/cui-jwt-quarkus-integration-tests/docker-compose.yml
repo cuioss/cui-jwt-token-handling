@@ -1,3 +1,6 @@
+# JWT Integration Tests - Docker Compose Configuration
+# Purpose: Container-based integration testing for CUI JWT Quarkus extension
+
 services:
   cui-jwt-integration-tests:
     build:
@@ -9,41 +12,37 @@ services:
       platforms:
         - linux/amd64
         - linux/arm64
-    ports:
-      # Map external port 10443 to internal port 8443
-      - "10443:8443"
-    volumes:
-      # Mount certificates if needed for debugging
-      - ./src/main/docker/certificates:/app/certificates:ro
-    environment:
-      # Optional environment overrides
-      - QUARKUS_LOG_LEVEL=INFO
     
-    # OWASP Security hardening configuration
+    ports:
+      - "10443:8443"  # External test port for integration tests
+    
+    volumes:
+      - ./src/main/docker/certificates:/app/certificates:ro
+    
+    environment:
+      - QUARKUS_PROFILE=integration
+      - QUARKUS_LOG_LEVEL=INFO
+      - QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_FILE=/app/certificates/keystore.p12
+      - QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_PASSWORD=integration-test
+    
+    # OWASP Security hardening for integration testing
     security_opt:
       - no-new-privileges:true
-    
-    # Drop all capabilities (principle of least privilege)
     cap_drop:
       - ALL
-    
-    # Read-only filesystem with tmpfs for temporary files
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=100m
       - /app/tmp:rw,noexec,nosuid,size=50m
     
-    # Resource limitations (DoS protection)
+    # Resource limits for testing consistency
     deploy:
       resources:
         limits:
           memory: 256M
           cpus: '1.0'
-        reservations:
-          memory: 128M
-          cpus: '0.5'
     
-    # Health check using internal script
+    # Health check for integration test validation
     healthcheck:
       test: ["CMD", "/app/health-check.sh"]
       interval: 30s
@@ -51,13 +50,9 @@ services:
       retries: 3
       start_period: 40s
     
-    # Network isolation
     networks:
-      - jwt-test
-    
-    # Production restart policy
-    restart: unless-stopped
+      - jwt-integration
 
 networks:
-  jwt-test:
+  jwt-integration:
     driver: bridge
