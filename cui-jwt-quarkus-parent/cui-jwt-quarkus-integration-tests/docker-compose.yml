@@ -1,8 +1,5 @@
 # JWT Integration Tests - Production-Grade Configuration
 # Purpose: Test with production-equivalent settings to catch issues early
-# 
-# Build optimization: Set COMPOSE_BAKE=true to enable Docker Bake for better performance
-# Example: COMPOSE_BAKE=true docker compose build
 
 services:
   cui-jwt-integration-tests:
