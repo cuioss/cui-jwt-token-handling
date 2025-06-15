@@ -1,10 +1,13 @@
-version: '3.8'
-
 services:
   cui-jwt-integration:
     build:
       context: .
       dockerfile: src/main/docker/Dockerfile.native
+      # Build optimization settings
+      cache_from:
+        - quay.io/quarkus/quarkus-distroless-image:2.0
+      platforms:
+        - linux/arm64
     ports:
       - "10443:8443"
     environment:
@@ -13,14 +16,45 @@ services:
       - QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_PASSWORD=integration-test
     volumes:
       - ./src/main/docker/certificates:/app/certificates:ro
+    
+    # OWASP Security hardening configuration
+    security_opt:
+      - no-new-privileges:true
+    
+    # Drop all capabilities (principle of least privilege)
+    cap_drop:
+      - ALL
+    
+    # Read-only filesystem with tmpfs for temporary files
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+      - /app/tmp:rw,noexec,nosuid,size=50m
+    
+    # Resource limitations (DoS protection)
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '1.0'
+        reservations:
+          memory: 128M
+          cpus: '0.5'
+    
+    # Health check using internal script
     healthcheck:
       test: ["CMD", "/app/health-check.sh"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    
+    # Network isolation
     networks:
       - jwt-network
+    
+    # Production restart policy
+    restart: unless-stopped
 
   # Optional: Prometheus for metrics collection
   prometheus:

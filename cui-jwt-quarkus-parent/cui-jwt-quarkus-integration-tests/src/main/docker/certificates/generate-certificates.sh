@@ -10,7 +10,7 @@ KEYSTORE_PASSWORD="integration-test"
 TRUSTSTORE_PASSWORD="integration-test"
 KEY_PASSWORD="integration-test"
 CERT_DNAME="CN=localhost, OU=Integration Testing, O=CUI-JWT, L=Berlin, ST=Berlin, C=DE"
-CERT_VALIDITY=1
+CERT_VALIDITY=730
 
 echo "Generating certificates for JWT integration testing..."
 echo "Certificate directory: ${CERT_DIR}"
@@ -68,6 +68,6 @@ echo "  - truststore.p12: Trust store for validation (password: ${TRUSTSTORE_PAS
 echo "  - localhost.cer: Certificate in DER format"
 echo "  - localhost.crt: Certificate in PEM format"
 echo ""
-echo "Certificate valid for ${CERT_VALIDITY} days"
+echo "Certificate valid for ${CERT_VALIDITY} days (2 years)"
 echo "Subject: ${CERT_DNAME}"
 echo "SAN: dns:localhost,ip:127.0.0.1,ip:0.0.0.0"
