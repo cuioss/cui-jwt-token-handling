@@ -183,4 +183,4 @@ curl -k https://localhost:10443/validate/health
 
 == Standards Compliance
 
-Follows link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]
+Follows link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]

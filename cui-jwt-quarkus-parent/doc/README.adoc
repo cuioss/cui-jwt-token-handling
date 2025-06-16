@@ -11,7 +11,7 @@ Complete documentation for the CUI JWT Quarkus extension - a comprehensive JWT v
 == Quick Links
 
 * **link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests]** - Comprehensive testing with Docker containers
-* **link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]** - Development standards and best practices
+* **link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]** - Development standards and best practices
 
 == Architecture & Implementation
 
@@ -104,7 +104,7 @@ Comprehensive integration testing in containerized environments:
 
 == Standards Compliance
 
-This extension follows the **link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]** for:
+This extension follows the **link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]** for:
 
 * **Container Security**: OWASP-compliant Docker configurations
 * **Native Image Optimization**: Single-execution Maven builds
@@ -124,5 +124,5 @@ For detailed configuration examples, see the link:../cui-jwt-quarkus-integration
 == Support
 
 * **Issues**: Report problems via project issue tracker
-* **Standards**: Follow link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]
+* **Standards**: Follow link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]
 * **Testing**: Use link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] as examples
