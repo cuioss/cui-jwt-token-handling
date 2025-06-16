@@ -25,6 +25,9 @@
 
         <!-- HTTPS configuration for testing (Docker external port) -->
         <test.https.port>10443</test.https.port>
+
+        <!-- Skip Sonar analysis for integration tests -->
+        <sonar.skip>true</sonar.skip>
     </properties>
 
     <dependencies>
