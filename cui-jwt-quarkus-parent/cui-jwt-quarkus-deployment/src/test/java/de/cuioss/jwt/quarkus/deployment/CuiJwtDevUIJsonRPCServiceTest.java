@@ -37,8 +37,8 @@ class CuiJwtDevUIJsonRPCServiceTest {
 
         // Then
         assertNotNull(result);
-        assertFalse((Boolean)result.get("enabled"));
-        assertFalse((Boolean)result.get("validatorPresent"));
+        assertFalse((Boolean) result.get("enabled"));
+        assertFalse((Boolean) result.get("validatorPresent"));
         assertEquals("BUILD_TIME", result.get("status"));
         assertEquals("JWT validation status will be available at runtime", result.get("statusMessage"));
     }
@@ -61,9 +61,9 @@ class CuiJwtDevUIJsonRPCServiceTest {
 
         // Then
         assertNotNull(result);
-        assertFalse((Boolean)result.get("enabled"));
-        assertFalse((Boolean)result.get("healthEnabled"));
-        assertTrue((Boolean)result.get("buildTime"));
+        assertFalse((Boolean) result.get("enabled"));
+        assertFalse((Boolean) result.get("healthEnabled"));
+        assertTrue((Boolean) result.get("buildTime"));
         assertEquals("Configuration details will be available at runtime", result.get("message"));
     }
 
@@ -75,7 +75,7 @@ class CuiJwtDevUIJsonRPCServiceTest {
 
         // Then
         assertNotNull(result);
-        assertFalse((Boolean)result.get("valid"));
+        assertFalse((Boolean) result.get("valid"));
         assertEquals("Token is empty or null", result.get("error"));
     }
 
@@ -86,7 +86,7 @@ class CuiJwtDevUIJsonRPCServiceTest {
 
         // Then
         assertNotNull(result);
-        assertFalse((Boolean)result.get("valid"));
+        assertFalse((Boolean) result.get("valid"));
         assertEquals("Token validation not available at build time", result.get("error"));
     }
 
@@ -97,9 +97,9 @@ class CuiJwtDevUIJsonRPCServiceTest {
 
         // Then
         assertNotNull(result);
-        assertTrue((Boolean)result.get("configurationValid"));
-        assertFalse((Boolean)result.get("tokenValidatorAvailable"));
-        assertFalse((Boolean)result.get("securityCounterAvailable"));
+        assertTrue((Boolean) result.get("configurationValid"));
+        assertFalse((Boolean) result.get("tokenValidatorAvailable"));
+        assertFalse((Boolean) result.get("securityCounterAvailable"));
         assertEquals("BUILD_TIME", result.get("overallStatus"));
         assertEquals("Health information will be available at runtime", result.get("message"));
     }

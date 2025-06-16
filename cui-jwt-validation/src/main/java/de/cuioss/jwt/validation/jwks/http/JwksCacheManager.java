@@ -114,7 +114,7 @@ class JwksCacheManager {
                     }
 
                     // If hit ratio is high, extend expiration time
-                    if (localAccessCount > 0 && (double)localHitCount / localAccessCount > 0.8) {
+                    if (localAccessCount > 0 && (double) localHitCount / localAccessCount > 0.8) {
                         return TimeUnit.SECONDS.toNanos(config.getRefreshIntervalSeconds() * 2L);
                     }
                     return currentDuration;

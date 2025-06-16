@@ -101,7 +101,7 @@ class TokenValidatorHealthCheckTest {
             assertInstanceOf(Number.class, issuerCountValue,
                     "issuerCount should be a Number, but was: " + issuerCountValue.getClass().getSimpleName());
 
-            int issuerCount = ((Number)issuerCountValue).intValue();
+            int issuerCount = ((Number) issuerCountValue).intValue();
             assertTrue(issuerCount > 0,
                     "issuerCount should be greater than 0 when UP, but was: " + issuerCount);
         } else if (status == HealthCheckResponse.Status.DOWN) {
@@ -114,7 +114,7 @@ class TokenValidatorHealthCheckTest {
             assertInstanceOf(String.class, errorValue,
                     "error should be a String, but was: " + errorValue.getClass().getSimpleName());
 
-            String errorMessage = (String)errorValue;
+            String errorMessage = (String) errorValue;
             assertFalse(errorMessage.isEmpty(), "Error message should not be empty");
         }
     }

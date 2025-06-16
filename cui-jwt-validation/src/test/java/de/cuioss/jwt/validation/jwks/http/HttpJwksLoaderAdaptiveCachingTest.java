@@ -75,7 +75,7 @@ class HttpJwksLoaderAdaptiveCachingTest {
         assertDoesNotThrow(() -> {
             Field cacheManagerField = HttpJwksLoader.class.getDeclaredField("cacheManager");
             cacheManagerField.setAccessible(true);
-            cacheManager = (JwksCacheManager)cacheManagerField.get(httpJwksLoader);
+            cacheManager = (JwksCacheManager) cacheManagerField.get(httpJwksLoader);
         }, "Failed to access cacheManager field: ");
     }
 
@@ -89,8 +89,8 @@ class HttpJwksLoaderAdaptiveCachingTest {
         hitCountField.setAccessible(true);
 
         // Reset the counters manually since HttpJwksLoader constructor already accessed the cache
-        AtomicInteger accessCount = (AtomicInteger)accessCountField.get(cacheManager);
-        AtomicInteger hitCount = (AtomicInteger)hitCountField.get(cacheManager);
+        AtomicInteger accessCount = (AtomicInteger) accessCountField.get(cacheManager);
+        AtomicInteger hitCount = (AtomicInteger) hitCountField.get(cacheManager);
         accessCount.set(0);
         hitCount.set(0);
 
@@ -130,7 +130,7 @@ class HttpJwksLoaderAdaptiveCachingTest {
         jwksCacheField.setAccessible(true);
         @SuppressWarnings("unchecked")
         LoadingCache<String, JWKSKeyLoader> jwksCache =
-                (LoadingCache<String, JWKSKeyLoader>)jwksCacheField.get(cacheManager);
+                (LoadingCache<String, JWKSKeyLoader>) jwksCacheField.get(cacheManager);
 
         // First access to populate the cache
         Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
@@ -170,8 +170,8 @@ class HttpJwksLoaderAdaptiveCachingTest {
         hitCountField.setAccessible(true);
 
         // Reset the counters manually since HttpJwksLoader constructor already accessed the cache
-        AtomicInteger accessCount = (AtomicInteger)accessCountField.get(cacheManager);
-        AtomicInteger hitCount = (AtomicInteger)hitCountField.get(cacheManager);
+        AtomicInteger accessCount = (AtomicInteger) accessCountField.get(cacheManager);
+        AtomicInteger hitCount = (AtomicInteger) hitCountField.get(cacheManager);
         accessCount.set(0);
         hitCount.set(0);
 
@@ -182,8 +182,8 @@ class HttpJwksLoaderAdaptiveCachingTest {
         }
 
         // Get the current counts again
-        accessCount = (AtomicInteger)accessCountField.get(cacheManager);
-        hitCount = (AtomicInteger)hitCountField.get(cacheManager);
+        accessCount = (AtomicInteger) accessCountField.get(cacheManager);
+        hitCount = (AtomicInteger) hitCountField.get(cacheManager);
 
         // Counts should be reset after reaching the adaptive window size
         assertEquals(0, accessCount.get(), "Access count should be reset after reaching adaptive window size");

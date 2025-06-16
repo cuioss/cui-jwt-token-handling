@@ -16,12 +16,12 @@
 package de.cuioss.jwt.integration;
 
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.RestAssured;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Test for Dev UI component wiring and accessibility.
@@ -38,50 +38,50 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
     @DisplayName("Should serve Dev UI main page")
     void shouldServeDevUIMainPage() {
         given()
-            .when()
-            .get("/q/dev-ui")
-            .then()
-            .statusCode(anyOf(is(200), is(302), is(404))); // 404 is acceptable in test mode
+                .when()
+                .get("/q/dev-ui")
+                .then()
+                .statusCode(anyOf(is(200), is(302), is(404))); // 404 is acceptable in test mode
     }
 
     @Test
     @DisplayName("Should serve JWT debugger component")
     void shouldServeJwtDebuggerComponent() {
         given()
-            .when()
-            .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-debugger.js")
-            .then()
-            .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .when()
+                .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-debugger.js")
+                .then()
+                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
     }
 
     @Test
     @DisplayName("Should serve JWT validation status component")
     void shouldServeJwtValidationStatusComponent() {
         given()
-            .when()
-            .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-validation-status.js")
-            .then()
-            .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .when()
+                .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-validation-status.js")
+                .then()
+                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
     }
 
     @Test
     @DisplayName("Should serve JWT configuration component")
     void shouldServeJwtConfigurationComponent() {
         given()
-            .when()
-            .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-config.js")
-            .then()
-            .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .when()
+                .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-config.js")
+                .then()
+                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
     }
 
     @Test
     @DisplayName("Should serve JWKS endpoints component")
     void shouldServeJwksEndpointsComponent() {
         given()
-            .when()
-            .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwks-endpoints.js")
-            .then()
-            .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .when()
+                .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwks-endpoints.js")
+                .then()
+                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
     }
 
     @Test
@@ -90,33 +90,33 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
         // This verifies that the basic application is running and responsive
         // which is a prerequisite for Dev UI functionality
         given()
-            .when()
-            .get("/q/health")
-            .then()
-            .statusCode(200)
-            .body("status", is("UP"));
+                .when()
+                .get("/q/health")
+                .then()
+                .statusCode(200)
+                .body("status", is("UP"));
     }
 
     @Test
     @DisplayName("Should provide readiness endpoint")
     void shouldProvideReadinessEndpoint() {
         given()
-            .when()
-            .get("/q/health/ready")
-            .then()
-            .statusCode(200)
-            .body("status", is("UP"));
+                .when()
+                .get("/q/health/ready")
+                .then()
+                .statusCode(200)
+                .body("status", is("UP"));
     }
 
     @Test
     @DisplayName("Should provide liveness endpoint")
     void shouldProvideLivenessEndpoint() {
         given()
-            .when()
-            .get("/q/health/live")
-            .then()
-            .statusCode(200)
-            .body("status", is("UP"));
+                .when()
+                .get("/q/health/live")
+                .then()
+                .statusCode(200)
+                .body("status", is("UP"));
     }
 
     @Test
@@ -126,17 +126,17 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
         // This is important for Dev UI as it relies on the application being properly started
         
         given()
-            .when()
-            .get("/q/health")
-            .then()
-            .statusCode(200);
+                .when()
+                .get("/q/health")
+                .then()
+                .statusCode(200);
 
         // Test that metrics endpoint is available (if enabled)
         given()
-            .when()
-            .get("/q/metrics")
-            .then()
-            .statusCode(anyOf(is(200), is(404))); // 404 if metrics not enabled
+                .when()
+                .get("/q/metrics")
+                .then()
+                .statusCode(anyOf(is(200), is(404))); // 404 if metrics not enabled
     }
 
     @Test
@@ -148,10 +148,10 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
         // The fact that we can make HTTPS calls to health endpoints 
         // indicates that the HTTPS configuration is working
         given()
-            .relaxedHTTPSValidation()
-            .when()
-            .get("/q/health/live")
-            .then()
-            .statusCode(200);
+                .relaxedHTTPSValidation()
+                .when()
+                .get("/q/health/live")
+                .then()
+                .statusCode(200);
     }
 }

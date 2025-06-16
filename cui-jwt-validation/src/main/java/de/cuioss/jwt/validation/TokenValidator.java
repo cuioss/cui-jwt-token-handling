@@ -327,7 +327,7 @@ public class TokenValidator {
 
         // Safe cast because the token builder creates the correct type
         @SuppressWarnings("unchecked")
-        T validatedToken = (T)validatedContent;
+        T validatedToken = (T) validatedContent;
 
         LOGGER.debug("Token successfully validated");
         return validatedToken;

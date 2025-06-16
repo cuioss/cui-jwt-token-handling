@@ -19,7 +19,8 @@ import io.quarkus.test.junit.QuarkusIntegrationTest;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration tests for metrics endpoints.
@@ -52,12 +53,12 @@ class MetricsIntegrationTest extends BaseIntegrationTest {
                 .asString();
 
         // Verify JWT-specific metrics are present
-        org.junit.jupiter.api.Assertions.assertTrue(
+        assertTrue(
                 metricsResponse.contains("cui_jwt_validation_errors_total"),
                 "Should include JWT validation error metrics"
         );
-        
-        org.junit.jupiter.api.Assertions.assertTrue(
+
+        assertTrue(
                 metricsResponse.contains("cui_jwt_validation_success_total"),
                 "Should include JWT validation success metrics"
         );
@@ -140,12 +141,12 @@ class MetricsIntegrationTest extends BaseIntegrationTest {
                 .asString();
 
         // Verify metrics have been updated (should have counters > 0)
-        org.junit.jupiter.api.Assertions.assertTrue(
+        assertTrue(
                 updatedMetrics.contains("cui_jwt_validation_errors_total"),
                 "Should contain error metrics after invalid validation"
         );
-        
-        org.junit.jupiter.api.Assertions.assertTrue(
+
+        assertTrue(
                 updatedMetrics.contains("cui_jwt_validation_success_total"),
                 "Should contain success metrics after valid validation"
         );
@@ -163,12 +164,12 @@ class MetricsIntegrationTest extends BaseIntegrationTest {
                 .asString();
 
         // Verify Prometheus format
-        org.junit.jupiter.api.Assertions.assertTrue(
+        assertTrue(
                 metricsResponse.contains("# HELP"),
                 "Should include Prometheus HELP comments"
         );
-        
-        org.junit.jupiter.api.Assertions.assertTrue(
+
+        assertTrue(
                 metricsResponse.contains("# TYPE"),
                 "Should include Prometheus TYPE comments"
         );

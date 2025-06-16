@@ -162,7 +162,7 @@ class WellKnownHandlerTest {
         @DisplayName("Should throw exception for null or empty URL during build")
         void shouldThrowExceptionForNullOrEmptyUrl() {
             // Test with null URL
-            var builder = WellKnownHandler.builder().url((String)null);
+            var builder = WellKnownHandler.builder().url((String) null);
             WellKnownDiscoveryException nullException = assertThrows(
                     WellKnownDiscoveryException.class, builder::build,
                     "Should throw exception for null URL during build"

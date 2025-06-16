@@ -17,10 +17,10 @@ package de.cuioss.jwt.integration;
 
 import de.cuioss.jwt.quarkus.runtime.CuiJwtDevUIRuntimeService;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import jakarta.inject.Inject;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,7 +56,7 @@ class DevUIJsonRPCServiceTest {
         assertTrue(response.containsKey("validatorPresent"), "Response should contain 'validatorPresent' field");
         assertTrue(response.containsKey("status"), "Response should contain 'status' field");
         assertTrue(response.containsKey("statusMessage"), "Response should contain 'statusMessage' field");
-        
+
         // In runtime mode with configuration, validation should be enabled
         assertTrue((Boolean) response.get("enabled"), "JWT validation should be enabled in runtime");
         assertTrue((Boolean) response.get("validatorPresent"), "Validator should be present in runtime");
@@ -75,7 +75,7 @@ class DevUIJsonRPCServiceTest {
         assertTrue(response.containsKey("status"), "Response should contain 'status' field");
         assertTrue(response.containsKey("message"), "Response should contain 'message' field");
         assertTrue(response.containsKey("issuersConfigured"), "Response should contain 'issuersConfigured' field");
-        
+
         // JWKS status should be available in runtime
         assertEquals("RUNTIME", response.get("status"), "JWKS status should be RUNTIME");
         assertNotNull(response.get("message"), "Message should be present");
@@ -94,7 +94,7 @@ class DevUIJsonRPCServiceTest {
         assertTrue(response.containsKey("healthEnabled"), "Response should contain 'healthEnabled' field");
         assertTrue(response.containsKey("buildTime"), "Response should contain 'buildTime' field");
         assertTrue(response.containsKey("message"), "Response should contain 'message' field");
-        
+
         // Configuration should reflect runtime values
         assertTrue((Boolean) response.get("enabled"), "JWT should be enabled");
         assertTrue((Boolean) response.get("healthEnabled"), "Health should be enabled");
@@ -115,9 +115,9 @@ class DevUIJsonRPCServiceTest {
         assertNotNull(response, "Response should not be null");
         assertTrue(response.containsKey("valid"), "Response should contain 'valid' field");
         assertTrue(response.containsKey("error"), "Response should contain 'error' field");
-        
+
         assertFalse((Boolean) response.get("valid"), "Empty token should be invalid");
-        assertEquals("Token is empty or null", response.get("error"), 
+        assertEquals("Token is empty or null", response.get("error"),
                 "Should provide appropriate error message for empty token");
     }
 
@@ -134,9 +134,9 @@ class DevUIJsonRPCServiceTest {
         assertNotNull(response, "Response should not be null");
         assertTrue(response.containsKey("valid"), "Response should contain 'valid' field");
         assertTrue(response.containsKey("error"), "Response should contain 'error' field");
-        
+
         assertFalse((Boolean) response.get("valid"), "Null token should be invalid");
-        assertEquals("Token is empty or null", response.get("error"), 
+        assertEquals("Token is empty or null", response.get("error"),
                 "Should provide appropriate error message for null token");
     }
 
@@ -152,9 +152,9 @@ class DevUIJsonRPCServiceTest {
         // Then
         assertNotNull(response, "Response should not be null");
         assertTrue(response.containsKey("valid"), "Response should contain 'valid' field");
-        
+
         assertFalse((Boolean) response.get("valid"), "Malformed token should be invalid");
-        
+
         if (response.containsKey("error")) {
             assertNotNull(response.get("error"), "Should provide error message for malformed token");
             assertFalse(response.get("error").toString().isEmpty(), "Error message should not be empty");
@@ -175,10 +175,10 @@ class DevUIJsonRPCServiceTest {
         // Then
         assertNotNull(response, "Response should not be null");
         assertTrue(response.containsKey("valid"), "Response should contain 'valid' field");
-        
+
         // Token should be invalid (wrong signature/algorithm/issuer)
         assertFalse((Boolean) response.get("valid"), "Sample JWT should be invalid");
-        
+
         if (response.containsKey("error")) {
             assertNotNull(response.get("error"), "Error message should be present if validation fails");
         }
@@ -197,7 +197,7 @@ class DevUIJsonRPCServiceTest {
         assertTrue(response.containsKey("overallStatus"), "Response should contain 'overallStatus' field");
         assertTrue(response.containsKey("message"), "Response should contain 'message' field");
         assertTrue(response.containsKey("healthStatus"), "Response should contain 'healthStatus' field");
-        
+
         // Health information should reflect runtime state
         assertTrue((Boolean) response.get("configurationValid"), "Configuration should be valid");
         assertTrue((Boolean) response.get("tokenValidatorAvailable"), "Token validator should be available");
@@ -218,7 +218,7 @@ class DevUIJsonRPCServiceTest {
         assertNotNull(statusResponse1, "First status response should not be null");
         assertNotNull(statusResponse2, "Second status response should not be null");
         assertNotNull(configResponse, "Config response should not be null");
-        
+
         // Values should be consistent across calls (since they're in the same runtime)
         assertEquals(statusResponse1.get("enabled"), statusResponse2.get("enabled"),
                 "Enabled status should be consistent across calls");
@@ -235,19 +235,19 @@ class DevUIJsonRPCServiceTest {
         assertDoesNotThrow(() -> {
             devUIService.getValidationStatus();
         }, "getValidationStatus should not throw");
-        
+
         assertDoesNotThrow(() -> {
             devUIService.getJwksStatus();
         }, "getJwksStatus should not throw");
-        
+
         assertDoesNotThrow(() -> {
             devUIService.getConfiguration();
         }, "getConfiguration should not throw");
-        
+
         assertDoesNotThrow(() -> {
             devUIService.getHealthInfo();
         }, "getHealthInfo should not throw");
-        
+
         assertDoesNotThrow(() -> {
             devUIService.validateToken("test.token.string");
         }, "validateToken should not throw");

@@ -15,18 +15,17 @@
  */
 package de.cuioss.jwt.quarkus.runtime;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
+import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.MinimalTokenContent;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
-import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Runtime JSON-RPC service for CUI JWT DevUI.
@@ -57,7 +56,7 @@ public class CuiJwtDevUIRuntimeService {
         status.put("enabled", isEnabled);
         status.put("validatorPresent", tokenValidatorInstance.isResolvable());
         status.put("status", "RUNTIME");
-        
+
         if (isEnabled) {
             status.put("statusMessage", "JWT validation is active and ready");
         } else {
@@ -76,7 +75,7 @@ public class CuiJwtDevUIRuntimeService {
         Map<String, Object> jwksInfo = new HashMap<>();
 
         jwksInfo.put("status", "RUNTIME");
-        
+
         boolean isEnabled = isJwtEnabled();
         if (isEnabled) {
             jwksInfo.put("message", "JWKS endpoints are configured and active");
@@ -145,12 +144,12 @@ public class CuiJwtDevUIRuntimeService {
             TokenValidator validator = tokenValidatorInstance.get();
             // Try to create an access token first (most common case)
             TokenContent tokenContent = validator.createAccessToken(token.trim());
-            
+
             result.put("valid", true);
             result.put("tokenType", "ACCESS_TOKEN");
             result.put("claims", tokenContent.getClaims());
             result.put("issuer", tokenContent.getIssuer());
-            
+
         } catch (TokenValidationException e) {
             // Try ID token if access token fails
             try {
@@ -199,12 +198,12 @@ public class CuiJwtDevUIRuntimeService {
 
         boolean configValid = isJwtEnabled();
         boolean validatorAvailable = tokenValidatorInstance.isResolvable();
-        
+
         health.put("configurationValid", configValid);
         health.put("tokenValidatorAvailable", validatorAvailable);
         health.put("securityCounterAvailable", true); // Metrics are always enabled in runtime
         health.put("overallStatus", "RUNTIME");
-        
+
         if (configValid && validatorAvailable) {
             health.put("message", "All JWT components are healthy and operational");
             health.put("healthStatus", "UP");

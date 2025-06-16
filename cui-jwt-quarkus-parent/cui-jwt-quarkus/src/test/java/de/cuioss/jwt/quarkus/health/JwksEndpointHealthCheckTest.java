@@ -101,7 +101,7 @@ class JwksEndpointHealthCheckTest {
             assertInstanceOf(Number.class, endpointCountValue,
                     "checkedEndpoints should be a Number, but was: " + endpointCountValue.getClass().getSimpleName());
 
-            int endpointCount = ((Number)endpointCountValue).intValue();
+            int endpointCount = ((Number) endpointCountValue).intValue();
             assertTrue(endpointCount > 0,
                     "checkedEndpoints should be greater than 0 when UP, but was: " + endpointCount);
 

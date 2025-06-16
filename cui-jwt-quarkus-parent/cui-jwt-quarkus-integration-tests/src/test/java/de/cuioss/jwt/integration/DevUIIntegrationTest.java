@@ -15,13 +15,14 @@
  */
 package de.cuioss.jwt.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.quarkus.test.QuarkusDevModeTest;
 import io.quarkus.vertx.http.testutils.DevUIJsonRPCTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,7 +41,7 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
             .withApplicationRoot(jar -> jar
                     .addAsResource("application.properties")
                     .addAsResource("test-public-key.pem", "keys/test_public_key.pem"))
-            .setRuntimeProperties(java.util.Map.of(
+            .setRuntimeProperties(Map.of(
                     "cui.jwt.enabled", "true",
                     "cui.jwt.issuers.default.enabled", "true",
                     "cui.jwt.issuers.default.url", "https://test-auth.example.com",
@@ -63,7 +64,7 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         assertTrue(response.has("validatorPresent"), "Response should contain 'validatorPresent' field");
         assertTrue(response.has("status"), "Response should contain 'status' field");
         assertTrue(response.has("statusMessage"), "Response should contain 'statusMessage' field");
-        
+
         // In runtime mode, validation should be enabled
         assertTrue(response.get("enabled").asBoolean(), "JWT validation should be enabled in runtime");
         assertTrue(response.get("validatorPresent").asBoolean(), "Validator should be present in runtime");
@@ -80,7 +81,7 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         assertNotNull(response, "Response should not be null");
         assertTrue(response.has("status"), "Response should contain 'status' field");
         assertTrue(response.has("message"), "Response should contain 'message' field");
-        
+
         // JWKS status should be available in runtime
         assertEquals("RUNTIME", response.get("status").asText(), "JWKS status should be RUNTIME");
         assertNotNull(response.get("message").asText(), "Message should be present");
@@ -97,7 +98,7 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         assertTrue(response.has("enabled"), "Response should contain 'enabled' field");
         assertTrue(response.has("healthEnabled"), "Response should contain 'healthEnabled' field");
         assertTrue(response.has("buildTime"), "Response should contain 'buildTime' field");
-        
+
         // Configuration should reflect runtime values
         assertTrue(response.get("enabled").asBoolean(), "JWT should be enabled");
         assertTrue(response.get("healthEnabled").asBoolean(), "Health should be enabled");
@@ -117,9 +118,9 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         assertNotNull(response, "Response should not be null");
         assertTrue(response.has("valid"), "Response should contain 'valid' field");
         assertTrue(response.has("error"), "Response should contain 'error' field");
-        
+
         assertFalse(response.get("valid").asBoolean(), "Empty token should be invalid");
-        assertEquals("Token is empty or null", response.get("error").asText(), 
+        assertEquals("Token is empty or null", response.get("error").asText(),
                 "Should provide appropriate error message for empty token");
     }
 
@@ -136,7 +137,7 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         assertNotNull(response, "Response should not be null");
         assertTrue(response.has("valid"), "Response should contain 'valid' field");
         assertTrue(response.has("error"), "Response should contain 'error' field");
-        
+
         assertFalse(response.get("valid").asBoolean(), "Malformed token should be invalid");
         assertNotNull(response.get("error").asText(), "Should provide error message for malformed token");
         assertFalse(response.get("error").asText().isEmpty(), "Error message should not be empty");
@@ -156,10 +157,10 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         // Then
         assertNotNull(response, "Response should not be null");
         assertTrue(response.has("valid"), "Response should contain 'valid' field");
-        
+
         // Token should be invalid (wrong signature/algorithm/issuer)
         assertFalse(response.get("valid").asBoolean(), "Sample JWT should be invalid");
-        
+
         if (response.has("error")) {
             assertNotNull(response.get("error").asText(), "Error message should be present if validation fails");
         }
@@ -176,7 +177,7 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         assertTrue(response.has("configurationValid"), "Response should contain 'configurationValid' field");
         assertTrue(response.has("tokenValidatorAvailable"), "Response should contain 'tokenValidatorAvailable' field");
         assertTrue(response.has("overallStatus"), "Response should contain 'overallStatus' field");
-        
+
         // Health information should reflect runtime state
         assertTrue(response.get("configurationValid").asBoolean(), "Configuration should be valid");
         assertTrue(response.get("tokenValidatorAvailable").asBoolean(), "Token validator should be available");
@@ -195,7 +196,7 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         // Then
         assertNotNull(response, "Response should not be null");
         assertTrue(response.has("valid"), "Response should contain validation result");
-        
+
         // The key here is that the method was called and responded
         // This tests the JsonRPC parameter passing mechanism
         assertFalse(response.get("valid").asBoolean(), "Test token should be invalid");
@@ -213,14 +214,14 @@ class DevUIIntegrationTest extends DevUIJsonRPCTest {
         assertNotNull(statusResponse, "Status response should not be null");
         assertNotNull(configResponse, "Config response should not be null");
         assertNotNull(healthResponse, "Health response should not be null");
-        
+
         // Each response should have its expected structure
         assertTrue(statusResponse.has("enabled"), "Status should have enabled field");
         assertTrue(configResponse.has("enabled"), "Config should have enabled field");
         assertTrue(healthResponse.has("configurationValid"), "Health should have configurationValid field");
-        
+
         // Values should be consistent across calls (since they're in the same session)
-        assertEquals(statusResponse.get("enabled").asBoolean(), 
+        assertEquals(statusResponse.get("enabled").asBoolean(),
                 configResponse.get("enabled").asBoolean(),
                 "Enabled status should be consistent across calls");
     }

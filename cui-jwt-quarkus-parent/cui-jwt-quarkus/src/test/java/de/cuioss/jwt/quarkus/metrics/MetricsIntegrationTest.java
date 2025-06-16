@@ -109,20 +109,20 @@ class MetricsIntegrationTest {
      */
     static Stream<Arguments> invalidTokenScenarios() {
         return Stream.of(
-            // Empty token
-            Arguments.of("Empty token", "", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                // Empty token
+                Arguments.of("Empty token", "", de.cuioss.jwt.validation.exception.TokenValidationException.class),
 
-            // Malformed token (not enough segments)
-            Arguments.of("Malformed token (single segment)", "invalid", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                // Malformed token (not enough segments)
+                Arguments.of("Malformed token (single segment)", "invalid", de.cuioss.jwt.validation.exception.TokenValidationException.class),
 
-            // Malformed token (only two segments)
-            Arguments.of("Malformed token (two segments)", "header.payload", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                // Malformed token (only two segments)
+                Arguments.of("Malformed token (two segments)", "header.payload", de.cuioss.jwt.validation.exception.TokenValidationException.class),
 
-            // Invalid format (not Base64)
-            Arguments.of("Invalid format (not Base64)", "header.payload.signature", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                // Invalid format (not Base64)
+                Arguments.of("Invalid format (not Base64)", "header.payload.signature", de.cuioss.jwt.validation.exception.TokenValidationException.class),
 
-            // Too long token
-            Arguments.of("Too long token", "a".repeat(10000) + ".payload.signature", de.cuioss.jwt.validation.exception.TokenValidationException.class)
+                // Too long token
+                Arguments.of("Too long token", "a".repeat(10000) + ".payload.signature", de.cuioss.jwt.validation.exception.TokenValidationException.class)
         );
     }
 
@@ -138,8 +138,8 @@ class MetricsIntegrationTest {
         // Then - verify the exception is of expected type or a subclass
         assertTrue(expectedException.isAssignableFrom(thrownException.getClass()),
                 "Expected exception of type " + expectedException.getSimpleName() +
-                " but got " + thrownException.getClass().getSimpleName() +
-                " for scenario: " + description);
+                        " but got " + thrownException.getClass().getSimpleName() +
+                        " for scenario: " + description);
 
         // Verify that error metrics were recorded
         assertFalse(meterRegistry.find(JwtPropertyKeys.METRICS.VALIDATION_ERRORS).counters().isEmpty(),

@@ -80,7 +80,7 @@ class DevUIBasicTest extends BaseIntegrationTest {
         // Then
         assertNotNull(emptyTokenResult, "Result should not be null");
         assertFalse((Boolean) emptyTokenResult.get("valid"), "Empty token should be invalid");
-        assertEquals("Token is empty or null", emptyTokenResult.get("error"), 
+        assertEquals("Token is empty or null", emptyTokenResult.get("error"),
                 "Should provide appropriate error message");
 
         // When - test with null token
@@ -89,7 +89,7 @@ class DevUIBasicTest extends BaseIntegrationTest {
         // Then
         assertNotNull(nullTokenResult, "Result should not be null");
         assertFalse((Boolean) nullTokenResult.get("valid"), "Null token should be invalid");
-        assertEquals("Token is empty or null", nullTokenResult.get("error"), 
+        assertEquals("Token is empty or null", nullTokenResult.get("error"),
                 "Should provide appropriate error message");
 
         // When - test with sample token (will fail at build time)
@@ -98,7 +98,7 @@ class DevUIBasicTest extends BaseIntegrationTest {
         // Then
         assertNotNull(sampleTokenResult, "Result should not be null");
         assertFalse((Boolean) sampleTokenResult.get("valid"), "Sample token should be invalid at build time");
-        assertEquals("Token validation not available at build time", sampleTokenResult.get("error"), 
+        assertEquals("Token validation not available at build time", sampleTokenResult.get("error"),
                 "Should indicate build-time limitation");
     }
 
@@ -115,19 +115,19 @@ class DevUIBasicTest extends BaseIntegrationTest {
         Map<String, Object> healthInfo = service.getHealthInfo();
 
         // Then - all should indicate build-time status
-        assertEquals("BUILD_TIME", validationStatus.get("status"), 
+        assertEquals("BUILD_TIME", validationStatus.get("status"),
                 "Validation status should be BUILD_TIME");
-        assertEquals("BUILD_TIME", jwksStatus.get("status"), 
+        assertEquals("BUILD_TIME", jwksStatus.get("status"),
                 "JWKS status should be BUILD_TIME");
-        assertTrue((Boolean) configuration.get("buildTime"), 
+        assertTrue((Boolean) configuration.get("buildTime"),
                 "Configuration should indicate build time");
-        assertEquals("BUILD_TIME", healthInfo.get("overallStatus"), 
+        assertEquals("BUILD_TIME", healthInfo.get("overallStatus"),
                 "Health status should be BUILD_TIME");
 
         // Enabled should be false at build time
-        assertFalse((Boolean) validationStatus.get("enabled"), 
+        assertFalse((Boolean) validationStatus.get("enabled"),
                 "Validation should not be enabled at build time");
-        assertFalse((Boolean) configuration.get("enabled"), 
+        assertFalse((Boolean) configuration.get("enabled"),
                 "Configuration should not show enabled at build time");
     }
 
@@ -177,15 +177,15 @@ class DevUIBasicTest extends BaseIntegrationTest {
             Map<String, Object> config1 = service.getConfiguration();
             Map<String, Object> health1 = service.getHealthInfo();
             Map<String, Object> jwks1 = service.getJwksStatus();
-            
+
             // Verify all calls return consistent data
-            assertEquals(status1.get("enabled"), config1.get("enabled"), 
+            assertEquals(status1.get("enabled"), config1.get("enabled"),
                     "Status and config should be consistent");
-            assertEquals("BUILD_TIME", status1.get("status"), 
+            assertEquals("BUILD_TIME", status1.get("status"),
                     "Status should be BUILD_TIME");
-            assertEquals("BUILD_TIME", health1.get("overallStatus"), 
+            assertEquals("BUILD_TIME", health1.get("overallStatus"),
                     "Health should be BUILD_TIME");
-            assertEquals("BUILD_TIME", jwks1.get("status"), 
+            assertEquals("BUILD_TIME", jwks1.get("status"),
                     "JWKS should be BUILD_TIME");
         }, "Multiple concurrent calls should work without issues");
     }

@@ -197,7 +197,7 @@ class TokenSecurityPropertiesTest {
         double entropy = 0.0;
         for (int count : counts) {
             if (count > 0) {
-                double probability = (double)count / bytes.length;
+                double probability = (double) count / bytes.length;
                 entropy -= probability * (Math.log(probability) / Math.log(2));
             }
         }
