@@ -47,8 +47,11 @@ class DevUIBasicTest extends BaseIntegrationTest {
             given().when().get("/q/health/live").then().statusCode(200);
         }, "Live endpoint should not throw");
 
+        // Metrics endpoint might be disabled in some configurations, but should never throw an exception
         assertDoesNotThrow(() -> {
-            given().when().get("/q/metrics").then().statusCode(anyOf(is(200), is(404)));
+            int metricsStatusCode = given().when().get("/q/metrics").then().extract().statusCode();
+            assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                    "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
         }, "Metrics endpoint should not throw");
     }
 
@@ -114,7 +117,7 @@ class DevUIBasicTest extends BaseIntegrationTest {
     void shouldDemonstrateBasicApplicationComponentWiring() {
         // This test demonstrates the basic concept of how components work together
         // by testing that the application responds correctly to various requests
-        
+
         // Test that health endpoints provide structured responses
         given()
                 .when()
@@ -134,11 +137,15 @@ class DevUIBasicTest extends BaseIntegrationTest {
                 .body("status", is("UP"));
 
         // Test that metrics endpoint is available (if enabled)
-        given()
+        int metricsStatusCode = given()
                 .when()
                 .get("/q/metrics")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // 404 if metrics disabled
+                .extract()
+                .statusCode();
+
+        assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
 
         // This demonstrates that the basic wiring between components
         // works correctly in the integration environment
@@ -149,13 +156,15 @@ class DevUIBasicTest extends BaseIntegrationTest {
     void shouldHandleMultipleConcurrentEndpointCalls() {
         // This test verifies that the application can handle multiple endpoint calls
         // which simulates multiple frontend components making concurrent requests
-        
+
         // When - make multiple concurrent calls (simulating multiple components)
         assertDoesNotThrow(() -> {
             given().when().get("/q/health").then().statusCode(200);
             given().when().get("/q/health/ready").then().statusCode(200);
             given().when().get("/q/health/live").then().statusCode(200);
-            given().when().get("/q/metrics").then().statusCode(anyOf(is(200), is(404)));
+            int metricsStatusCode = given().when().get("/q/metrics").then().extract().statusCode();
+            assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                    "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
         }, "Multiple concurrent endpoint calls should work without issues");
 
         // Test concurrent calls with authentication headers

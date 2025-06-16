@@ -45,11 +45,16 @@ class DevUIJsonRPCServiceTest extends BaseIntegrationTest {
                 .body("status", is("UP"));
 
         // Verify that metrics endpoint works (if enabled)
-        given()
+        int metricsStatusCode = given()
                 .when()
                 .get("/q/metrics")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // 404 if metrics disabled
+                .extract()
+                .statusCode();
+
+        // Metrics might be disabled in some configurations, so we check for either 200 (enabled) or 404 (disabled)
+        assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
     }
 
     @Test
@@ -85,11 +90,16 @@ class DevUIJsonRPCServiceTest extends BaseIntegrationTest {
                 .body("status", is("UP"));
 
         // Test metrics endpoint for JWT-related metrics (if available)
-        given()
+        int metricsStatusCode = given()
                 .when()
                 .get("/q/metrics")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // Metrics may not be enabled
+                .extract()
+                .statusCode();
+
+        // Metrics might be disabled in some configurations, so we check for either 200 (enabled) or 404 (disabled)
+        assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
     }
 
     @Test
@@ -161,7 +171,7 @@ class DevUIJsonRPCServiceTest extends BaseIntegrationTest {
     void shouldHandleInvalidTokensGracefully() {
         // Test with various malformed JWT tokens
         String malformedToken = "not.a.valid.jwt";
-        
+
         given()
                 .header("Authorization", "Bearer " + malformedToken)
                 .when()
@@ -265,7 +275,7 @@ class DevUIJsonRPCServiceTest extends BaseIntegrationTest {
     void shouldHandleAllEndpointInvocationsWithoutErrors() {
         // This test verifies that all endpoints can be called without throwing exceptions
         // This tests the basic HTTP communication and endpoint routing
-        
+
         assertDoesNotThrow(() -> {
             given().when().get("/q/health").then().statusCode(200);
         }, "Health endpoint should not throw");
@@ -279,7 +289,9 @@ class DevUIJsonRPCServiceTest extends BaseIntegrationTest {
         }, "Live endpoint should not throw");
 
         assertDoesNotThrow(() -> {
-            given().when().get("/q/metrics").then().statusCode(anyOf(is(200), is(404)));
+            int metricsStatusCode = given().when().get("/q/metrics").then().extract().statusCode();
+            assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                    "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
         }, "Metrics endpoint should not throw");
     }
 }

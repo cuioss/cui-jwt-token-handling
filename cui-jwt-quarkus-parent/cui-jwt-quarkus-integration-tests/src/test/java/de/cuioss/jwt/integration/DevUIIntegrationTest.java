@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * REST API tests for CUI JWT components integration against external application.
@@ -64,11 +65,16 @@ class DevUIIntegrationTest extends BaseIntegrationTest {
                 .body("status", is("UP"));
 
         // Test that metrics endpoint can be accessed (may be disabled)
-        given()
+        int metricsStatusCode = given()
                 .when()
                 .get("/q/metrics")
                 .then()
-                .statusCode(anyOf(is(200), is(404)));
+                .extract()
+                .statusCode();
+
+        // Metrics might be disabled in some configurations, so we check for either 200 (enabled) or 404 (disabled)
+        assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
     }
 
     @Test
@@ -241,10 +247,15 @@ class DevUIIntegrationTest extends BaseIntegrationTest {
                 .body("status", is("UP"));
 
         // Test metrics endpoint (may be disabled)
-        given()
+        int metricsStatusCode = given()
                 .when()
                 .get("/q/metrics")
                 .then()
-                .statusCode(anyOf(is(200), is(404)));
+                .extract()
+                .statusCode();
+
+        // Metrics might be disabled in some configurations, so we check for either 200 (enabled) or 404 (disabled)
+        assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
     }
 }

@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * REST API tests for Dev UI component wiring and accessibility against external application.
@@ -35,51 +36,76 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
     @Test
     @DisplayName("Should serve Dev UI main page")
     void shouldServeDevUIMainPage() {
-        given()
+        int statusCode = given()
                 .when()
                 .get("/q/dev-ui")
                 .then()
-                .statusCode(anyOf(is(200), is(302), is(404))); // 404 is acceptable in test mode
+                .extract()
+                .statusCode();
+
+        // Dev UI main page might return different status codes depending on configuration
+        assertTrue(statusCode == 200 || statusCode == 302 || statusCode == 404,
+                "Dev UI main page should return 200, 302, or 404, but got: " + statusCode);
     }
 
     @Test
     @DisplayName("Should serve JWT debugger component")
     void shouldServeJwtDebuggerComponent() {
-        given()
+        int statusCode = given()
                 .when()
                 .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-debugger.js")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .extract()
+                .statusCode();
+
+        // 404 is acceptable if DevUI not enabled
+        assertTrue(statusCode == 200 || statusCode == 404,
+                "JWT debugger component should return 200 or 404, but got: " + statusCode);
     }
 
     @Test
     @DisplayName("Should serve JWT validation status component")
     void shouldServeJwtValidationStatusComponent() {
-        given()
+        int statusCode = given()
                 .when()
                 .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-validation-status.js")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .extract()
+                .statusCode();
+
+        // 404 is acceptable if DevUI not enabled
+        assertTrue(statusCode == 200 || statusCode == 404,
+                "JWT validation status component should return 200 or 404, but got: " + statusCode);
     }
 
     @Test
     @DisplayName("Should serve JWT configuration component")
     void shouldServeJwtConfigurationComponent() {
-        given()
+        int statusCode = given()
                 .when()
                 .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwt-config.js")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .extract()
+                .statusCode();
+
+        // 404 is acceptable if DevUI not enabled
+        assertTrue(statusCode == 200 || statusCode == 404,
+                "JWT configuration component should return 200 or 404, but got: " + statusCode);
     }
 
     @Test
     @DisplayName("Should serve JWKS endpoints component")
     void shouldServeJwksEndpointsComponent() {
-        given()
+        int statusCode = given()
                 .when()
                 .get("/q/dev-ui/io.quarkus.cui-jwt/components/qwc-jwks-endpoints.js")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // 404 is acceptable if DevUI not enabled
+                .extract()
+                .statusCode();
+
+        // 404 is acceptable if DevUI not enabled
+        assertTrue(statusCode == 200 || statusCode == 404,
+                "JWKS endpoints component should return 200 or 404, but got: " + statusCode);
     }
 
     @Test
@@ -122,7 +148,7 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
     void shouldRespondToBasicApplicationEndpoints() {
         // Test that basic application infrastructure is working
         // This is important for Dev UI as it relies on the application being properly started
-        
+
         given()
                 .when()
                 .get("/q/health")
@@ -130,11 +156,16 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
                 .statusCode(200);
 
         // Test that metrics endpoint is available (if enabled)
-        given()
+        int metricsStatusCode = given()
                 .when()
                 .get("/q/metrics")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // 404 if metrics not enabled
+                .extract()
+                .statusCode();
+
+        // Metrics might be disabled in some configurations, so we check for either 200 (enabled) or 404 (disabled)
+        assertTrue(metricsStatusCode == 200 || metricsStatusCode == 404,
+                "Metrics endpoint should return either 200 (enabled) or 404 (disabled), but got: " + metricsStatusCode);
     }
 
     @Test
@@ -142,8 +173,8 @@ class DevUIComponentWiringTest extends BaseIntegrationTest {
     void shouldHandleHttpsConfigurationCorrectly() {
         // Verify that the application is running with HTTPS configuration
         // which is important for JWT validation scenarios in Dev UI
-        
-        // The fact that we can make HTTPS calls to health endpoints 
+
+        // The fact that we can make HTTPS calls to health endpoints
         // indicates that the HTTPS configuration is working
         given()
                 .relaxedHTTPSValidation()

@@ -40,7 +40,7 @@ class MetricsIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldIncludeJwtValidationMetrics() {
+    void shouldIncludeBasicMetrics() {
         String metricsResponse = given()
                 .when()
                 .get("/q/metrics")
@@ -50,13 +50,11 @@ class MetricsIntegrationTest extends BaseIntegrationTest {
                 .body()
                 .asString();
 
-        // Verify basic metrics are present (simplified test)
+        // Verify basic metrics are present
         assertTrue(
                 metricsResponse.contains("jvm_") || metricsResponse.contains("http_"),
                 "Should include basic JVM or HTTP metrics"
         );
-
-        // Test passes if metrics endpoint is working
     }
 
     @Test
@@ -78,16 +76,6 @@ class MetricsIntegrationTest extends BaseIntegrationTest {
                 .then()
                 .statusCode(200)
                 .body(containsString("http_server"));
-    }
-
-    @Test
-    void shouldUpdateMetricsAfterValidation() {
-        // Test simplified to just verify metrics are accessible
-        given()
-                .when()
-                .get("/q/metrics")
-                .then()
-                .statusCode(200);
     }
 
     @Test

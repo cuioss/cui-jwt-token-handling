@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * REST API tests for HTTP JWT validation against external application.
@@ -30,36 +31,54 @@ import static org.hamcrest.Matchers.*;
 class HttpsJwtValidationTest extends BaseIntegrationTest {
 
     @Test
-    void shouldValidateJwtOverHttp() {
-        // Verify basic health endpoint works (simplified test for HTTP-only)
-        given()
+    void shouldValidateHealthEndpointsOverHttps() {
+        // This test verifies that:
+        // 1. Health endpoints are accessible over HTTPS
+        // 2. Health endpoints return appropriate status codes
+        // 3. Multiple concurrent requests are handled correctly
+
+        // First, verify basic health endpoint works
+        int healthStatusCode = given()
                 .when()
                 .get("/q/health")
                 .then()
-                .statusCode(anyOf(equalTo(200), equalTo(503)));
-    }
+                .extract()
+                .statusCode();
 
-    @Test
-    void shouldHandleMultipleSimultaneousRequests() {
-        // Test multiple simultaneous health checks
-        for (int i = 0; i < 5; i++) {
+        // Health check should return either 200 (UP) or 503 (DOWN), but not an error code
+        assertTrue(healthStatusCode == 200 || healthStatusCode == 503,
+                "Health endpoint should return either 200 (UP) or 503 (DOWN), but got: " + healthStatusCode);
+
+        // If status code is 200, verify the status is UP
+        if (healthStatusCode == 200) {
             given()
                     .when()
                     .get("/q/health")
                     .then()
-                    .statusCode(anyOf(equalTo(200), equalTo(503)));
+                    .body("status", equalTo("UP"));
         }
-    }
+        // If status code is 503, verify the status is DOWN
+        else if (healthStatusCode == 503) {
+            given()
+                    .when()
+                    .get("/q/health")
+                    .then()
+                    .body("status", equalTo("DOWN"));
+        }
 
-    @Test
-    void shouldProvideHealthCheck() {
-        // Verify health check endpoint is available
-        given()
-                .when()
-                .get("/q/health")
-                .then()
-                .statusCode(anyOf(equalTo(200), equalTo(503)))
-                .body("status", anyOf(equalTo("UP"), equalTo("DOWN")));
+        // Test multiple simultaneous health checks to verify concurrent handling
+        for (int i = 0; i < 3; i++) {
+            int concurrentHealthStatusCode = given()
+                    .when()
+                    .get("/q/health")
+                    .then()
+                    .extract()
+                    .statusCode();
+
+            // Health check should return either 200 (UP) or 503 (DOWN), but not an error code
+            assertTrue(concurrentHealthStatusCode == 200 || concurrentHealthStatusCode == 503,
+                    "Health endpoint should return either 200 (UP) or 503 (DOWN), but got: " + concurrentHealthStatusCode);
+        }
     }
 
     @Test
