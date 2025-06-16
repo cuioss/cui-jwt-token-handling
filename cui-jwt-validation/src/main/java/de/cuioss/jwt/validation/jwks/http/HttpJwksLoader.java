@@ -105,16 +105,6 @@ public class HttpJwksLoader implements JwksLoader, AutoCloseable {
     private JWKSKeyLoader loadJwksKeyLoader(String cacheKey) {
         LOGGER.debug("Loading JWKS for key: %s", cacheKey);
 
-        // Check if HttpHandler has a valid URI
-        if (config.getHttpHandler().getUri() == null) {
-            LOGGER.warn("Cannot load JWKS: URI is null (invalid URL)");
-            securityEventCounter.increment(SecurityEventCounter.EventType.JWKS_FETCH_FAILED);
-            return JWKSKeyLoader.builder()
-                    .originalString("{}")
-                    .securityEventCounter(securityEventCounter)
-                    .build();
-        }
-
         // Get the current ETag from the cache manager
         String etag = cacheManager.getCurrentEtag();
 
