@@ -1,18 +1,11 @@
 name: JMH Benchmark
 
 on:
-  # Allow manual triggering
-  workflow_dispatch:
-  # Run on merges to main branch
   pull_request:
-    types:
-      - closed
-    branches:
-      - 'main'
-  # Run on specific tags to capture performance at release points
+    branches: [ "main" ]
   push:
-    tags:
-      - 'v*.*.*'  # Run on version tags
+    tags: [ "*" ]
+  workflow_dispatch:
 
 # Declare default permissions as read only
 permissions: read-all
