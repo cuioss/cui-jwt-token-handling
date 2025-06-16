@@ -87,9 +87,6 @@ To run JVM-based integration tests, use the `integration-tests` profile. This pr
 ----
 # Run JVM-based integration tests with Quarkus image creation (from project root)
 ../../mvnw clean verify -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-
-# Or use the convenience script
-./scripts/run-integration-tests.sh
 ----
 
 ==== 3. Native Integration Tests
@@ -100,9 +97,6 @@ To run native container integration tests, use both the `integration-tests` and 
 ----
 # Run native container integration tests with native image creation (takes 5-10 minutes, from project root)
 ../../mvnw clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
-
-# Or use the convenience script
-./scripts/run-integration-tests.sh --native
 ----
 
 ==== 4. Manual Testing
@@ -110,7 +104,7 @@ To run native container integration tests, use both the `integration-tests` and 
 [source,bash]
 ----
 # Start the test application
-./scripts/start-integration-test.sh
+./scripts/start-integration-container.sh
 
 # Test JWT validation
 curl -k https://localhost:10443/validate/test-token
@@ -121,7 +115,7 @@ curl -k https://localhost:10443/q/health
 curl -k https://localhost:10443/q/metrics
 
 # Stop the application
-./scripts/stop-integration-test.sh
+./scripts/stop-integration-container.sh
 ----
 
 == Module Structure
@@ -157,10 +151,9 @@ cui-jwt-quarkus-integration-tests/
 │           ├── DevUIComponentWiringIT.java        # Dev UI component wiring tests
 │           └── DevUIJsonRPCServiceIT.java         # Dev UI JSON-RPC service tests
 └── scripts/
-    ├── setup-environment.sh                      # Environment setup
-    ├── start-integration-test.sh                 # Start test application
-    ├── stop-integration-test.sh                  # Stop test application
-    └── run-integration-tests.sh                  # Run all tests
+    ├── verify-environment.sh                      # Environment setup
+    ├── start-integration-container.sh             # Start test application
+    └── stop-integration-container.sh              # Stop test application
 ----
 
 == Test Structure
@@ -298,7 +291,7 @@ de.cuioss.jwt.metrics.enabled=true
 [source,bash]
 ----
 # Setup certificates and verify environment
-./scripts/setup-environment.sh
+./scripts/verify-environment.sh
 ----
 
 === Application Management
@@ -306,39 +299,30 @@ de.cuioss.jwt.metrics.enabled=true
 [source,bash]
 ----
 # Start JVM application
-./scripts/start-integration-test.sh
+./scripts/start-integration-container.sh
 
 # Start native application
-./scripts/start-integration-test.sh --native
+./scripts/start-integration-container.sh --native
 
 # Stop application
-./scripts/stop-integration-test.sh
+./scripts/stop-integration-container.sh
 
 # Stop and clean logs
-./scripts/stop-integration-test.sh --clean-logs
+./scripts/stop-integration-container.sh --clean-logs
 ----
 
 === Test Execution
 
 [source,bash]
 ----
-# Run JVM tests only (using integration-tests profile)
-./scripts/run-integration-tests.sh
-
-# Run native tests only (using integration-tests and native profiles)
-./scripts/run-integration-tests.sh --native --skip-jvm
-
-# Run both JVM and native tests (using integration-tests and native profiles)
-./scripts/run-integration-tests.sh --native
-
-# Skip clean build
-./scripts/run-integration-tests.sh --no-clean
-
-# Run directly with Maven (JVM tests)
+# Run JVM tests (using integration-tests profile)
 ../../mvnw clean verify -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
 
-# Run directly with Maven (native tests)
+# Run native tests (using integration-tests and native profiles)
 ../../mvnw clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
+
+# Skip tests during build
+../../mvnw clean package -DskipTests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
 ----
 
 == Manual Testing Procedures
@@ -450,7 +434,7 @@ keytool -list -keystore keystore.p12 -storetype PKCS12
 ----
 # Clean and rebuild (from project root)
 ../../mvnw clean -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-./scripts/setup-environment.sh
+./scripts/verify-environment.sh
 ../../mvnw package -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
 
 # Check native image requirements
@@ -495,7 +479,7 @@ This integration test module is designed for CI/CD pipelines:
 - name: Run Integration Tests
   run: |
     cd cui-jwt-quarkus-integration-tests
-    ./scripts/run-integration-tests.sh --native
+    mvn clean verify -Pintegration-tests,native
 
 # Or using Maven directly
 - name: Run Integration Tests with Maven

@@ -16,13 +16,12 @@
     <description>Integration tests for the CUI JWT Quarkus extension including native container testing with HTTPS support</description>
 
     <properties>
-        <!-- Configure test execution - surefire skip, failsafe enabled -->
-        <skipITs>false</skipITs>
-        <quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
+        <!-- Configure test execution - surefire skip, failsafe disabled by default -->
+        <skipITs>true</skipITs>
 
-        <!-- Native image build for integration tests - always enabled -->
-        <quarkus.native.container-build>true</quarkus.native.container-build>
-        <quarkus.native.enabled>true</quarkus.native.enabled>
+        <!-- Native image build for integration tests - disabled by default -->
+        <quarkus.native.container-build>false</quarkus.native.container-build>
+        <quarkus.native.enabled>false</quarkus.native.enabled>
 
         <!-- HTTPS configuration for testing (Docker external port) -->
         <test.https.port>10443</test.https.port>
@@ -89,120 +88,114 @@
     </dependencies>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default</id>
-                        <goals>
-                            <goal>build</goal>
-                            <goal>generate-code</goal>
-                            <goal>generate-code-tests</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>native-image</id>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                        <configuration>
-                            <properties>
-                                <quarkus.package.type>native</quarkus.package.type>
-                            </properties>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Start/Stop application using scripts -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <!-- Start application before integration tests -->
-                    <execution>
-                        <id>start-integration-app</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>./scripts/start-integration-test.sh</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                        </configuration>
-                    </execution>
-                    <!-- Stop application after integration tests -->
-                    <execution>
-                        <id>stop-integration-app</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>./scripts/stop-integration-test.sh</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Skip Unit Tests (Surefire) -->
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <skipTests>true</skipTests>
-                </configuration>
-            </plugin>
-
-            <!-- Integration Test Configuration -->
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                        <configuration>
-                            <!-- Include all tests in integration package -->
-                            <includes>
-                                <include>**/integration/**/*Test.java</include>
-                                <include>**/integration/**/*IT.java</include>
-                            </includes>
-                            <systemPropertyVariables>
-                                <test.https.port>${test.https.port}</test.https.port>
-                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                                <!-- Always enable native mode for tests -->
-                                <quarkus.native.enabled>true</quarkus.native.enabled>
-                            </systemPropertyVariables>
-                            <!-- Override skip settings -->
-                            <skipITs>false</skipITs>
-                            <skip>false</skip>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-        </plugins>
+        <!-- No plugins in default profile as per requirements -->
     </build>
 
     <profiles>
+        <!-- Profile for running integration tests with native image -->
         <profile>
-            <id>native</id>
-            <activation>
-                <property>
-                    <name>native</name>
-                </property>
-            </activation>
+            <id>integration-tests</id>
             <properties>
-                <!-- Native mode is already enabled by default in main properties -->
-                <!-- This is kept for backward compatibility -->
+                <!-- Enable integration tests -->
                 <skipITs>false</skipITs>
+
+                <!-- Enable native image building in Maven -->
+                <quarkus.native.container-build>true</quarkus.native.container-build>
                 <quarkus.native.enabled>true</quarkus.native.enabled>
+                <quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
             </properties>
+            <build>
+                <plugins>
+                    <!-- Quarkus Maven Plugin for code generation and build -->
+                    <plugin>
+                        <groupId>io.quarkus</groupId>
+                        <artifactId>quarkus-maven-plugin</artifactId>
+                        <executions>
+                            <!-- Single execution for all goals to prevent duplicates -->
+                            <execution>
+                                <goals>
+                                    <goal>generate-code</goal>
+                                    <goal>generate-code-tests</goal>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <properties>
+                                <quarkus.native.enabled>true</quarkus.native.enabled>
+                                <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
+                            </properties>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Skip Unit Tests (Surefire) -->
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Integration Test Configuration -->
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Include all tests in integration package -->
+                                    <includes>
+                                        <include>**/integration/**/*IT.java</include>
+                                    </includes>
+                                    <systemPropertyVariables>
+                                        <test.https.port>${test.https.port}</test.https.port>
+                                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                        <quarkus.native.enabled>${quarkus.native.enabled}</quarkus.native.enabled>
+                                    </systemPropertyVariables>
+                                    <!-- Use the skipITs property -->
+                                    <skipITs>${skipITs}</skipITs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Start/Stop application using scripts -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <!-- Start application before integration tests -->
+                            <execution>
+                                <id>start-integration-app</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>./scripts/start-integration-container.sh</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <!-- Stop application after integration tests -->
+                            <execution>
+                                <id>stop-integration-app</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>./scripts/stop-integration-container.sh</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

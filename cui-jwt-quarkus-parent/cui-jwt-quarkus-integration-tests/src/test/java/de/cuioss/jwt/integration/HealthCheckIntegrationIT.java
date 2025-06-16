@@ -18,7 +18,7 @@ package de.cuioss.jwt.integration;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * These tests verify that health checks work correctly in the
  * external application environment with proper JWT extension integration.
  */
-class HealthCheckIntegrationTest extends BaseIntegrationTest {
+class HealthCheckIntegrationIT extends BaseIntegrationTest {
 
     @Test
     void shouldProvideOverallHealthStatus() {

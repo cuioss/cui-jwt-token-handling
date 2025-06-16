@@ -19,7 +19,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * full end-to-end functionality.
  * </p>
  */
-class DevUIComponentWiringTest extends BaseIntegrationTest {
+class DevUIComponentWiringIT extends BaseIntegrationTest {
 
     @Test
     @DisplayName("Should serve Dev UI main page")

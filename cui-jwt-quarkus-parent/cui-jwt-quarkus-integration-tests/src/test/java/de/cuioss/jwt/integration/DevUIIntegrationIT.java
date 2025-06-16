@@ -19,7 +19,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * testing the application as a REST API against an external running application.
  * </p>
  */
-class DevUIIntegrationTest extends BaseIntegrationTest {
+class DevUIIntegrationIT extends BaseIntegrationTest {
 
     @Test
     @DisplayName("Should provide JWT validation through health checks")

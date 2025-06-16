@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * These tests verify that Prometheus metrics are properly exposed
  * and include JWT validation metrics against an external running application.
  */
-class MetricsIntegrationTest extends BaseIntegrationTest {
+class MetricsIntegrationIT extends BaseIntegrationTest {
 
     @Test
     void shouldExposeMetricsEndpoint() {

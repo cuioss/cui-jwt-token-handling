@@ -19,8 +19,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Basic Dev UI test for integration testing environment.
@@ -29,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * wired and can provide basic functionality through REST API endpoints.
  * </p>
  */
-class DevUIBasicTest extends BaseIntegrationTest {
+class DevUIBasicIT extends BaseIntegrationTest {
 
     @Test
     @DisplayName("Should provide basic Dev UI functionality through endpoints")

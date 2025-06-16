@@ -19,13 +19,17 @@ cd "${PROJECT_DIR}"
 
 # Start with Docker Compose
 echo "🐳 Starting Docker container with native image..."
-docker compose up --build -d
+docker compose up -d
 
-# Wait for service to be ready
+# Wait for service to be ready and measure startup time
 echo "⏳ Waiting for service to be ready..."
+START_TIME=$(date +%s)
 for i in {1..30}; do
     if curl -k -s https://localhost:10443/q/health/live > /dev/null 2>&1; then
+        END_TIME=$(date +%s)
+        TOTAL_TIME=$((END_TIME - START_TIME))
         echo "✅ Service is ready!"
+        echo "📈 Actual startup time: ${TOTAL_TIME}s (container + application)"
         break
     fi
     if [ $i -eq 30 ]; then
@@ -36,6 +40,18 @@ for i in {1..30}; do
     echo "⏳ Waiting... (attempt $i/30)"
     sleep 1
 done
+
+# Extract native startup time from logs
+NATIVE_STARTUP=$(docker compose logs 2>/dev/null | grep "started in" | sed -n 's/.*started in \([0-9.]*\)s.*/\1/p' | tail -1)
+if [ ! -z "$NATIVE_STARTUP" ]; then
+    echo "⚡ Native app startup: ${NATIVE_STARTUP}s (application only)"
+fi
+
+# Show actual image size
+IMAGE_SIZE=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep cui-jwt-integration-tests | awk '{print $2}' | head -1)
+if [ ! -z "$IMAGE_SIZE" ]; then
+    echo "📦 Image size: ${IMAGE_SIZE} (distroless native)"
+fi
 
 echo ""
 echo "🎉 JWT Integration Tests are running!"
@@ -52,5 +68,5 @@ echo "  curl -k https://localhost:10443/q/health/live"
 echo "  curl -k https://localhost:10443/jwt/status"
 echo "  curl -k https://localhost:10443/jwt/ping"
 echo ""
-echo "🛑 To stop: ./scripts/stop-integration-test.sh"
+echo "🛑 To stop: ./scripts/stop-integration-container.sh"
 echo "📋 To view logs: docker compose logs -f"

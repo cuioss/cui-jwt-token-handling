@@ -15,11 +15,11 @@
  */
 package de.cuioss.jwt.integration;
 
-import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * These tests verify that JWT validation works correctly
  * over HTTP connections against an external running application.
  */
-class HttpsJwtValidationTest extends BaseIntegrationTest {
+class HttpsJwtValidationIT extends BaseIntegrationTest {
 
     @Test
     void shouldValidateHealthEndpointsOverHttps() {

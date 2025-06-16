@@ -15,14 +15,14 @@
  */
 package de.cuioss.jwt.integration;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * REST API tests for the Dev UI endpoints against external application.
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * It uses REST API calls to test the Dev UI endpoints against an external running application.
  * </p>
  */
-class DevUIJsonRPCServiceTest extends BaseIntegrationTest {
+class DevUIJsonRPCServiceIT extends BaseIntegrationTest {
 
     @Test
     @DisplayName("Should provide Dev UI endpoints")
