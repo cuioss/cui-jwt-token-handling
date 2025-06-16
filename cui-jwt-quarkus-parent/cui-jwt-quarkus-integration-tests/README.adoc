@@ -8,6 +8,47 @@
 
 This module provides comprehensive integration tests for the CUI JWT Quarkus extension, including native container testing with HTTPS support, health checks, and metrics validation.
 
+== Port Configuration
+
+The integration tests are designed to test from the *external perspective*, using Docker port mapping to avoid conflicts:
+
+=== Internal vs External Ports
+
+- *Application Internal Port*: `8443` (standard HTTPS port inside the container)
+- *External Test Port*: `10443` (non-standard port mapped by Docker to avoid conflicts)
+
+=== Maven Configuration
+
+The test port is configured via Maven properties and can be customized:
+
+[source,xml]
+----
+<properties>
+    <!-- External test port for integration tests -->
+    <test.https.port>10443</test.https.port>
+</properties>
+----
+
+=== Test Configuration
+
+All integration tests extend `BaseIntegrationTest` which automatically configures REST Assured to use the external port:
+
+[source,java]
+----
+@QuarkusIntegrationTest
+class MyIntegrationTest extends BaseIntegrationTest {
+    // Tests automatically use the external port configured via Maven
+}
+----
+
+=== Key Benefits of External Port Configuration
+
+. ✅ *Tests from Outside Perspective*: Tests validate the complete system as external clients would access it
+. ✅ *Conflict Avoidance*: Non-standard external port avoids conflicts with running services
+. ✅ *Docker Port Mapping*: Infrastructure handles port mapping, not application code
+. ✅ *Configurable*: External port can be changed via Maven properties without code changes
+. ✅ *Environment Independence*: Different environments can use different external ports
+
 == Features
 
 - **Native Container Testing**: Tests run against native container images to verify production-like behavior
@@ -28,29 +69,43 @@ This module provides comprehensive integration tests for the CUI JWT Quarkus ext
 
 === Running Integration Tests
 
-==== 1. JVM Integration Tests
+==== 1. Default Build (No Tests, No Quarkus Image)
+
+By default, the module will only compile code and test classes without creating any Quarkus image and without running any tests:
 
 [source,bash]
 ----
-# Run JVM-based integration tests (from project root)
+# Build without creating Quarkus image or running tests (from project root)
 ../../mvnw clean verify -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-
-# Or use the convenience script
-./scripts/run-integration-tests.sh
 ----
 
-==== 2. Native Integration Tests
+==== 2. JVM Integration Tests
+
+To run JVM-based integration tests, use the `integration-tests` profile. This profile creates the Quarkus image and runs the integration tests:
 
 [source,bash]
 ----
-# Run native container integration tests (takes 5-10 minutes, from project root)
-../../mvnw clean verify -Pnative -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
+# Run JVM-based integration tests with Quarkus image creation (from project root)
+../../mvnw clean verify -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
 
 # Or use the convenience script
 ./scripts/run-integration-tests.sh
 ----
 
-==== 3. Manual Testing
+==== 3. Native Integration Tests
+
+To run native container integration tests, use both the `integration-tests` and `native` profiles. This creates a native Quarkus image and runs the integration tests against it:
+
+[source,bash]
+----
+# Run native container integration tests with native image creation (takes 5-10 minutes, from project root)
+../../mvnw clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
+
+# Or use the convenience script
+./scripts/run-integration-tests.sh --native
+----
+
+==== 4. Manual Testing
 
 [source,bash]
 ----
@@ -80,11 +135,11 @@ cui-jwt-quarkus-integration-tests/
 ├── src/
 │   ├── main/
 │   │   ├── java/de/cuioss/jwt/integration/
-│   │   │   ├── TestApplication.java              # JAX-RS application
+│   │   │   ├── TestApplication.java              # Main Quarkus application entry point
 │   │   │   ├── config/
 │   │   │   │   └── JwtTestConfiguration.java     # Memory-based JWKS config
 │   │   │   └── endpoint/
-│   │   │       └── ValidationEndpoint.java       # JWT validation endpoints
+│   │   │       └── JwtValidationEndpoint.java    # JWT validation endpoints
 │   │   ├── resources/
 │   │   │   ├── application.properties             # Application configuration
 │   │   │   └── application-integration.properties # Integration test config
@@ -94,10 +149,13 @@ cui-jwt-quarkus-integration-tests/
 │   │           └── generate-certificates.sh      # Certificate generation
 │   └── test/
 │       └── java/de/cuioss/jwt/integration/
-│           ├── NativeIntegrationTest.java         # Core integration tests
-│           ├── HealthCheckIntegrationTest.java    # Health check tests
-│           ├── MetricsIntegrationTest.java        # Metrics validation tests
-│           └── HttpsJwtValidationTest.java        # HTTPS-specific tests
+│           ├── HealthCheckIntegrationIT.java      # Health check tests
+│           ├── MetricsIntegrationIT.java          # Metrics validation tests
+│           ├── HttpsJwtValidationIT.java          # HTTPS-specific tests
+│           ├── DevUIIntegrationIT.java            # Dev UI integration tests
+│           ├── DevUIBasicIT.java                  # Basic Dev UI tests
+│           ├── DevUIComponentWiringIT.java        # Dev UI component wiring tests
+│           └── DevUIJsonRPCServiceIT.java         # Dev UI JSON-RPC service tests
 └── scripts/
     ├── setup-environment.sh                      # Environment setup
     ├── start-integration-test.sh                 # Start test application
@@ -105,19 +163,16 @@ cui-jwt-quarkus-integration-tests/
     └── run-integration-tests.sh                  # Run all tests
 ----
 
+== Test Structure
+
+=== Base Classes
+
+- `BaseIntegrationTest`: Base class that configures REST Assured with external port
+- All test classes extend this base to ensure consistent configuration
+
 == Test Categories
 
-=== Native Integration Tests (`NativeIntegrationTest`)
-
-Tests core functionality in native container environment:
-
-- Application startup and health verification
-- JWT token validation with valid tokens
-- Rejection of invalid tokens
-- HTTPS connection handling
-- Authorization header validation
-
-=== Health Check Tests (`HealthCheckIntegrationTest`)
+=== Health Check Tests (`HealthCheckIntegrationIT`)
 
 Validates health check endpoints:
 
@@ -127,7 +182,7 @@ Validates health check endpoints:
 - Readiness, liveness, and startup checks
 - Health check resilience and error handling
 
-=== Metrics Tests (`MetricsIntegrationTest`)
+=== Metrics Tests (`MetricsIntegrationIT`)
 
 Verifies Prometheus metrics integration:
 
@@ -137,7 +192,7 @@ Verifies Prometheus metrics integration:
 - Metrics updates after validation operations
 - Prometheus format compliance
 
-=== HTTPS Validation Tests (`HttpsJwtValidationTest`)
+=== HTTPS Validation Tests (`HttpsJwtValidationIT`)
 
 Tests HTTPS-specific functionality:
 
@@ -147,6 +202,56 @@ Tests HTTPS-specific functionality:
 - Expired token rejection
 - Memory-based JWKS functionality
 
+=== Native Integration Tests (`NativeIntegrationTest`)
+
+Tests basic native functionality:
+
+- Native image startup
+- Basic endpoint availability
+- Configuration loading
+- Native compatibility
+- Resource access
+
+=== Dev UI Integration Tests (`DevUIIntegrationIT`)
+
+Tests the overall integration of JWT components:
+
+- JWT validation through health checks
+- JWKS functionality
+- Configuration through endpoints
+- Authentication handling
+- Health information
+
+=== Dev UI Basic Tests (`DevUIBasicIT`)
+
+Tests basic Dev UI functionality:
+
+- Basic endpoint functionality
+- Authentication handling
+- Status information consistency
+- Component wiring
+- Concurrent endpoint calls
+
+=== Dev UI Component Wiring Tests (`DevUIComponentWiringIT`)
+
+Tests Dev UI component loading and accessibility:
+
+- Dev UI main page serving
+- JWT debugger component
+- JWT validation status component
+- JWT configuration component
+- JWKS endpoints component
+
+=== Dev UI JSON-RPC Service Tests (`DevUIJsonRPCServiceIT`)
+
+Tests Dev UI backend endpoints:
+
+- Dev UI endpoints availability
+- JWT validation status
+- JWKS status
+- Configuration information
+- Authentication handling
+
 == Configuration
 
 === HTTPS Configuration
@@ -155,6 +260,7 @@ The integration tests use self-signed certificates generated by the `generate-ce
 
 - **Keystore**: `keystore.p12` (password: `integration-test`)
 - **Truststore**: `truststore.p12` (password: `integration-test`)
+- **Certificate PEM**: `localhost.crt` (Certificate in PEM format)
 - **Certificate Subject**: `CN=localhost, OU=Integration Testing, O=CUI-JWT, L=Berlin, ST=Berlin, C=DE`
 - **SAN**: `dns:localhost,ip:127.0.0.1,ip:0.0.0.0`
 - **Validity**: 365 days
@@ -216,17 +322,23 @@ de.cuioss.jwt.metrics.enabled=true
 
 [source,bash]
 ----
-# Run JVM tests only
+# Run JVM tests only (using integration-tests profile)
 ./scripts/run-integration-tests.sh
 
-# Run native tests only
+# Run native tests only (using integration-tests and native profiles)
 ./scripts/run-integration-tests.sh --native --skip-jvm
 
-# Run both JVM and native tests
+# Run both JVM and native tests (using integration-tests and native profiles)
 ./scripts/run-integration-tests.sh --native
 
 # Skip clean build
 ./scripts/run-integration-tests.sh --no-clean
+
+# Run directly with Maven (JVM tests)
+../../mvnw clean verify -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
+
+# Run directly with Maven (native tests)
+../../mvnw clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
 ----
 
 == Manual Testing Procedures
@@ -279,6 +391,17 @@ curl -k https://localhost:10443/q/metrics | grep cui_jwt_validation
 
 === Using Docker Compose
 
+The provided Docker Compose configuration handles port mapping:
+
+[source,yaml]
+----
+services:
+  cui-jwt-integration-tests:
+    ports:
+      # Map external port 10443 to internal port 8443
+      - "10443:8443"
+----
+
 [source,bash]
 ----
 # Build and start with Docker Compose
@@ -296,7 +419,7 @@ docker-compose -f docker-compose-integration.yml down
 [source,bash]
 ----
 # Build native image (from project root)
-../../mvnw clean package -Pnative -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
+../../mvnw clean package -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
 
 # Build Docker image
 docker build -f src/main/docker/Dockerfile.native -t cui-jwt-integration .
@@ -328,7 +451,7 @@ keytool -list -keystore keystore.p12 -storetype PKCS12
 # Clean and rebuild (from project root)
 ../../mvnw clean -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
 ./scripts/setup-environment.sh
-../../mvnw package -Pnative -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
+../../mvnw package -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
 
 # Check native image requirements
 native-image --version
@@ -373,6 +496,11 @@ This integration test module is designed for CI/CD pipelines:
   run: |
     cd cui-jwt-quarkus-integration-tests
     ./scripts/run-integration-tests.sh --native
+
+# Or using Maven directly
+- name: Run Integration Tests with Maven
+  run: |
+    mvn clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
 ----
 
 == Performance Considerations
