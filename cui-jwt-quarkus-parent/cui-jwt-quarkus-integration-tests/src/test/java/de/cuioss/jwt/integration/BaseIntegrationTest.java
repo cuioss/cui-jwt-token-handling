@@ -31,19 +31,18 @@ import org.junit.jupiter.api.BeforeAll;
 public abstract class BaseIntegrationTest {
 
     private static final CuiLogger log = new CuiLogger(BaseIntegrationTest.class);
-    private static final String DEFAULT_TEST_PORT = "8443";
+    private static final String DEFAULT_TEST_PORT = "8080";
 
     @BeforeAll
     static void setUpBaseIntegrationTest() {
-        // Configure HTTPS with relaxed validation for self-signed certificates
-        RestAssured.useRelaxedHTTPSValidation();
-        RestAssured.baseURI = "https://localhost";
+        // Configure for HTTP (SSL disabled for tests)
+        RestAssured.baseURI = "http://localhost";
 
         // Use the external test port from Maven properties
-        // This allows Docker port mapping (e.g., 10443:8443) while tests use the external port
-        String testPort = System.getProperty("test.https.port", DEFAULT_TEST_PORT);
+        // This allows Docker port mapping (e.g., 10080:8080) while tests use the external port
+        String testPort = System.getProperty("test.http.port", DEFAULT_TEST_PORT);
         RestAssured.port = Integer.parseInt(testPort);
 
-        log.info("Integration tests configured for HTTPS port: {}", testPort);
+        log.info("Integration tests configured for HTTP port: {}", testPort);
     }
 }

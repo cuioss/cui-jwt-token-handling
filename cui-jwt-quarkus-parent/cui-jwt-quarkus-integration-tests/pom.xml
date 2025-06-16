@@ -16,8 +16,8 @@
     <description>Integration tests for the CUI JWT Quarkus extension including native container testing with HTTPS support</description>
 
     <properties>
-        <!-- Skip regular tests, only run integration tests -->
-        <maven.test.skip>true</maven.test.skip>
+        <!-- Allow unit tests and integration tests -->
+        <maven.test.skip>false</maven.test.skip>
         <skipITs>false</skipITs>
         <quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
         
@@ -55,6 +55,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
         
         <!-- JWT Validation Test Utilities for key material -->

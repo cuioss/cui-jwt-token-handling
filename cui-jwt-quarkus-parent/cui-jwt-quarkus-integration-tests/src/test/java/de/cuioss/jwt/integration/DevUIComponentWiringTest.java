@@ -15,7 +15,6 @@
  */
 package de.cuioss.jwt.integration;
 
-import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -24,14 +23,13 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 
 /**
- * Test for Dev UI component wiring and accessibility.
+ * REST API tests for Dev UI component wiring and accessibility against external application.
  * <p>
  * This test verifies that the Dev UI components are properly loaded and accessible
- * in development mode. It focuses on basic wiring and component loading rather than
+ * in the external application. It focuses on basic wiring and component loading rather than
  * full end-to-end functionality.
  * </p>
  */
-@QuarkusTest
 class DevUIComponentWiringTest extends BaseIntegrationTest {
 
     @Test
