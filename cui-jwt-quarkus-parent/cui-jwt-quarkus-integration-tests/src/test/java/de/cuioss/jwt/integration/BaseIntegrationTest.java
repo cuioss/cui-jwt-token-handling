@@ -30,7 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 @EnableTestLogger
 public abstract class BaseIntegrationTest {
 
-    private static final CuiLogger log = new CuiLogger(BaseIntegrationTest.class);
+    private static final CuiLogger LOGGER = new CuiLogger(BaseIntegrationTest.class);
     private static final String DEFAULT_TEST_PORT = "10443";
 
     @BeforeAll
@@ -43,6 +43,6 @@ public abstract class BaseIntegrationTest {
         String testPort = System.getProperty("test.https.port", DEFAULT_TEST_PORT);
         RestAssured.port = Integer.parseInt(testPort);
 
-        log.info("Integration tests configured for HTTPS port: {}", testPort);
+        LOGGER.info("Integration tests configured for HTTPS port: %s", testPort);
     }
 }
