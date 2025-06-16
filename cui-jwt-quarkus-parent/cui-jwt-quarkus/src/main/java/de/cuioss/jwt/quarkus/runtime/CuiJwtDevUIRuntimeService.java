@@ -22,7 +22,6 @@ import de.cuioss.jwt.validation.domain.token.TokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,11 +37,30 @@ import java.util.Map;
 @ApplicationScoped
 public class CuiJwtDevUIRuntimeService {
 
-    @Inject
-    Instance<TokenValidator> tokenValidatorInstance;
+    // String constants for commonly used literals
+    private static final String RUNTIME = "RUNTIME";
+    private static final String JWT_VALIDATION_DISABLED = "JWT validation is disabled";
+    private static final String MESSAGE = "message";
+    private static final String VALID = "valid";
+    private static final String ERROR = "error";
+    private static final String TOKEN_TYPE = "tokenType";
+    private static final String CLAIMS = "claims";
+    private static final String ISSUER = "issuer";
+    private static final String HEALTH_STATUS = "healthStatus";
 
-    @Inject
-    JwtValidationConfig config;
+    private final Instance<TokenValidator> tokenValidatorInstance;
+    private final JwtValidationConfig config;
+
+    /**
+     * Constructor for dependency injection.
+     *
+     * @param tokenValidatorInstance the token validator instance
+     * @param config the JWT validation configuration
+     */
+    public CuiJwtDevUIRuntimeService(Instance<TokenValidator> tokenValidatorInstance, JwtValidationConfig config) {
+        this.tokenValidatorInstance = tokenValidatorInstance;
+        this.config = config;
+    }
 
     /**
      * Get runtime JWT validation status.
@@ -55,12 +73,12 @@ public class CuiJwtDevUIRuntimeService {
         boolean isEnabled = isJwtEnabled();
         status.put("enabled", isEnabled);
         status.put("validatorPresent", tokenValidatorInstance.isResolvable());
-        status.put("status", "RUNTIME");
+        status.put("status", RUNTIME);
 
         if (isEnabled) {
             status.put("statusMessage", "JWT validation is active and ready");
         } else {
-            status.put("statusMessage", "JWT validation is disabled");
+            status.put("statusMessage", JWT_VALIDATION_DISABLED);
         }
 
         return status;
@@ -74,14 +92,14 @@ public class CuiJwtDevUIRuntimeService {
     public Map<String, Object> getJwksStatus() {
         Map<String, Object> jwksInfo = new HashMap<>();
 
-        jwksInfo.put("status", "RUNTIME");
+        jwksInfo.put("status", RUNTIME);
 
         boolean isEnabled = isJwtEnabled();
         if (isEnabled) {
-            jwksInfo.put("message", "JWKS endpoints are configured and active");
+            jwksInfo.put(MESSAGE, "JWKS endpoints are configured and active");
             jwksInfo.put("issuersConfigured", config.issuers().size());
         } else {
-            jwksInfo.put("message", "JWKS endpoints are disabled");
+            jwksInfo.put(MESSAGE, "JWKS endpoints are disabled");
             jwksInfo.put("issuersConfigured", 0);
         }
 
@@ -101,12 +119,12 @@ public class CuiJwtDevUIRuntimeService {
         configMap.put("healthEnabled", true); // Health is always enabled in runtime
         configMap.put("buildTime", false);
         configMap.put("metricsEnabled", true); // Metrics are always enabled in runtime
-        
+
         if (isEnabled) {
-            configMap.put("message", "JWT validation is properly configured");
+            configMap.put(MESSAGE, "JWT validation is properly configured");
             configMap.put("issuersCount", config.issuers().size());
         } else {
-            configMap.put("message", "JWT validation is disabled");
+            configMap.put(MESSAGE, JWT_VALIDATION_DISABLED);
             configMap.put("issuersCount", 0);
         }
 
@@ -123,20 +141,20 @@ public class CuiJwtDevUIRuntimeService {
         Map<String, Object> result = new HashMap<>();
 
         if (token == null || token.trim().isEmpty()) {
-            result.put("valid", false);
-            result.put("error", "Token is empty or null");
+            result.put(VALID, false);
+            result.put(ERROR, "Token is empty or null");
             return result;
         }
 
         if (!isJwtEnabled()) {
-            result.put("valid", false);
-            result.put("error", "JWT validation is disabled");
+            result.put(VALID, false);
+            result.put(ERROR, JWT_VALIDATION_DISABLED);
             return result;
         }
 
         if (!tokenValidatorInstance.isResolvable()) {
-            result.put("valid", false);
-            result.put("error", "Token validator is not available");
+            result.put(VALID, false);
+            result.put(ERROR, "Token validator is not available");
             return result;
         }
 
@@ -145,43 +163,42 @@ public class CuiJwtDevUIRuntimeService {
             // Try to create an access token first (most common case)
             TokenContent tokenContent = validator.createAccessToken(token.trim());
 
-            result.put("valid", true);
-            result.put("tokenType", "ACCESS_TOKEN");
-            result.put("claims", tokenContent.getClaims());
-            result.put("issuer", tokenContent.getIssuer());
+            result.put(VALID, true);
+            result.put(TOKEN_TYPE, "ACCESS_TOKEN");
+            result.put(CLAIMS, tokenContent.getClaims());
+            result.put(ISSUER, tokenContent.getIssuer());
 
         } catch (TokenValidationException e) {
             // Try ID token if access token fails
             try {
                 TokenValidator validator = tokenValidatorInstance.get();
                 TokenContent tokenContent = validator.createIdToken(token.trim());
-                result.put("valid", true);
-                result.put("tokenType", "ID_TOKEN");
-                result.put("claims", tokenContent.getClaims());
-                result.put("issuer", tokenContent.getIssuer());
+                result.put(VALID, true);
+                result.put(TOKEN_TYPE, "ID_TOKEN");
+                result.put(CLAIMS, tokenContent.getClaims());
+                result.put(ISSUER, tokenContent.getIssuer());
             } catch (TokenValidationException e2) {
                 // Try refresh token if ID token also fails
                 try {
                     TokenValidator validator = tokenValidatorInstance.get();
                     MinimalTokenContent tokenContent = validator.createRefreshToken(token.trim());
-                    result.put("valid", true);
-                    result.put("tokenType", "REFRESH_TOKEN");
+                    result.put(VALID, true);
+                    result.put(TOKEN_TYPE, "REFRESH_TOKEN");
                     result.put("rawToken", tokenContent.getRawToken());
                     // Refresh tokens may not have issuer or claims in the same way
-                    if (tokenContent instanceof TokenContent) {
-                        TokenContent fullTokenContent = (TokenContent) tokenContent;
-                        result.put("claims", fullTokenContent.getClaims());
-                        result.put("issuer", fullTokenContent.getIssuer());
+                    if (tokenContent instanceof TokenContent fullTokenContent) {
+                        result.put(CLAIMS, fullTokenContent.getClaims());
+                        result.put(ISSUER, fullTokenContent.getIssuer());
                     }
                 } catch (TokenValidationException e3) {
-                    result.put("valid", false);
-                    result.put("error", e.getMessage());
+                    result.put(VALID, false);
+                    result.put(ERROR, e.getMessage());
                     result.put("details", "Token validation failed for all token types");
                 }
             }
         } catch (Exception e) {
-            result.put("valid", false);
-            result.put("error", "Token validation error: " + e.getMessage());
+            result.put(VALID, false);
+            result.put(ERROR, "Token validation error: " + e.getMessage());
             result.put("details", "Exception during validation: " + e.getClass().getSimpleName());
         }
 
@@ -202,17 +219,17 @@ public class CuiJwtDevUIRuntimeService {
         health.put("configurationValid", configValid);
         health.put("tokenValidatorAvailable", validatorAvailable);
         health.put("securityCounterAvailable", true); // Metrics are always enabled in runtime
-        health.put("overallStatus", "RUNTIME");
+        health.put("overallStatus", RUNTIME);
 
         if (configValid && validatorAvailable) {
-            health.put("message", "All JWT components are healthy and operational");
-            health.put("healthStatus", "UP");
+            health.put(MESSAGE, "All JWT components are healthy and operational");
+            health.put(HEALTH_STATUS, "UP");
         } else if (configValid) {
-            health.put("message", "Configuration is valid but validator is not available");
-            health.put("healthStatus", "DOWN");
+            health.put(MESSAGE, "Configuration is valid but validator is not available");
+            health.put(HEALTH_STATUS, "DOWN");
         } else {
-            health.put("message", "JWT validation is disabled or misconfigured");
-            health.put("healthStatus", "DOWN");
+            health.put(MESSAGE, "JWT validation is disabled or misconfigured");
+            health.put(HEALTH_STATUS, "DOWN");
         }
 
         return health;
@@ -226,6 +243,6 @@ public class CuiJwtDevUIRuntimeService {
      */
     private boolean isJwtEnabled() {
         return config.issuers().values().stream()
-                .anyMatch(issuer -> issuer.enabled());
+                .anyMatch(JwtValidationConfig.IssuerConfig::enabled);
     }
 }
