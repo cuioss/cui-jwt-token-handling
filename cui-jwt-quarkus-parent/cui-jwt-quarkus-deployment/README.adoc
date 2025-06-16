@@ -29,7 +29,7 @@ toc::[]
 * Development-time debugging interface for JWT validation
 * JSON-RPC services for interactive token analysis
 * Web components for JWT configuration inspection
-* Real-time validation status monitoring
+* See link:../doc/devui-implementation.adoc[DevUI Implementation Documentation] for comprehensive technical details
 
 === Extension Architecture
 * Follows Quarkus extension patterns with separate deployment and runtime modules
@@ -50,19 +50,10 @@ Main deployment processor handling build-time configuration:
 === DevUI Components
 Development interface components:
 
-* link:src/main/java/de/cuioss/jwt/quarkus/deployment/CuiJwtDevUIJsonRPCService.java[CuiJwtDevUIJsonRPCService]
-* JSON-RPC service for DevUI communication
-* Interactive JWT debugging capabilities
-* Configuration inspection tools
-* Validation status monitoring
+* link:src/main/java/de/cuioss/jwt/quarkus/deployment/CuiJwtDevUIJsonRPCService.java[CuiJwtDevUIJsonRPCService] - JSON-RPC service for DevUI communication
+* Web components in `src/main/resources/dev-ui/` for interactive JWT debugging
 
-=== Web Components
-Frontend DevUI components located in `src/main/resources/dev-ui/`:
-
-* JWT validation status display
-* JWKS endpoint configuration
-* Token debugger interface
-* Configuration overview
+For detailed component architecture, implementation details, and testing framework, see link:../doc/devui-implementation.adoc[DevUI Implementation Documentation].
 
 == Usage Examples
 
@@ -100,9 +91,9 @@ Automatically registers these classes for reflection:
 * JWT validation implementation classes
 
 === Native Image Support
-Configures runtime initialization for:
+Configures GraalVM native image compilation with automatic reflection registration and runtime initialization.
 
-* `de.cuioss.jwt.validation.jwks.http.HttpJwksLoader`
+For detailed configuration, reflection classes, and testing information, see link:../doc/native-image-support.adoc[Native Image Support Documentation].
 
 == Best Practices
 
@@ -131,5 +122,8 @@ Configures runtime initialization for:
 == Related Documentation
 
 * link:../cui-jwt-quarkus/README.adoc[Runtime Module Documentation]
+* link:../doc/quarkus-integration.adoc[Quarkus Integration Architecture]
+* link:../doc/devui-implementation.adoc[DevUI Implementation Documentation]
 * link:../doc/devui-testing.adoc[DevUI Testing Guide]
+* link:../doc/native-image-support.adoc[Native Image Support Documentation]
 * link:../../doc/specification/technical-components.adoc[Technical Components Specification]

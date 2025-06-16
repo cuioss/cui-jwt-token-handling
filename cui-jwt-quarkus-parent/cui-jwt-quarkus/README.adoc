@@ -35,13 +35,13 @@ toc::[]
 * Built-in health checks for JWT validation endpoints
 * JWKS endpoint connectivity monitoring
 * Token validator status verification
-* Configurable health check timeouts and caching
+* See link:../doc/health-checks.adoc[Health Checks Documentation] for detailed configuration and usage
 
 === Metrics Collection
 * Integration with Micrometer for JWT validation metrics
 * Token validation success/failure counters
 * Performance metrics for validation operations
-* JWKS loading and caching statistics
+* See link:../doc/metrics-integration.adoc[Metrics Integration Documentation] for comprehensive monitoring setup
 
 == Detailed Component Documentation
 
@@ -84,31 +84,20 @@ Factory for issuer-specific configurations:
 
 === Health Checks
 
-==== TokenValidatorHealthCheck
-Health check for token validator status:
+The runtime module provides health check implementations:
 
-* link:src/main/java/de/cuioss/jwt/quarkus/health/TokenValidatorHealthCheck.java[TokenValidatorHealthCheck]
-* Verifies token validator availability
-* Reports validation capability status
-* Configurable health check intervals
+* link:src/main/java/de/cuioss/jwt/quarkus/health/TokenValidatorHealthCheck.java[TokenValidatorHealthCheck] - Validates token validator configuration
+* link:src/main/java/de/cuioss/jwt/quarkus/health/JwksEndpointHealthCheck.java[JwksEndpointHealthCheck] - Monitors JWKS endpoint connectivity
 
-==== JwksEndpointHealthCheck
-Health check for JWKS endpoint connectivity:
-
-* link:src/main/java/de/cuioss/jwt/quarkus/health/JwksEndpointHealthCheck.java[JwksEndpointHealthCheck]
-* Monitors JWKS endpoint availability
-* Validates key retrieval capabilities
-* Caching-aware health status reporting
+For detailed configuration, usage examples, and Kubernetes integration, see link:../doc/health-checks.adoc[Health Checks Documentation].
 
 === Metrics Integration
 
-==== JwtMetricsCollector
-Metrics collection for JWT validation events:
+The runtime module provides metrics collection through:
 
-* link:src/main/java/de/cuioss/jwt/quarkus/metrics/JwtMetricsCollector.java[JwtMetricsCollector]
-* Collects validation success/failure metrics
-* Tracks performance statistics
-* Integration with Micrometer registry
+* link:src/main/java/de/cuioss/jwt/quarkus/metrics/JwtMetricsCollector.java[JwtMetricsCollector] - Collects JWT validation metrics
+
+For detailed metrics configuration, Prometheus queries, alerting examples, and Grafana dashboard setup, see link:../doc/metrics-integration.adoc[Metrics Integration Documentation].
 
 === Runtime Services
 
@@ -290,14 +279,17 @@ cui.jwt.issuers.my-issuer.parser.allowed-algorithms=RS256,RS384,RS512
 * Compatible with GraalVM native image compilation
 
 === Native Image Support
-* All reflection requirements are handled by deployment module
-* Runtime initialization is properly configured
-* HTTP clients are native-image compatible
-* No additional configuration required for native builds
+* Full GraalVM native image compatibility
+* Automatic reflection and runtime initialization configuration
+* See link:../doc/native-image-support.adoc[Native Image Support Documentation] for detailed configuration and testing information
 
 == Related Documentation
 
 * link:../cui-jwt-quarkus-deployment/README.adoc[Deployment Module Documentation]
+* link:../doc/quarkus-integration.adoc[Quarkus Integration Architecture]
+* link:../doc/health-checks.adoc[Health Checks Documentation]
+* link:../doc/metrics-integration.adoc[Metrics Integration Documentation]
+* link:../doc/native-image-support.adoc[Native Image Support Documentation]
 * link:../doc/devui-testing.adoc[DevUI Testing Guide]
 * link:../../doc/specification/technical-components.adoc[Technical Components Specification]
 * link:../../doc/specification/security.adoc[Security Specification]
