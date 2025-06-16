@@ -138,10 +138,9 @@ link:doc/health-checks.adoc[Health Checks Documentation]
 
 The project consists of the following modules:
 
-* `deployment` - Contains the Quarkus deployment code for the extension
-* `runtime` - Contains the runtime code for the extension
+* `cui-jwt-quarkus-deployment` - Contains the Quarkus deployment code for the extension
+* `cui-jwt-quarkus` - Contains the runtime code for the extension
+* `cui-jwt-quarkus-integration-tests` - Provides integration tests
 * `doc` - Contains additional documentation
 
-== Development
 
-Development information can be found in the `todo` directory, which contains tasks and notes for further development.
