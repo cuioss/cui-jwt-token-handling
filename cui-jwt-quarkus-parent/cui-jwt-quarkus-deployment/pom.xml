@@ -175,20 +175,8 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
-                        <maven.home>${maven.home}</maven.home>
-                    </systemPropertyVariables>
-                    <useModulePath>false</useModulePath>
-                    <useFile>false</useFile>
-                    <trimStackTrace>false</trimStackTrace>
-                    <enableAssertions>true</enableAssertions>
-                    <!-- Suppress JVM warnings -->
+                    <!-- Override argLine to include JaCoCo agent -->
                     <argLine>@{argLine} -XX:+IgnoreUnrecognizedVMOptions -Djava.awt.headless=true</argLine>
-                    <!-- Fix for "Surefire is going to kill self fork JVM" issue -->
-                    <forkedProcessTimeoutInSeconds>0</forkedProcessTimeoutInSeconds>
-                    <forkedProcessExitTimeoutInSeconds>60</forkedProcessExitTimeoutInSeconds>
                 </configuration>
             </plugin>
             <!-- Add JaCoCo for code coverage with Sonar -->

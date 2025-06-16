@@ -37,12 +37,6 @@
             <artifactId>cui-jwt-quarkus</artifactId>
         </dependency>
 
-        <!-- JWT Validation for compile time access -->
-        <dependency>
-            <groupId>de.cuioss.jwt</groupId>
-            <artifactId>cui-jwt-validation</artifactId>
-        </dependency>
-
         <!-- Quarkus Extensions for REST and Health -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -70,12 +64,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Test Dependencies -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
@@ -142,6 +130,7 @@
                     <!-- Integration Test Configuration -->
                     <plugin>
                         <artifactId>maven-failsafe-plugin</artifactId>
+                        <!-- Inherits base configuration from parent, adds module-specific overrides -->
                         <executions>
                             <execution>
                                 <goals>
