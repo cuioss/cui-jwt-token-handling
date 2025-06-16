@@ -1,56 +1,39 @@
 = Native Image Support
 :toc:
 :toclevels: 3
-:toc-title: Table of Contents
 :sectnums:
+:source-highlighter: highlightjs
 
 == Overview
 
-This document describes the native image support for the CUI JWT Quarkus extension.
+GraalVM native image support for the CUI JWT Quarkus extension with automatic reflection and runtime initialization configuration.
 
-== Native Image Configuration
+== Configuration
 
-The CUI JWT Quarkus extension supports GraalVM native image compilation through Quarkus. The following configurations have been applied to ensure proper functionality in native mode:
+=== Reflection Classes
 
-=== Reflection Configuration
-
-The following classes are registered for reflection:
-
-* `de.cuioss.jwt.quarkus.config.JwtValidationConfig` - The main configuration interface
-* `de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig` - Nested configuration for issuers
-* `de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig` - Nested configuration for parser
-* `de.cuioss.jwt.quarkus.config.JwtValidationConfig$HttpJwksLoaderConfig` - Nested configuration for HTTP JWKS loader
-* `de.cuioss.jwt.validation.TokenValidator` - The main validator class
-* `de.cuioss.jwt.validation.IssuerConfig` - Issuer configuration class
-* `de.cuioss.jwt.validation.ParserConfig` - Parser configuration class
-* `de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig` - HTTP JWKS loader configuration
-* `de.cuioss.jwt.validation.security.SecurityEventCounter` - Security event counter
+* Configuration interfaces: `JwtValidationConfig` and nested classes
+* Core validation: `TokenValidator`, `IssuerConfig`, `ParserConfig`
+* JWKS loading: `HttpJwksLoaderConfig`
+* Security monitoring: `SecurityEventCounter`
 
 === Runtime Initialization
 
-The following classes are configured for runtime initialization:
+* `HttpJwksLoader` - Network operations require runtime initialization
 
-* `de.cuioss.jwt.validation.jwks.http.HttpJwksLoader` - This class needs to be initialized at runtime due to its network operations
+== Testing
 
-== Testing Native Image Support
+Native image support verified through `@QuarkusIntegrationTest` annotations:
+* `NativeSimpleIT` - Basic extension functionality
+* `NativeTokenValidatorProducerIT` - CDI injection validation
 
-Native image support is tested using Quarkus integration tests with the `@QuarkusIntegrationTest` annotation. These tests verify that the extension works correctly when compiled to a native executable.
+== Best Practices
 
-The following native tests are available:
+* Minimize reflection in application code
+* Use build-time initialization where possible
+* Configure appropriate HTTP timeouts
+* Test both JVM and native modes
 
-* `NativeSimpleIT` - A simple test to verify the extension works in native mode
-* `NativeTokenValidatorProducerIT` - Tests that the TokenValidator is properly injected in native mode
+== Performance
 
-== Best Practices for Native Image
-
-When using this extension in native mode, consider the following best practices:
-
-1. Minimize reflection usage in your application code
-2. Use build-time initialization where possible
-3. Ensure proper resource cleanup, especially for network connections
-4. Configure timeouts appropriately for HTTP operations
-5. Test your application in both JVM and native modes
-
-== Known Limitations
-
-There are no known limitations when running in native mode. The extension should work the same in both JVM and native modes.
+See link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] for native build performance metrics.

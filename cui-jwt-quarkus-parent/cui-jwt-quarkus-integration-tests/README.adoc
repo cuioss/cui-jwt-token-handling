@@ -1,120 +1,56 @@
 = CUI JWT Quarkus Integration Tests
 :toc:
 :toclevels: 3
-:toc-title: Table of Contents
 :sectnums:
+:source-highlighter: highlightjs
 
 == Overview
 
-This module provides comprehensive integration tests for the CUI JWT Quarkus extension, including native container testing with HTTPS support, health checks, and metrics validation.
+Integration tests for the CUI JWT Quarkus extension with native container testing, HTTPS support, health checks, and metrics validation.
 
 == Port Configuration
 
-The integration tests are designed to test from the *external perspective*, using Docker port mapping to avoid conflicts:
+* **Application Internal**: `8443` (HTTPS inside container)
+* **External Test**: `10443` (Docker mapped port)
+* **Configuration**: Maven property `test.https.port`
 
-=== Internal vs External Ports
-
-- *Application Internal Port*: `8443` (standard HTTPS port inside the container)
-- *External Test Port*: `10443` (non-standard port mapped by Docker to avoid conflicts)
-
-=== Maven Configuration
-
-The test port is configured via Maven properties and can be customized:
-
-[source,xml]
-----
-<properties>
-    <!-- External test port for integration tests -->
-    <test.https.port>10443</test.https.port>
-</properties>
-----
-
-=== Test Configuration
-
-All integration tests extend `BaseIntegrationTest` which automatically configures REST Assured to use the external port:
+=== Test Base Class
 
 [source,java]
 ----
 @QuarkusIntegrationTest
 class MyIntegrationTest extends BaseIntegrationTest {
-    // Tests automatically use the external port configured via Maven
+    // Automatically configured for external port
 }
 ----
 
-=== Key Benefits of External Port Configuration
-
-. ✅ *Tests from Outside Perspective*: Tests validate the complete system as external clients would access it
-. ✅ *Conflict Avoidance*: Non-standard external port avoids conflicts with running services
-. ✅ *Docker Port Mapping*: Infrastructure handles port mapping, not application code
-. ✅ *Configurable*: External port can be changed via Maven properties without code changes
-. ✅ *Environment Independence*: Different environments can use different external ports
-
 == Features
 
-- **Native Container Testing**: Tests run against native container images to verify production-like behavior
-- **HTTPS Support**: Full HTTPS testing with generated self-signed certificates
-- **Memory-based JWKS**: In-memory JWT key configuration for isolated testing
-- **Health Check Integration**: Verification of JWT-specific health checks
-- **Metrics Validation**: Prometheus metrics testing and verification
-- **Manual Testing Scripts**: Automated scripts for manual testing and verification
+* Native container testing with production-like behavior
+* HTTPS with self-signed certificates
+* Memory-based JWKS for isolated testing
+* Health check and metrics validation
+* Manual testing scripts
 
 == Quick Start
 
 === Prerequisites
 
-- Java 17 or later
-- Maven 3.8 or later (or use included Maven Wrapper `./mvnw`)
-- Docker (optional, for container testing)
-- `keytool` (included with JDK)
+* Java 17+, Maven 3.8+ (or `./mvnw`), Docker, `keytool`
 
-=== Running Integration Tests
-
-==== 1. Default Build (No Tests, No Quarkus Image)
-
-By default, the module will only compile code and test classes without creating any Quarkus image and without running any tests:
+=== Test Execution
 
 [source,bash]
 ----
-# Build without creating Quarkus image or running tests (from project root)
-../../mvnw clean verify -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-----
-
-==== 2. JVM Integration Tests
-
-To run JVM-based integration tests, use the `integration-tests` profile. This profile creates the Quarkus image and runs the integration tests:
-
-[source,bash]
-----
-# Run JVM-based integration tests with Quarkus image creation (from project root)
+# JVM tests
 ../../mvnw clean verify -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-----
 
-==== 3. Native Integration Tests
-
-To run native container integration tests, use both the `integration-tests` and `native` profiles. This creates a native Quarkus image and runs the integration tests against it:
-
-[source,bash]
-----
-# Run native container integration tests with native image creation (takes 5-10 minutes, from project root)
+# Native tests (5-10 minutes)
 ../../mvnw clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
-----
 
-==== 4. Manual Testing
-
-[source,bash]
-----
-# Start the test application
+# Manual testing
 ./scripts/start-integration-container.sh
-
-# Test JWT validation
-curl -k https://localhost:10443/validate/test-token
-curl -k -H "Authorization: Bearer <TOKEN>" https://localhost:10443/validate
-
-# Check health and metrics
 curl -k https://localhost:10443/q/health
-curl -k https://localhost:10443/q/metrics
-
-# Stop the application
 ./scripts/stop-integration-container.sh
 ----
 
@@ -123,380 +59,128 @@ curl -k https://localhost:10443/q/metrics
 [source]
 ----
 cui-jwt-quarkus-integration-tests/
-├── pom.xml                              # Maven configuration
-├── README.adoc                          # This documentation
-├── docker-compose-integration.yml      # Docker Compose configuration
-├── src/
-│   ├── main/
-│   │   ├── java/de/cuioss/jwt/integration/
-│   │   │   ├── TestApplication.java              # Main Quarkus application entry point
-│   │   │   ├── config/
-│   │   │   │   └── JwtTestConfiguration.java     # Memory-based JWKS config
-│   │   │   └── endpoint/
-│   │   │       └── JwtValidationEndpoint.java    # JWT validation endpoints
-│   │   ├── resources/
-│   │   │   ├── application.properties             # Application configuration
-│   │   │   └── application-integration.properties # Integration test config
-│   │   └── docker/
-│   │       ├── Dockerfile.native                 # Native container image
-│   │       └── certificates/
-│   │           └── generate-certificates.sh      # Certificate generation
-│   └── test/
-│       └── java/de/cuioss/jwt/integration/
-│           ├── HealthCheckIntegrationIT.java      # Health check tests
-│           ├── MetricsIntegrationIT.java          # Metrics validation tests
-│           ├── HttpsJwtValidationIT.java          # HTTPS-specific tests
-│           ├── DevUIIntegrationIT.java            # Dev UI integration tests
-│           ├── DevUIBasicIT.java                  # Basic Dev UI tests
-│           ├── DevUIComponentWiringIT.java        # Dev UI component wiring tests
-│           └── DevUIJsonRPCServiceIT.java         # Dev UI JSON-RPC service tests
+├── src/main/
+│   ├── java/de/cuioss/jwt/integration/
+│   │   ├── TestApplication.java
+│   │   ├── config/JwtTestConfiguration.java
+│   │   └── endpoint/JwtValidationEndpoint.java
+│   ├── resources/application*.properties
+│   └── docker/
+│       ├── Dockerfile.native
+│       └── certificates/generate-certificates.sh
+├── src/test/java/de/cuioss/jwt/integration/
+│   ├── *IntegrationIT.java
+│   └── DevUI*IT.java
 └── scripts/
-    ├── verify-environment.sh                      # Environment setup
-    ├── start-integration-container.sh             # Start test application
-    └── stop-integration-container.sh              # Stop test application
+    ├── start-integration-container.sh
+    └── stop-integration-container.sh
 ----
 
 == Test Structure
 
-=== Base Classes
-
-- `BaseIntegrationTest`: Base class that configures REST Assured with external port
-- All test classes extend this base to ensure consistent configuration
-
 == Test Categories
 
-=== Health Check Tests (`HealthCheckIntegrationIT`)
-
-Validates health check endpoints:
-
-- Overall application health status
-- JWT validator health check
-- JWKS endpoint health check
-- Readiness, liveness, and startup checks
-- Health check resilience and error handling
-
-=== Metrics Tests (`MetricsIntegrationIT`)
-
-Verifies Prometheus metrics integration:
-
-- Metrics endpoint availability
-- JWT-specific metrics presence
-- System and HTTP metrics
-- Metrics updates after validation operations
-- Prometheus format compliance
-
-=== HTTPS Validation Tests (`HttpsJwtValidationIT`)
-
-Tests HTTPS-specific functionality:
-
-- JWT validation over HTTPS
-- Concurrent request handling
-- Token claims validation
-- Expired token rejection
-- Memory-based JWKS functionality
-
-=== Native Integration Tests (`NativeIntegrationTest`)
-
-Tests basic native functionality:
-
-- Native image startup
-- Basic endpoint availability
-- Configuration loading
-- Native compatibility
-- Resource access
-
-=== Dev UI Integration Tests (`DevUIIntegrationIT`)
-
-Tests the overall integration of JWT components:
-
-- JWT validation through health checks
-- JWKS functionality
-- Configuration through endpoints
-- Authentication handling
-- Health information
-
-=== Dev UI Basic Tests (`DevUIBasicIT`)
-
-Tests basic Dev UI functionality:
-
-- Basic endpoint functionality
-- Authentication handling
-- Status information consistency
-- Component wiring
-- Concurrent endpoint calls
-
-=== Dev UI Component Wiring Tests (`DevUIComponentWiringIT`)
-
-Tests Dev UI component loading and accessibility:
-
-- Dev UI main page serving
-- JWT debugger component
-- JWT validation status component
-- JWT configuration component
-- JWKS endpoints component
-
-=== Dev UI JSON-RPC Service Tests (`DevUIJsonRPCServiceIT`)
-
-Tests Dev UI backend endpoints:
-
-- Dev UI endpoints availability
-- JWT validation status
-- JWKS status
-- Configuration information
-- Authentication handling
+* **HealthCheckIntegrationIT**: Health endpoint validation
+* **MetricsIntegrationIT**: Prometheus metrics verification
+* **HttpsJwtValidationIT**: HTTPS JWT validation testing
+* **DevUI*IT**: Development UI component testing
 
 == Configuration
 
-=== HTTPS Configuration
+=== HTTPS Setup
 
-The integration tests use self-signed certificates generated by the `generate-certificates.sh` script:
+Self-signed certificates via `generate-certificates.sh`:
+* Keystore/Truststore: `*.p12` (password: `integration-test`)
+* Subject: `CN=localhost`
+* SAN: `dns:localhost,ip:127.0.0.1`
 
-- **Keystore**: `keystore.p12` (password: `integration-test`)
-- **Truststore**: `truststore.p12` (password: `integration-test`)
-- **Certificate PEM**: `localhost.crt` (Certificate in PEM format)
-- **Certificate Subject**: `CN=localhost, OU=Integration Testing, O=CUI-JWT, L=Berlin, ST=Berlin, C=DE`
-- **SAN**: `dns:localhost,ip:127.0.0.1,ip:0.0.0.0`
-- **Validity**: 365 days
-
-=== JWT Configuration
-
-Memory-based JWKS configuration for isolated testing:
+=== Key Properties
 
 [source,properties]
 ----
+# JWT
 de.cuioss.jwt.enabled=true
-de.cuioss.jwt.issuers.test.audience=test-audience
 de.cuioss.jwt.issuers.test.jwks.memory.enabled=true
-----
 
-=== Health and Metrics
-
-[source,properties]
-----
-# Health Checks
+# Health & Metrics
 quarkus.smallrye-health.enabled=true
-de.cuioss.jwt.health.enabled=true
-de.cuioss.jwt.health.jwks.enabled=true
+quarkus.micrometer.export.prometheus.enabled=true
+----
+
+== Script Usage
+
+[source,bash]
+----
+# Environment
+./scripts/verify-environment.sh
+
+# Application
+./scripts/start-integration-container.sh [--native]
+./scripts/stop-integration-container.sh [--clean-logs]
+
+# Testing
+../../mvnw clean verify -Pintegration-tests
+../../mvnw clean verify -Pintegration-tests,native -am
+----
+
+== Manual Testing
+
+[source,bash]
+----
+# JWT validation
+TOKEN=$(curl -k -s https://localhost:10443/validate/test-token | jq -r '.token')
+curl -k -H "Authorization: Bearer $TOKEN" https://localhost:10443/validate
+
+# Health checks
+curl -k https://localhost:10443/q/health/live
+curl -k https://localhost:10443/q/health/ready
 
 # Metrics
-quarkus.micrometer.enabled=true
-quarkus.micrometer.export.prometheus.enabled=true
-de.cuioss.jwt.metrics.enabled=true
-----
-
-== Scripts Usage
-
-=== Environment Setup
-
-[source,bash]
-----
-# Setup certificates and verify environment
-./scripts/verify-environment.sh
-----
-
-=== Application Management
-
-[source,bash]
-----
-# Start JVM application
-./scripts/start-integration-container.sh
-
-# Start native application
-./scripts/start-integration-container.sh --native
-
-# Stop application
-./scripts/stop-integration-container.sh
-
-# Stop and clean logs
-./scripts/stop-integration-container.sh --clean-logs
-----
-
-=== Test Execution
-
-[source,bash]
-----
-# Run JVM tests (using integration-tests profile)
-../../mvnw clean verify -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-
-# Run native tests (using integration-tests and native profiles)
-../../mvnw clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
-
-# Skip tests during build
-../../mvnw clean package -DskipTests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-----
-
-== Manual Testing Procedures
-
-=== 1. Basic JWT Validation
-
-[source,bash]
-----
-# Get a test token
-TOKEN=$(curl -k -s https://localhost:10443/validate/test-token | jq -r '.token')
-
-# Validate the token
-curl -k -H "Authorization: Bearer $TOKEN" https://localhost:10443/validate
-----
-
-=== 2. Health Check Verification
-
-[source,bash]
-----
-# Check overall health
-curl -k https://localhost:10443/q/health | jq
-
-# Check liveness (recommended for health checks)
-curl -k https://localhost:10443/q/health/live
-
-# Check readiness
-curl -k https://localhost:10443/q/health/ready
-----
-
-=== 3. Metrics Collection
-
-[source,bash]
-----
-# View all metrics
-curl -k https://localhost:10443/q/metrics
-
-# Filter JWT metrics
 curl -k https://localhost:10443/q/metrics | grep cui_jwt
-
-# Perform validations to generate metrics
-TOKEN=$(curl -k -s https://localhost:10443/validate/test-token | jq -r '.token')
-curl -k -H "Authorization: Bearer $TOKEN" https://localhost:10443/validate
-curl -k -H "Authorization: Bearer invalid.token" https://localhost:10443/validate
-
-# Check updated metrics
-curl -k https://localhost:10443/q/metrics | grep cui_jwt_validation
 ----
 
 == Docker Integration
 
-=== Using Docker Compose
-
-The provided Docker Compose configuration handles port mapping:
-
-[source,yaml]
-----
-services:
-  cui-jwt-integration-tests:
-    ports:
-      # Map external port 10443 to internal port 8443
-      - "10443:8443"
-----
-
 [source,bash]
 ----
-# Build and start with Docker Compose
+# Docker Compose
 docker-compose -f docker-compose-integration.yml up --build
 
-# View logs
-docker-compose -f docker-compose-integration.yml logs -f
-
-# Stop and clean up
-docker-compose -f docker-compose-integration.yml down
-----
-
-=== Manual Docker Usage
-
-[source,bash]
-----
-# Build native image (from project root)
-../../mvnw clean package -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
-
-# Build Docker image
+# Manual Docker
 docker build -f src/main/docker/Dockerfile.native -t cui-jwt-integration .
-
-# Run container
 docker run -p 10443:8443 cui-jwt-integration
 ----
 
 == Troubleshooting
 
-=== Common Issues
-
-==== Certificate Issues
-
 [source,bash]
 ----
-# Regenerate certificates
-cd src/main/docker/certificates
-./generate-certificates.sh
-
-# Verify certificate
+# Certificate issues
+cd src/main/docker/certificates && ./generate-certificates.sh
 keytool -list -keystore keystore.p12 -storetype PKCS12
-----
 
-==== Native Build Issues
-
-[source,bash]
-----
-# Clean and rebuild (from project root)
-../../mvnw clean -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
-./scripts/verify-environment.sh
-../../mvnw package -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
-
-# Check native image requirements
+# Build issues
+../../mvnw clean && ./scripts/verify-environment.sh
 native-image --version
-----
 
-==== Application Startup Issues
-
-[source,bash]
-----
-# Check application logs
-tail -f target/application.log
-
-# Verify port availability
+# Runtime issues
+tail -f target/application.log | grep "de.cuioss.jwt"
 lsof -i :10443
-
-# Test basic connectivity
 curl -k https://localhost:10443/validate/health
 ----
 
-=== Log Analysis
+== Performance
 
-[source,bash]
-----
-# Application logs
-tail -f target/application.log
+* Native compilation: 5-10 minutes
+* Memory: ~100MB native vs ~300MB JVM
+* Startup: ~1s native vs ~3s JVM
 
-# Filter JWT-specific logs
-tail -f target/application.log | grep "de.cuioss.jwt"
+== Security
 
-# Check for errors
-tail -f target/application.log | grep -i error
-----
+* Self-signed certificates for testing only
+* Memory-based JWKS (no external dependencies)
+* Test tokens expire per test run
 
-== CI/CD Integration
+== Standards Compliance
 
-This integration test module is designed for CI/CD pipelines:
-
-[source,yaml]
-----
-# Example GitHub Actions step
-- name: Run Integration Tests
-  run: |
-    cd cui-jwt-quarkus-integration-tests
-    mvn clean verify -Pintegration-tests,native
-
-# Or using Maven directly
-- name: Run Integration Tests with Maven
-  run: |
-    mvn clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
-----
-
-== Performance Considerations
-
-- **Native compilation**: 5-10 minutes on typical CI systems
-- **Memory usage**: ~100MB native vs ~300MB JVM
-- **Startup time**: ~1 second native vs ~3 seconds JVM
-- **Certificate generation**: ~2 seconds
-
-== Security Notes
-
-- Self-signed certificates are for testing only
-- Memory-based JWKS eliminates external dependencies
-- No sensitive data is logged or persisted
-- Test tokens expire and are regenerated per test run
+Follows link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]

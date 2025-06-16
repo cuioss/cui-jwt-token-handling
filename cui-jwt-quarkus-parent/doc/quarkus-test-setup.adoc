@@ -1,19 +1,18 @@
-= Quarkus Test Setup
+= Quarkus Test Framework Setup
 :toc:
-:toclevels: 2
-:toc-title: Table of Contents
+:toclevels: 3
+:sectnums:
+:source-highlighter: highlightjs
 
 == Overview
 
-This document describes the test setup for the cui-jwt-quarkus extension. It covers the configuration needed to properly run Quarkus tests with appropriate logging and test frameworks.
+Test framework configuration for the CUI JWT Quarkus extension, covering dependencies, logging, and test execution setup.
 
 == Test Dependencies
 
-The following test dependencies are required:
-
 [source,xml]
 ----
-<!-- Testing with Quarkus -->
+<!-- Quarkus Testing -->
 <dependency>
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-junit5-internal</artifactId>
@@ -27,7 +26,7 @@ The following test dependencies are required:
     <scope>test</scope>
 </dependency>
 
-<!-- Logging for tests -->
+<!-- Logging -->
 <dependency>
     <groupId>de.cuioss.test</groupId>
     <artifactId>cui-test-juli-logger</artifactId>
@@ -39,7 +38,7 @@ The following test dependencies are required:
     <scope>test</scope>
 </dependency>
 
-<!-- For CDI testing without Quarkus -->
+<!-- CDI Testing -->
 <dependency>
     <groupId>org.jboss.weld</groupId>
     <artifactId>weld-junit5</artifactId>
@@ -166,99 +165,11 @@ With WeldJunit5, configuration must be:
 * Mocked through test alternatives
 * Set up in the test setup phase
 
-== Testing with JWT Tokens
 
-The cui-jwt-validation module provides test utilities that make it easy to create and validate JWT tokens in tests. These utilities are available in the test classifier of the cui-jwt-validation artifact.
+== Framework Selection
 
-=== Adding the Test Dependency
+* **QuarkusUnitTest**: Extension registration, Quarkus subsystems, ConfigMapping
+* **WeldJunit5**: CDI beans in isolation, dependency injection testing
+* **Plain JUnit5**: Pure Java code, utilities, fastest execution
 
-To use the test utilities, add the following dependency to your pom.xml:
-
-[source,xml]
-----
-<dependency>
-    <groupId>de.cuioss.jwt</groupId>
-    <artifactId>cui-jwt-validation</artifactId>
-    <classifier>test</classifier>
-    <scope>test</scope>
-</dependency>
-----
-
-=== Key Test Utilities
-
-The test utilities include:
-
-* `TestTokenHolder` - Creates JWT tokens with configurable claims
-* `TestTokenGenerators` - Factory methods for creating token generators
-* `@TestTokenSource` - JUnit 5 annotation for parameterized tests with tokens
-
-=== Example: Testing with TestTokenHolder
-
-[source,java]
-----
-@Test
-void shouldValidateToken() {
-    // Arrange
-    TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
-    String token = tokenHolder.getRawToken();
-
-    // Get the IssuerConfig from the token holder
-    IssuerConfig issuerConfig = tokenHolder.getIssuerConfig();
-
-    // Create a TokenValidator with the IssuerConfig
-    TokenValidator tokenValidator = new TokenValidator(issuerConfig);
-
-    // Act
-    AccessTokenContent result = tokenValidator.createAccessToken(token);
-
-    // Assert
-    assertNotNull(result);
-    assertEquals(tokenHolder.getSubject(), result.getSubject());
-}
-----
-
-=== Example: Using @TestTokenSource
-
-[source,java]
-----
-@ParameterizedTest
-@TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
-void shouldValidateTokensUsingTestTokenSource(TestTokenHolder tokenHolder) {
-    // Arrange
-    String token = tokenHolder.getRawToken();
-    IssuerConfig issuerConfig = tokenHolder.getIssuerConfig();
-    TokenValidator tokenValidator = new TokenValidator(issuerConfig);
-
-    // Act
-    AccessTokenContent result = tokenValidator.createAccessToken(token);
-
-    // Assert
-    assertNotNull(result);
-    assertEquals(tokenHolder.getSubject(), result.getSubject());
-}
-----
-
-=== For More Information
-
-For more detailed information about the test utilities, see the UnitTesting.adoc document in the cui-jwt-validation module.
-
-== Framework Selection Guidelines
-
-=== When to Use QuarkusUnitTest
-* Testing Quarkus extension registration and lifecycle
-* Testing integration with Quarkus subsystems like config, metrics, or health
-* Testing ConfigMapping functionality
-* When you need the full Quarkus context
-* Testing build steps that produce bytecode or resources
-
-=== When to Use WeldJunit5
-* Testing CDI beans in isolation
-* Testing simple dependency injection
-* When Quarkus-specific APIs aren't needed
-* For faster test execution of bean logic
-
-=== When to Use Plain JUnit5
-* Testing pure Java code with no DI or Quarkus requirements
-* Unit testing with mocks or stubs
-* Testing simple utilities or services
-* When you need the fastest test execution
+See link:Testing%20Configuration.adoc[JWT Testing Guide] for JWT-specific testing patterns.

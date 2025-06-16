@@ -213,19 +213,29 @@ void shouldValidateTokensFromMultipleIssuers() {
 
 == Best Practices
 
-1. **Explicitly Set Empty Values**: Always set empty string (`""`) instead of null for properties you want to disable
-2. **Use TestProfile for Clarity**: Prefer `@TestProfile` over application.properties for test configuration
-3. **Test All Token Types**: Test access tokens, ID tokens, and refresh tokens separately
-4. **Validate Rejection Cases**: Test that invalid tokens are properly rejected
-5. **Keep Tests Isolated**: Each test should create its own tokens with specific claims
+* Set empty string (`""`) for disabled properties
+* Use `@TestProfile` for test configuration clarity
+* Test all token types (access, ID, refresh) separately
+* Validate rejection cases for invalid tokens
+* Keep tests isolated with specific token claims
 
-== Common Pitfalls
+== Common Issues
 
-1. **Missing Public Key Configuration**: Ensure `public-key-location` is explicitly set to empty string in tests
-2. **Audience Mismatch**: Ensure the token audience matches the configured audience in test profile
-3. **Token Expiration**: Be mindful of token expiration times in long-running tests
-4. **Issuer URL Format**: Ensure the issuer URL in tokens exactly matches the configured URL
+* **Public Key Configuration**: Set `public-key-location` to empty string
+* **Audience Mismatch**: Match token audience with configuration
+* **Token Expiration**: Consider expiration in long-running tests
+* **Issuer URL Format**: Exact URL matching required
 
-== Conclusion
+== Test Dependencies
 
-Testing with the `cui-jwt-quarkus` extension is straightforward using Quarkus Test Profiles. By following the patterns in this guide, you can effectively test JWT validation in your applications with minimal configuration.
+[source,xml]
+----
+<dependency>
+    <groupId>de.cuioss.jwt</groupId>
+    <artifactId>cui-jwt-validation</artifactId>
+    <classifier>test</classifier>
+    <scope>test</scope>
+</dependency>
+----
+
+See link:quarkus-test-setup.adoc[Quarkus Test Setup] for framework configuration details.

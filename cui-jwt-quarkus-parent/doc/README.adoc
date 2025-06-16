@@ -1,0 +1,128 @@
+= CUI JWT Quarkus Extension Documentation
+:toc:
+:toclevels: 3
+:sectnums:
+:source-highlighter: highlightjs
+
+== Overview
+
+Complete documentation for the CUI JWT Quarkus extension - a comprehensive JWT validation library integrated with the Quarkus framework. The extension provides automatic configuration, health checks, metrics integration, and development UI components.
+
+== Quick Links
+
+* **link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests]** - Comprehensive testing with Docker containers
+* **link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]** - Development standards and best practices
+
+== Architecture & Implementation
+
+=== link:quarkus-integration.adoc[Quarkus Integration]
+
+Core extension architecture with deployment and runtime modules:
+
+* **Extension Architecture**: Build-time vs runtime components
+* **CDI Integration**: Automatic bean discovery and configuration
+* **Health Checks**: Readiness and liveness probes
+* **Metrics Integration**: Automatic Micrometer integration
+* **DevUI Components**: Development interface with JSON-RPC services
+
+=== link:devui-implementation.adoc[DevUI Implementation]
+
+Development UI components for JWT debugging and monitoring:
+
+* **Web Components**: Lit Element-based reactive components  
+* **JSON-RPC Services**: Backend data access and validation
+* **Real-time Monitoring**: Live status updates and health tracking
+* **Token Debugging**: Interactive JWT validation and claims inspection
+
+== Configuration & Usage
+
+=== link:health-checks.adoc[Health Checks]
+
+MicroProfile Health integration for production monitoring:
+
+* **JWKS Endpoint Health** (`@Readiness`): Connectivity monitoring
+* **Token Validator Health** (`@Liveness`): Configuration validation
+* **Kubernetes Integration**: Probe configuration and best practices
+* **Performance Considerations**: Caching and timeout strategies
+
+=== link:metrics-integration.adoc[Metrics Integration]
+
+Micrometer metrics for security and performance monitoring:
+
+* **JWT Validation Metrics**: Error counters by category and type
+* **Security Event Tracking**: Failed validation attempts and patterns
+* **Prometheus Integration**: Standard metrics format and alerting
+* **Grafana Dashboard**: Pre-configured monitoring visualizations
+
+=== link:native-image-support.adoc[Native Image Support]
+
+GraalVM native compilation configuration:
+
+* **Reflection Configuration**: Automatic class registration
+* **Runtime Initialization**: Network component setup
+* **Performance Metrics**: Build times and resource usage
+* **Testing Strategy**: Native integration test validation
+
+== Development & Testing
+
+=== link:Testing%20Configuration.adoc[JWT Testing Guide]
+
+Application testing with JWT tokens and test profiles:
+
+* **Test Profile Setup**: Configuration overrides for testing
+* **Mock Token Creation**: `TestTokenHolder` and test utilities
+* **Multi-issuer Testing**: Complex configuration scenarios
+* **Validation Testing**: Valid and invalid token handling
+
+=== link:quarkus-test-setup.adoc[Quarkus Test Framework Setup]
+
+Test framework configuration and dependencies:
+
+* **Framework Selection**: QuarkusUnitTest vs WeldJunit5 vs plain JUnit5
+* **Logging Configuration**: JBoss LogManager integration
+* **Dependency Management**: Required test dependencies
+
+=== link:maven-build-configuration.adoc[Maven Build Configuration]
+
+Project build setup and compiler configuration:
+
+* **Java 17 Configuration**: Module path handling
+* **Surefire Plugin**: Test execution with proper logging
+* **Logging Setup**: Console output and level configuration
+
+== Integration Testing
+
+=== link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests]
+
+Comprehensive integration testing in containerized environments:
+
+* **Native Container Testing**: Production-like validation
+* **HTTPS Configuration**: TLS certificate management
+* **Health & Metrics Validation**: End-to-end monitoring verification
+* **DevUI Testing**: Development interface validation
+* **Performance Benchmarking**: Native vs JVM comparisons
+
+== Standards Compliance
+
+This extension follows the **link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]** for:
+
+* **Container Security**: OWASP-compliant Docker configurations
+* **Native Image Optimization**: Single-execution Maven builds
+* **Testing Patterns**: Structured test organization
+* **Documentation Standards**: Consistent structure and cross-referencing
+
+== Getting Started
+
+1. **Add the extension** to your Quarkus project
+2. **Configure JWT validation** with issuer and JWKS settings
+3. **Enable health checks** with `quarkus-smallrye-health`
+4. **Add metrics monitoring** with `quarkus-micrometer`
+5. **Test your setup** using the provided test utilities
+
+For detailed configuration examples, see the link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] documentation.
+
+== Support
+
+* **Issues**: Report problems via project issue tracker
+* **Standards**: Follow link:/Users/oliver/git/cui-llm-rules/standards/cdi-quarkus/[CDI Quarkus Standards]
+* **Testing**: Use link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] as examples

@@ -1,51 +1,30 @@
 = Maven Build Configuration
+:toc:
+:toclevels: 3
+:sectnums:
+:source-highlighter: highlightjs
 
-This document describes the Maven build configuration used in the CUI JWT Quarkus extension project.
+Maven build configuration for the CUI JWT Quarkus extension project.
 
 == Compiler Configuration
 
-The project uses Java 17 with proper module path configuration:
+Java 17 with proper module path handling:
 
 [source,xml]
 ----
 <plugin>
     <artifactId>maven-compiler-plugin</artifactId>
     <configuration>
-        <!-- Use release instead of source/target to properly handle modules -->
         <release>17</release>
     </configuration>
 </plugin>
 ----
 
-Using the `release` parameter instead of `source`/`target` ensures that the compiler properly handles the module path when compiling with Java 17, which prevents warnings about the system module path not being set.
-
-=== Project-Wide Configuration
-
-The compiler configuration is defined in the parent POM to ensure consistent behavior across all modules:
-
-[source,xml]
-----
-<!-- In /Users/oliver/git/cui-jwt/pom.xml -->
-<build>
-    <pluginManagement>
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <!-- Use release instead of source/target to properly handle modules -->
-                    <release>17</release>
-                </configuration>
-            </plugin>
-        </plugins>
-    </pluginManagement>
-</build>
-----
+Configured in parent POM for consistency across all modules.
 
 == Testing Configuration
 
-=== Surefire Plugin
-
-The maven-surefire-plugin is configured with proper system properties for logging and JVM options to suppress warnings:
+Surefire plugin with JBoss LogManager integration:
 
 [source,xml]
 ----
@@ -55,13 +34,9 @@ The maven-surefire-plugin is configured with proper system properties for loggin
         <systemPropertyVariables>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
             <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
-            <maven.home>${maven.home}</maven.home>
         </systemPropertyVariables>
         <useModulePath>false</useModulePath>
-        <useFile>false</useFile>
-        <trimStackTrace>false</trimStackTrace>
         <enableAssertions>true</enableAssertions>
-        <!-- Suppress JVM warnings -->
         <argLine>-XX:+IgnoreUnrecognizedVMOptions -Djava.awt.headless=true</argLine>
     </configuration>
 </plugin>
@@ -69,46 +44,23 @@ The maven-surefire-plugin is configured with proper system properties for loggin
 
 === Logging Configuration
 
-Each module has a `logging.properties` file in its test resources directory that configures Java Util Logging (JUL) for tests:
+Test logging via `logging.properties`:
 
 [source,properties]
 ----
 handlers=java.util.logging.ConsoleHandler
 .level=INFO
-java.util.logging.ConsoleHandler.level=FINE
-java.util.logging.ConsoleHandler.formatter=java.util.logging.SimpleFormatter
-java.util.logging.SimpleFormatter.format=%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s: %5$s%6$s%n
-
-# Configure JBoss LogManager as the root logger
-org.jboss.logmanager.useParentHandlers=false
-
-# Quarkus logging
 io.quarkus.level=INFO
-io.quarkus.test.level=INFO
-quarkus.level=INFO
-org.jboss.logging.level=INFO
-org.jboss.logmanager.level=INFO
-org.jboss.logmanager.handlers.level=INFO
-org.jboss.logmanager.handlers.ConsoleHandler.level=INFO
+de.cuioss.jwt.level=INFO
 ----
 
-Additionally, each module's `application.properties` file contains specific log level settings for different packages:
+Application logging in `application.properties`:
 
 [source,properties]
 ----
 quarkus.log.level=INFO
 quarkus.log.category."de.cuioss.jwt".level=DEBUG
-quarkus.log.category."org.jboss.logmanager".level=WARN
-quarkus.log.console.enable=true
 quarkus.log.console.format=%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n
 ----
 
-== Known Issues
-
-There is still one JVM warning during test execution:
-
-----
-OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
-----
-
-This warning is related to how the Quarkus test framework loads classes and doesn't affect the build or test execution. It's just an informational message that can be safely ignored.
+See link:quarkus-test-setup.adoc[Quarkus Test Setup] for detailed framework configuration.
