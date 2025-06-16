@@ -16,17 +16,12 @@
     <description>Integration tests for the CUI JWT Quarkus extension including native container testing with HTTPS support</description>
 
     <properties>
-        <!-- Allow unit tests and integration tests -->
-        <maven.test.skip>false</maven.test.skip>
+        <!-- Skip unit tests execution but compile test sources -->
+        <skipTests>true</skipTests>
         <skipITs>false</skipITs>
         <quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
         
-        <!-- HTTPS configuration for testing -->
-        <quarkus.http.ssl.certificate.key-store-file>certificates/keystore.p12</quarkus.http.ssl.certificate.key-store-file>
-        <quarkus.http.ssl.certificate.key-store-password>integration-test</quarkus.http.ssl.certificate.key-store-password>
-        <quarkus.http.insecure-requests>disabled</quarkus.http.insecure-requests>
-        
-        <!-- External test port for integration tests (mapped from Docker) -->
+        <!-- HTTPS configuration for testing (Docker external port) -->
         <test.https.port>10443</test.https.port>
     </properties>
 
@@ -106,6 +101,39 @@
                 </executions>
             </plugin>
             
+            <!-- Start/Stop application using scripts -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <!-- Start application before integration tests -->
+                    <execution>
+                        <id>start-integration-app</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>./scripts/start-integration-test.sh</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
+                    <!-- Stop application after integration tests -->
+                    <execution>
+                        <id>stop-integration-app</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>./scripts/stop-integration-test.sh</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <!-- Integration Test Configuration -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -116,10 +144,14 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
+                            <!-- Include all tests in integration package -->
+                            <includes>
+                                <include>**/integration/**/*Test.java</include>
+                                <include>**/integration/**/*IT.java</include>
+                            </includes>
                             <systemPropertyVariables>
-                                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
-                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <test.https.port>${test.https.port}</test.https.port>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                             </systemPropertyVariables>
                         </configuration>
                     </execution>
