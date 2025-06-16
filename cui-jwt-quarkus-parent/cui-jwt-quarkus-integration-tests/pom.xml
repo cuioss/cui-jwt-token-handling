@@ -16,11 +16,14 @@
     <description>Integration tests for the CUI JWT Quarkus extension including native container testing with HTTPS support</description>
 
     <properties>
-        <!-- Skip unit tests execution but compile test sources -->
-        <skipTests>true</skipTests>
+        <!-- Configure test execution - surefire skip, failsafe enabled -->
         <skipITs>false</skipITs>
         <quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
-        
+
+        <!-- Native image build for integration tests - always enabled -->
+        <quarkus.native.container-build>true</quarkus.native.container-build>
+        <quarkus.native.enabled>true</quarkus.native.enabled>
+
         <!-- HTTPS configuration for testing (Docker external port) -->
         <test.https.port>10443</test.https.port>
     </properties>
@@ -31,13 +34,13 @@
             <groupId>de.cuioss.jwt</groupId>
             <artifactId>cui-jwt-quarkus</artifactId>
         </dependency>
-        
+
         <!-- JWT Validation for compile time access -->
         <dependency>
             <groupId>de.cuioss.jwt</groupId>
             <artifactId>cui-jwt-validation</artifactId>
         </dependency>
-        
+
         <!-- Quarkus Extensions for REST and Health -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -55,7 +58,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
-        
+
         <!-- JWT Validation Test Utilities for key material -->
         <dependency>
             <groupId>de.cuioss.jwt</groupId>
@@ -64,7 +67,7 @@
             <classifier>test</classifier>
             <scope>test</scope>
         </dependency>
-        
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -76,7 +79,7 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
-        
+
         <!-- Dev UI Testing Dependencies -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -92,15 +95,27 @@
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>default</id>
                         <goals>
                             <goal>build</goal>
                             <goal>generate-code</goal>
                             <goal>generate-code-tests</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>native-image</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <quarkus.package.type>native</quarkus.package.type>
+                            </properties>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
-            
+
             <!-- Start/Stop application using scripts -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -133,7 +148,15 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
+            <!-- Skip Unit Tests (Surefire) -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+
             <!-- Integration Test Configuration -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -152,12 +175,17 @@
                             <systemPropertyVariables>
                                 <test.https.port>${test.https.port}</test.https.port>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <!-- Always enable native mode for tests -->
+                                <quarkus.native.enabled>true</quarkus.native.enabled>
                             </systemPropertyVariables>
+                            <!-- Override skip settings -->
+                            <skipITs>false</skipITs>
+                            <skip>false</skip>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            
+
         </plugins>
     </build>
 
@@ -170,6 +198,8 @@
                 </property>
             </activation>
             <properties>
+                <!-- Native mode is already enabled by default in main properties -->
+                <!-- This is kept for backward compatibility -->
                 <skipITs>false</skipITs>
                 <quarkus.native.enabled>true</quarkus.native.enabled>
             </properties>

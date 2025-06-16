@@ -13,11 +13,8 @@ echo "Root directory: ${ROOT_DIR}"
 
 cd "${PROJECT_DIR}"
 
-# Build native image first
-echo "📦 Building native image..."
-cd "${ROOT_DIR}"
-echo "📍 Building from: $(pwd)"
-./mvnw clean package -Dnative -Dquarkus.native.container-build=true -DskipTests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
+# Native image should already be built by the Maven lifecycle
+echo "📦 Using native image from target directory..."
 cd "${PROJECT_DIR}"
 
 # Start with Docker Compose
