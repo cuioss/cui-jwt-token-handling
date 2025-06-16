@@ -10,9 +10,9 @@ if ! echo -n '' > /dev/tcp/127.0.0.1/8443 2>/dev/null; then
 fi
 
 # Check application-specific health indicators
-# Validate certificate files exist
-if [ ! -f "/app/certificates/keystore.p12" ]; then
-    echo "Certificate files missing"
+# Validate PEM certificate files exist (matching Dockerfile COPY commands)
+if [ ! -f "/app/certificates/localhost.crt" ] || [ ! -f "/app/certificates/localhost.key" ]; then
+    echo "PEM certificate files missing"
     exit 1
 fi
 

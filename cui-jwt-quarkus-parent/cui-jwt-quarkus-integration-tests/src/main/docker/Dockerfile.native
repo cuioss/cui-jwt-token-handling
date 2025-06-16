@@ -41,8 +41,8 @@ COPY --chmod=0600 --chown=root:root src/main/docker/certificates/localhost.key /
 # Expose HTTPS port only (no HTTP for security)
 EXPOSE 8443
 
-# Health check using internal script (no external dependencies for security)
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+# Health check using internal script (optimized for fast native startup)
+HEALTHCHECK --interval=15s --timeout=5s --retries=3 --start-period=10s \
   CMD ["/app/health-check.sh"]
 
 # Run as non-root user for security (following OWASP recommendations)

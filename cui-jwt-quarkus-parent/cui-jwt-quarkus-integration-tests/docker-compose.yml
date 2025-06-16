@@ -47,13 +47,13 @@ services:
           memory: 128M
           cpus: '0.5'
 
-    # Health check using internal script (production requirement)
+    # Health check using internal script (optimized for fast native startup)
     healthcheck:
       test: ["CMD", "/app/health-check.sh"]
-      interval: 30s
-      timeout: 10s
+      interval: 15s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 10s
 
     # Network isolation (production pattern)
     networks:
