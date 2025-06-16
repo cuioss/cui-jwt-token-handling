@@ -186,8 +186,8 @@ class CuiJwtDevUIRuntimeServiceTest {
                 // If validation succeeded, check that we have the expected fields
                 assertNotNull(result.get("tokenType"), "Token type should be present for valid tokens");
                 String tokenType = (String) result.get("tokenType");
-                assertTrue(tokenType.equals("ACCESS_TOKEN") || tokenType.equals("ID_TOKEN") || tokenType.equals("REFRESH_TOKEN"),
-                          "Token type should be one of the expected types");
+                assertTrue("ACCESS_TOKEN".equals(tokenType) || "ID_TOKEN".equals(tokenType) || "REFRESH_TOKEN".equals(tokenType),
+                        "Token type should be one of the expected types");
             } else {
                 // If validation failed, check that we have an error message
                 assertNotNull(result.get("error"), "Should have error message for invalid tokens");
@@ -232,6 +232,139 @@ class CuiJwtDevUIRuntimeServiceTest {
             // This tests the constructor's robustness
             assertDoesNotThrow(() -> new CuiJwtDevUIRuntimeService(null, null),
                     "Constructor should not throw exception with null dependencies");
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge Case Tests")
+    class EdgeCaseTests {
+
+        @Test
+        @DisplayName("Should handle validateToken with whitespace-only token")
+        void shouldHandleWhitespaceOnlyToken() {
+            // Act
+            Map<String, Object> result = service.validateToken("   \t\n   ");
+
+            // Assert
+            assertNotNull(result, "Result should not be null");
+            assertEquals(false, result.get("valid"), "Should be invalid");
+            assertEquals("Token is empty or null", result.get("error"),
+                    "Should have correct error message for whitespace-only token");
+        }
+
+        @Test
+        @DisplayName("Should handle validateToken with very long token")
+        void shouldHandleVeryLongToken() {
+            // Given - Create a very long token string
+
+            // Act
+            Map<String, Object> result = service.validateToken("a".repeat(10000)
+                // Act
+            );
+
+            // Assert
+            assertNotNull(result, "Result should not be null");
+            assertNotNull(result.get("valid"), "Valid status should be present");
+            // The result can be either valid or invalid depending on the actual validation logic
+        }
+
+        @Test
+        @DisplayName("Should handle validateToken with special characters")
+        void shouldHandleTokenWithSpecialCharacters() {
+            // Act
+            Map<String, Object> result = service.validateToken("!@#$%^&*()_+-=[]{}|;':\",./<>?");
+
+            // Assert
+            assertNotNull(result, "Result should not be null");
+            assertNotNull(result.get("valid"), "Valid status should be present");
+            // The result can be either valid or invalid depending on the actual validation logic
+        }
+
+        @Test
+        @DisplayName("Should handle multiple consecutive calls to same method")
+        void shouldHandleMultipleConsecutiveCalls() {
+            // Act - Call the same method multiple times
+            Map<String, Object> result1 = service.getValidationStatus();
+            Map<String, Object> result2 = service.getValidationStatus();
+            Map<String, Object> result3 = service.getValidationStatus();
+
+            // Assert - All results should be consistent
+            assertNotNull(result1, "First result should not be null");
+            assertNotNull(result2, "Second result should not be null");
+            assertNotNull(result3, "Third result should not be null");
+
+            assertEquals(result1.get("enabled"), result2.get("enabled"),
+                    "Enabled status should be consistent");
+            assertEquals(result2.get("enabled"), result3.get("enabled"),
+                    "Enabled status should be consistent");
+            assertEquals(result1.get("status"), result2.get("status"),
+                    "Status should be consistent");
+        }
+
+        @Test
+        @DisplayName("Should handle getConfiguration method edge cases")
+        void shouldHandleGetConfigurationEdgeCases() {
+            // Act
+            Map<String, Object> result = service.getConfiguration();
+
+            // Assert - Test specific edge case values
+            assertNotNull(result, "Result should not be null");
+            assertEquals(true, result.get("healthEnabled"),
+                    "Health should always be enabled in runtime");
+            assertEquals(false, result.get("buildTime"),
+                    "Should not be build time in runtime");
+            assertEquals(true, result.get("metricsEnabled"),
+                    "Metrics should always be enabled in runtime");
+
+            // Test that issuersCount is always non-negative
+            Object issuersCount = result.get("issuersCount");
+            assertNotNull(issuersCount, "Issuers count should not be null");
+            assertInstanceOf(Integer.class, issuersCount, "Issuers count should be Integer");
+            assertTrue((Integer) issuersCount >= 0, "Issuers count should be non-negative");
+        }
+
+        @Test
+        @DisplayName("Should handle getHealthInfo method consistency")
+        void shouldHandleGetHealthInfoConsistency() {
+            // Act - Call multiple times
+            Map<String, Object> result1 = service.getHealthInfo();
+            Map<String, Object> result2 = service.getHealthInfo();
+
+            // Assert - Results should be consistent
+            assertNotNull(result1, "First result should not be null");
+            assertNotNull(result2, "Second result should not be null");
+
+            assertEquals(result1.get("overallStatus"), result2.get("overallStatus"),
+                    "Overall status should be consistent");
+            assertEquals("RUNTIME", result1.get("overallStatus"),
+                    "Overall status should be RUNTIME");
+            assertEquals(true, result1.get("securityCounterAvailable"),
+                    "Security counter should always be available");
+
+            // Health status should be UP or DOWN
+            String healthStatus1 = (String) result1.get("healthStatus");
+            String healthStatus2 = (String) result2.get("healthStatus");
+            assertTrue("UP".equals(healthStatus1) || "DOWN".equals(healthStatus1),
+                    "Health status should be UP or DOWN");
+            assertEquals(healthStatus1, healthStatus2, "Health status should be consistent");
+        }
+
+        @Test
+        @DisplayName("Should handle getJwksStatus method edge cases")
+        void shouldHandleGetJwksStatusEdgeCases() {
+            // Act
+            Map<String, Object> result = service.getJwksStatus();
+
+            // Assert
+            assertNotNull(result, "Result should not be null");
+            assertEquals("RUNTIME", result.get("status"), "Status should be RUNTIME");
+            assertNotNull(result.get("message"), "Message should not be null");
+            assertNotNull(result.get("issuersConfigured"), "Issuers configured should not be null");
+
+            // Test that issuersConfigured is always non-negative
+            Object issuersConfigured = result.get("issuersConfigured");
+            assertInstanceOf(Integer.class, issuersConfigured, "Issuers configured should be Integer");
+            assertTrue((Integer) issuersConfigured >= 0, "Issuers configured should be non-negative");
         }
     }
 }

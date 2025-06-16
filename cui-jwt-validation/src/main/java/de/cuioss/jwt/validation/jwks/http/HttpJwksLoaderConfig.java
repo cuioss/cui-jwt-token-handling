@@ -78,6 +78,7 @@ public class HttpJwksLoaderConfig {
      */
     @NonNull
     @Getter
+    @EqualsAndHashCode.Exclude
     private final HttpHandler httpHandler;
 
     /**
@@ -107,6 +108,7 @@ public class HttpJwksLoaderConfig {
      * If null, a new one will be created.
      */
     @Getter
+    @EqualsAndHashCode.Exclude
     private final ScheduledExecutorService scheduledExecutorService;
 
     /**

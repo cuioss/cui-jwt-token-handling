@@ -140,4 +140,56 @@ class TokenValidatorHealthCheckTest {
                     "Should contain either issuer count or error information");
         }
     }
+
+    @Test
+    @DisplayName("Should handle null TokenValidator in constructor")
+    void shouldHandleNullTokenValidatorInConstructor() {
+        // Given/When - This tests the constructor with null parameter
+        TokenValidatorHealthCheck healthCheckWithNull = new TokenValidatorHealthCheck(null);
+
+        // Then - Constructor should not throw exception
+        assertNotNull(healthCheckWithNull, "Health check should be created even with null TokenValidator");
+
+        // When - Call the health check
+        HealthCheckResponse response = healthCheckWithNull.call();
+
+        // Then - Should handle null gracefully
+        assertNotNull(response, "Response should not be null");
+        assertEquals(HealthCheckResponse.Status.DOWN, response.getStatus(),
+                "Status should be DOWN for null TokenValidator");
+        assertEquals("jwt-validator", response.getName(),
+                "Health check should have correct name");
+
+        assertTrue(response.getData().isPresent(), "Data should be present");
+        Map<String, Object> data = response.getData().get();
+        assertTrue(data.containsKey("error"), "Should contain error key");
+        assertEquals("TokenValidator not available", data.get("error"),
+                "Should have correct error message");
+    }
+
+    @Test
+    @DisplayName("Should test health check response structure consistency")
+    void shouldTestHealthCheckResponseStructure() {
+        // Given - Multiple calls to the health check
+        HealthCheckResponse response1 = healthCheck.call();
+        HealthCheckResponse response2 = healthCheck.call();
+
+        // Then - Responses should have consistent structure
+        assertEquals(response1.getName(), response2.getName(),
+                "Health check name should be consistent");
+        assertEquals("jwt-validator", response1.getName(),
+                "Health check should have correct name");
+
+        // Both responses should have data
+        assertTrue(response1.getData().isPresent(), "First response should have data");
+        assertTrue(response2.getData().isPresent(), "Second response should have data");
+
+        // Status should be consistent (UP or DOWN)
+        assertTrue(response1.getStatus() == HealthCheckResponse.Status.UP ||
+                response1.getStatus() == HealthCheckResponse.Status.DOWN,
+                "First response status should be UP or DOWN");
+        assertTrue(response2.getStatus() == HealthCheckResponse.Status.UP ||
+                response2.getStatus() == HealthCheckResponse.Status.DOWN,
+                "Second response status should be UP or DOWN");
+    }
 }

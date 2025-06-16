@@ -25,8 +25,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for verifying the auto-configuration of the CUI JWT Quarkus extension.
@@ -75,5 +74,115 @@ class CuiJwtProcessorTest {
 
         // Verify the default issuer is configured
         assertTrue(jwtConfig.issuers().containsKey("default"), "Should contain default issuer");
+    }
+
+    @Test
+    @DisplayName("Should test CuiJwtProcessor build step methods")
+    void shouldTestBuildStepMethods() {
+        // Given
+        CuiJwtProcessor processor = new CuiJwtProcessor();
+
+        // Test feature() method
+        var featureBuildItem = processor.feature();
+        assertNotNull(featureBuildItem, "Feature build item should not be null");
+        assertEquals("cui-jwt", featureBuildItem.getName(), "Feature name should be cui-jwt");
+
+        // Test registerConfigForReflection() method
+        var configReflectionItem = processor.registerConfigForReflection();
+        assertNotNull(configReflectionItem, "Config reflection item should not be null");
+        assertTrue(configReflectionItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig"),
+                "Should register JwtValidationConfig for reflection");
+
+        // Test registerNestedConfigForReflection() method
+        var nestedConfigReflectionItem = processor.registerNestedConfigForReflection();
+        assertNotNull(nestedConfigReflectionItem, "Nested config reflection item should not be null");
+        assertTrue(nestedConfigReflectionItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig"),
+                "Should register IssuerConfig for reflection");
+        assertTrue(nestedConfigReflectionItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig"),
+                "Should register ParserConfig for reflection");
+
+        // Test registerJwtValidationClassesForReflection() method
+        var jwtValidationReflectionItem = processor.registerJwtValidationClassesForReflection();
+        assertNotNull(jwtValidationReflectionItem, "JWT validation reflection item should not be null");
+        assertTrue(jwtValidationReflectionItem.getClassNames().contains("de.cuioss.jwt.validation.TokenValidator"),
+                "Should register TokenValidator for reflection");
+        assertTrue(jwtValidationReflectionItem.getClassNames().contains("de.cuioss.jwt.validation.security.SecurityEventCounter"),
+                "Should register SecurityEventCounter for reflection");
+
+        // Test runtimeInitializedClasses() method
+        var runtimeInitializedItem = processor.runtimeInitializedClasses();
+        assertNotNull(runtimeInitializedItem, "Runtime initialized item should not be null");
+        assertEquals("de.cuioss.jwt.validation.jwks.http.HttpJwksLoader", runtimeInitializedItem.getClassName(),
+                "Should register HttpJwksLoader for runtime initialization");
+    }
+
+    @Test
+    @DisplayName("Should test DevUI build step methods")
+    void shouldTestDevUIBuildStepMethods() {
+        // Given
+        CuiJwtProcessor processor = new CuiJwtProcessor();
+
+        // Test createJwtDevUICard() method
+        var cardPageBuildItem = processor.createJwtDevUICard();
+        assertNotNull(cardPageBuildItem, "Card page build item should not be null");
+
+        // Verify that pages are added (we can't easily test the exact content without accessing private fields)
+        // But we can verify the method doesn't throw exceptions and returns a valid item
+        assertNotNull(cardPageBuildItem.getPages(), "Pages should not be null");
+
+        // Test createJwtDevUIJsonRPCService() method
+        var jsonRPCProvidersBuildItem = processor.createJwtDevUIJsonRPCService();
+        assertNotNull(jsonRPCProvidersBuildItem, "JSON RPC providers build item should not be null");
+    }
+
+    @Test
+    @DisplayName("Should test processor instantiation")
+    void shouldTestProcessorInstantiation() {
+        // Test that processor can be instantiated without issues
+        assertDoesNotThrow(CuiJwtProcessor::new,
+                "CuiJwtProcessor should be instantiable without exceptions");
+
+        CuiJwtProcessor processor = new CuiJwtProcessor();
+        assertNotNull(processor, "Processor should not be null");
+    }
+
+    @Test
+    @DisplayName("Should test reflection configuration completeness")
+    void shouldTestReflectionConfigurationCompleteness() {
+        // Given
+        CuiJwtProcessor processor = new CuiJwtProcessor();
+
+        // Test that all reflection items are created and contain expected classes
+        var configReflection = processor.registerConfigForReflection();
+        assertNotNull(configReflection, "Config reflection should not be null");
+        assertFalse(configReflection.getClassNames().isEmpty(), "Config reflection should contain class names");
+
+        var nestedConfigReflection = processor.registerNestedConfigForReflection();
+        assertNotNull(nestedConfigReflection, "Nested config reflection should not be null");
+        assertFalse(nestedConfigReflection.getClassNames().isEmpty(), "Nested config reflection should contain class names");
+
+        var jwtValidationReflection = processor.registerJwtValidationClassesForReflection();
+        assertNotNull(jwtValidationReflection, "JWT validation reflection should not be null");
+        assertFalse(jwtValidationReflection.getClassNames().isEmpty(), "JWT validation reflection should contain class names");
+    }
+
+    @Test
+    @DisplayName("Should test multiple calls to build step methods")
+    void shouldTestMultipleBuildStepCalls() {
+        // Given
+        CuiJwtProcessor processor = new CuiJwtProcessor();
+
+        // Test that multiple calls to the same method return consistent results
+        var feature1 = processor.feature();
+        var feature2 = processor.feature();
+        assertEquals(feature1.getName(), feature2.getName(), "Feature name should be consistent");
+
+        var config1 = processor.registerConfigForReflection();
+        var config2 = processor.registerConfigForReflection();
+        assertEquals(config1.getClassNames(), config2.getClassNames(), "Config reflection should be consistent");
+
+        var runtime1 = processor.runtimeInitializedClasses();
+        var runtime2 = processor.runtimeInitializedClasses();
+        assertEquals(runtime1.getClassName(), runtime2.getClassName(), "Runtime initialized class should be consistent");
     }
 }

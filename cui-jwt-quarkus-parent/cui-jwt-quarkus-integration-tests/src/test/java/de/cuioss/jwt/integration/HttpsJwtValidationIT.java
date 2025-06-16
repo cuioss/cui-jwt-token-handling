@@ -56,9 +56,7 @@ class HttpsJwtValidationIT extends BaseIntegrationTest {
                     .get("/q/health")
                     .then()
                     .body("status", equalTo("UP"));
-        }
-        // If status code is 503, verify the status is DOWN
-        else if (healthStatusCode == 503) {
+        } else if (healthStatusCode == 503) {
             given()
                     .when()
                     .get("/q/health")

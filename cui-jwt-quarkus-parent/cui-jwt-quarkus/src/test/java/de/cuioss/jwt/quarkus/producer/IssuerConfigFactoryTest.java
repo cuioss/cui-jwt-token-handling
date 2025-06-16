@@ -80,9 +80,9 @@ class IssuerConfigFactoryTest {
         // the expected behavior and verifies the fix.
 
         System.out.println("[DEBUG_LOG] Fixed implementation now uses both connectionTimeoutMs (" +
-                          jwksConfig.connectionTimeoutMs + "ms) and readTimeoutMs (" +
-                          jwksConfig.readTimeoutMs + "ms) for a total timeout of " +
-                          (jwksConfig.connectionTimeoutMs + jwksConfig.readTimeoutMs) + "ms");
+                jwksConfig.connectionTimeoutMs + "ms) and readTimeoutMs (" +
+                jwksConfig.readTimeoutMs + "ms) for a total timeout of " +
+                (jwksConfig.connectionTimeoutMs + jwksConfig.readTimeoutMs) + "ms");
     }
 
     /**
@@ -121,7 +121,7 @@ class IssuerConfigFactoryTest {
         assertNotNull(resultIssuerConfig.getHttpJwksLoaderConfig(), "HttpJwksLoaderConfig should be created");
 
         System.out.println("[DEBUG_LOG] Successfully created IssuerConfig with HttpJwksLoaderConfig using both timeout values: " +
-                          "connectionTimeoutMs=" + jwksConfig.connectionTimeoutMs + "ms, readTimeoutMs=" + jwksConfig.readTimeoutMs + "ms");
+                "connectionTimeoutMs=" + jwksConfig.connectionTimeoutMs + "ms, readTimeoutMs=" + jwksConfig.readTimeoutMs + "ms");
     }
 
     /**
@@ -142,11 +142,11 @@ class IssuerConfigFactoryTest {
 
         // Act & Assert
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-            () -> IssuerConfigFactory.createIssuerConfigs(issuersConfig),
-            "Should throw IllegalStateException when no JWKS configuration is provided");
+                () -> IssuerConfigFactory.createIssuerConfigs(issuersConfig),
+                "Should throw IllegalStateException when no JWKS configuration is provided");
 
         assertTrue(exception.getMessage().contains("has no JWKS configuration"),
-                  "Exception message should indicate missing JWKS configuration");
+                "Exception message should indicate missing JWKS configuration");
     }
 
     // Test implementation classes

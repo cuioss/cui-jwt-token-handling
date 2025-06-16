@@ -104,8 +104,8 @@ class IssuerConfigFactory {
             HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder jwksBuilder = HttpJwksLoaderConfig.builder()
                     .refreshIntervalSeconds(jwksConfig.refreshIntervalSeconds())
                     .connectionAndReadTimeoutSeconds(
-                        jwksConfig.connectionTimeoutMs() / 1000, // Convert ms to seconds
-                        jwksConfig.readTimeoutMs() / 1000); // Convert ms to seconds
+                            jwksConfig.connectionTimeoutMs() / 1000, // Convert ms to seconds
+                            jwksConfig.readTimeoutMs() / 1000); // Convert ms to seconds
 
             configureJwksUrl(issuerName, jwksConfig, jwksBuilder);
             builder.httpJwksLoaderConfig(jwksBuilder.build());
