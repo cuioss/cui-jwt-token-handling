@@ -103,7 +103,9 @@ class IssuerConfigFactory {
             JwtValidationConfig.HttpJwksLoaderConfig jwksConfig = issuerConfig.jwks().get();
             HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder jwksBuilder = HttpJwksLoaderConfig.builder()
                     .refreshIntervalSeconds(jwksConfig.refreshIntervalSeconds())
-                    .requestTimeoutSeconds(jwksConfig.readTimeoutMs() / 1000); // Convert ms to seconds
+                    .connectionAndReadTimeoutSeconds(
+                        jwksConfig.connectionTimeoutMs() / 1000, // Convert ms to seconds
+                        jwksConfig.readTimeoutMs() / 1000); // Convert ms to seconds
 
             configureJwksUrl(issuerName, jwksConfig, jwksBuilder);
             builder.httpJwksLoaderConfig(jwksBuilder.build());

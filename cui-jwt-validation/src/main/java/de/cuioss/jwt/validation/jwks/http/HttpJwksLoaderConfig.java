@@ -313,6 +313,28 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
+         * Sets separate connection and read timeouts in seconds for HTTP requests.
+         * <p>
+         * Since the underlying HttpHandler only supports a single timeout, this method
+         * will use the sum of both timeouts as the total request timeout to ensure
+         * both connection establishment and data reading have adequate time.
+         * </p>
+         *
+         * @param connectionTimeoutSeconds The connection timeout in seconds. Must be positive.
+         * @param readTimeoutSeconds The read timeout in seconds. Must be positive.
+         * @return This builder instance.
+         */
+        public HttpJwksLoaderConfigBuilder connectionAndReadTimeoutSeconds(int connectionTimeoutSeconds, int readTimeoutSeconds) {
+            Preconditions.checkArgument(connectionTimeoutSeconds > 0, "connectionTimeoutSeconds must be positive");
+            Preconditions.checkArgument(readTimeoutSeconds > 0, "readTimeoutSeconds must be positive");
+
+            // Use the sum of both timeouts to ensure adequate time for both connection and read operations
+            int totalTimeoutSeconds = connectionTimeoutSeconds + readTimeoutSeconds;
+            httpHandlerBuilder.requestTimeoutSeconds(totalTimeoutSeconds);
+            return this;
+        }
+
+        /**
          * Builds a new HttpJwksLoaderConfig instance with the configured parameters.
          * Validates all parameters and applies default values where appropriate.
          *
