@@ -1,0 +1,135 @@
+= CUI JWT Quarkus Deployment
+:toc: macro
+:toclevels: 3
+:sectnumlevels: 1
+
+Deployment module for Quarkus integration providing build-time processing and DevUI components for JWT token validation.
+
+toc::[]
+
+== Maven Coordinates
+
+[source, xml]
+----
+<dependency>
+    <groupId>de.cuioss.jwt</groupId>
+    <artifactId>cui-jwt-quarkus-deployment</artifactId>
+</dependency>
+----
+
+== Core Concepts
+
+=== Build-Time Processing
+* Automatic reflection registration for JWT validation classes
+* Native image configuration for GraalVM compatibility
+* Runtime initialization setup for HTTP-based JWKS loaders
+* Integration with Quarkus deployment pipeline
+
+=== DevUI Integration
+* Development-time debugging interface for JWT validation
+* JSON-RPC services for interactive token analysis
+* Web components for JWT configuration inspection
+* Real-time validation status monitoring
+
+=== Extension Architecture
+* Follows Quarkus extension patterns with separate deployment and runtime modules
+* Provides build items for configuration and reflection setup
+* Integrates with Quarkus development mode features
+
+== Detailed Component Documentation
+
+=== CuiJwtProcessor
+Main deployment processor handling build-time configuration:
+
+* link:src/main/java/de/cuioss/jwt/quarkus/deployment/CuiJwtProcessor.java[CuiJwtProcessor]
+* Registers JWT validation classes for reflection
+* Configures runtime initialization for HTTP components
+* Sets up DevUI integration in development mode
+* Provides health check integration
+
+=== DevUI Components
+Development interface components:
+
+* link:src/main/java/de/cuioss/jwt/quarkus/deployment/CuiJwtDevUIJsonRPCService.java[CuiJwtDevUIJsonRPCService]
+* JSON-RPC service for DevUI communication
+* Interactive JWT debugging capabilities
+* Configuration inspection tools
+* Validation status monitoring
+
+=== Web Components
+Frontend DevUI components located in `src/main/resources/dev-ui/`:
+
+* JWT validation status display
+* JWKS endpoint configuration
+* Token debugger interface
+* Configuration overview
+
+== Usage Examples
+
+=== Basic Extension Usage
+The deployment module is automatically included when using the runtime extension:
+
+[source, xml]
+----
+<dependency>
+    <groupId>de.cuioss.jwt</groupId>
+    <artifactId>cui-jwt-quarkus</artifactId>
+</dependency>
+----
+
+=== Development Mode
+Access DevUI components during development:
+
+[source, bash]
+----
+mvn quarkus:dev
+# Navigate to http://localhost:8080/q/dev/
+# Find "CUI JWT" section for JWT validation tools
+----
+
+== Configuration
+
+The deployment module automatically configures build-time settings. No additional configuration is required for basic usage.
+
+=== Reflection Configuration
+Automatically registers these classes for reflection:
+
+* `de.cuioss.jwt.quarkus.config.JwtValidationConfig`
+* `de.cuioss.jwt.quarkus.config.JwksConfig`
+* `de.cuioss.jwt.quarkus.config.TokenValidationConfig`
+* JWT validation implementation classes
+
+=== Native Image Support
+Configures runtime initialization for:
+
+* `de.cuioss.jwt.validation.jwks.http.HttpJwksLoader`
+
+== Best Practices
+
+* Use development mode to debug JWT validation issues
+* Leverage DevUI components for configuration verification
+* Monitor validation status through provided health checks
+* Test native image builds with representative JWT configurations
+
+== Technical Details
+
+=== Thread Safety
+* All deployment processors are thread-safe
+* DevUI services handle concurrent requests appropriately
+* Build items are immutable and safe for parallel processing
+
+=== Performance Characteristics
+* Minimal runtime overhead - most processing occurs at build time
+* DevUI components only active in development mode
+* Efficient reflection registration reduces startup time
+
+=== Dependencies
+* Requires Quarkus 3.x framework
+* Integrates with Quarkus security, health, and DevUI modules
+* Compatible with GraalVM native image compilation
+
+== Related Documentation
+
+* link:../cui-jwt-quarkus/README.adoc[Runtime Module Documentation]
+* link:../doc/devui-testing.adoc[DevUI Testing Guide]
+* link:../../doc/specification/technical-components.adoc[Technical Components Specification]
