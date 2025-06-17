@@ -144,7 +144,7 @@ curl -k https://localhost:10443/q/metrics | grep cui_jwt
 [source,bash]
 ----
 # Docker Compose
-docker-compose -f docker-compose-integration.yml up --build
+docker-compose -f docker-compose up --build
 
 # Manual Docker
 docker build -f src/main/docker/Dockerfile.native -t cui-jwt-integration .
