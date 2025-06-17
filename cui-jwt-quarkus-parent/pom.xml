@@ -23,7 +23,7 @@
 
     <properties>
         <maven.jar.plugin.automatic.module.name>de.cuioss.jwt.quarkus</maven.jar.plugin.automatic.module.name>
-        <quarkus.version>3.23.0</quarkus.version>
+        <quarkus.version>3.23.3</quarkus.version>
 
         <!--
         Logging configuration:
