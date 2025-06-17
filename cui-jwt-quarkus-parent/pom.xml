@@ -31,6 +31,8 @@
         - Configure logging.properties in each module's test resources
         - Suppress JVM warnings with -XX:+IgnoreUnrecognizedVMOptions
         -->
+        <junit-platform.version>1.13.1</junit-platform.version>
+        <version.weld-junit5>4.0.1.Final</version.weld-junit5>
     </properties>
 
     <dependencyManagement>
@@ -50,11 +52,30 @@
                 <scope>import</scope>
             </dependency>
             <!-- JUnit BOM is already imported by quarkus-bom -->
+            <!-- Explicitly override JUnit versions to ensure all components are compatible-->
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-commons</artifactId>
+                <version>${junit-platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-engine</artifactId>
+                <version>${junit-platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-launcher</artifactId>
+                <version>${junit-platform.version}</version>
+                <scope>test</scope>
+            </dependency>
             <!-- Additional dependencies -->
             <dependency>
                 <groupId>org.jboss.weld</groupId>
                 <artifactId>weld-junit5</artifactId>
-                <version>4.0.1.Final</version>
+                <version>${version.weld-junit5}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -100,11 +121,6 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
