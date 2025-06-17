@@ -1,18 +1,11 @@
 name: JMH Benchmark
 
 on:
-  # Allow manual triggering
-  workflow_dispatch:
-  # Run on merges to main branch
   pull_request:
-    types:
-      - closed
-    branches:
-      - 'main'
-  # Run on specific tags to capture performance at release points
+    branches: [ "main" ]
   push:
-    tags:
-      - 'v*.*.*'  # Run on version tags
+    tags: [ "*" ]
+  workflow_dispatch:
 
 # Declare default permissions as read only
 permissions: read-all
@@ -52,6 +45,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Cache Maven packages
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
       - name: Run JMH Benchmarks
         run: |
           # Create directory for benchmark results
@@ -59,7 +59,7 @@ jobs:
 
           # Run benchmarks with JSON output format, skipping tests to avoid duplicate runs
           # Configure JMH parameters for CI environment: fewer iterations for faster execution
-          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-validation,cui-jwt-benchmarking -Dskip.benchmark=false -DskipTests \
+          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-benchmarking -Dskip.benchmark=false -DskipTests \
             -Djmh.result.format=JSON \
             -Djmh.result.filePrefix=benchmark-results/jmh-result \
             -Djmh.iterations=3 \

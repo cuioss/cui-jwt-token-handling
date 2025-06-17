@@ -19,6 +19,8 @@ import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
+import de.cuioss.jwt.validation.jwks.JwksType;
+import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoader;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SecurityEventCounter.EventType;
@@ -80,6 +82,10 @@ public class JWKSKeyLoader implements JwksLoader {
     @Getter
     @NonNull
     private final SecurityEventCounter securityEventCounter;
+    @NonNull
+    private final JwksType jwksType;
+    @NonNull
+    private final LoaderStatus status;
     private final Map<String, KeyInfo> keyInfoMap;
 
     /**
@@ -90,6 +96,7 @@ public class JWKSKeyLoader implements JwksLoader {
         private String etag;
         private ParserConfig parserConfig = ParserConfig.builder().build();
         private SecurityEventCounter securityEventCounter;
+        private JwksType jwksType = JwksType.MEMORY; // Default to MEMORY type
 
         JWKSKeyLoaderBuilder() {
         }
@@ -139,6 +146,17 @@ public class JWKSKeyLoader implements JwksLoader {
         }
 
         /**
+         * Sets the JWKS source type.
+         *
+         * @param jwksType the JWKS source type
+         * @return this builder
+         */
+        public JWKSKeyLoaderBuilder jwksType(JwksType jwksType) {
+            this.jwksType = jwksType;
+            return this;
+        }
+
+        /**
          * Builds a new JWKSKeyLoader.
          *
          * @return a new JWKSKeyLoader
@@ -151,12 +169,12 @@ public class JWKSKeyLoader implements JwksLoader {
                 throw new IllegalArgumentException("securityEventCounter must not be null");
             }
             try {
-                return new JWKSKeyLoader(originalString, etag, parserConfig, securityEventCounter);
+                return new JWKSKeyLoader(originalString, etag, parserConfig, securityEventCounter, jwksType);
             } catch (JsonException | IllegalStateException | IllegalArgumentException e) {
                 // If an exception occurs during construction, log it and return an empty JWKSKeyLoader
                 LOGGER.warn(e, WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
-                return new JWKSKeyLoader("{}", etag, parserConfig, securityEventCounter);
+                return new JWKSKeyLoader("{}", etag, parserConfig, securityEventCounter, jwksType);
             }
         }
     }
@@ -178,28 +196,36 @@ public class JWKSKeyLoader implements JwksLoader {
      * @param etag        the ETag value from the HTTP response, may be null
      * @param parserConfig the configuration for parsing, may be null (defaults to a new instance)
      * @param securityEventCounter the counter for security events, must not be null
+     * @param jwksType the type of JWKS source, must not be null
      */
     public JWKSKeyLoader(
             @NonNull String originalString,
             String etag,
             ParserConfig parserConfig,
-            @NonNull SecurityEventCounter securityEventCounter) {
+            @NonNull SecurityEventCounter securityEventCounter,
+            @NonNull JwksType jwksType) {
         this.originalString = originalString;
         this.etag = etag;
         this.parserConfig = parserConfig != null ? parserConfig : ParserConfig.builder().build();
         this.securityEventCounter = securityEventCounter;
+        this.jwksType = jwksType;
 
         // Parse JWKS content, handling any exceptions
         Map<String, KeyInfo> parsedMap;
+        LoaderStatus determinedStatus;
         try {
             parsedMap = parseJwks(originalString);
+            // Determine status based on whether keys were loaded
+            determinedStatus = parsedMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
         } catch (JsonException e) {
             // If parsing fails, log the error and use an empty map
             LOGGER.warn(e, WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             parsedMap = new ConcurrentHashMap<>();
+            determinedStatus = LoaderStatus.ERROR;
         }
         this.keyInfoMap = parsedMap;
+        this.status = determinedStatus;
     }
 
     /**
@@ -392,5 +418,25 @@ public class JWKSKeyLoader implements JwksLoader {
     @Override
     public Set<String> keySet() {
         return keyInfoMap.keySet();
+    }
+
+    /**
+     * Gets the type of JWKS source used by this loader.
+     *
+     * @return the JWKS source type
+     */
+    @Override
+    public JwksType getJwksType() {
+        return jwksType;
+    }
+
+    /**
+     * Gets the status of the JWKS loader.
+     *
+     * @return the status of the loader
+     */
+    @Override
+    public LoaderStatus getStatus() {
+        return status;
     }
 }

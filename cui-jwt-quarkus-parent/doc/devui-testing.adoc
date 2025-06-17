@@ -1,0 +1,80 @@
+= JWT DevUI Testing
+
+This document describes the JavaScript unit testing setup for CUI JWT Quarkus DevUI components.
+
+== Overview
+
+The testing framework provides comprehensive unit tests for JavaScript DevUI components using Jest and modern testing practices. Components are tested in isolation without requiring actual Quarkus runtime.
+
+== Quick Start
+
+[source,bash]
+----
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+
+# Run tests for CI/CD
+npm run test:ci
+----
+
+== Test Structure
+
+----
+src/test/js/
+├── setup/              # Jest configuration and setup
+├── mocks/              # Mock implementations (Lit, DevUI, directives)
+├── components/         # Component-specific test files
+└── utils/              # Test utility functions
+----
+
+== Key Features
+
+* **Build-time Testing**: Components tested without Quarkus runtime
+* **Comprehensive Mocking**: Lit library, DevUI services, and DOM environment
+* **Custom Matchers**: Enhanced assertions for web component testing
+* **Coverage Reporting**: Configurable thresholds with HTML and LCOV reports
+* **CI/CD Ready**: Optimized for continuous integration
+
+== Mock Framework
+
+The testing framework includes complete mocks for:
+
+* **Lit Library**: LitElement, html, css, and all directives
+* **DevUI Services**: JSON-RPC methods with realistic responses
+* **DOM Environment**: jsdom simulation for web component testing
+
+== Component Testing
+
+Each DevUI component has dedicated test files:
+
+* `qwc-jwt-validation-status.test.js`
+* `qwc-jwks-endpoints.test.js`
+* `qwc-jwt-debugger.test.js`
+* `qwc-jwt-config.test.js`
+
+== Custom Test Utilities
+
+The framework provides custom matchers and helpers:
+
+* `toHaveRenderedContent()` - Verify component rendering
+* `toHaveShadowClass()` - Check shadow DOM classes
+* `toBeDefinedAsCustomElement()` - Validate custom element registration
+* `waitForComponentUpdate()` - Handle async component updates
+* `createTestComponent()` - Component creation helper
+* `cleanupTestComponents()` - Test cleanup utility
+
+== Configuration
+
+Testing is configured through:
+
+* `jest.config.js` - Main Jest configuration
+* `package.json` - Dependencies and npm scripts
+* `.eslintrc.js` - Code quality enforcement
+
+The framework uses jsdom environment with ES6 module support and comprehensive mocking to simulate the DevUI build-time environment.

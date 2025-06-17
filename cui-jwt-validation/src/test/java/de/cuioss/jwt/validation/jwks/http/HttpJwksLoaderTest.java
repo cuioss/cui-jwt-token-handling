@@ -185,7 +185,6 @@ class HttpJwksLoaderTest {
                 .refreshIntervalSeconds(30)
                 .maxCacheSize(200)
                 .adaptiveWindowSize(20)
-                .requestTimeoutSeconds(15)
                 .backgroundRefreshPercentage(70)
                 .build();
 
@@ -196,7 +195,6 @@ class HttpJwksLoaderTest {
         assertEquals(30, customLoader.getConfig().getRefreshIntervalSeconds());
         assertEquals(200, customLoader.getConfig().getMaxCacheSize());
         assertEquals(20, customLoader.getConfig().getAdaptiveWindowSize());
-        assertEquals(15, customLoader.getConfig().getHttpHandler().getRequestTimeoutSeconds());
         assertEquals(70, customLoader.getConfig().getBackgroundRefreshPercentage());
 
         // Verify it works

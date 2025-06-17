@@ -73,6 +73,8 @@ class JwksLoaderFactoryTest {
         // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(HttpJwksLoader.class, loader, "Loader should be an instance of HttpJwksLoader");
+        assertEquals(JwksType.HTTP, loader.getJwksType(), "Loader should have HTTP type");
+        assertEquals(LoaderStatus.ERROR, loader.getStatus(), "HTTP loader should have ERROR status when URL is unreachable");
     }
 
     @Test
@@ -88,6 +90,8 @@ class JwksLoaderFactoryTest {
         // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
+        assertEquals(JwksType.FILE, loader.getJwksType(), "Loader should have FILE type");
+        assertEquals(LoaderStatus.OK, loader.getStatus(), "Loader should have OK status for valid file");
     }
 
     @Test
@@ -102,6 +106,8 @@ class JwksLoaderFactoryTest {
         // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
+        assertEquals(JwksType.FILE, loader.getJwksType(), "Loader should have FILE type");
+        assertEquals(LoaderStatus.ERROR, loader.getStatus(), "Loader should have ERROR status for non-existent file");
     }
 
     @Test
@@ -113,6 +119,8 @@ class JwksLoaderFactoryTest {
         // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
+        assertEquals(JwksType.MEMORY, loader.getJwksType(), "Loader should have MEMORY type");
+        assertEquals(LoaderStatus.OK, loader.getStatus(), "Loader should have OK status for valid content");
     }
 
     @Test
@@ -127,6 +135,8 @@ class JwksLoaderFactoryTest {
         // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
+        assertEquals(JwksType.MEMORY, loader.getJwksType(), "Loader should have MEMORY type");
+        assertEquals(LoaderStatus.ERROR, loader.getStatus(), "Loader should have ERROR status for invalid content");
 
         // The JWKSKeyLoader constructor now automatically increments the counter when it encounters invalid JSON content
 

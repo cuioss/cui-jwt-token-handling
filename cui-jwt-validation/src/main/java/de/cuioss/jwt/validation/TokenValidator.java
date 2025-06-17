@@ -29,13 +29,13 @@ import de.cuioss.jwt.validation.pipeline.TokenClaimValidator;
 import de.cuioss.jwt.validation.pipeline.TokenHeaderValidator;
 import de.cuioss.jwt.validation.pipeline.TokenSignatureValidator;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
+import de.cuioss.tools.collect.MapBuilder;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.string.MoreStrings;
 import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -111,6 +111,7 @@ public class TokenValidator {
     private static final CuiLogger LOGGER = new CuiLogger(TokenValidator.class);
 
     private final NonValidatingJwtParser jwtParser;
+    @Getter
     private final Map<String, IssuerConfig> issuerConfigMap;
 
     /**
@@ -148,14 +149,15 @@ public class TokenValidator {
                 .build();
 
         // Initialize issuerConfigMap with issuers as keys
-        this.issuerConfigMap = new HashMap<>();
+        var builder = new MapBuilder<String, IssuerConfig>();
         for (IssuerConfig issuerConfig : issuerConfigs) {
             // Initialize the JwksLoader with the SecurityEventCounter
             issuerConfig.initSecurityEventCounter(securityEventCounter);
-            issuerConfigMap.put(issuerConfig.getIssuer(), issuerConfig);
+            builder.put(issuerConfig.getIssuer(), issuerConfig);
         }
+        this.issuerConfigMap = builder.toImmutableMap();
 
-        LOGGER.debug("Created TokenValidator with %d issuer configurations", issuerConfigs.length);
+        LOGGER.debug("Created TokenValidator with %s issuer configurations", issuerConfigs.length);
         LOGGER.info(JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED.format(issuerConfigs.length));
     }
 
@@ -325,7 +327,7 @@ public class TokenValidator {
 
         // Safe cast because the token builder creates the correct type
         @SuppressWarnings("unchecked")
-        T validatedToken = (T)validatedContent;
+        T validatedToken = (T) validatedContent;
 
         LOGGER.debug("Token successfully validated");
         return validatedToken;

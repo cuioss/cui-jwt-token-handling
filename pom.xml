@@ -6,7 +6,7 @@
     <parent>
         <groupId>de.cuioss</groupId>
         <artifactId>cui-java-parent</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.8.1</version>
         <relativePath/>
     </parent>
     <groupId>de.cuioss.jwt</groupId>
@@ -34,20 +34,16 @@
         <url>https://github.com/cuioss/cui-jwt/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
+    <properties>
+        <!-- Frontend Maven Plugin -->
+        <frontend.node.version>v20.19.2</frontend.node.version>
+        <frontend.npm.version>10.5.0</frontend.npm.version>
+    </properties>
+
     <modules>
         <module>bom</module>
         <module>cui-jwt-validation</module>
         <module>cui-jwt-benchmarking</module>
-        <module>cui-jwt-quarkus</module>
+        <module>cui-jwt-quarkus-parent</module>
     </modules>
-
-    <properties>
-        <!-- Sonar exclusions -->
-        <sonar.coverage.exclusions>
-            **/cui-jwt-benchmarking/**/*
-        </sonar.coverage.exclusions>
-        <sonar.cpd.exclusions>
-            **/cui-jwt-benchmarking/**/*
-        </sonar.cpd.exclusions>
-    </properties>
 </project>

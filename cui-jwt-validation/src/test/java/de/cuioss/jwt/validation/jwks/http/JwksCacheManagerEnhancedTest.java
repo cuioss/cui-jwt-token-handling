@@ -165,8 +165,8 @@ class JwksCacheManagerEnhancedTest {
         jwksCacheField.setAccessible(true);
 
         // Reset the counters
-        AtomicInteger accessCount = (AtomicInteger)accessCountField.get(adaptiveCacheManager);
-        AtomicInteger hitCount = (AtomicInteger)hitCountField.get(adaptiveCacheManager);
+        AtomicInteger accessCount = (AtomicInteger) accessCountField.get(adaptiveCacheManager);
+        AtomicInteger hitCount = (AtomicInteger) hitCountField.get(adaptiveCacheManager);
         accessCount.set(0);
         hitCount.set(0);
 
@@ -192,7 +192,7 @@ class JwksCacheManagerEnhancedTest {
         // Manually force the cache to expire the entry
         @SuppressWarnings("unchecked")
         LoadingCache<String, JWKSKeyLoader> jwksCache =
-                (LoadingCache<String, JWKSKeyLoader>)jwksCacheField.get(adaptiveCacheManager);
+                (LoadingCache<String, JWKSKeyLoader>) jwksCacheField.get(adaptiveCacheManager);
         jwksCache.invalidate(adaptiveCacheManager.getCacheKey());
 
         // Wait a bit to ensure the cache entry is expired

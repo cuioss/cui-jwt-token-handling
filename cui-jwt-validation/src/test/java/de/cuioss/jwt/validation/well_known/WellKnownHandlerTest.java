@@ -162,7 +162,7 @@ class WellKnownHandlerTest {
         @DisplayName("Should throw exception for null or empty URL during build")
         void shouldThrowExceptionForNullOrEmptyUrl() {
             // Test with null URL
-            var builder = WellKnownHandler.builder().url((String)null);
+            var builder = WellKnownHandler.builder().url((String) null);
             WellKnownDiscoveryException nullException = assertThrows(
                     WellKnownDiscoveryException.class, builder::build,
                     "Should throw exception for null URL during build"
@@ -534,6 +534,135 @@ class WellKnownHandlerTest {
         }
 
         @Test
+        @DisplayName("Should use custom connect timeout")
+        void shouldUseCustomConnectTimeout(URIBuilder uriBuilder) throws MalformedURLException {
+            // Given
+            URL wellKnownUrl = URI.create(uriBuilder
+                    .addPathSegment("/.well-known/openid-configuration")
+                    .buildAsString()).toURL();
+
+            // When
+            WellKnownHandler handler = WellKnownHandler.builder()
+                    .url(wellKnownUrl)
+                    .connectTimeoutSeconds(30)
+                    .build();
+
+            // Then
+            assertNotNull(handler, "Handler should not be null");
+            assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
+
+            // Verify the dispatcher was called
+            wellKnownDispatcher.assertCallsAnswered(1);
+
+            // Verify that the handler was created successfully
+            assertNotNull(handler.getJwksUri(), "JWKS URI should not be null");
+            assertNotNull(handler.getIssuer(), "Issuer should not be null");
+            assertNotNull(handler.getAuthorizationEndpoint(), "Authorization endpoint should not be null");
+            assertNotNull(handler.getTokenEndpoint(), "Token endpoint should not be null");
+        }
+
+        @Test
+        @DisplayName("Should use custom read timeout")
+        void shouldUseCustomReadTimeout(URIBuilder uriBuilder) throws MalformedURLException {
+            // Given
+            URL wellKnownUrl = URI.create(uriBuilder
+                    .addPathSegment("/.well-known/openid-configuration")
+                    .buildAsString()).toURL();
+
+            // When
+            WellKnownHandler handler = WellKnownHandler.builder()
+                    .url(wellKnownUrl)
+                    .readTimeoutSeconds(60)
+                    .build();
+
+            // Then
+            assertNotNull(handler, "Handler should not be null");
+            assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
+
+            // Verify the dispatcher was called
+            wellKnownDispatcher.assertCallsAnswered(1);
+
+            // Verify that the handler was created successfully
+            assertNotNull(handler.getJwksUri(), "JWKS URI should not be null");
+            assertNotNull(handler.getIssuer(), "Issuer should not be null");
+            assertNotNull(handler.getAuthorizationEndpoint(), "Authorization endpoint should not be null");
+            assertNotNull(handler.getTokenEndpoint(), "Token endpoint should not be null");
+        }
+
+        @Test
+        @DisplayName("Should use both timeout configurations")
+        void shouldUseBothTimeoutConfigurations(URIBuilder uriBuilder) throws MalformedURLException {
+            // Given
+            URL wellKnownUrl = URI.create(uriBuilder
+                    .addPathSegment("/.well-known/openid-configuration")
+                    .buildAsString()).toURL();
+
+            // When
+            WellKnownHandler handler = WellKnownHandler.builder()
+                    .url(wellKnownUrl)
+                    .connectTimeoutSeconds(15)
+                    .readTimeoutSeconds(45)
+                    .build();
+
+            // Then
+            assertNotNull(handler, "Handler should not be null");
+            assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
+
+            // Verify the dispatcher was called
+            wellKnownDispatcher.assertCallsAnswered(1);
+
+            // Verify that the handler was created successfully
+            assertNotNull(handler.getJwksUri(), "JWKS URI should not be null");
+            assertNotNull(handler.getIssuer(), "Issuer should not be null");
+            assertNotNull(handler.getAuthorizationEndpoint(), "Authorization endpoint should not be null");
+            assertNotNull(handler.getTokenEndpoint(), "Token endpoint should not be null");
+        }
+
+        @Test
+        @DisplayName("Should throw exception for zero connect timeout")
+        void shouldThrowExceptionForZeroConnectTimeout() {
+            // Given
+            var builder = WellKnownHandler.builder()
+                    .url("https://example.com/.well-known/openid-configuration");
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> builder.connectTimeoutSeconds(0), "Should throw IllegalArgumentException for zero connect timeout");
+        }
+
+        @Test
+        @DisplayName("Should throw exception for negative connect timeout")
+        void shouldThrowExceptionForNegativeConnectTimeout() {
+            // Given
+            var builder = WellKnownHandler.builder()
+                    .url("https://example.com/.well-known/openid-configuration");
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> builder.connectTimeoutSeconds(-1), "Should throw IllegalArgumentException for negative connect timeout");
+        }
+
+        @Test
+        @DisplayName("Should throw exception for zero read timeout")
+        void shouldThrowExceptionForZeroReadTimeout() {
+            // Given
+            var builder = WellKnownHandler.builder()
+                    .url("https://example.com/.well-known/openid-configuration");
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> builder.readTimeoutSeconds(0), "Should throw IllegalArgumentException for zero read timeout");
+        }
+
+        @Test
+        @DisplayName("Should throw exception for negative read timeout")
+        void shouldThrowExceptionForNegativeReadTimeout() {
+            // Given
+            var builder = WellKnownHandler.builder()
+                    .url("https://example.com/.well-known/openid-configuration");
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> builder.readTimeoutSeconds(-1), "Should throw IllegalArgumentException for negative read timeout");
+        }
+
+        @Test
         @DisplayName("Should use all builder methods together")
         void shouldUseAllBuilderMethodsTogether(URIBuilder uriBuilder) throws Exception {
             // Given
@@ -558,6 +687,8 @@ class WellKnownHandlerTest {
             // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
+                    .connectTimeoutSeconds(20)
+                    .readTimeoutSeconds(40)
                     .tlsVersions(secureSSLContextProvider)
                     .sslContext(sslContext)
                     .parserConfig(parserConfig)

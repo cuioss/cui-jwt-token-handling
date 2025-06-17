@@ -19,6 +19,8 @@ import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksLoaderFactory;
+import de.cuioss.jwt.validation.jwks.JwksType;
+import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
@@ -291,6 +293,16 @@ class TokenSignatureValidatorTest {
             @Override
             public Set<String> keySet() {
                 return Set.of(InMemoryJWKSFactory.DEFAULT_KEY_ID);
+            }
+
+            @Override
+            public JwksType getJwksType() {
+                return JwksType.MEMORY;
+            }
+
+            @Override
+            public LoaderStatus getStatus() {
+                return LoaderStatus.OK;
             }
         };
 

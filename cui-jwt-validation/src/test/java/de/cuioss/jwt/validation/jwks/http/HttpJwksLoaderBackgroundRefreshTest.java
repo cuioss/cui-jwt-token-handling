@@ -78,7 +78,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
         assertDoesNotThrow(() -> {
             Field backgroundRefreshManagerField = HttpJwksLoader.class.getDeclaredField("backgroundRefreshManager");
             backgroundRefreshManagerField.setAccessible(true);
-            backgroundRefreshManager = (BackgroundRefreshManager)backgroundRefreshManagerField.get(httpJwksLoader);
+            backgroundRefreshManager = (BackgroundRefreshManager) backgroundRefreshManagerField.get(httpJwksLoader);
         }, "Failed to access backgroundRefreshManager field: ");
     }
 
@@ -106,7 +106,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
         try (HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter)) {
             Field backgroundRefreshManagerField = HttpJwksLoader.class.getDeclaredField("backgroundRefreshManager");
             backgroundRefreshManagerField.setAccessible(true);
-            BackgroundRefreshManager manager = (BackgroundRefreshManager)backgroundRefreshManagerField.get(loader);
+            BackgroundRefreshManager manager = (BackgroundRefreshManager) backgroundRefreshManagerField.get(loader);
 
             // Verify that background refresh is disabled
             assertFalse(manager.isEnabled(),
@@ -130,7 +130,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
         // Wait for the background refresh to occur (50% of refresh interval)
         // Add a small buffer to ensure the background refresh has time to complete
         ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(
-                (long)(REFRESH_INTERVAL_SECONDS * BACKGROUND_REFRESH_PERCENTAGE / 100.0 * 1000) + 200));
+                (long) (REFRESH_INTERVAL_SECONDS * BACKGROUND_REFRESH_PERCENTAGE / 100.0 * 1000) + 200));
 
         // The server should have been called again by the background refresh
         assertTrue(moduleDispatcher.getCallCounter() > initialCallCount,
@@ -201,7 +201,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
                 // Get access to the cacheManager field
                 Field cacheManagerField = HttpJwksLoader.class.getDeclaredField("cacheManager");
                 cacheManagerField.setAccessible(true);
-                JwksCacheManager cacheManager = (JwksCacheManager)cacheManagerField.get(loader);
+                JwksCacheManager cacheManager = (JwksCacheManager) cacheManagerField.get(loader);
 
                 // Refresh the cache
                 cacheManager.refresh();

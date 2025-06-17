@@ -117,7 +117,7 @@ class ClaimMapperUtils {
         List<String> result = new ArrayList<>();
         for (JsonValue item : jsonArray) {
             if (item.getValueType() == JsonValue.ValueType.STRING) {
-                result.add(((JsonString)item).getString());
+                result.add(((JsonString) item).getString());
             } else {
                 // For non-string values, convert to string
                 result.add(item.toString());

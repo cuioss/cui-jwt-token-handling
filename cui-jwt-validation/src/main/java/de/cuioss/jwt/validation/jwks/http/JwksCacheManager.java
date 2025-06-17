@@ -114,7 +114,7 @@ class JwksCacheManager {
                     }
 
                     // If hit ratio is high, extend expiration time
-                    if (localAccessCount > 0 && (double)localHitCount / localAccessCount > 0.8) {
+                    if (localAccessCount > 0 && (double) localHitCount / localAccessCount > 0.8) {
                         return TimeUnit.SECONDS.toNanos(config.getRefreshIntervalSeconds() * 2L);
                     }
                     return currentDuration;
@@ -133,9 +133,6 @@ class JwksCacheManager {
      * @return the cache key
      */
     String getCacheKey() {
-        if (config.getHttpHandler().getUri() == null) {
-            return CACHE_KEY_PREFIX + "invalid-url";
-        }
         return CACHE_KEY_PREFIX + config.getHttpHandler().getUri();
     }
 
@@ -168,14 +165,6 @@ class JwksCacheManager {
     // owolff: Regarding the LoadingCache API, The API claims that the method may return null,
     // therefore the null check is not redundant
     JWKSKeyLoader resolve() {
-        // Check if HttpHandler has a valid URI
-        if (config.getHttpHandler().getUri() == null) {
-            LOGGER.warn("Cannot resolve JWKSKeyLoader: JWKS URI is null (invalid URL)");
-            return JWKSKeyLoader.builder()
-                    .originalString(EMPTY_JWKS)
-                    .securityEventCounter(securityEventCounter)
-                    .build();
-        }
 
         LOGGER.debug(DEBUG.RESOLVING_KEY_LOADER.format(config.getHttpHandler().getUri().toString()));
 
@@ -294,5 +283,15 @@ class JwksCacheManager {
      */
     Optional<JWKSKeyLoader> getLastValidResult() {
         return Optional.ofNullable(lastValidResult);
+    }
+
+    /**
+     * Gets the current JWKSKeyLoader from cache if present, without triggering a load.
+     * This is used to check the current state without causing side effects.
+     *
+     * @return the current JWKSKeyLoader if present in cache, null otherwise
+     */
+    JWKSKeyLoader getCurrentLoader() {
+        return jwksCache.getIfPresent(getCacheKey());
     }
 }

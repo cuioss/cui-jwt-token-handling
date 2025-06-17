@@ -21,6 +21,7 @@
         <version.exec-maven-plugin>3.2.0</version.exec-maven-plugin>
         <version.jmh>1.37</version.jmh>
         <sonar.skip>true</sonar.skip>
+        <version.mockwebserver3>5.0.0-alpha.12</version.mockwebserver3>
     </properties>
 
     <dependencyManagement>
@@ -52,17 +53,12 @@
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>mockwebserver3</artifactId>
-                <version>5.0.0-alpha.12</version>
+                <version>${version.mockwebserver3}</version>
             </dependency>
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
-                <version>5.0.0-alpha.12</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains</groupId>
-                <artifactId>annotations</artifactId>
-                <version>24.1.0</version>
+                <version>${version.mockwebserver3}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -99,19 +95,18 @@
             <groupId>de.cuioss.test</groupId>
             <artifactId>cui-test-keycloak-integration</artifactId>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Rest Assured for API testing -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- JetBrains annotations -->
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
             <scope>compile</scope>
         </dependency>
 
@@ -168,7 +163,6 @@
         <plugins>
             <!-- Skip unit tests by default -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <skipTests>true</skipTests>

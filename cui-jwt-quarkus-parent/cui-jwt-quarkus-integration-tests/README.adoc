@@ -1,0 +1,186 @@
+= CUI JWT Quarkus Integration Tests
+:toc:
+:toclevels: 3
+:sectnums:
+:source-highlighter: highlightjs
+
+== Overview
+
+Integration tests for the CUI JWT Quarkus extension with native container testing, HTTPS support, health checks, and metrics validation.
+
+== Port Configuration
+
+* **Application Internal**: `8443` (HTTPS inside container)
+* **External Test**: `10443` (Docker mapped port)
+* **Configuration**: Maven property `test.https.port`
+
+=== Test Base Class
+
+[source,java]
+----
+@QuarkusIntegrationTest
+class MyIntegrationTest extends BaseIntegrationTest {
+    // Automatically configured for external port
+}
+----
+
+== Features
+
+* Native container testing with production-like behavior
+* HTTPS with self-signed certificates
+* Memory-based JWKS for isolated testing
+* Health check and metrics validation
+* Manual testing scripts
+
+== Quick Start
+
+=== Prerequisites
+
+* Java 17+, Maven 3.8+ (or `./mvnw`), Docker, `keytool`
+
+=== Test Execution
+
+[source,bash]
+----
+# JVM tests
+../../mvnw clean verify -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
+
+# Native tests (5-10 minutes)
+../../mvnw clean verify -Pintegration-tests,native -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -am
+
+# Manual testing
+./scripts/start-integration-container.sh
+curl -k https://localhost:10443/q/health
+./scripts/stop-integration-container.sh
+----
+
+== Module Structure
+
+[source]
+----
+cui-jwt-quarkus-integration-tests/
+├── src/main/
+│   ├── java/de/cuioss/jwt/integration/
+│   │   ├── TestApplication.java
+│   │   ├── config/JwtTestConfiguration.java
+│   │   └── endpoint/JwtValidationEndpoint.java
+│   ├── resources/application*.properties
+│   └── docker/
+│       ├── Dockerfile.native
+│       └── certificates/generate-certificates.sh
+├── src/test/java/de/cuioss/jwt/integration/
+│   ├── *IntegrationIT.java
+│   └── DevUI*IT.java
+└── scripts/
+    ├── start-integration-container.sh
+    └── stop-integration-container.sh
+----
+
+== Test Structure
+
+== Test Categories
+
+* **HealthCheckIntegrationIT**: Health endpoint validation
+* **MetricsIntegrationIT**: Prometheus metrics verification
+* **HttpsJwtValidationIT**: HTTPS JWT validation testing
+* **DevUI*IT**: Development UI component testing
+
+== Configuration
+
+=== HTTPS Setup
+
+Self-signed certificates via `generate-certificates.sh`:
+* Keystore/Truststore: `*.p12` (password: `integration-test`)
+* Subject: `CN=localhost`
+* SAN: `dns:localhost,ip:127.0.0.1`
+
+=== Key Properties
+
+[source,properties]
+----
+# JWT
+de.cuioss.jwt.enabled=true
+de.cuioss.jwt.issuers.test.jwks.memory.enabled=true
+
+# Health & Metrics
+quarkus.smallrye-health.enabled=true
+quarkus.micrometer.export.prometheus.enabled=true
+----
+
+== Script Usage
+
+[source,bash]
+----
+# Environment
+./scripts/verify-environment.sh
+
+# Application
+./scripts/start-integration-container.sh [--native]
+./scripts/stop-integration-container.sh [--clean-logs]
+
+# Testing
+../../mvnw clean verify -Pintegration-tests
+../../mvnw clean verify -Pintegration-tests,native -am
+----
+
+== Manual Testing
+
+[source,bash]
+----
+# JWT validation
+TOKEN=$(curl -k -s https://localhost:10443/validate/test-token | jq -r '.token')
+curl -k -H "Authorization: Bearer $TOKEN" https://localhost:10443/validate
+
+# Health checks
+curl -k https://localhost:10443/q/health/live
+curl -k https://localhost:10443/q/health/ready
+
+# Metrics
+curl -k https://localhost:10443/q/metrics | grep cui_jwt
+----
+
+== Docker Integration
+
+[source,bash]
+----
+# Docker Compose
+docker-compose -f docker-compose up --build
+
+# Manual Docker
+docker build -f src/main/docker/Dockerfile.native -t cui-jwt-integration .
+docker run -p 10443:8443 cui-jwt-integration
+----
+
+== Troubleshooting
+
+[source,bash]
+----
+# Certificate issues
+cd src/main/docker/certificates && ./generate-certificates.sh
+keytool -list -keystore keystore.p12 -storetype PKCS12
+
+# Build issues
+../../mvnw clean && ./scripts/verify-environment.sh
+native-image --version
+
+# Runtime issues
+tail -f target/application.log | grep "de.cuioss.jwt"
+lsof -i :10443
+curl -k https://localhost:10443/validate/health
+----
+
+== Performance
+
+* Native compilation: 5-10 minutes
+* Memory: ~100MB native vs ~300MB JVM
+* Startup: ~1s native vs ~3s JVM
+
+== Security
+
+* Self-signed certificates for testing only
+* Memory-based JWKS (no external dependencies)
+* Test tokens expire per test run
+
+== Standards Compliance
+
+Follows link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]

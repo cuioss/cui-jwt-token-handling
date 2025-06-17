@@ -120,4 +120,20 @@ public interface JwksLoader {
      */
     Set<String> keySet();
 
+    /**
+     * Gets the type of JWKS source used by this loader.
+     *
+     * @return the JWKS source type
+     */
+    JwksType getJwksType();
+
+    /**
+     * Gets the status of the JWKS loader.
+     * <p>
+     * A loader status is OK if it can load at least one key.
+     *
+     * @return the status of the loader
+     */
+    LoaderStatus getStatus();
+
 }

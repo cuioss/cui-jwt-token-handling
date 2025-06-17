@@ -19,6 +19,7 @@ import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.tools.base.Preconditions;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import de.cuioss.tools.net.http.HttpStatusFamily;
@@ -75,7 +76,8 @@ public final class WellKnownHandler {
     private static final String TOKEN_ENDPOINT_KEY = "token_endpoint";
     private static final String USERINFO_ENDPOINT_KEY = "userinfo_endpoint";
 
-    private static final int TIMEOUT_SECONDS = 5; // 5 seconds
+    private static final int CONNECT_TIMEOUT_SECONDS = 2; // 2 seconds for connection
+    private static final int READ_TIMEOUT_SECONDS = 3; // 3 seconds for reading
     public static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
 
     private final Map<String, HttpHandler> endpoints;
@@ -105,6 +107,8 @@ public final class WellKnownHandler {
     public static class WellKnownHandlerBuilder {
         private ParserConfig parserConfig;
         private final HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
+        private int connectTimeoutSeconds = CONNECT_TIMEOUT_SECONDS;
+        private int readTimeoutSeconds = READ_TIMEOUT_SECONDS;
 
         /**
          * Constructor initializing the HttpHandlerBuilder.
@@ -164,6 +168,32 @@ public final class WellKnownHandler {
          */
         public WellKnownHandlerBuilder tlsVersions(SecureSSLContextProvider secureSSLContextProvider) {
             httpHandlerBuilder.tlsVersions(secureSSLContextProvider);
+            return this;
+        }
+
+        /**
+         * Sets the connection timeout in seconds.
+         *
+         * @param connectTimeoutSeconds the connection timeout in seconds
+         * @return this builder instance
+         * @throws IllegalArgumentException if connectTimeoutSeconds is not positive
+         */
+        public WellKnownHandlerBuilder connectTimeoutSeconds(int connectTimeoutSeconds) {
+            Preconditions.checkArgument(connectTimeoutSeconds > 0, "connectTimeoutSeconds must be > 0, but was %s", connectTimeoutSeconds);
+            this.connectTimeoutSeconds = connectTimeoutSeconds;
+            return this;
+        }
+
+        /**
+         * Sets the read timeout in seconds.
+         *
+         * @param readTimeoutSeconds the read timeout in seconds
+         * @return this builder instance
+         * @throws IllegalArgumentException if readTimeoutSeconds is not positive
+         */
+        public WellKnownHandlerBuilder readTimeoutSeconds(int readTimeoutSeconds) {
+            Preconditions.checkArgument(readTimeoutSeconds > 0, "readTimeoutSeconds must be > 0, but was %s", readTimeoutSeconds);
+            this.readTimeoutSeconds = readTimeoutSeconds;
             return this;
         }
 
@@ -321,7 +351,8 @@ public final class WellKnownHandler {
         @SuppressWarnings("try") // HttpClient implements AutoCloseable in Java 17 but doesn't need to be closed
         public WellKnownHandler build() {
             // Configure the HttpHandlerBuilder with the timeout
-            httpHandlerBuilder.requestTimeoutSeconds(TIMEOUT_SECONDS);
+            httpHandlerBuilder.connectionTimeoutSeconds(connectTimeoutSeconds);
+            httpHandlerBuilder.readTimeoutSeconds(readTimeoutSeconds);
 
             // Build the HttpHandler for the well-known URL
             HttpHandler wellKnownHttpHandler;

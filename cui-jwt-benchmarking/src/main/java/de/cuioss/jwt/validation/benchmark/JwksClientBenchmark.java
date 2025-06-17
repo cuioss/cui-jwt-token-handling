@@ -73,7 +73,6 @@ public class JwksClientBenchmark {
             securityEventCounter = new SecurityEventCounter();
             httpConfig = HttpJwksLoaderConfig.builder()
                     .url(mockWebServer.url("/jwks.json").toString())
-                    .requestTimeoutSeconds(5) // Changed from connect/readTimeoutSeconds
                     .refreshIntervalSeconds(60) // Default cache duration for this loader
                     .build();
             jwksClient = JwksLoaderFactory.createHttpLoader(httpConfig, securityEventCounter);

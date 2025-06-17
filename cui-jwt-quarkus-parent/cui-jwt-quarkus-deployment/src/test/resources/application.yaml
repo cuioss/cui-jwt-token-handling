@@ -1,0 +1,43 @@
+# Test configuration for Quarkus tests
+quarkus:
+  log:
+    level: INFO
+    console:
+      enable: true
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n"
+    category:
+      "de.cuioss.jwt":
+        level: DEBUG
+      "org.jboss.logmanager":
+        level: WARN
+  jacoco:
+    reuse-data-file: true
+
+# JWT configuration for testing
+cui:
+  jwt:
+    issuers:
+      default:
+        url: https://test-auth.example.com
+        enabled: true
+        public-key-location: classpath:keys/test_public_key.pem
+      test-issuer:
+        url: https://test-issuer.example.com
+        enabled: true
+        jwks:
+          url: https://test-issuer.example.com/.well-known/jwks.json
+          refresh-interval-seconds: 300
+          read-timeout-ms: 5000
+    parser:
+      max-token-size-bytes: 8192
+      audience: test-audience
+      leeway-seconds: 30
+      validate-not-before: true
+      validate-expiration: true
+      validate-issued-at: false
+      allowed-algorithms: RS256,RS384,RS512,ES256,ES384,ES512
+    health:
+      enabled: true
+      jwks:
+        cache-seconds: 30
+        timeout-seconds: 5

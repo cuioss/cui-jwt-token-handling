@@ -147,6 +147,40 @@ The project includes comprehensive documentation to help you get started and und
 * link:doc/Build.adoc[Building and Development] - Information for contributors
 * link:cui-jwt-validation/UnitTesting.adoc[Test Utilities] - Documentation for the test artifact and utilities
 
+== Additional Modules
+
+The project includes several additional modules that extend the core JWT validation functionality:
+
+=== Quarkus Integration
+
+The link:cui-jwt-quarkus-parent/README.adoc[Quarkus Extension] provides seamless integration of the JWT validation library into Quarkus applications. It includes:
+
+* CDI producers for easy dependency injection
+* Configuration support via Quarkus properties
+* Metrics integration with Micrometer for monitoring JWT validation events
+* Health checks for validation components
+* Native image support for GraalVM compilation
+
+[source,xml]
+----
+<dependency>
+    <groupId>de.cuioss.jwt</groupId>
+    <artifactId>cui-jwt-quarkus</artifactId>
+</dependency>
+----
+
+=== Performance Benchmarking
+
+The link:cui-jwt-benchmarking/README.adoc[Benchmarking Module] provides comprehensive performance measurements using JMH (Java Microbenchmark Harness). It measures:
+
+* Token validation performance across different scenarios
+* JWKS key retrieval and caching performance
+* Multi-issuer validation performance
+* Concurrent validation capabilities
+* Error handling performance impact
+
+Benchmark results are automatically published to GitHub Pages and can be used to track performance regressions over time.
+
 == Next Steps
 
 * Read the link:cui-jwt-validation/README.adoc[Usage Guide] for detailed examples

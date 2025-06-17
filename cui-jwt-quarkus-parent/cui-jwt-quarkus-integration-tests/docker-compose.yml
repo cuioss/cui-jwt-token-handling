@@ -1,0 +1,69 @@
+# JWT Integration Tests - Production-Grade Configuration
+# Purpose: Test with production-equivalent settings to catch issues early
+
+services:
+  cui-jwt-integration-tests:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native
+      # Build optimization settings
+      cache_from:
+        - quay.io/quarkus/quarkus-distroless-image:2.0
+      platforms:
+        - linux/amd64
+        - linux/arm64
+
+    ports:
+      - "10443:8443"  # External test port for integration tests
+
+    volumes:
+      # Read-only certificate mount (production pattern)
+      - ./src/main/docker/certificates:/app/certificates:ro
+
+    environment:
+      - QUARKUS_LOG_LEVEL=INFO
+
+    # OWASP Security hardening (production-grade)
+    security_opt:
+      - no-new-privileges:true
+
+    # Drop all capabilities (principle of least privilege)
+    cap_drop:
+      - ALL
+
+    # Read-only filesystem with tmpfs for temporary files (production setting)
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+      - /app/tmp:rw,noexec,nosuid,size=50m
+
+    # Resource limitations (DoS protection - production values)
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '1.0'
+        reservations:
+          memory: 128M
+          cpus: '0.5'
+
+    # Health check using internal script (optimized for fast native startup)
+    healthcheck:
+      test: ["CMD", "/app/health-check.sh"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # Network isolation (production pattern)
+    networks:
+      - jwt-integration
+
+    # Production restart policy
+    restart: unless-stopped
+
+networks:
+  jwt-integration:
+    driver: bridge
+    # Control inter-container communication (production setting)
+    internal: false

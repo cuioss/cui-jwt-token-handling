@@ -573,7 +573,7 @@ class TestTokenHolderTest {
                 // Convert both to sets to compare values regardless of collection type
                 assertInstanceOf(Collection.class, jwtAudience, "Audience should be a collection");
                 @SuppressWarnings("unchecked")
-                Collection<String> audienceCollection = (Collection<String>)jwtAudience;
+                Collection<String> audienceCollection = (Collection<String>) jwtAudience;
                 assertEquals(new HashSet<>(customAudience), new HashSet<>(audienceCollection));
             }
         }

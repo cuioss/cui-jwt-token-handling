@@ -78,6 +78,7 @@ public class HttpJwksLoaderConfig {
      */
     @NonNull
     @Getter
+    @EqualsAndHashCode.Exclude
     private final HttpHandler httpHandler;
 
     /**
@@ -107,6 +108,7 @@ public class HttpJwksLoaderConfig {
      * If null, a new one will be created.
      */
     @Getter
+    @EqualsAndHashCode.Exclude
     private final ScheduledExecutorService scheduledExecutorService;
 
     /**
@@ -297,18 +299,28 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
-         * Sets the timeout in seconds for HTTP requests.
-         * <p>
-         * If not set, a default timeout of 10 seconds will be used.
-         * </p>
+         * Sets the connection timeout in seconds.
          *
-         * @param requestTimeoutSeconds The request timeout in seconds.
-         *                              Must be positive.
-         * @return This builder instance.
+         * @param connectTimeoutSeconds the connection timeout in seconds
+         * @return this builder instance
+         * @throws IllegalArgumentException if connectTimeoutSeconds is not positive
          */
-        public HttpJwksLoaderConfigBuilder requestTimeoutSeconds(int requestTimeoutSeconds) {
-            Preconditions.checkArgument(requestTimeoutSeconds > 0, "requestTimeoutSeconds must be positive");
-            httpHandlerBuilder.requestTimeoutSeconds(requestTimeoutSeconds);
+        public HttpJwksLoaderConfigBuilder connectTimeoutSeconds(int connectTimeoutSeconds) {
+            Preconditions.checkArgument(connectTimeoutSeconds > 0, "connectTimeoutSeconds must be > 0, but was %s", connectTimeoutSeconds);
+            httpHandlerBuilder.connectionTimeoutSeconds(connectTimeoutSeconds);
+            return this;
+        }
+
+        /**
+         * Sets the read timeout in seconds.
+         *
+         * @param readTimeoutSeconds the read timeout in seconds
+         * @return this builder instance
+         * @throws IllegalArgumentException if readTimeoutSeconds is not positive
+         */
+        public HttpJwksLoaderConfigBuilder readTimeoutSeconds(int readTimeoutSeconds) {
+            Preconditions.checkArgument(readTimeoutSeconds > 0, "readTimeoutSeconds must be > 0, but was %s", readTimeoutSeconds);
+            httpHandlerBuilder.readTimeoutSeconds(readTimeoutSeconds);
             return this;
         }
 

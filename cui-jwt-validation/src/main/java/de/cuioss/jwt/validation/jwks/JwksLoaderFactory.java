@@ -93,6 +93,7 @@ public class JwksLoaderFactory {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .originalString(jwksContent)
                     .securityEventCounter(securityEventCounter)
+                    .jwksType(JwksType.FILE)
                     .build();
             LOGGER.debug("Successfully loaded %s keys", keyLoader.keySet().size());
             return keyLoader;
@@ -102,6 +103,7 @@ public class JwksLoaderFactory {
             return JWKSKeyLoader.builder()
                     .originalString("{}")
                     .securityEventCounter(securityEventCounter)
+                    .jwksType(JwksType.FILE)
                     .build(); // Empty JWKS
         }
     }
@@ -119,6 +121,7 @@ public class JwksLoaderFactory {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .originalString(jwksContent)
                     .securityEventCounter(securityEventCounter)
+                    .jwksType(JwksType.MEMORY)
                     .build();
             LOGGER.debug("Successfully loaded %s key(s)", keyLoader.keySet().size());
             return keyLoader;
@@ -128,6 +131,7 @@ public class JwksLoaderFactory {
             return JWKSKeyLoader.builder()
                     .originalString("{}")
                     .securityEventCounter(securityEventCounter)
+                    .jwksType(JwksType.MEMORY)
                     .build(); // Empty JWKS
         }
     }

@@ -246,7 +246,7 @@ public class InMemoryKeyMaterialHandler {
             return createJwksFromEcKey(keyId, algorithm);
         } else if (algorithm.startsWith("PS")) {
             // PS algorithms use RSA keys with RSASSA-PSS signature scheme
-            return createJwksFromRsaKey((RSAPublicKey)publicKey, keyId, algorithm);
+            return createJwksFromRsaKey((RSAPublicKey) publicKey, keyId, algorithm);
         } else {
             throw new IllegalArgumentException("Unsupported key type for algorithm: " + algorithm);
         }
@@ -370,7 +370,7 @@ public class InMemoryKeyMaterialHandler {
 
             if (algName.startsWith("RS") || algName.startsWith("PS")) {
                 // RSA or RSA-PSS key
-                RSAPublicKey rsaKey = (RSAPublicKey)publicKey;
+                RSAPublicKey rsaKey = (RSAPublicKey) publicKey;
 
                 // Extract the modulus and exponent
                 byte[] modulusBytes = rsaKey.getModulus().toByteArray();

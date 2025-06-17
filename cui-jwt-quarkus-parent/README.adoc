@@ -1,0 +1,146 @@
+= CUI JWT Quarkus Integration
+:toc: macro
+:toclevels: 3
+:toc-title: Table of Contents
+:icons: font
+
+A Quarkus extension for the CUI JWT validation library.
+
+toc::[]
+
+== Overview
+
+This module provides integration of the CUI JWT validation library into Quarkus applications. It includes:
+
+* Quarkus configuration support
+* CDI producers for JWT validation components
+* Integrated security checks
+* Support for multiple JWT issuers
+
+== Documentation
+
+=== Configuration Documentation
+
+The complete documentation of the configuration options can be found in the Quarkus extension metadata:
+
+link:cui-jwt-quarkus/src/main/resources/META-INF/quarkus-config-doc.adoc[Quarkus Configuration Documentation]
+
+=== CDI Beans and Injection
+
+The extension provides the following CDI beans:
+
+==== TokenValidator
+
+The `TokenValidator` is provided as an ApplicationScoped bean and can be directly injected into your application:
+
+[source,java]
+----
+@Inject
+TokenValidator tokenValidator;
+----
+
+The TokenValidator is automatically initialized with the configuration settings from the Quarkus configuration.
+
+Example usage:
+
+[source,java]
+----
+@ApplicationScoped
+public class JwtAuthenticationService {
+
+    @Inject
+    TokenValidator tokenValidator;
+
+    public Optional<AccessTokenContent> validateAccessToken(String token) {
+        try {
+            return tokenValidator.validateAccessToken(token);
+        } catch (TokenValidationException e) {
+            // Handle validation exception
+            return Optional.empty();
+        }
+    }
+}
+----
+
+=== Metrics Integration
+
+The extension includes integration with Micrometer to expose JWT validation security events as metrics. 
+This allows you to monitor and alert on security-related incidents.
+
+The following metrics are available:
+
+* `cui.jwt.validation.errors` - Counter for validation errors by type
+
+Each metric includes relevant tags for filtering:
+
+* `event_type` - The type of security event
+* `result` - The validation result (failure)
+* `category` - The category of event (structure, signature, semantic)
+
+For more details, see the link:doc/metrics-integration.adoc[Metrics Integration Documentation].
+
+Example Prometheus query to check for signature verification failures:
+
+[source]
+----
+sum(cui_jwt_validation_errors_total{event_type="SIGNATURE_VERIFICATION_FAILED"})
+----
+
+==== Using Metrics in Your Application
+
+The metrics are automatically collected when you use the `TokenValidator` in your application. To expose them:
+
+. Add the Micrometer extension to your application:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-micrometer</artifactId>
+</dependency>
+----
+
+. Optionally, add a registry implementation like Prometheus:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+</dependency>
+----
+
+The metrics will be available at the standard Micrometer/Prometheus endpoint: `/q/metrics`
+
+=== Grafana Dashboard
+
+A pre-configured Grafana dashboard is available at link:doc/jwt-metrics-grafana-dashboard.json[jwt-metrics-grafana-dashboard.json] that visualizes JWT validation metrics. The dashboard can be imported directly into Grafana.
+
+=== Test Setup
+
+Information on setting up tests can be found here:
+
+link:doc/quarkus-test-setup.adoc[Quarkus Test Setup]
+
+=== Native Image Support
+
+The extension supports GraalVM Native Image compilation. More information can be found here:
+
+link:doc/native-image-support.adoc[Native Image Support]
+
+=== Health Checks
+
+The extension provides MicroProfile Health checks for JWT validation components. For detailed information see:
+
+link:doc/health-checks.adoc[Health Checks Documentation]
+
+== Modules
+
+The project consists of the following modules:
+
+* `cui-jwt-quarkus-deployment` - Contains the Quarkus deployment code for the extension
+* `cui-jwt-quarkus` - Contains the runtime code for the extension
+* `cui-jwt-quarkus-integration-tests` - Provides integration tests
+* `doc` - Contains additional documentation
+
+

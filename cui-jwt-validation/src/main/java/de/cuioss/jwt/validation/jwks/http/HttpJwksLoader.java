@@ -19,6 +19,8 @@ import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
+import de.cuioss.jwt.validation.jwks.JwksType;
+import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.key.JWKSKeyLoader;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
@@ -84,17 +86,13 @@ public class HttpJwksLoader implements JwksLoader, AutoCloseable {
         this.cacheManager = new JwksCacheManager(config, this::loadJwksKeyLoader, securityEventCounter);
         this.backgroundRefreshManager = new BackgroundRefreshManager(config, cacheManager);
 
-        // Check if HttpHandler has a valid URI
-        if (config.getHttpHandler().getUri() == null) {
-            LOGGER.warn("JWKS URI is null. This loader will return empty results for all key requests.");
-            return;
-        }
-
+        // Start background refresh if enabled - this helps with preloading the cache
         // Initial JWKS content fetch to populate cache
         cacheManager.resolve();
 
         LOGGER.debug(DEBUG.INITIALIZED_JWKS_LOADER.format(
                 config.getHttpHandler().getUri().toString(), config.getRefreshIntervalSeconds()));
+
     }
 
     /**
@@ -106,16 +104,6 @@ public class HttpJwksLoader implements JwksLoader, AutoCloseable {
      */
     private JWKSKeyLoader loadJwksKeyLoader(String cacheKey) {
         LOGGER.debug("Loading JWKS for key: %s", cacheKey);
-
-        // Check if HttpHandler has a valid URI
-        if (config.getHttpHandler().getUri() == null) {
-            LOGGER.warn("Cannot load JWKS: URI is null (invalid URL)");
-            securityEventCounter.increment(SecurityEventCounter.EventType.JWKS_FETCH_FAILED);
-            return JWKSKeyLoader.builder()
-                    .originalString("{}")
-                    .securityEventCounter(securityEventCounter)
-                    .build();
-        }
 
         // Get the current ETag from the cache manager
         String etag = cacheManager.getCurrentEtag();
@@ -226,6 +214,39 @@ public class HttpJwksLoader implements JwksLoader, AutoCloseable {
     @Override
     public Set<String> keySet() {
         return cacheManager.resolve().keySet();
+    }
+
+    /**
+     * Gets the type of JWKS source used by this loader.
+     *
+     * @return the JWKS source type, always {@link de.cuioss.jwt.validation.jwks.JwksType#HTTP}
+     */
+    @Override
+    public JwksType getJwksType() {
+        return JwksType.HTTP;
+    }
+
+    /**
+     * Gets the status of the JWKS loader.
+     * <p>
+     * A loader status is OK if it can load at least one key.
+     * This implementation lazily determines the status based on the availability
+     * of keys when this method is called.
+     *
+     * @return the status of the loader, which is OK if at least one key is available,
+     *         ERROR if keys could not be loaded, or UNDEFINED if not yet determined
+     */
+    @Override
+    public LoaderStatus getStatus() {
+        // Check if any keys have been loaded (without triggering a load)
+        JWKSKeyLoader currentLoader = cacheManager.getCurrentLoader();
+        if (currentLoader != null) {
+            // Delegate to the current loader's status
+            return currentLoader.getStatus();
+        }
+
+        // If no loader has been created yet, we're in UNDEFINED state
+        return LoaderStatus.UNDEFINED;
     }
 
     /**
