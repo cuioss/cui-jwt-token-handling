@@ -299,6 +299,32 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
+         * Sets the connection timeout in seconds.
+         *
+         * @param connectTimeoutSeconds the connection timeout in seconds
+         * @return this builder instance
+         * @throws IllegalArgumentException if connectTimeoutSeconds is not positive
+         */
+        public HttpJwksLoaderConfigBuilder connectTimeoutSeconds(int connectTimeoutSeconds) {
+            Preconditions.checkArgument(connectTimeoutSeconds > 0, "connectTimeoutSeconds must be > 0, but was %s", connectTimeoutSeconds);
+            httpHandlerBuilder.connectionTimeoutSeconds(connectTimeoutSeconds);
+            return this;
+        }
+
+        /**
+         * Sets the read timeout in seconds.
+         *
+         * @param readTimeoutSeconds the read timeout in seconds
+         * @return this builder instance
+         * @throws IllegalArgumentException if readTimeoutSeconds is not positive
+         */
+        public HttpJwksLoaderConfigBuilder readTimeoutSeconds(int readTimeoutSeconds) {
+            Preconditions.checkArgument(readTimeoutSeconds > 0, "readTimeoutSeconds must be > 0, but was %s", readTimeoutSeconds);
+            httpHandlerBuilder.readTimeoutSeconds(readTimeoutSeconds);
+            return this;
+        }
+
+        /**
          * Builds a new HttpJwksLoaderConfig instance with the configured parameters.
          * Validates all parameters and applies default values where appropriate.
          *

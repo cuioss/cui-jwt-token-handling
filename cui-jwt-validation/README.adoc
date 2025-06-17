@@ -144,6 +144,8 @@ HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
     .wellKnown(wellKnownHandler) // This extracts the jwks_uri from the handler
     // Optionally set other HttpJwksLoaderConfig properties like:
     // .refreshIntervalSeconds(300)
+    // .connectTimeoutSeconds(30) // Connection timeout in seconds (default: system default)
+    // .readTimeoutSeconds(60)    // Read timeout in seconds (default: system default)
     // .sslContext(yourSslContext) // If custom SSL context is needed for JWKS endpoint
     .build();
 ----

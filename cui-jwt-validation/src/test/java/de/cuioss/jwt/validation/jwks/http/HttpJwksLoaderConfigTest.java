@@ -297,6 +297,113 @@ class HttpJwksLoaderConfigTest {
                 .build());
     }
 
+    @Test
+    @DisplayName("Should set connect timeout seconds")
+    void shouldSetConnectTimeoutSeconds() {
+        // Given
+        int connectTimeout = 30;
+
+        // When
+        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                .url(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .connectTimeoutSeconds(connectTimeout)
+                .build();
+
+        // Then
+        assertNotNull(config.getHttpHandler(), "HttpHandler should be created");
+        // Note: We can't directly verify the timeout value as it's internal to HttpHandler
+        // but we can verify the config builds successfully with the timeout set
+    }
+
+    @Test
+    @DisplayName("Should set read timeout seconds")
+    void shouldSetReadTimeoutSeconds() {
+        // Given
+        int readTimeout = 60;
+
+        // When
+        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                .url(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .readTimeoutSeconds(readTimeout)
+                .build();
+
+        // Then
+        assertNotNull(config.getHttpHandler(), "HttpHandler should be created");
+        // Note: We can't directly verify the timeout value as it's internal to HttpHandler
+        // but we can verify the config builds successfully with the timeout set
+    }
+
+    @Test
+    @DisplayName("Should set both connect and read timeout seconds")
+    void shouldSetBothTimeouts() {
+        // Given
+        int connectTimeout = 30;
+        int readTimeout = 60;
+
+        // When
+        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                .url(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .connectTimeoutSeconds(connectTimeout)
+                .readTimeoutSeconds(readTimeout)
+                .build();
+
+        // Then
+        assertNotNull(config.getHttpHandler(), "HttpHandler should be created");
+    }
+
+    @Test
+    @DisplayName("Should throw exception for zero connect timeout seconds")
+    void shouldThrowExceptionForZeroConnectTimeoutSeconds() {
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
+                .url(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .connectTimeoutSeconds(0)
+                .build());
+    }
+
+    @Test
+    @DisplayName("Should throw exception for negative connect timeout seconds")
+    void shouldThrowExceptionForNegativeConnectTimeoutSeconds() {
+        // Given
+        int negativeConnectTimeout = -1;
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
+                .url(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .connectTimeoutSeconds(negativeConnectTimeout)
+                .build());
+    }
+
+    @Test
+    @DisplayName("Should throw exception for zero read timeout seconds")
+    void shouldThrowExceptionForZeroReadTimeoutSeconds() {
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
+                .url(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .readTimeoutSeconds(0)
+                .build());
+    }
+
+    @Test
+    @DisplayName("Should throw exception for negative read timeout seconds")
+    void shouldThrowExceptionForNegativeReadTimeoutSeconds() {
+        // Given
+        int negativeReadTimeout = -1;
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
+                .url(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .readTimeoutSeconds(negativeReadTimeout)
+                .build());
+    }
+
 
     @Test
     @DisplayName("Should test toString method")

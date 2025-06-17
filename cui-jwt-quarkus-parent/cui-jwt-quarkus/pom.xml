@@ -40,6 +40,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>de.cuioss.jwt</groupId>
             <artifactId>cui-jwt-validation</artifactId>
             <version>${project.version}</version>
