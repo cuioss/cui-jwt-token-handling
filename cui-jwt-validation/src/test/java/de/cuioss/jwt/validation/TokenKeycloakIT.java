@@ -39,11 +39,11 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Tests Token integration with Keycloak")
-public class TokenKeycloakITTest extends KeycloakITBase {
+public class TokenKeycloakIT extends KeycloakITBase {
 
     public static final String SCOPES = "openid email profile";
     public static final List<String> SCOPES_AS_LIST = Splitter.on(" ").splitToList(SCOPES);
-    private static final CuiLogger LOGGER = new CuiLogger(TokenKeycloakITTest.class);
+    private static final CuiLogger LOGGER = new CuiLogger(TokenKeycloakIT.class);
 
     private TokenValidator preConfiguredFactory; // Renamed from 'factory' to avoid confusion
     private String authServerUrlString; // To cache the auth server URL
@@ -213,7 +213,7 @@ public class TokenKeycloakITTest extends KeycloakITBase {
             // 1. Get Keycloak's well-known URI
             // Assuming getAuthServerUrl() returns something like "https://localhost:port/auth"
             // and realm is "cui-test"
-            String wellKnownUrlString = TokenKeycloakITTest.this.authServerUrlString + "/realms/" + TestRealm.REALM_NAME + "/.well-known/openid-configuration";
+            String wellKnownUrlString = TokenKeycloakIT.this.authServerUrlString + "/realms/" + TestRealm.REALM_NAME + "/.well-known/openid-configuration";
             LOGGER.info("Using Well-Known URL: " + wellKnownUrlString);
 
             // 2. Perform OIDC Discovery
@@ -268,7 +268,7 @@ public class TokenKeycloakITTest extends KeycloakITBase {
         @Test
         @DisplayName("Should fail validation if expected issuer is incorrect (via Well-Known discovery setup)")
         void shouldFailValidationWithIncorrectExpectedIssuerViaWellKnown() {
-            String wellKnownUrlString = TokenKeycloakITTest.this.authServerUrlString + "/realms/" + TestRealm.REALM_NAME + "/.well-known/openid-configuration";
+            String wellKnownUrlString = TokenKeycloakIT.this.authServerUrlString + "/realms/" + TestRealm.REALM_NAME + "/.well-known/openid-configuration";
             WellKnownHandler wellKnownHandler = WellKnownHandler.builder()
                     .url(wellKnownUrlString)
                     .sslContext(keycloakSslContext)
