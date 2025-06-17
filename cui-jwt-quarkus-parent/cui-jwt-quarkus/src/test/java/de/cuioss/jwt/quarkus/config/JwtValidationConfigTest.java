@@ -86,8 +86,8 @@ class JwtValidationConfigTest {
         assertEquals(Optional.empty(), jwksConfig.wellKnownUrl());
         assertEquals(7200, jwksConfig.cacheTtlSeconds());
         assertEquals(600, jwksConfig.refreshIntervalSeconds());
-        assertEquals(3000, jwksConfig.connectionTimeoutMs());
-        assertEquals(3000, jwksConfig.readTimeoutMs());
+        assertEquals(3, jwksConfig.connectionTimeoutSeconds());
+        assertEquals(3, jwksConfig.readTimeoutSeconds());
         assertEquals(5, jwksConfig.maxRetries());
         assertTrue(jwksConfig.useSystemProxy());
 
@@ -125,8 +125,8 @@ class JwtValidationConfigTest {
                 jwksConfig.wellKnownUrl());
         assertEquals(3600, jwksConfig.cacheTtlSeconds());
         assertEquals(300, jwksConfig.refreshIntervalSeconds());
-        assertEquals(5000, jwksConfig.connectionTimeoutMs());
-        assertEquals(5000, jwksConfig.readTimeoutMs());
+        assertEquals(5, jwksConfig.connectionTimeoutSeconds());
+        assertEquals(5, jwksConfig.readTimeoutSeconds());
         assertEquals(3, jwksConfig.maxRetries());
         assertFalse(jwksConfig.useSystemProxy());
 

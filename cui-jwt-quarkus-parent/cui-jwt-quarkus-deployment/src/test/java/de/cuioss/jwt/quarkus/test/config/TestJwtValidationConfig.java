@@ -145,13 +145,13 @@ public class TestJwtValidationConfig {
             }
 
             @Override
-            public int connectionTimeoutMs() {
-                return 2000;
+            public int connectionTimeoutSeconds() {
+                return 2;
             }
 
             @Override
-            public int readTimeoutMs() {
-                return 2000;
+            public int readTimeoutSeconds() {
+                return 2;
             }
 
             @Override

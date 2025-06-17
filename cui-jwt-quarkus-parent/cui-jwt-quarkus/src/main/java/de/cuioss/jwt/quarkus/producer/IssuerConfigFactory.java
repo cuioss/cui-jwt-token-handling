@@ -102,7 +102,9 @@ class IssuerConfigFactory {
         if (issuerConfig.jwks().isPresent()) {
             JwtValidationConfig.HttpJwksLoaderConfig jwksConfig = issuerConfig.jwks().get();
             HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder jwksBuilder = HttpJwksLoaderConfig.builder()
-                    .refreshIntervalSeconds(jwksConfig.refreshIntervalSeconds());
+                    .refreshIntervalSeconds(jwksConfig.refreshIntervalSeconds())
+                    .connectTimeoutSeconds(jwksConfig.connectionTimeoutSeconds())
+                    .readTimeoutSeconds(jwksConfig.readTimeoutSeconds());
 
             configureJwksUrl(issuerName, jwksConfig, jwksBuilder);
             builder.httpJwksLoaderConfig(jwksBuilder.build());

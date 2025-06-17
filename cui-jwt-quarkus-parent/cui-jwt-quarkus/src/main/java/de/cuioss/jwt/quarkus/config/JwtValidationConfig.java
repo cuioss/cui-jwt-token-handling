@@ -224,20 +224,20 @@ public interface JwtValidationConfig {
         int refreshIntervalSeconds();
 
         /**
-         * The connection timeout in milliseconds for the JWKS endpoint.
+         * The connection timeout in seconds for the JWKS endpoint.
          *
-         * @return The connection timeout in milliseconds
+         * @return The connection timeout in seconds
          */
-        @WithDefault("5000")
-        int connectionTimeoutMs();
+        @WithDefault("5")
+        int connectionTimeoutSeconds();
 
         /**
-         * The read timeout in milliseconds for the JWKS endpoint.
+         * The read timeout in seconds for the JWKS endpoint.
          *
-         * @return The read timeout in milliseconds
+         * @return The read timeout in seconds
          */
-        @WithDefault("5000")
-        int readTimeoutMs();
+        @WithDefault("5")
+        int readTimeoutSeconds();
 
         /**
          * The maximum number of retries for failed JWKS requests.

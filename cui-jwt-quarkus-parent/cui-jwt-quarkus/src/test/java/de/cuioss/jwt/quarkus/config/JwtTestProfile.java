@@ -56,8 +56,8 @@ public class JwtTestProfile implements QuarkusTestProfile {
                 "https://keycloak.example.com/auth/realms/master/protocol/openid-connect/certs");
         config.put("cui.jwt.issuers.keycloak.jwks.cache-ttl-seconds", "7200");
         config.put("cui.jwt.issuers.keycloak.jwks.refresh-interval-seconds", "600");
-        config.put("cui.jwt.issuers.keycloak.jwks.connection-timeout-ms", "3000");
-        config.put("cui.jwt.issuers.keycloak.jwks.read-timeout-ms", "3000");
+        config.put("cui.jwt.issuers.keycloak.jwks.connection-timeout-seconds", "3");
+        config.put("cui.jwt.issuers.keycloak.jwks.read-timeout-seconds", "3");
         config.put("cui.jwt.issuers.keycloak.jwks.max-retries", "5");
         config.put("cui.jwt.issuers.keycloak.jwks.use-system-proxy", "true");
         config.put("cui.jwt.issuers.keycloak.parser.audience", "my-app");
@@ -77,8 +77,8 @@ public class JwtTestProfile implements QuarkusTestProfile {
                 "https://wellknown.example.com/auth/realms/master/protocol/openid-connect/certs"); // Fallback direct URL
         config.put("cui.jwt.issuers.wellknown.jwks.cache-ttl-seconds", "3600");
         config.put("cui.jwt.issuers.wellknown.jwks.refresh-interval-seconds", "300");
-        config.put("cui.jwt.issuers.wellknown.jwks.connection-timeout-ms", "5000");
-        config.put("cui.jwt.issuers.wellknown.jwks.read-timeout-ms", "5000");
+        config.put("cui.jwt.issuers.wellknown.jwks.connection-timeout-seconds", "5");
+        config.put("cui.jwt.issuers.wellknown.jwks.read-timeout-seconds", "5");
         config.put("cui.jwt.issuers.wellknown.jwks.max-retries", "3");
         config.put("cui.jwt.issuers.wellknown.jwks.use-system-proxy", "false");
         config.put("cui.jwt.issuers.wellknown.parser.audience", "well-known-app");

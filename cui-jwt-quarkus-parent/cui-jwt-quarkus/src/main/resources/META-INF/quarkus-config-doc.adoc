@@ -41,8 +41,8 @@ While the minimal configuration will work, we recommend the following best pract
 cui.jwt.issuers.default.url=https://your-idp.example.com/
 cui.jwt.issuers.default.jwks.well-known-url=https://your-idp.example.com/.well-known/openid-configuration
 cui.jwt.issuers.default.parser.audience=your-application-id
-cui.jwt.issuers.default.jwks.connectionTimeoutMs=3000
-cui.jwt.issuers.default.jwks.readTimeoutMs=3000
+cui.jwt.issuers.default.jwks.connectionTimeoutSeconds=3
+cui.jwt.issuers.default.jwks.readTimeoutSeconds=3
 cui.jwt.issuers.default.jwks.maxRetries=3
 ----
 
@@ -166,13 +166,13 @@ Each issuer can have a JWKS (JSON Web Key Set) endpoint configuration. There are
 |int (default: 300)
 |The refresh interval in seconds for the JWKS cache.
 
-|cui.jwt.issuers.<issuer-name>.jwks.connectionTimeoutMs
-|int (default: 5000)
-|The connection timeout in milliseconds for the JWKS endpoint.
+|cui.jwt.issuers.<issuer-name>.jwks.connectionTimeoutSeconds
+|int (default: 5)
+|The connection timeout in seconds for the JWKS endpoint.
 
-|cui.jwt.issuers.<issuer-name>.jwks.readTimeoutMs
-|int (default: 5000)
-|The read timeout in milliseconds for the JWKS endpoint.
+|cui.jwt.issuers.<issuer-name>.jwks.readTimeoutSeconds
+|int (default: 5)
+|The read timeout in seconds for the JWKS endpoint.
 
 |cui.jwt.issuers.<issuer-name>.jwks.maxRetries
 |int (default: 3)
@@ -236,11 +236,11 @@ For quick reference, here are all the default values in one place:
 |cui.jwt.issuers.<issuer-name>.jwks.refreshIntervalSeconds
 |300
 
-|cui.jwt.issuers.<issuer-name>.jwks.connectionTimeoutMs
-|5000
+|cui.jwt.issuers.<issuer-name>.jwks.connectionTimeoutSeconds
+|5
 
-|cui.jwt.issuers.<issuer-name>.jwks.readTimeoutMs
-|5000
+|cui.jwt.issuers.<issuer-name>.jwks.readTimeoutSeconds
+|5
 
 |cui.jwt.issuers.<issuer-name>.jwks.maxRetries
 |3
@@ -275,8 +275,8 @@ cui.jwt.issuers.keycloak.enabled=true
 cui.jwt.issuers.keycloak.jwks.url=https://keycloak.example.com/auth/realms/master/protocol/openid-connect/certs
 cui.jwt.issuers.keycloak.jwks.cacheTtlSeconds=7200
 cui.jwt.issuers.keycloak.jwks.refreshIntervalSeconds=600
-cui.jwt.issuers.keycloak.jwks.connectionTimeoutMs=3000
-cui.jwt.issuers.keycloak.jwks.readTimeoutMs=3000
+cui.jwt.issuers.keycloak.jwks.connectionTimeoutSeconds=3
+cui.jwt.issuers.keycloak.jwks.readTimeoutSeconds=3
 cui.jwt.issuers.keycloak.jwks.maxRetries=5
 cui.jwt.issuers.keycloak.jwks.useSystemProxy=true
 
@@ -310,8 +310,8 @@ cui.jwt.issuers.auth0.enabled=true
 cui.jwt.issuers.auth0.jwks.well-known-url=https://your-tenant.auth0.com/.well-known/openid-configuration
 cui.jwt.issuers.auth0.jwks.cacheTtlSeconds=3600
 cui.jwt.issuers.auth0.jwks.refreshIntervalSeconds=300
-cui.jwt.issuers.auth0.jwks.connectionTimeoutMs=5000
-cui.jwt.issuers.auth0.jwks.readTimeoutMs=5000
+cui.jwt.issuers.auth0.jwks.connectionTimeoutSeconds=5
+cui.jwt.issuers.auth0.jwks.readTimeoutSeconds=5
 cui.jwt.issuers.auth0.jwks.maxRetries=3
 
 # Parser configuration

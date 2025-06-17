@@ -45,8 +45,8 @@ class IssuerConfigFactoryTest {
         TestHttpJwksLoaderConfig jwksConfig = new TestHttpJwksLoaderConfig();
 
         // Configure different timeout values to demonstrate the fix
-        jwksConfig.connectionTimeoutMs = 3000; // 3 seconds - now used for connection timeout
-        jwksConfig.readTimeoutMs = 8000; // 8 seconds - used for read timeout
+        jwksConfig.connectionTimeoutSeconds = 3; // 3 seconds - now used for connection timeout
+        jwksConfig.readTimeoutSeconds = 8; // 8 seconds - used for read timeout
         jwksConfig.refreshIntervalSeconds = 300;
         jwksConfig.url = Optional.of("https://example.com/jwks");
         jwksConfig.wellKnownUrl = Optional.empty();
@@ -72,17 +72,17 @@ class IssuerConfigFactoryTest {
         assertNotNull(httpJwksLoaderConfig, "HttpJwksLoaderConfig should not be null");
 
         // This test now demonstrates the fixed behavior:
-        // The HttpHandler is configured with requestTimeoutSeconds = (connectionTimeoutMs + readTimeoutMs) / 1000 = (3 + 8) = 11 seconds
-        // Both connectionTimeoutMs (3 seconds) and readTimeoutMs (8 seconds) are now used
+        // The HttpHandler is configured with requestTimeoutSeconds = (connectionTimeoutSeconds + readTimeoutSeconds) = (3 + 8) = 11 seconds
+        // Both connectionTimeoutSeconds (3 seconds) and readTimeoutSeconds (8 seconds) are now used
         //
         // Note: We can't directly access the timeout values from HttpJwksLoaderConfig
         // because they are encapsulated in the HttpHandler, but this test documents
         // the expected behavior and verifies the fix.
 
-        System.out.println("[DEBUG_LOG] Fixed implementation now uses both connectionTimeoutMs (" +
-                jwksConfig.connectionTimeoutMs + "ms) and readTimeoutMs (" +
-                jwksConfig.readTimeoutMs + "ms) for a total timeout of " +
-                (jwksConfig.connectionTimeoutMs + jwksConfig.readTimeoutMs) + "ms");
+        System.out.println("[DEBUG_LOG] Fixed implementation now uses both connectionTimeoutSeconds (" +
+                jwksConfig.connectionTimeoutSeconds + "s) and readTimeoutSeconds (" +
+                jwksConfig.readTimeoutSeconds + "s) for a total timeout of " +
+                (jwksConfig.connectionTimeoutSeconds + jwksConfig.readTimeoutSeconds) + "s");
     }
 
     /**
@@ -95,8 +95,8 @@ class IssuerConfigFactoryTest {
         TestIssuerConfig issuerConfig = new TestIssuerConfig();
         TestHttpJwksLoaderConfig jwksConfig = new TestHttpJwksLoaderConfig();
 
-        jwksConfig.connectionTimeoutMs = 1000;
-        jwksConfig.readTimeoutMs = 5000;
+        jwksConfig.connectionTimeoutSeconds = 1;
+        jwksConfig.readTimeoutSeconds = 5;
         jwksConfig.refreshIntervalSeconds = 300;
         jwksConfig.url = Optional.of("https://example.com/jwks");
         jwksConfig.wellKnownUrl = Optional.empty();
@@ -116,12 +116,12 @@ class IssuerConfigFactoryTest {
         assertEquals(1, result.size(), "Should have one issuer config");
 
         // The fixed implementation should work without throwing exceptions
-        // and now uses both connectionTimeoutMs and readTimeoutMs
+        // and now uses both connectionTimeoutSeconds and readTimeoutSeconds
         IssuerConfig resultIssuerConfig = result.get(0);
         assertNotNull(resultIssuerConfig.getHttpJwksLoaderConfig(), "HttpJwksLoaderConfig should be created");
 
         System.out.println("[DEBUG_LOG] Successfully created IssuerConfig with HttpJwksLoaderConfig using both timeout values: " +
-                "connectionTimeoutMs=" + jwksConfig.connectionTimeoutMs + "ms, readTimeoutMs=" + jwksConfig.readTimeoutMs + "ms");
+                "connectionTimeoutSeconds=" + jwksConfig.connectionTimeoutSeconds + "s, readTimeoutSeconds=" + jwksConfig.readTimeoutSeconds + "s");
     }
 
     /**
@@ -189,8 +189,8 @@ class IssuerConfigFactoryTest {
         public Optional<String> wellKnownUrl;
         public int cacheTtlSeconds = 3600;
         public int refreshIntervalSeconds = 300;
-        public int connectionTimeoutMs = 5000;
-        public int readTimeoutMs = 5000;
+        public int connectionTimeoutSeconds = 5;
+        public int readTimeoutSeconds = 5;
         public int maxRetries = 3;
         public boolean useSystemProxy = false;
 
@@ -215,13 +215,13 @@ class IssuerConfigFactoryTest {
         }
 
         @Override
-        public int connectionTimeoutMs() {
-            return connectionTimeoutMs;
+        public int connectionTimeoutSeconds() {
+            return connectionTimeoutSeconds;
         }
 
         @Override
-        public int readTimeoutMs() {
-            return readTimeoutMs;
+        public int readTimeoutSeconds() {
+            return readTimeoutSeconds;
         }
 
         @Override
