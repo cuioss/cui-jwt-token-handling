@@ -43,7 +43,7 @@ public class CuiJwtProcessor {
      * @return A {@link FeatureBuildItem} for the CUI JWT feature
      */
     @BuildStep
-    FeatureBuildItem feature() {
+    public FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
     }
 
@@ -54,7 +54,7 @@ public class CuiJwtProcessor {
      * @return A {@link ReflectiveClassBuildItem} for the JWT validation configuration
      */
     @BuildStep
-    ReflectiveClassBuildItem registerConfigForReflection() {
+    public ReflectiveClassBuildItem registerConfigForReflection() {
         return ReflectiveClassBuildItem.builder("de.cuioss.jwt.quarkus.config.JwtValidationConfig")
                 .methods(true)
                 .fields(true)
@@ -67,7 +67,7 @@ public class CuiJwtProcessor {
      * @return A {@link ReflectiveClassBuildItem} for the nested configuration classes
      */
     @BuildStep
-    ReflectiveClassBuildItem registerNestedConfigForReflection() {
+    public ReflectiveClassBuildItem registerNestedConfigForReflection() {
         return ReflectiveClassBuildItem.builder(
                 "de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig",
                 "de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig",
@@ -83,7 +83,7 @@ public class CuiJwtProcessor {
      * @return A {@link ReflectiveClassBuildItem} for the JWT validation classes
      */
     @BuildStep
-    ReflectiveClassBuildItem registerJwtValidationClassesForReflection() {
+    public ReflectiveClassBuildItem registerJwtValidationClassesForReflection() {
         return ReflectiveClassBuildItem.builder(
                 "de.cuioss.jwt.validation.TokenValidator",
                 "de.cuioss.jwt.validation.IssuerConfig",
@@ -102,7 +102,7 @@ public class CuiJwtProcessor {
      * @return A {@link RuntimeInitializedClassBuildItem} for classes that need runtime initialization
      */
     @BuildStep
-    RuntimeInitializedClassBuildItem runtimeInitializedClasses() {
+    public RuntimeInitializedClassBuildItem runtimeInitializedClasses() {
         return new RuntimeInitializedClassBuildItem("de.cuioss.jwt.validation.jwks.http.HttpJwksLoader");
     }
 
@@ -112,7 +112,7 @@ public class CuiJwtProcessor {
      * @return A {@link CardPageBuildItem} for the JWT DevUI card
      */
     @BuildStep(onlyIf = IsDevelopment.class)
-    CardPageBuildItem createJwtDevUICard() {
+    public CardPageBuildItem createJwtDevUICard() {
         CardPageBuildItem cardPageBuildItem = new CardPageBuildItem();
 
         // JWT Validation Status page
@@ -152,7 +152,7 @@ public class CuiJwtProcessor {
      * @return A {@link JsonRPCProvidersBuildItem} for JWT DevUI JSON-RPC methods
      */
     @BuildStep(onlyIf = IsDevelopment.class)
-    JsonRPCProvidersBuildItem createJwtDevUIJsonRPCService() {
+    public JsonRPCProvidersBuildItem createJwtDevUIJsonRPCService() {
         return new JsonRPCProvidersBuildItem("CuiJwtDevUI", CuiJwtDevUIJsonRPCService.class);
     }
 
