@@ -1,12 +1,10 @@
-// Mock notificationStore before imports
-jest.mock('devui', () => ({
-  notificationStore: {
-    addNotification: jest.fn(),
-  },
-}));
-
 import { html, LitElement } from 'lit';
-import { notificationStore } from 'devui';
+import { devui, resetDevUIMocks } from '../mocks/devui.js';
+
+// Mock notificationStore
+const notificationStore = {
+  addNotification: jest.fn(),
+};
 
 class QwcJwtConfig extends LitElement {
   static get properties() {
@@ -20,9 +18,10 @@ class QwcJwtConfig extends LitElement {
 
   constructor() {
     super();
-    this._loading = false;
-    this._error = null;
     this._configuration = null;
+    this._healthInfo = null;
+    this._loading = true;
+    this._error = null;
     this._lastRenderedResult = '';
   }
 
@@ -247,18 +246,20 @@ class QwcJwtConfig extends LitElement {
   }
 
   async _loadConfiguration() {
-    this._loading = true;
-    this._error = null;
-
     try {
-      const response = await fetch('/q/dev-ui/io.quarkus.quarkus-arc/jwt-config');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      this._loading = true;
+      this._error = null;
 
-      const data = await response.json();
-      this._configuration = data;
+      const [config, health] = await Promise.all([
+        devui.jsonRPC.CuiJwtDevUI.getConfiguration(),
+        devui.jsonRPC.CuiJwtDevUI.getHealthInfo(),
+      ]);
+
+      this._configuration = config;
+      this._healthInfo = health;
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error loading JWT configuration:', error);
       this._error = `Failed to load configuration: ${error.message}`;
       notificationStore.addNotification({
         type: 'error',
@@ -281,8 +282,8 @@ describe('QwcJwtConfig', () => {
   let component;
 
   beforeEach(() => {
-    // Mock fetch globally
-    global.fetch = jest.fn();
+    // Reset DevUI mocks before each test
+    resetDevUIMocks();
 
     // Create a new component instance for each test
     component = new QwcJwtConfig();
@@ -295,9 +296,10 @@ describe('QwcJwtConfig', () => {
 
   describe('Component Initialization', () => {
     test('should initialize with default properties', () => {
-      expect(component._loading).toBe(false);
+      expect(component._loading).toBe(true);
       expect(component._error).toBe(null);
       expect(component._configuration).toBe(null);
+      expect(component._healthInfo).toBe(null);
       expect(component._lastRenderedResult).toBe('');
     });
 
@@ -320,6 +322,7 @@ describe('QwcJwtConfig', () => {
     });
 
     test('should render error state when error exists', () => {
+      component._loading = false;
       component._error = 'Test error message';
 
       component.render();
@@ -357,39 +360,47 @@ describe('QwcJwtConfig', () => {
   describe('Configuration Loading', () => {
     test('should handle successful configuration loading', async () => {
       const mockConfig = { enabled: true, healthEnabled: false };
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockConfig,
-      });
+      const mockHealth = { configurationValid: true, overallStatus: 'OK' };
+
+      devui.jsonRPC.CuiJwtDevUI.getConfiguration.mockResolvedValueOnce(mockConfig);
+      devui.jsonRPC.CuiJwtDevUI.getHealthInfo.mockResolvedValueOnce(mockHealth);
 
       await component._loadConfiguration();
 
       expect(component._loading).toBe(false);
       expect(component._error).toBe(null);
       expect(component._configuration).toEqual(mockConfig);
+      expect(component._healthInfo).toEqual(mockHealth);
+      expect(devui.jsonRPC.CuiJwtDevUI.getConfiguration).toHaveBeenCalledTimes(1);
+      expect(devui.jsonRPC.CuiJwtDevUI.getHealthInfo).toHaveBeenCalledTimes(1);
     });
 
     test('should handle failed configuration loading', async () => {
-      global.fetch.mockRejectedValueOnce(new Error('Network error'));
+      const error = new Error('Network error');
+      devui.jsonRPC.CuiJwtDevUI.getConfiguration.mockRejectedValueOnce(error);
+      devui.jsonRPC.CuiJwtDevUI.getHealthInfo.mockRejectedValueOnce(error);
 
       await component._loadConfiguration();
 
       expect(component._loading).toBe(false);
       expect(component._error).toContain('Failed to load configuration: Network error');
       expect(component._configuration).toBe(null);
+      expect(component._healthInfo).toBe(null);
     });
 
-    test('should handle HTTP error responses', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-      });
+    test('should handle partial failure in configuration loading', async () => {
+      const mockConfig = { enabled: true, healthEnabled: false };
+      const error = new Error('Health service error');
+
+      devui.jsonRPC.CuiJwtDevUI.getConfiguration.mockResolvedValueOnce(mockConfig);
+      devui.jsonRPC.CuiJwtDevUI.getHealthInfo.mockRejectedValueOnce(error);
 
       await component._loadConfiguration();
 
       expect(component._loading).toBe(false);
-      expect(component._error).toContain('HTTP 404: Not Found');
+      expect(component._error).toContain('Failed to load configuration: Health service error');
+      expect(component._configuration).toBe(null);
+      expect(component._healthInfo).toBe(null);
     });
   });
 });
