@@ -21,7 +21,7 @@
         <version.exec-maven-plugin>3.2.0</version.exec-maven-plugin>
         <version.jmh>1.37</version.jmh>
         <sonar.skip>true</sonar.skip>
-        <version.mockwebserver3>5.0.0-alpha.12</version.mockwebserver3>
+        <version.mockwebserver3>5.0.0-alpha.16</version.mockwebserver3>
     </properties>
 
     <dependencyManagement>
