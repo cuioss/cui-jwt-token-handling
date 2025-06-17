@@ -35,7 +35,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Build with Maven, Java ${{ matrix.version }}
-        run: ./mvnw --no-transfer-progress verify -Dmaven.compiler.source=${{ matrix.version }} -Dmaven.compiler.target=${{ matrix.version }}
+        run: ./mvnw --no-transfer-progress verify -Dmaven.compiler.release=${{ matrix.version }}
 
   sonar-build:
     needs: build
