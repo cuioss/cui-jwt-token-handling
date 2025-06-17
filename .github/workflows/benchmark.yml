@@ -59,7 +59,7 @@ jobs:
 
           # Run benchmarks with JSON output format, skipping tests to avoid duplicate runs
           # Configure JMH parameters for CI environment: fewer iterations for faster execution
-          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-validation,cui-jwt-benchmarking -Dskip.benchmark=false -DskipTests \
+          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-benchmarking -Dskip.benchmark=false -DskipTests \
             -Djmh.result.format=JSON \
             -Djmh.result.filePrefix=benchmark-results/jmh-result \
             -Djmh.iterations=3 \
