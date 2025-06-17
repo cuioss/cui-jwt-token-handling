@@ -46,8 +46,7 @@ class QwcJwtDebugger extends LitElement {
       this._error = null;
       this.requestUpdate();
 
-      const response = await devui.jsonRPC.CuiJwtDevUI.validateToken(this._token.trim());
-      this._validationResult = response;
+      this._validationResult = await devui.jsonRPC.CuiJwtDevUI.validateToken(this._token.trim());
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error validating token:', error);
@@ -104,51 +103,178 @@ class QwcJwtDebugger extends LitElement {
   }
 
   _doRender() {
-    // Create simplified string representation for testing
-    let result = '<div class="debugger-container">';
-    result += '<h3 class="debugger-title">JWT Token Debugger</h3>';
-    result += '<div class="input-section">';
-    result += '<div class="input-group">';
-    result += '<label class="input-label" for="token-input">JWT Token:</label>';
-    result +=
-      '<textarea id="token-input" class="token-input" placeholder="Paste your JWT token here..."></textarea>';
-    result += '</div>';
-    result += '<div class="button-group">';
-    result += `<button class="validate-button" ${this._loading || !this._token.trim() ? 'disabled' : ''}>`;
-    result += `${this._loading ? 'Validating...' : 'Validate Token'}</button>`;
-    result += `<button class="clear-button" ${this._token ? '' : 'disabled'}>Clear</button>`;
-    result += `<button class="copy-button" ${this._token ? '' : 'disabled'}>Copy Token</button>`;
-    result += '</div>';
-    result += '</div>';
-
-    if (this._error) {
-      result += `<div class="error-message"><strong>Error:</strong> ${this._error}</div>`;
-    }
-
-    if (this._validationResult) {
-      result += '<div class="result-section">';
-      result += '<h4 class="result-title">Validation Result</h4>';
-      result += `<div class="validation-status ${this._validationResult.valid ? 'valid' : 'invalid'}">`;
-      result += `<strong>Status:</strong> ${this._validationResult.valid ? 'Valid' : 'Invalid'}</div>`;
-
-      if (this._validationResult.error) {
-        result += `<div class="validation-error"><strong>Error:</strong> ${this._validationResult.error}</div>`;
-      }
-
-      if (this._validationResult.claims) {
-        result += '<div class="claims-section">';
-        result += '<h5>Claims:</h5>';
-        result += `<pre class="claims-display">${JSON.stringify(this._validationResult.claims, null, 2)}</pre>`;
-        result += '</div>';
-      }
-
-      result += '</div>';
-    }
-
-    result += '</div>';
-
-    return { toString: () => result, strings: [result] };
+    const content =
+      this._buildHeader() +
+      this._buildInputSection() +
+      this._buildErrorSection() +
+      this._buildResultSection() +
+      '</div>';
+    return { toString: () => content, strings: [content] };
   }
+
+  _buildHeader() {
+    return '<div class="debugger-container"><h3 class="debugger-title">JWT Token Debugger</h3>';
+  }
+
+  _buildInputSection() {
+    const inputGroup = this._buildInputGroup();
+    const buttonGroup = this._buildButtonGroup();
+    return `<div class="input-section">${inputGroup}${buttonGroup}</div>`;
+  }
+
+  _buildInputGroup() {
+    return (
+      '<div class="input-group">' +
+      '<label class="input-label" for="token-input">JWT Token:</label>' +
+      '<textarea id="token-input" class="token-input" placeholder="Paste your JWT token here..."></textarea>' +
+      '</div>'
+    );
+  }
+
+  _buildButtonGroup() {
+    const validateButton = this._buildValidateButton();
+    const clearButton = this._buildClearButton();
+    const copyButton = this._buildCopyButton();
+    return `<div class="button-group">${validateButton}${clearButton}${copyButton}</div>`;
+  }
+
+  _buildValidateButton() {
+    const disabled = this._loading || !this._token.trim() ? 'disabled' : '';
+    const text = this._loading ? 'Validating...' : 'Validate Token';
+    return `<button class="validate-button" ${disabled}>${text}</button>`;
+  }
+
+  _buildClearButton() {
+    const disabled = this._token ? '' : 'disabled';
+    return `<button class="clear-button" ${disabled}>Clear</button>`;
+  }
+
+  _buildCopyButton() {
+    const disabled = this._token ? '' : 'disabled';
+    return `<button class="copy-button" ${disabled}>Copy Token</button>`;
+  }
+
+  _buildErrorSection() {
+    return this._error
+      ? `<div class="error-message"><strong>Error:</strong> ${this._error}</div>`
+      : '';
+  }
+
+  _buildResultSection() {
+    if (!this._validationResult) {
+      return '';
+    }
+
+    const resultHeader = this._buildResultHeader();
+    const validationError = this._buildValidationError();
+    const claimsSection = this._buildClaimsSection();
+
+    return `<div class="result-section">${resultHeader}${validationError}${claimsSection}</div>`;
+  }
+
+  _buildResultHeader() {
+    const status = this._validationResult.valid ? 'valid' : 'invalid';
+    const statusText = this._validationResult.valid ? 'Valid' : 'Invalid';
+    return (
+      '<h4 class="result-title">Validation Result</h4>' +
+      `<div class="validation-status ${status}"><strong>Status:</strong> ${statusText}</div>`
+    );
+  }
+
+  _buildValidationError() {
+    return this._validationResult.error
+      ? `<div class="validation-error"><strong>Error:</strong> ${this._validationResult.error}</div>`
+      : '';
+  }
+
+  _buildClaimsSection() {
+    if (!this._validationResult.claims) {
+      return '';
+    }
+
+    const claimsJson = JSON.stringify(this._validationResult.claims, null, 2);
+    return (
+      '<div class="claims-section">' +
+      '<h5>Claims:</h5>' +
+      `<pre class="claims-display">${claimsJson}</pre>` +
+      '</div>'
+    );
+  }
+}
+
+// Test helper functions
+function setupTestEnvironment(container) {
+  resetDevUIMocks();
+  container = document.createElement('div');
+  document.body.append(container);
+  return container;
+}
+
+function setupComponent() {
+  const component = new QwcJwtDebugger();
+  component.shadowRoot = document.createElement('div');
+  return component;
+}
+
+function createMockElements() {
+  return {
+    tokenInput: createTokenInput(),
+    validateButton: createValidateButton(),
+    clearButton: createClearButton(),
+    copyButton: createCopyButton(),
+  };
+}
+
+function createTokenInput() {
+  const element = document.createElement('textarea');
+  element.id = 'token-input';
+  element.placeholder = 'Paste your JWT token here...';
+  return element;
+}
+
+function createValidateButton() {
+  const element = document.createElement('button');
+  element.className = 'validate-button';
+  element.textContent = 'Validate Token';
+  element.disabled = true;
+  return element;
+}
+
+function createClearButton() {
+  const element = document.createElement('button');
+  element.className = 'clear-button';
+  element.disabled = true;
+  return element;
+}
+
+function createCopyButton() {
+  const element = document.createElement('button');
+  element.className = 'copy-button';
+  element.disabled = true;
+  return element;
+}
+
+function setupQuerySelectorMock(component, elements) {
+  component.shadowRoot.querySelector = jest.fn(selector => {
+    switch (selector) {
+      case '#token-input':
+        return elements.tokenInput;
+      case '.validate-button':
+        return elements.validateButton;
+      case '.clear-button':
+        return elements.clearButton;
+      case '.copy-button':
+        return elements.copyButton;
+      default:
+        return null;
+    }
+  });
+}
+
+async function performInitialRender(container, component) {
+  container.append(component);
+  component.render();
+  await waitForComponentUpdate(component);
 }
 
 describe('QwcJwtDebugger', () => {
@@ -156,65 +282,11 @@ describe('QwcJwtDebugger', () => {
   let container;
 
   beforeEach(async () => {
-    // Reset all mocks
-    resetDevUIMocks();
-
-    // Create container
-    container = document.createElement('div');
-    document.body.append(container);
-
-    // Create component
-    component = new QwcJwtDebugger();
-
-    // Mock shadow DOM for testing
-    const shadowRoot = document.createElement('div');
-    component.shadowRoot = shadowRoot;
-
-    // Mock querySelector methods to return our mock elements
-    const tokenInput = document.createElement('textarea');
-    tokenInput.id = 'token-input';
-    tokenInput.placeholder = 'Paste your JWT token here...';
-
-    const validateButton = document.createElement('button');
-    validateButton.className = 'validate-button';
-    validateButton.textContent = 'Validate Token';
-    validateButton.disabled = true;
-
-    const clearButton = document.createElement('button');
-    clearButton.className = 'clear-button';
-    clearButton.disabled = true;
-
-    const copyButton = document.createElement('button');
-    copyButton.className = 'copy-button';
-    copyButton.disabled = true;
-
-    shadowRoot.querySelector = jest.fn(selector => {
-      switch (selector) {
-        case '#token-input': {
-          return tokenInput;
-        }
-        case '.validate-button': {
-          return validateButton;
-        }
-        case '.clear-button': {
-          return clearButton;
-        }
-        case '.copy-button': {
-          return copyButton;
-        }
-        default: {
-          return null;
-        }
-      }
-    });
-
-    container.append(component);
-
-    // Initial render
-    component.render();
-
-    // Wait for initial render
-    await waitForComponentUpdate(component);
+    container = setupTestEnvironment();
+    component = setupComponent();
+    const elements = createMockElements();
+    setupQuerySelectorMock(component, elements);
+    await performInitialRender(container, component);
   });
 
   afterEach(() => {

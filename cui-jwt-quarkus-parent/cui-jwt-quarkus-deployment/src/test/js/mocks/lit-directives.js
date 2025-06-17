@@ -29,7 +29,15 @@ export const repeat = jest.fn((items, keyFn, template) => {
 
 // Mock when directive
 export const when = jest.fn((condition, trueTemplate, falseTemplate) => {
-  return condition ? trueTemplate() : falseTemplate ? falseTemplate() : '';
+  if (condition) {
+    return trueTemplate();
+  }
+
+  if (falseTemplate) {
+    return falseTemplate();
+  }
+
+  return '';
 });
 
 // Mock choose directive
@@ -76,6 +84,7 @@ export const range = jest.fn((startOrEnd, end, step = 1) => {
 export const until = jest.fn((...values) => {
   // Return the last non-promise value or empty string
   for (let i = values.length - 1; i >= 0; i--) {
+    // eslint-disable-next-line security/detect-object-injection
     const value = values[i];
     if (!(value instanceof Promise)) {
       return value;

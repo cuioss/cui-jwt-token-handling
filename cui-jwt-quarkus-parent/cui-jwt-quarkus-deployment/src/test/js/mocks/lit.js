@@ -5,22 +5,25 @@
  * without requiring the full Lit library to be loaded.
  */
 
-// Mock html template literal function
-export const html = (strings, ...values) => {
-  // Simple template interpolation for testing
+// Helper function for template literal processing
+const processTemplateLiteral = (strings, values) => {
   return strings.reduce((result, string, i) => {
+    // eslint-disable-next-line security/detect-object-injection
     const value = values[i] ? values[i] : '';
     return result + string + value;
   }, '');
 };
 
+// Mock html template literal function
+export const html = (strings, ...values) => {
+  // Simple template interpolation for testing
+  return processTemplateLiteral(strings, values);
+};
+
 // Mock css template literal function
 export const css = (strings, ...values) => {
   // Simple CSS template interpolation
-  return strings.reduce((result, string, i) => {
-    const value = values[i] ? values[i] : '';
-    return result + string + value;
-  }, '');
+  return processTemplateLiteral(strings, values);
 };
 
 // Mock LitElement base class
@@ -166,6 +169,7 @@ export const property = (options = {}) => {
     if (!target.constructor.properties) {
       target.constructor.properties = {};
     }
+    // eslint-disable-next-line security/detect-object-injection
     target.constructor.properties[propertyKey] = options;
 
     // Create getter/setter

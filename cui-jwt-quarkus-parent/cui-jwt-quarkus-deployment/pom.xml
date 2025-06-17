@@ -161,13 +161,13 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm-lint-fix</id>
+                        <id>npm-lint</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
-                        <phase>verify</phase>
+                        <phase>compile</phase>
                         <configuration>
-                            <arguments>run lint:fix</arguments>
+                            <arguments>run lint</arguments>
                         </configuration>
                     </execution>
                 </executions>
