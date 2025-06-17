@@ -115,10 +115,9 @@ public class JwksClientFailureBenchmark {
         // Set a custom dispatcher that simulates a timeout by throwing an IOException
         serverState.mockWebServer.setDispatcher(new TimeoutSimulatingDispatcher());
 
-        // Create a loader with a short timeout (1 second)
+        // Create a loader with default timeout
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(serverState.serverUrl)
-                .requestTimeoutSeconds(1) // Short timeout to make the test faster
                 .refreshIntervalSeconds(0) // Disable caching for failure tests
                 .build();
         JwksLoader loader = JwksLoaderFactory.createHttpLoader(config, serverState.securityEventCounter);

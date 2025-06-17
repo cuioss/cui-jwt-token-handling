@@ -52,7 +52,6 @@ class HttpJwksLoaderConfigTest {
         assertNotNull(config.getHttpHandler().getSslContext());
         assertEquals(100, config.getMaxCacheSize()); // Default value
         assertEquals(10, config.getAdaptiveWindowSize()); // Default value
-        assertEquals(10, config.getHttpHandler().getRequestTimeoutSeconds()); // Default value
         assertEquals(80, config.getBackgroundRefreshPercentage()); // Default value
     }
 
@@ -63,7 +62,6 @@ class HttpJwksLoaderConfigTest {
         SSLContext sslContext = SSLContext.getDefault();
         int maxCacheSize = 200;
         int adaptiveWindowSize = 20;
-        int requestTimeoutSeconds = 15;
         int backgroundRefreshPercentage = 70;
 
         // When
@@ -73,7 +71,6 @@ class HttpJwksLoaderConfigTest {
                 .sslContext(sslContext)
                 .maxCacheSize(maxCacheSize)
                 .adaptiveWindowSize(adaptiveWindowSize)
-                .requestTimeoutSeconds(requestTimeoutSeconds)
                 .backgroundRefreshPercentage(backgroundRefreshPercentage)
                 .build();
 
@@ -83,7 +80,6 @@ class HttpJwksLoaderConfigTest {
         assertNotNull(config.getHttpHandler().getSslContext());
         assertEquals(maxCacheSize, config.getMaxCacheSize());
         assertEquals(adaptiveWindowSize, config.getAdaptiveWindowSize());
-        assertEquals(requestTimeoutSeconds, config.getHttpHandler().getRequestTimeoutSeconds());
         assertEquals(backgroundRefreshPercentage, config.getBackgroundRefreshPercentage());
     }
 
@@ -161,19 +157,6 @@ class HttpJwksLoaderConfigTest {
                 .build());
     }
 
-    @Test
-    @DisplayName("Should throw exception for negative request timeout")
-    void shouldThrowExceptionForNegativeRequestTimeout() {
-        // Given
-        int negativeRequestTimeout = -1;
-
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .requestTimeoutSeconds(negativeRequestTimeout)
-                .build());
-    }
 
     @Test
     @DisplayName("Should throw exception for negative background refresh percentage")
@@ -276,47 +259,6 @@ class HttpJwksLoaderConfigTest {
     }
 
     @Test
-    @DisplayName("Should handle connectionAndReadTimeoutSeconds method")
-    void shouldHandleConnectionAndReadTimeoutSeconds() {
-        // Given
-        int connectionTimeout = 5;
-        int readTimeout = 10;
-
-        // When
-        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .connectionAndReadTimeoutSeconds(connectionTimeout, readTimeout)
-                .build();
-
-        // Then
-        assertEquals(connectionTimeout + readTimeout, config.getHttpHandler().getRequestTimeoutSeconds(),
-                "Total timeout should be sum of connection and read timeouts");
-    }
-
-    @Test
-    @DisplayName("Should throw exception for negative connection timeout")
-    void shouldThrowExceptionForNegativeConnectionTimeout() {
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .connectionAndReadTimeoutSeconds(-1, 10)
-                .build());
-    }
-
-    @Test
-    @DisplayName("Should throw exception for negative read timeout")
-    void shouldThrowExceptionForNegativeReadTimeout() {
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .connectionAndReadTimeoutSeconds(5, -1)
-                .build());
-    }
-
-    @Test
     @DisplayName("Should handle URI parameter method")
     void shouldHandleUriParameter() {
         // Given
@@ -355,16 +297,6 @@ class HttpJwksLoaderConfigTest {
                 .build());
     }
 
-    @Test
-    @DisplayName("Should handle zero request timeout")
-    void shouldThrowExceptionForZeroRequestTimeout() {
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .requestTimeoutSeconds(0)
-                .build());
-    }
 
     @Test
     @DisplayName("Should test toString method")

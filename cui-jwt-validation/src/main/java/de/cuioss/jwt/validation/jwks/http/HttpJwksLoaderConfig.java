@@ -299,44 +299,6 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
-         * Sets the timeout in seconds for HTTP requests.
-         * <p>
-         * If not set, a default timeout of 10 seconds will be used.
-         * </p>
-         *
-         * @param requestTimeoutSeconds The request timeout in seconds.
-         *                              Must be positive.
-         * @return This builder instance.
-         */
-        public HttpJwksLoaderConfigBuilder requestTimeoutSeconds(int requestTimeoutSeconds) {
-            Preconditions.checkArgument(requestTimeoutSeconds > 0, "requestTimeoutSeconds must be positive");
-            httpHandlerBuilder.requestTimeoutSeconds(requestTimeoutSeconds);
-            return this;
-        }
-
-        /**
-         * Sets separate connection and read timeouts in seconds for HTTP requests.
-         * <p>
-         * Since the underlying HttpHandler only supports a single timeout, this method
-         * will use the sum of both timeouts as the total request timeout to ensure
-         * both connection establishment and data reading have adequate time.
-         * </p>
-         *
-         * @param connectionTimeoutSeconds The connection timeout in seconds. Must be positive.
-         * @param readTimeoutSeconds The read timeout in seconds. Must be positive.
-         * @return This builder instance.
-         */
-        public HttpJwksLoaderConfigBuilder connectionAndReadTimeoutSeconds(int connectionTimeoutSeconds, int readTimeoutSeconds) {
-            Preconditions.checkArgument(connectionTimeoutSeconds > 0, "connectionTimeoutSeconds must be positive");
-            Preconditions.checkArgument(readTimeoutSeconds > 0, "readTimeoutSeconds must be positive");
-
-            // Use the sum of both timeouts to ensure adequate time for both connection and read operations
-            int totalTimeoutSeconds = connectionTimeoutSeconds + readTimeoutSeconds;
-            httpHandlerBuilder.requestTimeoutSeconds(totalTimeoutSeconds);
-            return this;
-        }
-
-        /**
          * Builds a new HttpJwksLoaderConfig instance with the configured parameters.
          * Validates all parameters and applies default values where appropriate.
          *

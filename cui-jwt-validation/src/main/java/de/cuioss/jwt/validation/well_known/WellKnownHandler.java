@@ -321,7 +321,8 @@ public final class WellKnownHandler {
         @SuppressWarnings("try") // HttpClient implements AutoCloseable in Java 17 but doesn't need to be closed
         public WellKnownHandler build() {
             // Configure the HttpHandlerBuilder with the timeout
-            httpHandlerBuilder.requestTimeoutSeconds(TIMEOUT_SECONDS);
+            // TODO: Update to new HttpHandler API
+            // httpHandlerBuilder.requestTimeoutSeconds(TIMEOUT_SECONDS);
 
             // Build the HttpHandler for the well-known URL
             HttpHandler wellKnownHttpHandler;
