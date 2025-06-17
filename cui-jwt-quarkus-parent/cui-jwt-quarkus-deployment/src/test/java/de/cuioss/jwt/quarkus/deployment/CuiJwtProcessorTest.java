@@ -17,11 +17,17 @@ package de.cuioss.jwt.quarkus.deployment;
 
 import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
+import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
+import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
+import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -89,4 +95,5 @@ class CuiJwtProcessorTest {
         // The actual build step methods are tested indirectly through the Quarkus test framework
         // by verifying that the configuration is properly available and the extension works
     }
+
 }
