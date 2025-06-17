@@ -259,7 +259,7 @@ class CuiJwtDevUIRuntimeServiceTest {
 
             // Act
             Map<String, Object> result = service.validateToken("a".repeat(10000)
-                // Act
+            // Act
             );
 
             // Assert

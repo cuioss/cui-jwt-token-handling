@@ -16,7 +16,11 @@
 package de.cuioss.jwt.quarkus.test.config;
 
 import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
-import de.cuioss.jwt.quarkus.config.JwtValidationConfig.*;
+import de.cuioss.jwt.quarkus.config.JwtValidationConfig.HealthConfig;
+import de.cuioss.jwt.quarkus.config.JwtValidationConfig.HttpJwksLoaderConfig;
+import de.cuioss.jwt.quarkus.config.JwtValidationConfig.IssuerConfig;
+import de.cuioss.jwt.quarkus.config.JwtValidationConfig.JwksHealthConfig;
+import de.cuioss.jwt.quarkus.config.JwtValidationConfig.ParserConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 

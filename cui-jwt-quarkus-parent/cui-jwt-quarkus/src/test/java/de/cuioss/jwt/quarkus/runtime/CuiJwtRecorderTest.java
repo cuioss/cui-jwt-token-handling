@@ -16,6 +16,7 @@
 package de.cuioss.jwt.quarkus.runtime;
 
 import de.cuioss.test.juli.junit5.EnableTestLogger;
+import io.quarkus.runtime.annotations.Recorder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,7 @@ class CuiJwtRecorderTest {
     @DisplayName("Should verify recorder has @Recorder annotation")
     void shouldHaveRecorderAnnotation() {
         // Verify that the class has the required @Recorder annotation
-        assertTrue(CuiJwtRecorder.class.isAnnotationPresent(io.quarkus.runtime.annotations.Recorder.class),
+        assertTrue(CuiJwtRecorder.class.isAnnotationPresent(Recorder.class),
                 "CuiJwtRecorder should be annotated with @Recorder");
     }
 }

@@ -18,6 +18,7 @@ package de.cuioss.jwt.quarkus.metrics;
 import de.cuioss.jwt.quarkus.config.JwtPropertyKeys;
 import de.cuioss.jwt.quarkus.config.JwtTestProfile;
 import de.cuioss.jwt.validation.TokenValidator;
+import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -110,19 +111,19 @@ class MetricsIntegrationTest {
     static Stream<Arguments> invalidTokenScenarios() {
         return Stream.of(
                 // Empty token
-                Arguments.of("Empty token", "", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                Arguments.of("Empty token", "", TokenValidationException.class),
 
                 // Malformed token (not enough segments)
-                Arguments.of("Malformed token (single segment)", "invalid", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                Arguments.of("Malformed token (single segment)", "invalid", TokenValidationException.class),
 
                 // Malformed token (only two segments)
-                Arguments.of("Malformed token (two segments)", "header.payload", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                Arguments.of("Malformed token (two segments)", "header.payload", TokenValidationException.class),
 
                 // Invalid format (not Base64)
-                Arguments.of("Invalid format (not Base64)", "header.payload.signature", de.cuioss.jwt.validation.exception.TokenValidationException.class),
+                Arguments.of("Invalid format (not Base64)", "header.payload.signature", TokenValidationException.class),
 
                 // Too long token
-                Arguments.of("Too long token", "a".repeat(10000) + ".payload.signature", de.cuioss.jwt.validation.exception.TokenValidationException.class)
+                Arguments.of("Too long token", "a".repeat(10000) + ".payload.signature", TokenValidationException.class)
         );
     }
 
@@ -131,9 +132,7 @@ class MetricsIntegrationTest {
     @DisplayName("Should record metrics for different invalid token scenarios")
     void shouldRecordMetricsForDifferentInvalidTokens(String description, String invalidToken, Class<? extends Exception> expectedException) {
         // When - validate the token (will fail)
-        Exception thrownException = assertThrows(Exception.class, () -> {
-            tokenValidator.createAccessToken(invalidToken);
-        }, "Should throw an exception for invalid token: " + description);
+        Exception thrownException = assertThrows(Exception.class, () -> tokenValidator.createAccessToken(invalidToken), "Should throw an exception for invalid token: " + description);
 
         // Then - verify the exception is of expected type or a subclass
         assertTrue(expectedException.isAssignableFrom(thrownException.getClass()),

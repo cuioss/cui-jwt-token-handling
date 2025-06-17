@@ -42,13 +42,13 @@ class JwksEndpointHealthCheckTest {
 
     @Test
     @DisplayName("Health check bean should be injected and available")
-    void testHealthCheckBeanIsInjected() {
+    void healthCheckBeanIsInjected() {
         assertNotNull(healthCheck, "JwksEndpointHealthCheck should be injected");
     }
 
     @Test
     @DisplayName("Health check should return valid response with status")
-    void testHealthCheckBeanIsUpOrDown() {
+    void healthCheckBeanIsUpOrDown() {
         HealthCheckResponse response = healthCheck.call();
         assertNotNull(response, "HealthCheckResponse should not be null");
         assertNotNull(response.getStatus(), "Health check status should not be null");
@@ -59,7 +59,7 @@ class JwksEndpointHealthCheckTest {
 
     @Test
     @DisplayName("Health check should have correct name")
-    void testHealthCheckName() {
+    void healthCheckName() {
         HealthCheckResponse response = healthCheck.call();
         assertEquals("jwks-endpoints", response.getName(),
                 "Health check should have correct name");
@@ -74,7 +74,7 @@ class JwksEndpointHealthCheckTest {
     @ParameterizedTest(name = "Health check should include correct data when status is {0}")
     @EnumSource(HealthCheckResponse.Status.class)
     @DisplayName("Health check should include correct data for different statuses")
-    void testHealthCheckDataForStatus(HealthCheckResponse.Status status) {
+    void healthCheckDataForStatus(HealthCheckResponse.Status status) {
         HealthCheckResponse response = healthCheck.call();
 
         // Skip if the current status doesn't match the test parameter
@@ -123,7 +123,7 @@ class JwksEndpointHealthCheckTest {
 
     @Test
     @DisplayName("Health check should contain issuer endpoint details")
-    void testIssuerEndpointDetails() {
+    void issuerEndpointDetails() {
         HealthCheckResponse response = healthCheck.call();
 
         if (response.getStatus() == HealthCheckResponse.Status.UP && response.getData().isPresent()) {
@@ -153,7 +153,7 @@ class JwksEndpointHealthCheckTest {
 
     @Test
     @DisplayName("Health check should handle concurrent calls properly")
-    void testConcurrentHealthCheckCalls() {
+    void concurrentHealthCheckCalls() {
         // Make multiple concurrent calls to test thread safety and caching
         HealthCheckResponse response1 = healthCheck.call();
         HealthCheckResponse response2 = healthCheck.call();
@@ -172,7 +172,7 @@ class JwksEndpointHealthCheckTest {
 
     @Test
     @DisplayName("Health check should handle edge cases gracefully")
-    void testHealthCheckEdgeCases() {
+    void healthCheckEdgeCases() {
         HealthCheckResponse response = healthCheck.call();
 
         // Response should be valid regardless of JWKS endpoint status

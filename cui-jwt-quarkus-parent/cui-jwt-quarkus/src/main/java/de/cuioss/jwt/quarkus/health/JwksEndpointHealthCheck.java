@@ -29,6 +29,7 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Readiness;
 
 import java.util.concurrent.TimeUnit;
@@ -148,7 +149,7 @@ public class JwksEndpointHealthCheck implements HealthCheck {
          * @param responseBuilder the response builder
          * @param prefix the prefix for the data keys
          */
-        void addToResponse(org.eclipse.microprofile.health.HealthCheckResponseBuilder responseBuilder, String prefix) {
+        void addToResponse(HealthCheckResponseBuilder responseBuilder, String prefix) {
             boolean up = status == LoaderStatus.OK;
             responseBuilder.withData(prefix + "url", issuer);
             responseBuilder.withData(prefix + "jwksType", jwksType);

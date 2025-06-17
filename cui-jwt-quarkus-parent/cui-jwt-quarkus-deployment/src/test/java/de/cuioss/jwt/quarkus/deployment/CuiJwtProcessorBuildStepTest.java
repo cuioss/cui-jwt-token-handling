@@ -96,7 +96,7 @@ class CuiJwtProcessorBuildStepTest {
 
         assertNotNull(runtimeItem, "Runtime initialized class build item should not be null");
         // Test that the method executes without throwing exceptions
-        assertDoesNotThrow(() -> processor.runtimeInitializedClasses(),
+        assertDoesNotThrow(processor::runtimeInitializedClasses,
                 "Runtime initialization build step should execute without exceptions");
     }
 
@@ -117,7 +117,7 @@ class CuiJwtProcessorBuildStepTest {
 
         assertNotNull(jsonRpcItem, "JSON-RPC providers build item should not be null");
         // Test that the method executes without throwing exceptions
-        assertDoesNotThrow(() -> processor.createJwtDevUIJsonRPCService(),
+        assertDoesNotThrow(processor::createJwtDevUIJsonRPCService,
                 "DevUI JSON-RPC service build step should execute without exceptions");
     }
 
@@ -125,18 +125,18 @@ class CuiJwtProcessorBuildStepTest {
     @DisplayName("Should execute all build steps without exceptions")
     void shouldExecuteAllBuildStepsWithoutExceptions() {
         // Test that all build step methods can be called without throwing exceptions
-        assertDoesNotThrow(() -> processor.feature(), "feature() should not throw exceptions");
-        assertDoesNotThrow(() -> processor.registerConfigForReflection(),
+        assertDoesNotThrow(processor::feature, "feature() should not throw exceptions");
+        assertDoesNotThrow(processor::registerConfigForReflection,
                 "registerConfigForReflection() should not throw exceptions");
-        assertDoesNotThrow(() -> processor.registerNestedConfigForReflection(),
+        assertDoesNotThrow(processor::registerNestedConfigForReflection,
                 "registerNestedConfigForReflection() should not throw exceptions");
-        assertDoesNotThrow(() -> processor.registerJwtValidationClassesForReflection(),
+        assertDoesNotThrow(processor::registerJwtValidationClassesForReflection,
                 "registerJwtValidationClassesForReflection() should not throw exceptions");
-        assertDoesNotThrow(() -> processor.runtimeInitializedClasses(),
+        assertDoesNotThrow(processor::runtimeInitializedClasses,
                 "runtimeInitializedClasses() should not throw exceptions");
-        assertDoesNotThrow(() -> processor.createJwtDevUICard(),
+        assertDoesNotThrow(processor::createJwtDevUICard,
                 "createJwtDevUICard() should not throw exceptions");
-        assertDoesNotThrow(() -> processor.createJwtDevUIJsonRPCService(),
+        assertDoesNotThrow(processor::createJwtDevUIJsonRPCService,
                 "createJwtDevUIJsonRPCService() should not throw exceptions");
     }
 }
