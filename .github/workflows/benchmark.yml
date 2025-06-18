@@ -122,7 +122,7 @@ jobs:
         with:
           folder: gh-pages
           repository-name: cuioss/cuioss.github.io
-          target-folder: cui-jwt-validation/benchmarks
+          target-folder: cui-jwt/benchmarks
           branch: main
           token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
 
@@ -158,7 +158,7 @@ jobs:
               echo "{\"schemaVersion\":1,\"label\":\"$display_name\",\"message\":\"${formatted_score} ms ($TIMESTAMP)\",\"color\":\"$color\"}" > "gh-pages/badges/$badge_name.json"
 
               # Create badge markdown for README
-              echo "[![$display_name](https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt-validation/benchmarks/badges/$badge_name.json)](https://cuioss.github.io/cui-jwt-validation/benchmarks/)" >> gh-pages/badge-markdown.txt
+              echo "[![$display_name](https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/$badge_name.json)](https://cuioss.github.io/cui-jwt/benchmarks/)" >> gh-pages/badge-markdown.txt
 
               echo "Created badge for $display_name: $formatted_score ms"
             else
