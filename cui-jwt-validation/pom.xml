@@ -171,6 +171,23 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Force test compilation even when tests are skipped -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-test-sources</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Configure Surefire to exclude integration tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
