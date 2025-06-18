@@ -65,13 +65,21 @@ jobs:
             -Djmh.forks=1 \
             -Djmh.threads=2
 
+          # Move benchmark results to expected location for upload
+          if [ -d "cui-jwt-benchmarking/benchmark-results" ]; then
+            echo "Moving benchmark results to upload location..."
+            mv cui-jwt-benchmarking/benchmark-results .
+          else
+            echo "Creating empty benchmark-results directory..."
+            mkdir -p benchmark-results
+          fi
+
           # Add timestamp to results
           echo "{ \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\", \"commit\": \"${{ github.sha }}\" }" > benchmark-results/metadata.json
 
           # Verify that benchmark results were generated
           echo "Checking for benchmark results..."
-          ls -la benchmark-results/ || echo "No benchmark-results directory found"
-          ls -la jmh-result.json || echo "No jmh-result.json in root found"
+          ls -la benchmark-results/
           find . -name "jmh-result*.json" -type f || echo "No JMH result files found anywhere"
 
       - name: Upload benchmark results

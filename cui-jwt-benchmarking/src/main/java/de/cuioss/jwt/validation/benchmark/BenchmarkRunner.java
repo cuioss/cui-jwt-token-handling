@@ -85,7 +85,14 @@ public class BenchmarkRunner {
     private static String getResultFile() {
         String filePrefix = System.getProperty("jmh.result.filePrefix");
         if (filePrefix != null && !filePrefix.isEmpty()) {
-            return filePrefix + ".json";
+            String resultFile = filePrefix + ".json";
+            // Ensure parent directory exists
+            java.io.File file = new java.io.File(resultFile);
+            java.io.File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+            return resultFile;
         }
         return "jmh-result.json";
     }
