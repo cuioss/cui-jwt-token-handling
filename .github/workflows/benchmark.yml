@@ -52,6 +52,11 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Build cui-jwt-validation
+        run: |
+          # Build validation module first to ensure test artifact is available for benchmarking
+          ./mvnw --no-transfer-progress clean install -pl cui-jwt-validation -DskipTests
+
       - name: Run JMH Benchmarks
         run: |
           # Create directory for benchmark results

@@ -48,7 +48,7 @@
                 <groupId>de.cuioss.jwt</groupId>
                 <artifactId>cui-jwt-validation</artifactId>
                 <version>${project.version}</version>
-                <classifier>test</classifier>
+                <classifier>generators</classifier>
             </dependency>
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
@@ -74,7 +74,7 @@
         <dependency>
             <groupId>de.cuioss.jwt</groupId>
             <artifactId>cui-jwt-validation</artifactId>
-            <classifier>test</classifier>
+            <classifier>generators</classifier>
             <scope>compile</scope>
         </dependency>
 

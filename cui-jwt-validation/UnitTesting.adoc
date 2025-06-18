@@ -10,9 +10,9 @@
 
 This document describes the test utilities provided by the `cui-jwt-validation` project for testing JWT validation functionality in your applications.
 
-== Test Artifact
+== Generators Artifact
 
-The project provides a test artifact with the classifier `test` that contains utility classes for testing JWT validation. This artifact is published alongside the main artifact and can be included in your project's test dependencies.
+The project provides a test artifact with the classifier `generators` that contains utility classes for testing JWT validation. This artifact is published alongside the main artifact and can be included in your project's test dependencies.
 
 === Maven Dependency
 
@@ -24,7 +24,7 @@ To use the test utilities in your project, add the following dependency to your 
     <groupId>de.cuioss.jwt</groupId>
     <artifactId>cui-jwt-validation</artifactId>
     <version>${version}</version>
-    <classifier>test</classifier>
+    <classifier>generators</classifier>
     <scope>test</scope>
 </dependency>
 ----

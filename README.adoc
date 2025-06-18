@@ -80,7 +80,7 @@ The library also provides a test artifact with utilities for testing JWT validat
     <dependency>
         <groupId>de.cuioss.jwt</groupId>
         <artifactId>cui-jwt-validation</artifactId>
-        <classifier>test</classifier>
+        <classifier>generators</classifier>
         <scope>test</scope>
     </dependency>
 ----

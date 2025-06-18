@@ -154,11 +154,12 @@
                 <executions>
                     <execution>
                         <id>create-test-jar</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>test</classifier>
+                            <classifier>generators</classifier>
                             <includes>
                                 <include>de/cuioss/jwt/validation/test/**</include>
                             </includes>
