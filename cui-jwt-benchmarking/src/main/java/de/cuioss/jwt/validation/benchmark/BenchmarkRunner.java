@@ -57,13 +57,36 @@ public class BenchmarkRunner {
                 // Set benchmark mode (average time)
                 .mode(Mode.AverageTime)
                 // Configure result output - create a combined report for all benchmarks
-                .resultFormat(ResultFormatType.JSON)
-                .result("jmh-result.json")
+                .resultFormat(getResultFormat())
+                .result(getResultFile())
                 // Add JVM argument to configure logging for forked JVM instances
                 .jvmArgsAppend("-Djava.util.logging.config.file=src/test/resources/benchmark-logging.properties")
                 .build();
 
         // Run the benchmarks
         new Runner(options).run();
+    }
+
+    /**
+     * Gets the result format from system property or defaults to JSON.
+     */
+    private static ResultFormatType getResultFormat() {
+        String format = System.getProperty("jmh.result.format", "JSON");
+        try {
+            return ResultFormatType.valueOf(format.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResultFormatType.JSON;
+        }
+    }
+
+    /**
+     * Gets the result file from system property or defaults to jmh-result.json.
+     */
+    private static String getResultFile() {
+        String filePrefix = System.getProperty("jmh.result.filePrefix");
+        if (filePrefix != null && !filePrefix.isEmpty()) {
+            return filePrefix + ".json";
+        }
+        return "jmh-result.json";
     }
 }

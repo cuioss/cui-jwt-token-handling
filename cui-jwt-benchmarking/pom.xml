@@ -202,6 +202,12 @@
                             <arguments>
                                 <argument>-classpath</argument>
                                 <argument>${project.build.outputDirectory}${path.separator}${project.build.directory}/dependency/*</argument>
+                                <argument>-Djmh.result.format=${jmh.result.format}</argument>
+                                <argument>-Djmh.result.filePrefix=${jmh.result.filePrefix}</argument>
+                                <argument>-Djmh.iterations=${jmh.iterations}</argument>
+                                <argument>-Djmh.warmupIterations=${jmh.warmupIterations}</argument>
+                                <argument>-Djmh.forks=${jmh.forks}</argument>
+                                <argument>-Djmh.threads=${jmh.threads}</argument>
                                 <argument>de.cuioss.jwt.validation.benchmark.BenchmarkRunner</argument>
                             </arguments>
                         </configuration>

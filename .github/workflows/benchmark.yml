@@ -68,6 +68,12 @@ jobs:
           # Add timestamp to results
           echo "{ \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\", \"commit\": \"${{ github.sha }}\" }" > benchmark-results/metadata.json
 
+          # Verify that benchmark results were generated
+          echo "Checking for benchmark results..."
+          ls -la benchmark-results/ || echo "No benchmark-results directory found"
+          ls -la jmh-result.json || echo "No jmh-result.json in root found"
+          find . -name "jmh-result*.json" -type f || echo "No JMH result files found anywhere"
+
       - name: Upload benchmark results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
