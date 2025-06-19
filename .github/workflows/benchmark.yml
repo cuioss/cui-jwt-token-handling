@@ -305,6 +305,9 @@ jobs:
           # Create a combined badge for all benchmarks
           echo "{\"schemaVersion\":1,\"label\":\"JWT Benchmarks\",\"message\":\"Updated $TIMESTAMP\",\"color\":\"brightgreen\"}" > gh-pages/badges/all-benchmarks.json
 
+          # Create last benchmark run badge
+          echo "{\"schemaVersion\":1,\"label\":\"Last Benchmark Run\",\"message\":\"$TIMESTAMP\",\"color\":\"blue\"}" > gh-pages/badges/last-run-badge.json
+
           # Note: validator-badge.json removed as redundant with comprehensive performance-badge.json
 
       - name: Deploy to cuioss.github.io
