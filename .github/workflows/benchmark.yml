@@ -91,107 +91,14 @@ jobs:
 
       - name: Prepare GitHub Pages visualization
         run: |
-          # Create directory for GitHub Pages
-          mkdir -p gh-pages
-
-          # Copy benchmark results to gh-pages directory
-          cp -r benchmark-results/* gh-pages/
-
-          # Find and rename the JMH result file for visualization
-          # First check if jmh-result.json exists in project root
-          if [ -f "jmh-result.json" ]; then
-            echo "Using jmh-result.json from project root"
-            cp jmh-result.json gh-pages/jmh-result.json
-          else
-            # Find the result file in benchmark-results directory
-            echo "Looking for JMH result files in benchmark-results directory"
-            find benchmark-results -name "jmh-result*.json" -type f -exec cp {} gh-pages/jmh-result.json \;
-          fi
-
-          # Verify and copy the visualizer template
-          if [ ! -f "gh-pages/jmh-result.json" ]; then
-            echo "ERROR: No benchmark result file found!"
-            exit 1
-          fi
-
-          # Copy the JMH Visualizer template
-          cp cui-jwt-benchmarking/doc/templates/index-visualizer.html gh-pages/index.html
-
-          # Create benchmark badges BEFORE deployment
-          # Create directory for badges
-          mkdir -p gh-pages/badges
+          # Prepare GitHub Pages structure using script
+          bash cui-jwt-benchmarking/doc/templates/scripts/prepare-github-pages.sh benchmark-results cui-jwt-benchmarking/doc/templates gh-pages
 
           # Get current date for badge timestamp
           TIMESTAMP=$(date -u +"%Y-%m-%d")
 
-          # Function to create a badge for a benchmark
-          create_badge() {
-            local benchmark_name=$1
-            local display_name=$2
-            local badge_name=$3
-            local color=$4
-
-            # Extract benchmark data using jq for reliable JSON parsing
-            if [ -f "gh-pages/jmh-result.json" ]; then
-              local benchmark_entry=$(jq -r '.[] | select(.benchmark == "'"$benchmark_name"'")' gh-pages/jmh-result.json 2>/dev/null)
-              local score=$(echo "$benchmark_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "N/A")
-              local unit=$(echo "$benchmark_entry" | jq -r '.primaryMetric.scoreUnit' 2>/dev/null || echo "")
-              
-              echo "Debug: Extracting badge for $benchmark_name: score=$score, unit=$unit"
-            else
-              echo "Warning: jmh-result.json not found in gh-pages directory"
-              local score="N/A"
-              local unit=""
-            fi
-
-            if [ "$score" != "N/A" ] && [ "$score" != "null" ]; then
-              # Convert to appropriate unit and format
-              if [[ "$unit" == "us/op" ]]; then
-                # Convert microseconds to milliseconds for display
-                local score_ms=$(echo "scale=3; $score / 1000" | bc -l)
-                local formatted_score=$(printf "%.2f" $score_ms)
-                local unit_display="ms"
-              elif [[ "$unit" == "ms/op" ]]; then
-                local formatted_score=$(printf "%.2f" $score)
-                local unit_display="ms"
-              elif [[ "$unit" == "ops/s" ]]; then
-                # Format ops/s with appropriate scale
-                if [ $(echo "$score > 1000" | bc -l) -eq 1 ]; then
-                  local score_k=$(echo "scale=1; $score / 1000" | bc -l)
-                  local formatted_score=$(printf "%.1f" $score_k)
-                  local unit_display="k ops/s"
-                else
-                  local formatted_score=$(printf "%.0f" $score)
-                  local unit_display="ops/s"
-                fi
-              else
-                local formatted_score=$(printf "%.2f" $score)
-                local unit_display="$unit"
-              fi
-
-              # Create badge JSON - no timestamp for validator badge, include for others
-              if [[ "$badge_name" == "validator-badge" ]]; then
-                echo "{\"schemaVersion\":1,\"label\":\"$display_name\",\"message\":\"${formatted_score} ${unit_display}\",\"color\":\"$color\"}" > "gh-pages/badges/$badge_name.json"
-              else
-                echo "{\"schemaVersion\":1,\"label\":\"$display_name\",\"message\":\"${formatted_score} ${unit_display} ($TIMESTAMP)\",\"color\":\"$color\"}" > "gh-pages/badges/$badge_name.json"
-              fi
-
-              # Create badge markdown for README
-              echo "[![$display_name](https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/$badge_name.json)](https://cuioss.github.io/cui-jwt/benchmarks/)" >> gh-pages/badge-markdown.txt
-
-              echo "Created badge for $display_name: $formatted_score $unit_display"
-            else
-              echo "Warning: Could not find benchmark results for $benchmark_name"
-              # Create placeholder badge
-              echo "{\"schemaVersion\":1,\"label\":\"$display_name\",\"message\":\"No Data\",\"color\":\"red\"}" > "gh-pages/badges/$badge_name.json"
-            fi
-          }
-
           # Create header for badge markdown
           echo "## Benchmark Results ($TIMESTAMP)" > gh-pages/badge-markdown.txt
-
-          # Note: Access Token Validation badge removed as redundant with Performance Score
-          # The Performance Score badge already includes average time information plus comprehensive metrics
 
           # Create performance badge using script
           if [ -f "gh-pages/jmh-result.json" ]; then
@@ -201,11 +108,8 @@ jobs:
             echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"No Data\",\"color\":\"red\"}" > "gh-pages/badges/performance-badge.json"
           fi
 
-          # Create a combined badge for all benchmarks
-          echo "{\"schemaVersion\":1,\"label\":\"JWT Benchmarks\",\"message\":\"Updated $TIMESTAMP\",\"color\":\"brightgreen\"}" > gh-pages/badges/all-benchmarks.json
-
-          # Create last benchmark run badge
-          echo "{\"schemaVersion\":1,\"label\":\"Last Benchmark Run\",\"message\":\"$TIMESTAMP\",\"color\":\"blue\"}" > gh-pages/badges/last-run-badge.json
+          # Create simple badges using script
+          bash cui-jwt-benchmarking/doc/templates/scripts/create-simple-badge.sh gh-pages/jmh-result.json gh-pages/badges "$TIMESTAMP"
 
           # Performance Tracking System using scripts
           echo "Setting up performance tracking..."
@@ -233,8 +137,6 @@ jobs:
             echo "Warning: jmh-result.json not found for performance tracking"
             echo "{\"schemaVersion\":1,\"label\":\"Performance Trend\",\"message\":\"→ No Data\",\"color\":\"lightgrey\"}" > "gh-pages/badges/trend-badge.json"
           fi
-
-          # Note: validator-badge.json removed as redundant with comprehensive performance-badge.json
 
       - name: Deploy to cuioss.github.io
         uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8 # v4.7.3
