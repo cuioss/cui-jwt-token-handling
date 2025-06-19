@@ -63,7 +63,7 @@ create_badge() {
         fi
 
         # Create badge markdown for README
-        echo "[![$display_name](https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/$badge_name.json)](https://cuioss.github.io/cui-jwt/benchmarks/)" >> "$OUTPUT_DIR/../badge-markdown.txt"
+        echo "[![$display_name](https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/$badge_name.json)](https://cuioss.github.io/cui-jwt/benchmarks/)" >> "$(dirname "$OUTPUT_DIR")/badge-markdown.txt"
 
         echo "Created badge for $display_name: $formatted_score $unit_display"
     else
