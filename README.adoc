@@ -17,6 +17,7 @@ image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-va
 
 image:https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml/badge.svg[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/performance-badge.json[JWT Performance Score,link=https://cuioss.github.io/cui-jwt/benchmarks/]
+image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/trend-badge.json[Performance Trend,link=https://cuioss.github.io/cui-jwt/benchmarks/trends.html]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/last-run-badge.json[Last Benchmark Run,link=https://cuioss.github.io/cui-jwt/benchmarks/]
 
 link:cui-jwt-benchmarking/README.adoc#understand-performance-metrics[Understand Performance Metrics]

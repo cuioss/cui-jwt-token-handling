@@ -95,6 +95,43 @@ This module is configured to run benchmarks automatically via GitHub Actions:
 
 Results are published to GitHub Pages for visualization and comparison over time.
 
+== Performance Tracking System
+
+The benchmarking module includes an advanced performance tracking system that monitors trends over time:
+
+=== Individual Run Tracking
+
+Each benchmark run creates a timestamped JSON file containing:
+
+* Performance metrics (score, throughput, latency, error resilience)
+* Environment information (Java version, OS, commit hash)
+* Raw JMH measurement data
+
+Files are stored as `performance-YYYYMMDD-HHMMSS.json` in the tracking directory.
+
+=== Consolidated Tracking
+
+A master `performance-tracking.json` file maintains the last 10 benchmark runs for trend analysis.
+
+=== Performance Trends Visualization
+
+Access comprehensive performance trends at: https://cuioss.github.io/cui-jwt/benchmarks/trends.html
+
+**Features:**
+* Interactive charts for all key metrics
+* Trend indicators with percentage changes
+* Percentage change calculation between first and last of last 10 runs
+* Technical variation filtering for accurate trend detection
+
+=== Performance Trend Badge
+
+The **Performance Trend** badge shows:
+* **↗ X.X% (improving)** - Green badge for performance gains > 2%
+* **↘ X.X% (declining)** - Orange badge for performance drops > 2%  
+* **→ X.X% (stable)** - Grey badge for changes ≤ 2%
+
+Clicking the badge opens the detailed trends visualization.
+
 == Understand Performance Metrics
 
 The benchmarking module includes a comprehensive performance scoring system that combines multiple metrics into a single indicator. This system focuses on the most critical performance aspects of JWT validation.
@@ -157,3 +194,22 @@ For detailed information about the benchmarking system:
 
 * link:doc/performance-scoring.adoc[Performance Scoring System] - Complete methodology and calculation details
 * link:doc/README.adoc[Benchmark Documentation] - Visualization templates and additional documentation
+
+=== Templates and Scripts
+
+The `doc/templates/` directory contains:
+
+**HTML Templates:**
+* `index-visualizer.html` - JMH Visualizer integration template
+* `performance-trends.html` - Interactive performance trends visualization
+
+**Data Templates:**
+* `performance-run.json` - Individual benchmark run data template (uses `envsubst` variables)
+
+**Processing Scripts:**
+* `scripts/create-performance-badge.sh` - Generates comprehensive performance badge from JMH results
+* `scripts/create-performance-tracking.sh` - Creates timestamped performance tracking files 
+* `scripts/update-performance-trends.sh` - Updates consolidated tracking and manages trend analysis
+* `scripts/calculate-trend-badge.sh` - Calculates trend metrics and generates trend badge
+
+The scripts architecture separates complex badge and tracking logic from the GitHub workflow, making the system more maintainable and testable.
