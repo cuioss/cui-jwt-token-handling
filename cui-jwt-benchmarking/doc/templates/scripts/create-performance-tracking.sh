@@ -37,18 +37,20 @@ mkdir -p "$OUTPUT_DIR/badges"
 METRICS_FILE="$OUTPUT_DIR/tracking/metrics-temp.sh"
 bash "$TEMPLATES_DIR/scripts/create-performance-badge.sh" "$JMH_RESULT_FILE" "$OUTPUT_DIR/badges" > "$METRICS_FILE.log" 2>&1
 
+# Read the badge output immediately after script execution
+BADGE_OUTPUT_CONTENT=$(cat "$METRICS_FILE.log")
+
 # Extract metrics from badge script output and create a sourceable metrics file
 {
   echo "# Performance metrics extracted from create-performance-badge.sh"
-  echo "$BADGE_OUTPUT" | grep "PERFORMANCE_SCORE=" | head -1 || echo "PERFORMANCE_SCORE=0"
-  echo "$BADGE_OUTPUT" | grep "THROUGHPUT_OPS_PER_SEC=" | head -1 || echo "THROUGHPUT_OPS_PER_SEC=0" 
-  echo "$BADGE_OUTPUT" | grep "AVERAGE_TIME_MS=" | head -1 || echo "AVERAGE_TIME_MS=0"
-  echo "$BADGE_OUTPUT" | grep "ERROR_RESILIENCE_OPS_PER_SEC=" | head -1 || echo "ERROR_RESILIENCE_OPS_PER_SEC=0"
-  echo "$BADGE_OUTPUT" | grep "AVG_TIME_MICROS=" | head -1 || echo "AVG_TIME_MICROS=0"
+  echo "$BADGE_OUTPUT_CONTENT" | grep "PERFORMANCE_SCORE=" | head -1 || echo "PERFORMANCE_SCORE=0"
+  echo "$BADGE_OUTPUT_CONTENT" | grep "THROUGHPUT_OPS_PER_SEC=" | head -1 || echo "THROUGHPUT_OPS_PER_SEC=0" 
+  echo "$BADGE_OUTPUT_CONTENT" | grep "AVERAGE_TIME_MS=" | head -1 || echo "AVERAGE_TIME_MS=0"
+  echo "$BADGE_OUTPUT_CONTENT" | grep "ERROR_RESILIENCE_OPS_PER_SEC=" | head -1 || echo "ERROR_RESILIENCE_OPS_PER_SEC=0"
+  echo "$BADGE_OUTPUT_CONTENT" | grep "AVG_TIME_MICROS=" | head -1 || echo "AVG_TIME_MICROS=0"
 } > "$METRICS_FILE"
 
 # Source the metrics file for more robust parsing
-BADGE_OUTPUT=$(cat "$METRICS_FILE.log")
 source "$METRICS_FILE" || {
   echo "Error: Failed to source metrics from create-performance-badge.sh"
   exit 1
