@@ -189,7 +189,16 @@
       const sumXX = values.reduce((sum, _, i) => sum + (i * i), 0);
       
       const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-      const percentChange = ((values[n-1] - values[0]) / values[0]) * 100;
+      let percentChange;
+      if (values[0] === 0) {
+        if (values[n-1] === 0) {
+          percentChange = 0;
+        } else {
+          percentChange = values[n-1] > 0 ? Infinity : -Infinity;
+        }
+      } else {
+        percentChange = ((values[n-1] - values[0]) / values[0]) * 100;
+      }
       
       let direction = 'stable';
       if (Math.abs(percentChange) > 2) {
