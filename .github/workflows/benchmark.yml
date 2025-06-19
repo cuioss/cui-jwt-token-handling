@@ -169,31 +169,63 @@ jobs:
             echo "Creating performance indicator badge..."
             
             if [ -f "gh-pages/jmh-result.json" ]; then
-              # Extract throughput (ops/sec) from PerformanceIndicatorBenchmark.measureThroughput
-              local throughput=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureThroughput") | .primaryMetric.score' gh-pages/jmh-result.json 2>/dev/null || echo "0")
+              # Extract throughput data from PerformanceIndicatorBenchmark.measureThroughput
+              local throughput_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureThroughput")' gh-pages/jmh-result.json 2>/dev/null)
+              local throughput_score=$(echo "$throughput_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
+              local throughput_unit=$(echo "$throughput_entry" | jq -r '.primaryMetric.scoreUnit' 2>/dev/null || echo "")
               
-              # Extract average time (microseconds) from PerformanceIndicatorBenchmark.measureAverageTime  
-              local avg_time=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureAverageTime") | .primaryMetric.score' gh-pages/jmh-result.json 2>/dev/null || echo "0")
+              # Extract average time data from PerformanceIndicatorBenchmark.measureAverageTime  
+              local avg_time_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureAverageTime")' gh-pages/jmh-result.json 2>/dev/null)
+              local avg_time_score=$(echo "$avg_time_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
+              local avg_time_unit=$(echo "$avg_time_entry" | jq -r '.primaryMetric.scoreUnit' 2>/dev/null || echo "")
               
-              echo "Debug: Extracted throughput=$throughput, avg_time=$avg_time"
+              echo "Debug: Throughput: $throughput_score $throughput_unit, AvgTime: $avg_time_score $avg_time_unit"
               
-              if [ "$throughput" != "0" ] && [ "$throughput" != "null" ] && [ "$avg_time" != "0" ] && [ "$avg_time" != "null" ]; then
-                # Convert scientific notation to regular numbers
-                throughput=$(echo "$throughput" | awk '{printf "%.0f", $1}')
-                avg_time_microseconds=$(echo "$avg_time * 1000000" | bc -l | awk '{printf "%.1f", $1}')
+              if [ "$throughput_score" != "0" ] && [ "$throughput_score" != "null" ] && [ "$avg_time_score" != "0" ] && [ "$avg_time_score" != "null" ]; then
+                # Convert throughput to ops/sec if needed
+                if [[ "$throughput_unit" == "ops/s" ]]; then
+                  throughput_ops_per_sec=$(echo "$throughput_score" | awk '{printf "%.0f", $1}')
+                elif [[ "$throughput_unit" == "s/op" ]]; then
+                  # Convert s/op to ops/s
+                  throughput_ops_per_sec=$(echo "scale=0; 1 / $throughput_score" | bc -l)
+                else
+                  echo "Warning: Unknown throughput unit: $throughput_unit"
+                  throughput_ops_per_sec="0"
+                fi
                 
-                # Calculate weighted performance score: (throughput * 0.6) + ((1000000 / avg_time_microseconds) * 0.4)
-                local latency_ops_per_sec=$(echo "scale=2; 1000000 / $avg_time_microseconds" | bc -l)
-                local performance_score=$(echo "scale=2; ($throughput * 0.6) + ($latency_ops_per_sec * 0.4)" | bc -l)
-                local formatted_score=$(printf "%.0f" $performance_score)
-                local throughput_k=$(echo "scale=1; $throughput / 1000" | bc -l)
+                # Convert avg time to microseconds if needed
+                if [[ "$avg_time_unit" == "us/op" ]]; then
+                  avg_time_microseconds=$(echo "$avg_time_score" | awk '{printf "%.1f", $1}')
+                elif [[ "$avg_time_unit" == "ms/op" ]]; then
+                  # Convert ms to microseconds
+                  avg_time_microseconds=$(echo "scale=1; $avg_time_score * 1000" | bc -l)
+                elif [[ "$avg_time_unit" == "s/op" ]]; then
+                  # Convert s to microseconds
+                  avg_time_microseconds=$(echo "scale=1; $avg_time_score * 1000000" | bc -l)
+                else
+                  echo "Warning: Unknown avg time unit: $avg_time_unit"
+                  avg_time_microseconds="0"
+                fi
                 
-                # Create badge with performance score
-                echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"${formatted_score} (${throughput_k}k ops/s, ${avg_time_microseconds}μs)\",\"color\":\"brightgreen\"}" > "gh-pages/badges/performance-badge.json"
+                echo "Debug: Converted - Throughput: ${throughput_ops_per_sec} ops/s, AvgTime: ${avg_time_microseconds} μs"
                 
-                echo "Created performance badge: Score=$formatted_score (Throughput=${throughput_k}k ops/s, AvgTime=${avg_time_microseconds}μs)"
+                if [ "$throughput_ops_per_sec" != "0" ] && [ "$avg_time_microseconds" != "0" ]; then
+                  # Calculate weighted performance score: (throughput * 0.6) + ((1000000 / avg_time_microseconds) * 0.4)
+                  local latency_ops_per_sec=$(echo "scale=2; 1000000 / $avg_time_microseconds" | bc -l)
+                  local performance_score=$(echo "scale=2; ($throughput_ops_per_sec * 0.6) + ($latency_ops_per_sec * 0.4)" | bc -l)
+                  local formatted_score=$(printf "%.0f" $performance_score)
+                  local throughput_k=$(echo "scale=1; $throughput_ops_per_sec / 1000" | bc -l)
+                  
+                  # Create badge with performance score
+                  echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"${formatted_score} (${throughput_k}k ops/s, ${avg_time_microseconds}μs)\",\"color\":\"brightgreen\"}" > "gh-pages/badges/performance-badge.json"
+                  
+                  echo "Created performance badge: Score=$formatted_score (Throughput=${throughput_k}k ops/s, AvgTime=${avg_time_microseconds}μs)"
+                else
+                  echo "Warning: Unit conversion failed"
+                  echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"Conversion Error\",\"color\":\"yellow\"}" > "gh-pages/badges/performance-badge.json"
+                fi
               else
-                echo "Warning: Could not extract valid performance metrics (throughput=$throughput, avg_time=$avg_time)"
+                echo "Warning: Could not extract valid performance metrics (throughput=$throughput_score, avg_time=$avg_time_score)"
                 echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"Pending\",\"color\":\"yellow\"}" > "gh-pages/badges/performance-badge.json"
               fi
             else

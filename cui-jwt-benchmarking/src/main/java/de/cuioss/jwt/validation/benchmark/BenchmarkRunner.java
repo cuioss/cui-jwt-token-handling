@@ -54,8 +54,8 @@ public class BenchmarkRunner {
                 .warmupTime(TimeValue.seconds(1))
                 // Set number of threads
                 .threads(Integer.getInteger("jmh.threads", 2))
-                // Set benchmark mode (average time)
-                .mode(Mode.AverageTime)
+                // Use benchmark mode specified in individual benchmark annotations
+                // (removed .mode(Mode.AverageTime) to allow individual benchmarks to specify their own mode)
                 // Configure result output - create a combined report for all benchmarks
                 .resultFormat(getResultFormat())
                 .result(getResultFile())
