@@ -20,6 +20,15 @@ echo "Creating performance tracking data..."
 JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2)
 OS_NAME="$(uname -s)"
 
+# Capture actual JVM arguments if available from environment or use default
+if [ -n "$MAVEN_OPTS" ]; then
+  JVM_ARGS_VALUE="$MAVEN_OPTS"
+elif [ -n "$JAVA_OPTS" ]; then
+  JVM_ARGS_VALUE="$JAVA_OPTS"  
+else
+  JVM_ARGS_VALUE="default"
+fi
+
 # Create performance tracking directory
 mkdir -p "$OUTPUT_DIR/tracking"
 mkdir -p "$OUTPUT_DIR/badges"
@@ -64,7 +73,7 @@ export THROUGHPUT_OPS_PER_SEC="$THROUGHPUT_OPS_PER_SEC"
 export AVG_TIME_MICROS="$AVG_TIME_MICROS"
 export ERROR_RESILIENCE_OPS_PER_SEC="$ERROR_RESILIENCE_OPS_PER_SEC"
 export JAVA_VERSION="$JAVA_VERSION"
-export JVM_ARGS="default"
+export JVM_ARGS="$JVM_ARGS_VALUE"
 export OS_NAME="$OS_NAME"
 
 TIMESTAMP_FILE=$(date -u +"%Y%m%d-%H%M%S")
