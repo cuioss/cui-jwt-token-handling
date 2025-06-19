@@ -6,9 +6,9 @@
 
 == Status
 
-image:https://github.com/cuioss/cui-jwt/actions/workflows/maven.yml/badge.svg[Java CI with Maven,link=https://github.com/cuioss/cui-jwt/actions/workflows/maven.yml]
-image:https://github.com/cuioss/cui-jwt/actions/workflows/integration-tests.yml/badge.svg[Integration Tests,link=https://github.com/cuioss/cui-jwt/actions/workflows/integration-tests.yml]
-image:https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml/badge.svg[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
+image:https://github.com/cuioss/cui-jwt/actions/workflows/maven.yml/badge.svg?branch=main[Java CI with Maven,link=https://github.com/cuioss/cui-jwt/actions/workflows/maven.yml]
+image:https://github.com/cuioss/cui-jwt/actions/workflows/integration-tests.yml/badge.svg?branch=main[Integration Tests,link=https://github.com/cuioss/cui-jwt/actions/workflows/integration-tests.yml]
+image:https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml/badge.svg?branch=main[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
 image:http://img.shields.io/:license-apache-blue.svg[License,link=http://www.apache.org/licenses/LICENSE-2.0.html]
 image:https://img.shields.io/maven-central/v/de.cuioss.jwt/cui-jwt-parent.svg?label=Maven%20Central["Maven Central", link="https://central.sonatype.com/artifact/de.cuioss.jwt/cui-jwt-parent"]
 
