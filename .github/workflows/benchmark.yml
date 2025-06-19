@@ -95,9 +95,9 @@ jobs:
           # Prepare GitHub Pages structure using script
           bash cui-jwt-benchmarking/doc/templates/scripts/prepare-github-pages.sh benchmark-results cui-jwt-benchmarking/doc/templates gh-pages
 
-          # Get current date for badge timestamp
-          TIMESTAMP=$(date -u +"%Y-%m-%d")
-          TIMESTAMP_WITH_TIME=$(date -u +"%Y-%m-%d %H:%M UTC")
+          # Get current date for badge timestamp in Berlin time
+          TIMESTAMP=$(TZ='Europe/Berlin' date +"%Y-%m-%d")
+          TIMESTAMP_WITH_TIME=$(TZ='Europe/Berlin' date +"%Y-%m-%d %H:%M %Z")
 
           # Create header for badge markdown
           echo "## Benchmark Results ($TIMESTAMP)" > gh-pages/badge-markdown.txt

@@ -320,7 +320,7 @@ Integration tests must verify compatibility with Keycloak as the identity provid
 
 The library must be regularly scanned for vulnerabilities using:
 
-* https://owasp.org/www-project-dependency-check/[OWASP Dependency Check] for third-party dependencies
+* Automated dependency vulnerability scanning for third-party dependencies
 * Static Application Security Testing (SAST) tools
 * Fuzz-Testing tools for input validation vulnerabilities
 
