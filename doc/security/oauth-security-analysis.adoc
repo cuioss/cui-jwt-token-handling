@@ -29,6 +29,12 @@ The client confusion attack occurs when a token issued for one client is used wi
 ==== Current Implementation Status: MITIGATED
 The library has implemented protections against client confusion attacks. For implementation details, see link:security-specifications.adoc#client-confusion-attack[Client Confusion Attack] in the Security Specifications document.
 
+**Implementation Details:**
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidator.java[TokenClaimValidator.java:233-249] - Audience claim validation prevents token misuse across clients
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidator.java[TokenClaimValidator.java:387-413] - Authorized Party (azp) validation verifies token was issued for the specific client
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/IssuerConfig.java[IssuerConfig.java] - Configuration enforces expectedClientId and expectedAudience validation
+* Mandatory azp validation when expectedClientId is configured prevents cross-client token usage
+
 ==== Test Coverage
 * link:../../src/test/java/de/cuioss/jwt/validation/ClientConfusionAttackTest.java[ClientConfusionAttackTest] - Tests specifically for client confusion attacks:
 ** `verify_azp_validation()` - Verifies that tokens with valid `azp` claims are accepted
@@ -50,6 +56,12 @@ The scope upgrade attack occurs when an attacker attempts to add additional scop
 ==== Current Implementation Status: PARTIALLY MITIGATED
 The library provides tools for scope validation but requires proper implementation at the application level. For implementation details, see link:security-specifications.adoc#scope-upgrade-attack[Scope Upgrade Attack] in the Security Specifications document.
 
+**Implementation Details:**
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/domain/token/AccessTokenContent.java[AccessTokenContent.java] - Provides access to scope claims from validated tokens
+* Scope validation must be implemented at the application level using the parsed token content
+* The library validates token integrity but does not enforce scope restrictions (authorization server responsibility)
+* Applications should validate scopes against expected permissions before granting resource access
+
 ==== Test Coverage
 No specific tests for scope upgrade attack prevention.
 
@@ -65,6 +77,12 @@ OAuth CSRF is an attack against OAuth flows, where the browser consuming the aut
 
 ==== Current Implementation Status: OUT OF SCOPE
 CSRF protection is primarily a concern at the application level, not in the token validation library. For best practices on preventing CSRF attacks, see link:../jwt-security-best-practices.adoc#token-lifecycle-management[Token Lifecycle Management] in the JWT Security Best Practices Guide.
+
+**Implementation Details:**
+* CSRF attacks occur during OAuth authorization flows, before token issuance
+* Token validation libraries operate after tokens are issued and do not handle OAuth flows
+* Applications must implement state parameter validation and proper CSRF tokens during OAuth flows
+* The library validates token integrity once received but cannot prevent CSRF during authorization
 
 ==== Test Coverage
 No specific tests for CSRF protection as it's out of scope for the token validation library.
@@ -97,6 +115,12 @@ The mutable claims attack exploits the fact that some OAuth providers allow user
 ==== Current Implementation Status: MITIGATED
 The library enforces validation of the `sub` claim to mitigate mutable claims attacks. For implementation details, see link:security-specifications.adoc#mutable-claims-attack[Mutable Claims Attack] in the Security Specifications document.
 
+**Implementation Details:**
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidator.java[TokenClaimValidator.java] - Validates presence and format of subject (sub) claim
+* All token types (AccessTokenContent, IdTokenContent, RefreshTokenContent) expose the immutable `sub` claim
+* Applications are guided to use `getSubject()` method for user identification rather than mutable claims like email
+* Library ensures `sub` claim is always present and validated in all token types
+
 ==== Test Coverage
 * link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidatorTest.java[TokenClaimValidatorTest] - Tests specifically for mutable claims validation:
 ** `shouldValidateTokenWithValidSubjectClaim()` - Verifies that tokens with valid subject claims are accepted
@@ -115,6 +139,12 @@ When OAuth is used in mobile applications, developers often use custom URL schem
 
 ==== Current Implementation Status: OUT OF SCOPE
 Mobile app redirect scheme handling is outside the scope of the token validation library. For best practices on securing mobile OAuth flows, see link:../jwt-security-best-practices.adoc#secure-token-handling-on-the-client[Secure Token Handling on the Client] in the JWT Security Best Practices Guide.
+
+**Implementation Details:**
+* Redirect scheme hijacking occurs during OAuth authorization flows, before token issuance
+* Token validation libraries operate after tokens are issued and do not handle mobile redirect schemes
+* Mobile applications must implement proper redirect URI validation and use platform-specific secure mechanisms
+* The library validates token integrity once received but cannot prevent redirect interception during authorization
 
 ==== Test Coverage
 No specific tests for redirect scheme hijacking as it's out of scope for the token validation library.
