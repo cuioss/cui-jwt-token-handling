@@ -195,10 +195,21 @@ For detailed information about the benchmarking system:
 * link:doc/performance-scoring.adoc[Performance Scoring System] - Complete methodology and calculation details
 * link:doc/README.adoc[Benchmark Documentation] - Visualization templates and additional documentation
 
-=== Templates
+=== Templates and Scripts
 
 The `doc/templates/` directory contains:
 
+**HTML Templates:**
 * `index-visualizer.html` - JMH Visualizer integration template
 * `performance-trends.html` - Interactive performance trends visualization
-* `performance-run.json` - Individual benchmark run data template
+
+**Data Templates:**
+* `performance-run.json` - Individual benchmark run data template (uses `envsubst` variables)
+
+**Processing Scripts:**
+* `scripts/create-performance-badge.sh` - Generates comprehensive performance badge from JMH results
+* `scripts/create-performance-tracking.sh` - Creates timestamped performance tracking files 
+* `scripts/update-performance-trends.sh` - Updates consolidated tracking and manages trend analysis
+* `scripts/calculate-trend-badge.sh` - Calculates trend metrics and generates trend badge
+
+The scripts architecture separates complex badge and tracking logic from the GitHub workflow, making the system more maintainable and testable.

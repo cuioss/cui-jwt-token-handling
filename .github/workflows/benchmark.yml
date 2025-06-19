@@ -193,114 +193,13 @@ jobs:
           # Note: Access Token Validation badge removed as redundant with Performance Score
           # The Performance Score badge already includes average time information plus comprehensive metrics
 
-          # Create performance indicator badge
-          create_performance_badge() {
-            echo "Creating performance indicator badge..."
-            
-            if [ -f "gh-pages/jmh-result.json" ]; then
-              # Extract throughput data from PerformanceIndicatorBenchmark.measureThroughput
-              local throughput_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureThroughput")' gh-pages/jmh-result.json 2>/dev/null)
-              local throughput_score=$(echo "$throughput_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
-              local throughput_unit=$(echo "$throughput_entry" | jq -r '.primaryMetric.scoreUnit' 2>/dev/null || echo "")
-              
-              # Extract average time data from PerformanceIndicatorBenchmark.measureAverageTime  
-              local avg_time_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureAverageTime")' gh-pages/jmh-result.json 2>/dev/null)
-              local avg_time_score=$(echo "$avg_time_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
-              local avg_time_unit=$(echo "$avg_time_entry" | jq -r '.primaryMetric.scoreUnit' 2>/dev/null || echo "")
-              
-              # Extract error resilience data from ErrorLoadBenchmark with 0% error percentage (clean performance under error handling)
-              local error_resilience_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.ErrorLoadBenchmark.validateMixedTokens" and .params.errorPercentage == "0")' gh-pages/jmh-result.json 2>/dev/null)
-              local error_resilience_score=$(echo "$error_resilience_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
-              local error_resilience_unit=$(echo "$error_resilience_entry" | jq -r '.primaryMetric.scoreUnit' 2>/dev/null || echo "")
-              
-              echo "Debug: Throughput: $throughput_score $throughput_unit, AvgTime: $avg_time_score $avg_time_unit, ErrorResilience: $error_resilience_score $error_resilience_unit"
-              
-              if [ "$throughput_score" != "0" ] && [ "$throughput_score" != "null" ] && [ "$avg_time_score" != "0" ] && [ "$avg_time_score" != "null" ]; then
-                # Convert throughput to ops/sec if needed
-                if [[ "$throughput_unit" == "ops/s" ]]; then
-                  throughput_ops_per_sec=$(echo "$throughput_score" | awk '{printf "%.0f", $1}')
-                elif [[ "$throughput_unit" == "s/op" ]]; then
-                  # Convert s/op to ops/s
-                  throughput_ops_per_sec=$(echo "scale=0; 1 / $throughput_score" | bc -l)
-                else
-                  echo "Warning: Unknown throughput unit: $throughput_unit"
-                  throughput_ops_per_sec="0"
-                fi
-                
-                # Convert avg time to microseconds if needed
-                if [[ "$avg_time_unit" == "us/op" ]]; then
-                  avg_time_microseconds=$(echo "$avg_time_score" | awk '{printf "%.1f", $1}')
-                elif [[ "$avg_time_unit" == "ms/op" ]]; then
-                  # Convert ms to microseconds
-                  avg_time_microseconds=$(echo "scale=1; $avg_time_score * 1000" | bc -l)
-                elif [[ "$avg_time_unit" == "s/op" ]]; then
-                  # Convert s to microseconds
-                  avg_time_microseconds=$(echo "scale=1; $avg_time_score * 1000000" | bc -l)
-                else
-                  echo "Warning: Unknown avg time unit: $avg_time_unit"
-                  avg_time_microseconds="0"
-                fi
-                
-                # Convert error resilience to ops/sec if needed
-                if [ "$error_resilience_score" != "0" ] && [ "$error_resilience_score" != "null" ]; then
-                  if [[ "$error_resilience_unit" == "ops/s" ]]; then
-                    error_resilience_ops_per_sec=$(echo "$error_resilience_score" | awk '{printf "%.0f", $1}')
-                  elif [[ "$error_resilience_unit" == "ms/op" ]]; then
-                    # Convert ms/op to ops/s
-                    error_resilience_ops_per_sec=$(echo "scale=0; 1000 / $error_resilience_score" | bc -l)
-                  elif [[ "$error_resilience_unit" == "us/op" ]]; then
-                    # Convert us/op to ops/s
-                    error_resilience_ops_per_sec=$(echo "scale=0; 1000000 / $error_resilience_score" | bc -l)
-                  else
-                    echo "Warning: Unknown error resilience unit: $error_resilience_unit"
-                    error_resilience_ops_per_sec="0"
-                  fi
-                else
-                  error_resilience_ops_per_sec="0"
-                fi
-                
-                echo "Debug: Converted - Throughput: ${throughput_ops_per_sec} ops/s, AvgTime: ${avg_time_microseconds} μs, ErrorResilience: ${error_resilience_ops_per_sec} ops/s"
-                
-                if [ "$throughput_ops_per_sec" != "0" ] && [ "$avg_time_microseconds" != "0" ]; then
-                  # Calculate latency component
-                  local latency_ops_per_sec=$(echo "scale=2; 1000000 / $avg_time_microseconds" | bc -l)
-                  
-                  # Calculate comprehensive weighted performance score with error resilience
-                  if [ "$error_resilience_ops_per_sec" != "0" ]; then
-                    # Enhanced formula: (throughput * 0.57) + (latency * 0.40) + (error_resilience * 0.03)
-                    local performance_score=$(echo "scale=2; ($throughput_ops_per_sec * 0.57) + ($latency_ops_per_sec * 0.40) + ($error_resilience_ops_per_sec * 0.03)" | bc -l)
-                    echo "Debug: Using enhanced scoring with error resilience"
-                  else
-                    # Fallback to original formula: (throughput * 0.6) + (latency * 0.4)
-                    local performance_score=$(echo "scale=2; ($throughput_ops_per_sec * 0.6) + ($latency_ops_per_sec * 0.4)" | bc -l)
-                    echo "Debug: Using original scoring (no error resilience data)"
-                  fi
-                  
-                  local formatted_score=$(printf "%.0f" $performance_score)
-                  local throughput_k=$(echo "scale=1; $throughput_ops_per_sec / 1000" | bc -l)
-                  local avg_time_ms=$(echo "scale=3; $avg_time_microseconds / 1000" | bc -l)
-                  local formatted_avg_time_ms=$(printf "%.2f" $avg_time_ms)
-                  
-                  # Create badge with performance score (using ms instead of μs)
-                  echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"${formatted_score} (${throughput_k}k ops/s, ${formatted_avg_time_ms}ms)\",\"color\":\"brightgreen\"}" > "gh-pages/badges/performance-badge.json"
-                  
-                  echo "Created performance badge: Score=$formatted_score (Throughput=${throughput_k}k ops/s, AvgTime=${avg_time_microseconds}μs)"
-                else
-                  echo "Warning: Unit conversion failed"
-                  echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"Conversion Error\",\"color\":\"yellow\"}" > "gh-pages/badges/performance-badge.json"
-                fi
-              else
-                echo "Warning: Could not extract valid performance metrics (throughput=$throughput_score, avg_time=$avg_time_score)"
-                echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"Pending\",\"color\":\"yellow\"}" > "gh-pages/badges/performance-badge.json"
-              fi
-            else
-              echo "Warning: jmh-result.json not found"
-              echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"No Data\",\"color\":\"red\"}" > "gh-pages/badges/performance-badge.json"
-            fi
-          }
-
-          # Create the performance indicator badge
-          create_performance_badge
+          # Create performance badge using script
+          if [ -f "gh-pages/jmh-result.json" ]; then
+            bash cui-jwt-benchmarking/doc/templates/scripts/create-performance-badge.sh gh-pages/jmh-result.json gh-pages/badges
+          else
+            echo "Warning: jmh-result.json not found"
+            echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"No Data\",\"color\":\"red\"}" > "gh-pages/badges/performance-badge.json"
+          fi
 
           # Create a combined badge for all benchmarks
           echo "{\"schemaVersion\":1,\"label\":\"JWT Benchmarks\",\"message\":\"Updated $TIMESTAMP\",\"color\":\"brightgreen\"}" > gh-pages/badges/all-benchmarks.json
@@ -308,171 +207,32 @@ jobs:
           # Create last benchmark run badge
           echo "{\"schemaVersion\":1,\"label\":\"Last Benchmark Run\",\"message\":\"$TIMESTAMP\",\"color\":\"blue\"}" > gh-pages/badges/last-run-badge.json
 
-          # Performance Tracking System
+          # Performance Tracking System using scripts
           echo "Setting up performance tracking..."
-          
-          # Create performance tracking directory
-          mkdir -p gh-pages/tracking
-          
-          # Get commit hash and environment info
           COMMIT_HASH="${{ github.sha }}"
-          JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2)
-          OS_NAME="$(uname -s)"
           
-          # Create current run performance data
-          create_performance_tracking() {
-            echo "Creating performance tracking data..."
+          if [ -f "gh-pages/jmh-result.json" ]; then
+            # Create performance tracking data using script
+            TRACKING_OUTPUT=$(bash cui-jwt-benchmarking/doc/templates/scripts/create-performance-tracking.sh gh-pages/jmh-result.json cui-jwt-benchmarking/doc/templates gh-pages "$COMMIT_HASH" 2>&1)
+            echo "$TRACKING_OUTPUT"
             
-            # Extract the same performance data we use for badges
-            if [ -f "gh-pages/jmh-result.json" ]; then
-              # Get the performance metrics we calculated earlier
-              local throughput_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureThroughput")' gh-pages/jmh-result.json 2>/dev/null)
-              local throughput_score=$(echo "$throughput_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
-              
-              local avg_time_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureAverageTime")' gh-pages/jmh-result.json 2>/dev/null)
-              local avg_time_score=$(echo "$avg_time_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
-              
-              local error_resilience_entry=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.ErrorLoadBenchmark.validateMixedTokens" and .params.errorPercentage == "0")' gh-pages/jmh-result.json 2>/dev/null)
-              local error_resilience_score=$(echo "$error_resilience_entry" | jq -r '.primaryMetric.score' 2>/dev/null || echo "0")
-              
-              if [ "$throughput_score" != "0" ] && [ "$throughput_score" != "null" ] && [ "$avg_time_score" != "0" ] && [ "$avg_time_score" != "null" ]; then
-                # Convert units as we do in badge creation
-                local throughput_ops_per_sec=$(echo "$throughput_score" | awk '{printf "%.0f", $1}')
-                local avg_time_microseconds=$(echo "$avg_time_score" | awk '{printf "%.1f", $1}')
-                local avg_time_ms=$(echo "scale=3; $avg_time_microseconds / 1000" | bc -l)
-                local formatted_avg_time_ms=$(printf "%.2f" $avg_time_ms)
-                
-                # Calculate error resilience ops/sec (convert from ms/op if needed)
-                local error_resilience_ops_per_sec="0"
-                if [ "$error_resilience_score" != "0" ] && [ "$error_resilience_score" != "null" ]; then
-                  # Assume it's in ms/op format, convert to ops/s
-                  error_resilience_ops_per_sec=$(echo "scale=0; 1000 / $error_resilience_score" | bc -l 2>/dev/null || echo "0")
-                fi
-                
-                # Calculate performance score using same formula as badge
-                local latency_ops_per_sec=$(echo "scale=2; 1000000 / $avg_time_microseconds" | bc -l)
-                local performance_score
-                if [ "$error_resilience_ops_per_sec" != "0" ]; then
-                  performance_score=$(echo "scale=2; ($throughput_ops_per_sec * 0.57) + ($latency_ops_per_sec * 0.40) + ($error_resilience_ops_per_sec * 0.03)" | bc -l)
-                else
-                  performance_score=$(echo "scale=2; ($throughput_ops_per_sec * 0.6) + ($latency_ops_per_sec * 0.4)" | bc -l)
-                fi
-                local formatted_score=$(printf "%.0f" $performance_score)
-                
-                # Create performance run JSON from template
-                sed "s/{{TIMESTAMP}}/$(date -u +"%Y-%m-%dT%H:%M:%SZ")/g; \
-                     s/{{COMMIT_HASH}}/$COMMIT_HASH/g; \
-                     s/{{PERFORMANCE_SCORE}}/$formatted_score/g; \
-                     s/{{THROUGHPUT_VALUE}}/$throughput_ops_per_sec/g; \
-                     s/{{AVERAGE_TIME_MS}}/$formatted_avg_time_ms/g; \
-                     s/{{ERROR_RESILIENCE_VALUE}}/$error_resilience_ops_per_sec/g; \
-                     s/{{THROUGHPUT_OPS_PER_SEC}}/$throughput_ops_per_sec/g; \
-                     s/{{AVG_TIME_MICROS}}/$avg_time_microseconds/g; \
-                     s/{{ERROR_RESILIENCE_OPS_PER_SEC}}/$error_resilience_ops_per_sec/g; \
-                     s/{{JAVA_VERSION}}/$JAVA_VERSION/g; \
-                     s/{{JVM_ARGS}}/default/g; \
-                     s/{{OS_NAME}}/$OS_NAME/g" \
-                     cui-jwt-benchmarking/doc/templates/performance-run.json > "gh-pages/tracking/performance-$(date -u +"%Y%m%d-%H%M%S").json"
-                
-                echo "Created performance tracking file: performance-$(date -u +"%Y%m%d-%H%M%S").json"
-                
-                # Update consolidated tracking file
-                update_performance_tracking "$formatted_score" "$throughput_ops_per_sec" "$formatted_avg_time_ms" "$error_resilience_ops_per_sec"
-              else
-                echo "Warning: Could not extract valid performance metrics for tracking"
-              fi
+            # Extract metrics from tracking script output
+            PERF_SCORE=$(echo "$TRACKING_OUTPUT" | grep "PERF_SCORE=" | cut -d'=' -f2)
+            PERF_THROUGHPUT=$(echo "$TRACKING_OUTPUT" | grep "PERF_THROUGHPUT=" | cut -d'=' -f2)
+            PERF_LATENCY=$(echo "$TRACKING_OUTPUT" | grep "PERF_LATENCY=" | cut -d'=' -f2)
+            PERF_RESILIENCE=$(echo "$TRACKING_OUTPUT" | grep "PERF_RESILIENCE=" | cut -d'=' -f2)
+            
+            if [ -n "$PERF_SCORE" ] && [ "$PERF_SCORE" != "0" ]; then
+              # Update consolidated tracking and create trend badge using script
+              bash cui-jwt-benchmarking/doc/templates/scripts/update-performance-trends.sh cui-jwt-benchmarking/doc/templates gh-pages "$COMMIT_HASH" "$PERF_SCORE" "$PERF_THROUGHPUT" "$PERF_LATENCY" "$PERF_RESILIENCE"
             else
-              echo "Warning: jmh-result.json not found for performance tracking"
+              echo "Warning: Could not extract valid performance metrics for trend tracking"
+              echo "{\"schemaVersion\":1,\"label\":\"Performance Trend\",\"message\":\"→ No Data\",\"color\":\"lightgrey\"}" > "gh-pages/badges/trend-badge.json"
             fi
-          }
-          
-          # Function to update consolidated performance tracking and calculate trends
-          update_performance_tracking() {
-            local current_score=$1
-            local current_throughput=$2
-            local current_latency=$3
-            local current_resilience=$4
-            
-            echo "Updating consolidated performance tracking..."
-            
-            # Download existing tracking file if it exists
-            local tracking_file="gh-pages/performance-tracking.json"
-            curl -f -s "https://cuioss.github.io/cui-jwt/benchmarks/performance-tracking.json" -o "$tracking_file" 2>/dev/null || echo '{"runs":[]}' > "$tracking_file"
-            
-            # Add current run to tracking data
-            local current_run=$(cat <<EOF
-{
-  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-  "commit": "$COMMIT_HASH",
-  "performance": {
-    "score": $current_score,
-    "throughput": {"value": $current_throughput, "unit": "ops/s"},
-    "averageTime": {"value": $current_latency, "unit": "ms"},
-    "errorResilience": {"value": $current_resilience, "unit": "ops/s"}
-  }
-}
-EOF
-)
-            
-            # Add new run and keep only last 10 runs
-            jq --argjson newrun "$current_run" '.runs += [$newrun] | .runs = (.runs | sort_by(.timestamp) | .[-10:])' "$tracking_file" > "$tracking_file.tmp" && mv "$tracking_file.tmp" "$tracking_file"
-            
-            # Calculate trends and create trend badge
-            calculate_and_create_trend_badge "$tracking_file"
-            
-            # Copy performance trends template
-            cp cui-jwt-benchmarking/doc/templates/performance-trends.html gh-pages/trends.html
-            
-            echo "Performance tracking updated successfully"
-          }
-          
-          # Function to calculate trends and create trend badge
-          calculate_and_create_trend_badge() {
-            local tracking_file=$1
-            
-            echo "Calculating performance trends..."
-            
-            # Extract last 10 scores for trend calculation
-            local scores=$(jq -r '.runs[].performance.score' "$tracking_file" | tail -10)
-            local score_count=$(echo "$scores" | wc -l)
-            
-            if [ "$score_count" -ge 2 ]; then
-              # Calculate simple trend (percentage change from first to last in the dataset)
-              local first_score=$(echo "$scores" | head -1)
-              local last_score=$(echo "$scores" | tail -1)
-              local percent_change=$(echo "scale=2; (($last_score - $first_score) / $first_score) * 100" | bc -l)
-              
-              # Determine trend direction and color
-              local trend_direction="stable"
-              local trend_color="lightgrey"
-              local trend_symbol="→"
-              
-              if [ $(echo "$percent_change > 2" | bc -l) -eq 1 ]; then
-                trend_direction="improving"
-                trend_color="brightgreen"
-                trend_symbol="↗"
-              elif [ $(echo "$percent_change < -2" | bc -l) -eq 1 ]; then
-                trend_direction="declining"
-                trend_color="orange"
-                trend_symbol="↘"
-              fi
-              
-              local abs_change=$(echo "$percent_change" | sed 's/-//')
-              local formatted_change=$(printf "%.1f" $abs_change)
-              
-              # Create trend badge
-              echo "{\"schemaVersion\":1,\"label\":\"Performance Trend\",\"message\":\"$trend_symbol $formatted_change% ($trend_direction)\",\"color\":\"$trend_color\"}" > "gh-pages/badges/trend-badge.json"
-              
-              echo "Created trend badge: $trend_direction ($formatted_change%)"
-            else
-              # Not enough data for trend
-              echo "{\"schemaVersion\":1,\"label\":\"Performance Trend\",\"message\":\"→ Insufficient Data\",\"color\":\"lightgrey\"}" > "gh-pages/badges/trend-badge.json"
-              echo "Created trend badge: insufficient data"
-            fi
-          }
-          
-          # Execute performance tracking
-          create_performance_tracking
+          else
+            echo "Warning: jmh-result.json not found for performance tracking"
+            echo "{\"schemaVersion\":1,\"label\":\"Performance Trend\",\"message\":\"→ No Data\",\"color\":\"lightgrey\"}" > "gh-pages/badges/trend-badge.json"
+          fi
 
           # Note: validator-badge.json removed as redundant with comprehensive performance-badge.json
 
