@@ -23,8 +23,6 @@ _Access Token Validation shows average time to validate a single JWT token_
 
 https://cuioss.github.io/cui-jwt/about.html[Generated Documentation on github-pages]
 
-:sectnums:
-
 == What is it?
 
 A comprehensive library for validating JWT tokens in multi-issuer environments.
