@@ -97,7 +97,7 @@ jobs:
 
           # Get current date for badge timestamp
           TIMESTAMP=$(date -u +"%Y-%m-%d")
-          TIMESTAMP_WITH_TIME=$(date -u +"%Y-%m-%d %H:%M")
+          TIMESTAMP_WITH_TIME=$(date -u +"%Y-%m-%d %H:%M UTC")
 
           # Create header for badge markdown
           echo "## Benchmark Results ($TIMESTAMP)" > gh-pages/badge-markdown.txt
