@@ -22,17 +22,31 @@ OS_NAME="$(uname -s)"
 
 # Create performance tracking directory
 mkdir -p "$OUTPUT_DIR/tracking"
+mkdir -p "$OUTPUT_DIR/badges"
 
-# Run the performance badge script to get metrics
-BADGE_OUTPUT=$(bash "$TEMPLATES_DIR/scripts/create-performance-badge.sh" "$JMH_RESULT_FILE" "$OUTPUT_DIR/badges" 2>&1)
-echo "$BADGE_OUTPUT"
+# Run the performance badge script to get metrics and capture in a metrics file
+METRICS_FILE="$OUTPUT_DIR/tracking/metrics-temp.sh"
+bash "$TEMPLATES_DIR/scripts/create-performance-badge.sh" "$JMH_RESULT_FILE" "$OUTPUT_DIR/badges" > "$METRICS_FILE.log" 2>&1
 
-# Extract metrics from badge script output
-PERFORMANCE_SCORE=$(echo "$BADGE_OUTPUT" | grep "PERFORMANCE_SCORE=" | cut -d'=' -f2)
-THROUGHPUT_OPS_PER_SEC=$(echo "$BADGE_OUTPUT" | grep "THROUGHPUT_OPS_PER_SEC=" | cut -d'=' -f2)
-AVERAGE_TIME_MS=$(echo "$BADGE_OUTPUT" | grep "AVERAGE_TIME_MS=" | cut -d'=' -f2)
-ERROR_RESILIENCE_OPS_PER_SEC=$(echo "$BADGE_OUTPUT" | grep "ERROR_RESILIENCE_OPS_PER_SEC=" | cut -d'=' -f2)
-AVG_TIME_MICROS=$(echo "$BADGE_OUTPUT" | grep "AVG_TIME_MICROS=" | cut -d'=' -f2)
+# Extract metrics from badge script output and create a sourceable metrics file
+{
+  echo "# Performance metrics extracted from create-performance-badge.sh"
+  echo "$BADGE_OUTPUT" | grep "PERFORMANCE_SCORE=" | head -1 || echo "PERFORMANCE_SCORE=0"
+  echo "$BADGE_OUTPUT" | grep "THROUGHPUT_OPS_PER_SEC=" | head -1 || echo "THROUGHPUT_OPS_PER_SEC=0" 
+  echo "$BADGE_OUTPUT" | grep "AVERAGE_TIME_MS=" | head -1 || echo "AVERAGE_TIME_MS=0"
+  echo "$BADGE_OUTPUT" | grep "ERROR_RESILIENCE_OPS_PER_SEC=" | head -1 || echo "ERROR_RESILIENCE_OPS_PER_SEC=0"
+  echo "$BADGE_OUTPUT" | grep "AVG_TIME_MICROS=" | head -1 || echo "AVG_TIME_MICROS=0"
+} > "$METRICS_FILE"
+
+# Source the metrics file for more robust parsing
+BADGE_OUTPUT=$(cat "$METRICS_FILE.log")
+source "$METRICS_FILE" || {
+  echo "Error: Failed to source metrics from create-performance-badge.sh"
+  exit 1
+}
+
+# Clean up temporary files
+rm -f "$METRICS_FILE" "$METRICS_FILE.log"
 
 if [ -z "$PERFORMANCE_SCORE" ] || [ "$PERFORMANCE_SCORE" = "0" ]; then
   echo "Warning: Could not extract valid performance metrics for tracking"
