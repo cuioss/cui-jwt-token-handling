@@ -17,7 +17,7 @@ if [ "$SCORE_COUNT" -ge 2 ]; then
   # Calculate simple trend (percentage change from first to last in the dataset)
   FIRST_SCORE=$(echo "$SCORES" | head -1)
   LAST_SCORE=$(echo "$SCORES" | tail -1)
-  PERCENT_CHANGE=$(echo "scale=2; (($LAST_SCORE - $FIRST_SCORE) / $FIRST_SCORE) * 100" | bc -l)
+  PERCENT_CHANGE=$(if [ "$(echo "$FIRST_SCORE == 0" | bc -l)" -eq 1 ]; then if [ "$(echo "$LAST_SCORE == 0" | bc -l)" -eq 1 ]; then echo "0"; else echo "99999"; fi; else echo "scale=2; (($LAST_SCORE - $FIRST_SCORE) / $FIRST_SCORE) * 100"; fi | bc -l)
   
   # Determine trend direction and color
   TREND_DIRECTION="stable"
