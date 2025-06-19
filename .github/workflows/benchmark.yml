@@ -117,17 +117,7 @@ jobs:
           # Copy the JMH Visualizer template
           cp cui-jwt-benchmarking/doc/index-visualizer.html gh-pages/index.html
 
-      - name: Deploy to cuioss.github.io
-        uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8 # v4.7.3
-        with:
-          folder: gh-pages
-          repository-name: cuioss/cuioss.github.io
-          target-folder: cui-jwt/benchmarks
-          branch: main
-          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
-
-      - name: Create benchmark badges
-        run: |
+          # Create benchmark badges BEFORE deployment
           # Create directory for badges
           mkdir -p gh-pages/badges
 
@@ -179,3 +169,12 @@ jobs:
 
           # Copy the validator badge to the root for backward compatibility
           cp -f gh-pages/badges/validator-badge.json gh-pages/validator-badge.json || true
+
+      - name: Deploy to cuioss.github.io
+        uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8 # v4.7.3
+        with:
+          folder: gh-pages
+          repository-name: cuioss/cuioss.github.io
+          target-folder: cui-jwt/benchmarks
+          branch: main
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
