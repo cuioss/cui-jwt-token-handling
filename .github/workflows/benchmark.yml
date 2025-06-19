@@ -3,8 +3,8 @@ name: JMH Benchmark
 on:
   pull_request:
     branches: [ "main" ]
+    types: [ closed ]
   push:
-    branches: [ "main" ]
     tags: [ "*" ]
   workflow_dispatch:
 
