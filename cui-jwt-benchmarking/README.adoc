@@ -120,7 +120,7 @@ Access comprehensive performance trends at: https://cuioss.github.io/cui-jwt/ben
 **Features:**
 * Interactive charts for all key metrics
 * Trend indicators with percentage changes
-* Linear regression analysis over last 10 runs
+* Percentage change calculation between first and last of last 10 runs
 * Technical variation filtering for accurate trend detection
 
 === Performance Trend Badge
