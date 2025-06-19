@@ -4,7 +4,6 @@ on:
   pull_request:
     branches: [ "main" ]
   push:
-    branches: [ "main" ]
     tags: [ "*" ]
   workflow_dispatch:
 
@@ -20,8 +19,8 @@ jobs:
   benchmark:
     name: Run JMH Benchmarks
     runs-on: ubuntu-latest
-    # Run on pushes to main, merged PRs, tags, or manual dispatch
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    # Only run on merged PRs, not just closed ones
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     # Add timeout to prevent long-running jobs
     timeout-minutes: 30
     permissions:
