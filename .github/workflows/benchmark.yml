@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [ "main" ]
   push:
+    branches: [ "main" ]
     tags: [ "*" ]
   workflow_dispatch:
 
@@ -96,6 +97,7 @@ jobs:
 
           # Get current date for badge timestamp
           TIMESTAMP=$(date -u +"%Y-%m-%d")
+          TIMESTAMP_WITH_TIME=$(date -u +"%Y-%m-%d %H:%M")
 
           # Create header for badge markdown
           echo "## Benchmark Results ($TIMESTAMP)" > gh-pages/badge-markdown.txt
@@ -109,7 +111,7 @@ jobs:
           fi
 
           # Create simple badges using script
-          bash cui-jwt-benchmarking/doc/templates/scripts/create-simple-badge.sh gh-pages/jmh-result.json gh-pages/badges "$TIMESTAMP"
+          bash cui-jwt-benchmarking/doc/templates/scripts/create-simple-badge.sh gh-pages/jmh-result.json gh-pages/badges "$TIMESTAMP" "$TIMESTAMP_WITH_TIME"
 
           # Performance Tracking System using scripts
           echo "Setting up performance tracking..."
