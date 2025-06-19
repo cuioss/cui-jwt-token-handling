@@ -1,9 +1,18 @@
-= Benchmark Visualization Template
+= Benchmark Documentation
 :toc:
 :toclevels: 3
 :sectnums:
 
-This directory contains the HTML template used for integrating JMH Visualizer with the JWT Validation project's benchmark results.
+This directory contains documentation and templates for the JWT Validation benchmarking system.
+
+== Documentation Files
+
+* link:performance-scoring.adoc[Performance Scoring System] - Comprehensive guide to the weighted performance metrics and scoring methodology
+* This document (README.adoc) - Overview of benchmark visualization templates
+
+== Benchmark Visualization Template
+
+This section describes the HTML template used for integrating JMH Visualizer with the JWT Validation project's benchmark results.
 
 == Overview
 

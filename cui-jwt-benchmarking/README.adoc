@@ -10,11 +10,12 @@ This module contains benchmarking code for the JWT token validation library. It 
 
 The benchmarking module provides performance measurements for key components of the JWT validation library:
 
-* Token validation performance
-* JWKS key retrieval performance
+* Token validation performance (average time and throughput)
+* JWKS key retrieval performance  
 * Multi-issuer validation performance
 * Error handling performance
 * Concurrent validation performance
+* **Performance Score**: A weighted metric combining throughput and latency
 
 == Running Benchmarks Manually
 
@@ -93,3 +94,38 @@ This module is configured to run benchmarks automatically via GitHub Actions:
 * Manually via workflow dispatch
 
 Results are published to GitHub Pages for visualization and comparison over time.
+
+== Performance Scoring System
+
+The benchmarking module includes a comprehensive performance scoring system that combines multiple metrics into a single indicator. This system focuses on the two most critical performance aspects:
+
+=== Key Metrics
+
+**Token Throughput**: Operations per second under concurrent load (60% weight)
+
+**Average Validation Time**: Microseconds per operation in single-threaded scenarios (40% weight)
+
+=== Weighted Score Calculation
+
+The performance score uses the formula:
+```
+Score = (Throughput × 0.6) + ((1,000,000 ÷ AvgTime) × 0.4)
+```
+
+This provides a balanced view where higher throughput and lower latency both contribute positively to the score.
+
+=== Performance Badge
+
+The system automatically generates a performance badge displayed in the main README that shows:
+- The weighted performance score
+- Raw throughput value (operations/second)  
+- Raw average time value (microseconds)
+
+Example: `Performance Score: 32000 (45k ops/s, 80μs)`
+
+== Documentation
+
+For detailed information about the benchmarking system:
+
+* link:doc/performance-scoring.adoc[Performance Scoring System] - Complete methodology and calculation details
+* link:doc/README.adoc[Benchmark Documentation] - Visualization templates and additional documentation
