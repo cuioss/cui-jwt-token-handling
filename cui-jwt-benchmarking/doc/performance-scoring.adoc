@@ -67,6 +67,7 @@ The performance score uses a weighted combination of three key metrics:
 Performance Score = (Throughput × 0.57) + (Latency_Inverted × 0.40) + (Error_Resilience × 0.03)
 
 Where:
+
 - Throughput = Operations per second from concurrent benchmark
 - Latency_Inverted = 1,000,000 ÷ Average_Time_Microseconds
 - Error_Resilience = Operations per second under mixed error conditions (0% error scenario)
@@ -104,6 +105,7 @@ Latency_Inverted = 1,000,000 ÷ Average_Time_Microseconds
 ----
 
 This inversion ensures that:
+
 - Lower validation times contribute positively to the score
 - The metric is in the same scale as throughput (ops/sec)
 - Both metrics contribute positively to higher scores

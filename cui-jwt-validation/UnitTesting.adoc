@@ -16,18 +16,7 @@ The project provides a test artifact with the classifier `generators` that conta
 
 === Maven Dependency
 
-To use the test utilities in your project, add the following dependency to your `pom.xml`:
-
-[source,xml]
-----
-<dependency>
-    <groupId>de.cuioss.jwt</groupId>
-    <artifactId>cui-jwt-validation</artifactId>
-    <version>${version}</version>
-    <classifier>generators</classifier>
-    <scope>test</scope>
-</dependency>
-----
+For Maven dependency information, see xref:README.adoc#test-artifact[Test Artifact Dependencies] in the main module documentation.
 
 === Contents
 

@@ -4,23 +4,23 @@
 :toc-title: Table of Contents
 :sectnums:
 
-link:../Specification.adoc[Back to Main Specification]
+xref:../Specification.adoc[Back to Main Specification]
 
 == Overview
-_See Requirement link:../Requirements.adoc#CUI-JWT-12[CUI-JWT-12: Testing and Quality Assurance]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-12[CUI-JWT-12: Testing and Quality Assurance]_
 
 This document provides detailed specifications for testing the JWT Token Validation library.
 
 === Document Navigation
 
-* link:../../README.adoc[README] - Project overview and introduction
-* link:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
-* link:../Requirements.adoc[Requirements] - Functional and non-functional requirements
-* link:../Specification.adoc[Specification] - Technical specifications
-* link:../LogMessages.adoc[Log Messages] - Reference for all log messages
-* link:../Build.adoc[Building and Development] - Information for contributors
-* link:technical-components.adoc[Technical Components] - Implementation details
-* link:../security/security-specifications.adoc[Security] - Security measures implementation
+* xref:../../README.adoc[README] - Project overview and introduction
+* xref:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
+* xref:../Requirements.adoc[Requirements] - Functional and non-functional requirements
+* xref:../Specification.adoc[Specification] - Technical specifications
+* xref:../LogMessages.adoc[Log Messages] - Reference for all log messages
+* xref:../Build.adoc[Building and Development] - Information for contributors
+* xref:technical-components.adoc[Technical Components] - Implementation details
+* xref:../security/security-specifications.adoc[Security] - Security measures implementation
 
 == Compliance with CUI Testing Standards
 
@@ -74,7 +74,7 @@ The CUI Quality Standards and Testing Framework defines:
 == Testing Strategy
 
 === Unit Testing
-_See Requirement link:../Requirements.adoc#CUI-JWT-12.2[CUI-JWT-12.2: Unit Testing]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-12.2[CUI-JWT-12.2: Unit Testing]_
 
 ==== Status: IMPLEMENTED
 
@@ -82,17 +82,17 @@ Unit tests have been implemented for the core functionality, providing comprehen
 
 The following test classes implement these unit tests:
 
-* link:../../src/test/java/de/cuioss/jwt/validation/TokenValidatorTest.java[TokenValidatorTest.java] - Tests for the TokenValidator
-* link:../../src/test/java/de/cuioss/jwt/validation/TokenTypeTest.java[TokenTypeTest.java] - Tests for token type enumeration
-* link:../../src/test/java/de/cuioss/jwt/validation/domain/token/BaseTokenContentTest.java[BaseTokenContentTest.java] - Tests for the base token content
-* link:../../src/test/java/de/cuioss/jwt/validation/domain/token/AccessTokenContentTest.java[AccessTokenContentTest.java] - Tests for access token content
-* link:../../src/test/java/de/cuioss/jwt/validation/domain/token/IdTokenContentTest.java[IdTokenContentTest.java] - Tests for ID token content
-* link:../../src/test/java/de/cuioss/jwt/validation/domain/token/RefreshTokenContentTest.java[RefreshTokenContentTest.java] - Tests for refresh token content
-* link:../../src/test/java/de/cuioss/jwt/validation/CustomClaimMapperTest.java[CustomClaimMapperTest.java] - Tests for custom claim mapping
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/ParserConfigTest.java[ParserConfigTest.java] - Tests for ParserConfig
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/DecodedJwtTest.java[DecodedJwtTest.java] - Tests for DecodedJwt
-* link:../../src/test/java/de/cuioss/jwt/validation/security/BouncyCastleProviderSingletonTest.java[BouncyCastleProviderSingletonTest.java] - Tests for BouncyCastleProviderSingleton
-* link:../../src/test/java/de/cuioss/jwt/validation/jwks/JwksLoaderFactoryTest.java[JwksLoaderFactoryTest.java] - Tests for JwksLoaderFactory
+* xref:../../src/test/java/de/cuioss/jwt/validation/TokenValidatorTest.java[TokenValidatorTest.java] - Tests for the TokenValidator
+* xref:../../src/test/java/de/cuioss/jwt/validation/TokenTypeTest.java[TokenTypeTest.java] - Tests for token type enumeration
+* xref:../../src/test/java/de/cuioss/jwt/validation/domain/token/BaseTokenContentTest.java[BaseTokenContentTest.java] - Tests for the base token content
+* xref:../../src/test/java/de/cuioss/jwt/validation/domain/token/AccessTokenContentTest.java[AccessTokenContentTest.java] - Tests for access token content
+* xref:../../src/test/java/de/cuioss/jwt/validation/domain/token/IdTokenContentTest.java[IdTokenContentTest.java] - Tests for ID token content
+* xref:../../src/test/java/de/cuioss/jwt/validation/domain/token/RefreshTokenContentTest.java[RefreshTokenContentTest.java] - Tests for refresh token content
+* xref:../../src/test/java/de/cuioss/jwt/validation/CustomClaimMapperTest.java[CustomClaimMapperTest.java] - Tests for custom claim mapping
+* xref:../../src/test/java/de/cuioss/jwt/validation/pipeline/ParserConfigTest.java[ParserConfigTest.java] - Tests for ParserConfig
+* xref:../../src/test/java/de/cuioss/jwt/validation/pipeline/DecodedJwtTest.java[DecodedJwtTest.java] - Tests for DecodedJwt
+* xref:../../src/test/java/de/cuioss/jwt/validation/security/BouncyCastleProviderSingletonTest.java[BouncyCastleProviderSingletonTest.java] - Tests for BouncyCastleProviderSingleton
+* xref:../../src/test/java/de/cuioss/jwt/validation/jwks/JwksLoaderFactoryTest.java[JwksLoaderFactoryTest.java] - Tests for JwksLoaderFactory
 
 These tests cover:
 
@@ -133,23 +133,23 @@ The following test cases will be implemented:
 
 The following test classes demonstrate token parsing and validation:
 
-* link:../../src/test/java/de/cuioss/jwt/validation/TokenValidatorTest.java[TokenValidatorTest.java] - Contains tests for token creation and validation:
+* xref:../../src/test/java/de/cuioss/jwt/validation/TokenValidatorTest.java[TokenValidatorTest.java] - Contains tests for token creation and validation:
 ** `shouldCreateAccessToken()` - Tests creating and parsing an access token
 ** `shouldCreateIdToken()` - Tests creating and parsing an ID token
 ** `shouldCreateRefreshToken()` - Tests creating and parsing a refresh token
 ** `shouldHandleInvalidTokenFormat()` - Tests handling invalid token formats
 ** `shouldHandleUnknownIssuer()` - Tests handling unknown issuers
 
-* link:../../src/test/java/de/cuioss/jwt/validation/RFC7519JWTComplianceTest.java[RFC7519JWTComplianceTest.java] - Contains tests for RFC 7519 compliance:
+* xref:../../src/test/java/de/cuioss/jwt/validation/RFC7519JWTComplianceTest.java[RFC7519JWTComplianceTest.java] - Contains tests for RFC 7519 compliance:
 ** `shouldValidateTokenSignature()` - Tests validating token signatures
 ** `shouldRejectInvalidSignature()` - Tests rejecting tokens with invalid signatures
 
-* link:../../src/test/java/de/cuioss/jwt/validation/OAuth2JWTBestPracticesComplianceTest.java[OAuth2JWTBestPracticesComplianceTest.java] - Contains tests for OAuth 2.0 JWT Best Practices compliance:
+* xref:../../src/test/java/de/cuioss/jwt/validation/OAuth2JWTBestPracticesComplianceTest.java[OAuth2JWTBestPracticesComplianceTest.java] - Contains tests for OAuth 2.0 JWT Best Practices compliance:
 ** `shouldRejectAccessTokenWithInvalidSignature()` - Tests rejecting access tokens with invalid signatures
 ** `shouldRejectIDTokenWithInvalidSignature()` - Tests rejecting ID tokens with invalid signatures
 
 === Integration Testing with TestContainers
-_See Requirement link:../Requirements.adoc#CUI-JWT-12.3[CUI-JWT-12.3: Integration Testing]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-12.3[CUI-JWT-12.3: Integration Testing]_
 
 ==== Status: IMPLEMENTED
 
@@ -157,7 +157,7 @@ Integration tests have been implemented to verify compatibility with Keycloak as
 
 The following test class implements integration tests with Keycloak:
 
-* link:../../src/test/java/de/cuioss/jwt/validation/TokenKeycloakITTest.java[TokenKeycloakITTest.java] - Integration tests with Keycloak
+* xref:../../src/test/java/de/cuioss/jwt/validation/TokenKeycloakITTest.java[TokenKeycloakITTest.java] - Integration tests with Keycloak
 
 These tests cover:
 
@@ -177,16 +177,16 @@ The `KeycloakITBase` class from the `cui-test-keycloak-integration` library prov
 Refer to the implementation and associated JavaDoc for detailed behavior.
 
 === Security Testing
-_See Requirement link:../Requirements.adoc#CUI-JWT-8[CUI-JWT-8: Security]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8[CUI-JWT-8: Security]_
 
 ==== Status: IMPLEMENTED
 
 Comprehensive security testing has been implemented to verify the security aspects of the JWT Token Validation library.
 
-For detailed information about security testing, including test classes, test coverage, and specific security tests like Key Disclosure Vulnerability Tests and Token Cracking Resistance Tests, please refer to the link:../security/security-specifications.adoc[Security] document, specifically the "Security Testing Specifications" section.
+For detailed information about security testing, including test classes, test coverage, and specific security tests like Key Disclosure Vulnerability Tests and Token Cracking Resistance Tests, please refer to the xref:../security/security-specifications.adoc[Security] document, specifically the "Security Testing Specifications" section.
 
 === Performance Testing
-_See Requirement link:../Requirements.adoc#CUI-JWT-9[CUI-JWT-9: Performance]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-9[CUI-JWT-9: Performance]_
 
 ==== Status: IMPLEMENTED
 
@@ -220,7 +220,7 @@ The implementation uses concurrent testing to simulate real-world load scenarios
 5. Cache efficiency for JWKS loading
 
 === Logging Tests
-_See Requirement link:../Requirements.adoc#CUI-JWT-7[CUI-JWT-7: Logging]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-7[CUI-JWT-7: Logging]_
 
 ==== Status: IMPLEMENTED
 
@@ -228,9 +228,9 @@ Comprehensive logging tests have been implemented to verify that the JWT Token V
 
 The following test classes implement these logging tests:
 
-* link:../../src/test/java/de/cuioss/jwt/validation/TokenValidatorTest.java[TokenValidatorTest.java] - Contains a nested class `TokenLoggingTests` with tests for token-related logging
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidatorTest.java[TokenClaimValidatorTest.java] - Contains tests that verify logging for claim validation
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest.java] - Contains tests that verify logging for signature validation
+* xref:../../src/test/java/de/cuioss/jwt/validation/TokenValidatorTest.java[TokenValidatorTest.java] - Contains a nested class `TokenLoggingTests` with tests for token-related logging
+* xref:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidatorTest.java[TokenClaimValidatorTest.java] - Contains tests that verify logging for claim validation
+* xref:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest.java] - Contains tests that verify logging for signature validation
 
 These tests cover:
 
@@ -271,13 +271,13 @@ The following test methods demonstrate the logging test approach:
 These tests ensure that the library logs appropriate information at the correct log levels for both successful operations and error scenarios.
 
 === Vulnerability Scanning
-_See Requirement link:../Requirements.adoc#CUI-JWT-12.4[CUI-JWT-12.4: Vulnerability Scanning]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-12.4[CUI-JWT-12.4: Vulnerability Scanning]_
 
 ==== Status: IMPLEMENTED
 
 Vulnerability scanning has been implemented using GitHub Dependabot to regularly check for security vulnerabilities in dependencies.
 
-For detailed information about dependency management and vulnerability scanning, please refer to the link:../security/security-specifications.adoc[Security] document, specifically the "Dependency Management" section.
+For detailed information about dependency management and vulnerability scanning, please refer to the xref:../security/security-specifications.adoc[Security] document, specifically the "Dependency Management" section.
 
 ==== Fuzz Testing Implementation
 
@@ -285,10 +285,10 @@ Fuzz testing has been implemented using Generators from https://github.com/cuios
 
 The following generator classes implement fuzz testing:
 
-* link:../../src/test/java/de/cuioss/jwt/validation/test/generator/AccessTokenGenerator.java[AccessTokenGenerator] - Generates random but valid access tokens with varying claims
-* link:../../src/test/java/de/cuioss/jwt/validation/test/generator/IDTokenGenerator.java[IDTokenGenerator] - Generates random but valid ID tokens with varying claims
-* link:../../src/test/java/de/cuioss/jwt/validation/test/generator/ScopeGenerator.java[ScopeGenerator] - Generates random scopes for access tokens
-* link:../../src/test/java/de/cuioss/jwt/validation/test/generator/RoleGenerator.java[RoleGenerator] - Generates random roles for access tokens
+* xref:../../src/test/java/de/cuioss/jwt/validation/test/generator/AccessTokenGenerator.java[AccessTokenGenerator] - Generates random but valid access tokens with varying claims
+* xref:../../src/test/java/de/cuioss/jwt/validation/test/generator/IDTokenGenerator.java[IDTokenGenerator] - Generates random but valid ID tokens with varying claims
+* xref:../../src/test/java/de/cuioss/jwt/validation/test/generator/ScopeGenerator.java[ScopeGenerator] - Generates random scopes for access tokens
+* xref:../../src/test/java/de/cuioss/jwt/validation/test/generator/RoleGenerator.java[RoleGenerator] - Generates random roles for access tokens
 
 These generators are used in parameterized tests with the `@TypeGeneratorSource` annotation to perform fuzz testing. For example:
 
@@ -311,7 +311,7 @@ void shouldRejectAccessTokenWithInvalidSignature(String token) {
 This approach ensures that the library is tested against a wide range of inputs, helping to identify potential vulnerabilities that might not be discovered with traditional testing methods.
 
 === Compliance Testing
-_See Requirement link:../Requirements.adoc#CUI-JWT-12.5[CUI-JWT-12.5: Compliance Testing]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-12.5[CUI-JWT-12.5: Compliance Testing]_
 
 ==== Status: IMPLEMENTED
 
@@ -319,10 +319,10 @@ Compliance tests have been implemented to verify that the JWT Token Validation l
 
 The following test classes implement these compliance tests:
 
-* link:../../src/test/java/de/cuioss/jwt/validation/RFC7519JWTComplianceTest.java[RFC7519JWTComplianceTest.java] - Tests compliance with the JWT specification defined in RFC 7519
-* link:../../src/test/java/de/cuioss/jwt/validation/OpenIDConnectComplianceTest.java[OpenIDConnectComplianceTest.java] - Tests compliance with OpenID Connect Certification requirements
-* link:../../src/test/java/de/cuioss/jwt/validation/OAuth2JWTBestPracticesComplianceTest.java[OAuth2JWTBestPracticesComplianceTest.java] - Tests compliance with OAuth 2.0 JWT Best Current Practices
-* link:../../src/test/java/de/cuioss/jwt/validation/test/JwtTokenTamperingUtil.java[JwtTokenTamperingUtil.java] - Utility class for tampering with JWT tokens for testing purposes
+* xref:../../src/test/java/de/cuioss/jwt/validation/RFC7519JWTComplianceTest.java[RFC7519JWTComplianceTest.java] - Tests compliance with the JWT specification defined in RFC 7519
+* xref:../../src/test/java/de/cuioss/jwt/validation/OpenIDConnectComplianceTest.java[OpenIDConnectComplianceTest.java] - Tests compliance with OpenID Connect Certification requirements
+* xref:../../src/test/java/de/cuioss/jwt/validation/OAuth2JWTBestPracticesComplianceTest.java[OAuth2JWTBestPracticesComplianceTest.java] - Tests compliance with OAuth 2.0 JWT Best Current Practices
+* xref:../../src/test/java/de/cuioss/jwt/validation/test/JwtTokenTamperingUtil.java[JwtTokenTamperingUtil.java] - Utility class for tampering with JWT tokens for testing purposes
 
 These tests cover:
 
@@ -346,7 +346,7 @@ These tests cover:
 
 ==== JWT Token Tampering Testing
 
-The link:../../src/test/java/de/cuioss/jwt/validation/test/JwtTokenTamperingUtil.java[JwtTokenTamperingUtil] class provides a comprehensive approach to testing JWT token signature tampering. This utility implements best practices for testing JWT signature tampering as documented in Test-Failure.adoc.
+The xref:../../src/test/java/de/cuioss/jwt/validation/test/JwtTokenTamperingUtil.java[JwtTokenTamperingUtil] class provides a comprehensive approach to testing JWT token signature tampering. This utility implements best practices for testing JWT signature tampering as documented in Test-Failure.adoc.
 
 The class provides the following tampering strategies:
 

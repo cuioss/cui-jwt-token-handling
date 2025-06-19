@@ -22,6 +22,7 @@ For guidance on secure token handling practices for application developers, see 
 One of the most common and dangerous implementation mistakes when using JWTs is failing to verify the signature. If an application skips this step (often using a library's `decode()` method instead of `verify()`), attackers can forge arbitrary claims.
 
 ==== Impact
+
 * Authentication bypass
 * Authorization bypass
 
@@ -39,6 +40,7 @@ The library's design enforces signature verification:
 * No public API methods expose token decoding without signature verification
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Comprehensive tests for the signature validation process:
 ** `shouldValidateTokenWithValidSignature()` - Verifies that valid signatures are accepted
 ** `shouldRejectTokenWithInvalidSignature()` - Verifies that invalid signatures are rejected
@@ -50,6 +52,7 @@ The library's design enforces signature verification:
 The JWT specification allows tokens to specify the signing algorithm in their header using the `alg` field. If libraries accept `none` as a valid option, attackers can forge tokens without needing a signature.
 
 ==== Impact
+
 * Authentication bypass
 * Authorization bypass
 
@@ -62,6 +65,7 @@ The library explicitly rejects the "none" algorithm. For implementation details,
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenHeaderValidator.java[TokenHeaderValidator.java:110-132] - Header validator checks algorithm support before signature validation
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorAlgorithmTest.java[TokenSignatureValidatorAlgorithmTest] - Tests algorithm validation
 
 === 3. Trivial Secret (Weak HMAC Keys)
@@ -70,6 +74,7 @@ The library explicitly rejects the "none" algorithm. For implementation details,
 When using HMAC-based algorithms like `HS256`, the integrity of the JWT depends entirely on the secrecy and strength of the shared secret key. If the key is weak, guessable, or hardcoded, an attacker can brute-force it.
 
 ==== Impact
+
 * Token forgery
 * Authentication bypass
 
@@ -82,6 +87,7 @@ The library provides protection against weak keys. For implementation details, s
 * No support for HMAC-based algorithms removes the risk of weak key attacks entirely
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/security/AlgorithmPreferencesTest.java[AlgorithmPreferencesTest] - Tests algorithm preferences
 * link:../../src/test/java/de/cuioss/jwt/validation/security/KeyDisclosureVulnerabilityTest.java[KeyDisclosureVulnerabilityTest] - Tests protection against key disclosure
 
@@ -91,6 +97,7 @@ The library provides protection against weak keys. For implementation details, s
 This attack exploits the fact that the JWT header includes a user-controlled `alg` parameter. If the server doesn't enforce which algorithm is expected, an attacker can manipulate the header to cause the backend to verify the token using the wrong algorithm — often with catastrophic consequences.
 
 ==== Impact
+
 * Authentication bypass
 * Authorization bypass
 
@@ -103,6 +110,7 @@ The library implements several protections against algorithm confusion attacks. 
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java:140-148] - Strict algorithm-key matching prevents confusion attacks
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Tests algorithm confusion protection through `shouldRejectAlgorithmConfusionAttack()`
 
 === 5. `kid` Injection (Key ID Manipulation)
@@ -111,6 +119,7 @@ The library implements several protections against algorithm confusion attacks. 
 The JWT header supports a field called `kid` (Key ID) that allows the token to indicate which key should be used to verify the signature. If applications dynamically fetch keys based on this field — especially from filesystems or databases — the `kid` value becomes a dangerous injection point.
 
 ==== Impact
+
 * Authentication bypass
 * Authorization bypass
 * Remote command execution
@@ -130,6 +139,7 @@ The library implements several protections against Key ID injection attacks. For
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/jwks/http/HttpJwksLoader.java[HttpJwksLoader.java:116-128] - Keys are pre-loaded and cached via HTTPS, eliminating dynamic key fetching based on kid values
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Tests rejection of tokens with invalid `kid` values in `shouldRejectTokenWhenKeyNotFound()`
 * link:../../src/test/java/de/cuioss/jwt/validation/security/KeyInjectionAttackTest.java[KeyInjectionAttackTest] - Comprehensive tests for KID injection attacks:
 ** Tests path traversal via `kid` header
@@ -144,6 +154,7 @@ The library implements several protections against Key ID injection attacks. For
 JWTs can optionally include a JWK (JSON Web Key) directly inside the token header using the `jwk` parameter. If the server accepts any public key supplied in the token without proper validation, an attacker can embed their own public key into the header and generate tokens that validate against it.
 
 ==== Impact
+
 * Authentication bypass
 * Authorization bypass
 
@@ -156,6 +167,7 @@ The library mitigates this vulnerability by refusing to accept keys from tokens.
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/security/SecurityEventCounter.java[SecurityEventCounter.java] - Tracks UNSUPPORTED_ALGORITHM events when embedded JWK tokens are detected
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/security/EmbeddedJwkAttackTest.java[EmbeddedJwkAttackTest] - Tests rejection of tokens with embedded JWK in the header
 
 === 7. JKU / X5U Header Abuse
@@ -164,6 +176,7 @@ The library mitigates this vulnerability by refusing to accept keys from tokens.
 JWT supports additional headers like `jku` (JWK Set URL) and `x5u` (X.509 certificate URL) that point to external URLs where public keys can be retrieved. If the application does not strictly control the source of these URLs, it opens the door for Server-Side Request Forgery and using attacker-controlled keys.
 
 ==== Impact
+
 * Authentication bypass
 * Authorization bypass
 * Server-Side Request Forgery
@@ -178,6 +191,7 @@ The library prevents JKU/X5U header abuse by not following arbitrary URLs in tok
 * No dynamic URL following eliminates SSRF attack vectors
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/security/JkuX5uAttackTest.java[JkuX5uAttackTest] - Tests rejection of tokens with JKU or X5U headers pointing to malicious URLs
 
 === 8. CVE-2022-21449 (Psychic Signature)
@@ -186,6 +200,7 @@ The library prevents JKU/X5U header abuse by not following arbitrary URLs in tok
 In 2022, a critical vulnerability was discovered in the Java JDK's ECDSA signature verification implementation. This bug allowed attackers to bypass digital signature verification entirely by submitting an invalid signature where both values (`s` and `r`) are set to zero.
 
 ==== Impact
+
 * Authentication bypass
 * Authorization bypass
 
@@ -198,6 +213,7 @@ The library is protected against the "Psychic Signature" vulnerability. For impl
 * The library enforces use of Bouncy Castle provider for all cryptographic operations, avoiding vulnerable JDK implementations
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/security/PsychicSignatureAttackTest.java[PsychicSignatureAttackTest] - Tests rejection of tokens with all-zero ECDSA signatures (ES256, ES384, ES512)
 
 == Summary and Recommendations

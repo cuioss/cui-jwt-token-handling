@@ -10,12 +10,12 @@ This document outlines the functional and non-functional requirements for the JW
 
 === Document Navigation
 
-* link:../README.adoc[README] - Project overview and introduction
-* link:../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
-* link:Specification.adoc[Specification] - Technical specifications
-* link:LogMessages.adoc[Log Messages] - Reference for all log messages
-* link:security/Threat-Model.adoc[Threat Model] - Security analysis and mitigations
-* link:Build.adoc[Building and Development] - Information for contributors
+* xref:../README.adoc[README] - Project overview and introduction
+* xref:../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
+* xref:Specification.adoc[Specification] - Technical specifications
+* xref:LogMessages.adoc[Log Messages] - Reference for all log messages
+* xref:security/Threat-Model.adoc[Threat Model] - Security analysis and mitigations
+* xref:Build.adoc[Building and Development] - Information for contributors
 
 == Referenced Standards
 

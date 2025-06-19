@@ -46,7 +46,7 @@ These health checks are automatically discovered by Quarkus through their annota
 
 No explicit registration is needed in the `CuiJwtProcessor` class, as Quarkus handles the discovery and registration automatically.
 
-See link:health-checks.adoc[Health Checks] for detailed information.
+See xref:health-checks.adoc[Health Checks] for detailed information.
 
 ==== Metrics Integration
 
@@ -56,7 +56,7 @@ The extension automatically exposes metrics when the Quarkus Micrometer extensio
 * Security event monitoring
 * Performance metrics
 
-See link:metrics-integration.adoc[Metrics Integration] for detailed information.
+See xref:metrics-integration.adoc[Metrics Integration] for detailed information.
 
 == Configuration
 
@@ -101,7 +101,7 @@ The extension supports GraalVM native image compilation with:
 * Runtime initialization for network-dependent components
 * Proper resource inclusion
 
-See link:native-image-support.adoc[Native Image Support] for detailed information.
+See xref:native-image-support.adoc[Native Image Support] for detailed information.
 
 == Best Practices
 
@@ -139,7 +139,7 @@ The extension includes comprehensive tests:
 * Health check validation
 * Metrics collection verification
 
-See link:quarkus-test-setup.adoc[Quarkus Test Setup] for information on testing the extension.
+See xref:quarkus-test-setup.adoc[Quarkus Test Setup] for information on testing the extension.
 
 == Maven Configuration
 
@@ -149,4 +149,4 @@ The extension is configured as a standard Quarkus extension with:
 * Proper dependency management
 * Build plugin configuration
 
-See link:maven-build-configuration.adoc[Maven Build Configuration] for detailed information.
+See xref:maven-build-configuration.adoc[Maven Build Configuration] for detailed information.

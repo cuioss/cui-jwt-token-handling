@@ -22,6 +22,7 @@ For guidance on secure OAuth implementation practices for application developers
 The client confusion attack occurs when a token issued for one client is used with a different client. This attack is possible when applications implementing OAuth don't verify that the token was generated for their specific client ID. An attacker could create a malicious website that implements OAuth login, collect legitimate access tokens from users, and then use these tokens to impersonate users on vulnerable applications that don't validate the token's intended audience.
 
 ==== Impact
+
 * Account takeover
 * Authentication bypass
 * Session hijacking
@@ -36,6 +37,7 @@ The library has implemented protections against client confusion attacks. For im
 * Mandatory azp validation when expectedClientId is configured prevents cross-client token usage
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/ClientConfusionAttackTest.java[ClientConfusionAttackTest] - Tests specifically for client confusion attacks:
 ** `verify_azp_validation()` - Verifies that tokens with valid `azp` claims are accepted
 ** `verify_azp_validation_failure()` - Verifies that tokens with invalid `azp` claims are rejected
@@ -50,6 +52,7 @@ The library has implemented protections against client confusion attacks. For im
 The scope upgrade attack occurs when an attacker attempts to add additional scopes during the token exchange process. If the authorization server accepts and implicitly trusts a `scope` parameter sent in the Access Token Request, a malicious application could try to upgrade the scope of Authorization Codes retrieved from user callbacks by sending a higher privileged scope in the Access Token Request.
 
 ==== Impact
+
 * Privilege escalation
 * Unauthorized access to protected resources
 
@@ -71,6 +74,7 @@ No specific tests for scope upgrade attack prevention.
 OAuth CSRF is an attack against OAuth flows, where the browser consuming the authorization code is different than the one that has initiated the flow. It can be used by an attacker to coerce the victim to consume their Authorization Code, causing the victim to connect with attacker's authorization context.
 
 ==== Impact
+
 * Account hijacking
 * Session fixation
 * Unauthorized authentication
@@ -93,6 +97,7 @@ No specific tests for CSRF protection as it's out of scope for the token validat
 If the Authorization Server does not properly validate the `redirect_uri` parameter, a malicious actor can manipulate a victim to complete a flow that will disclose their Authorization Code to an untrusted party. Common validation mistakes include validating only the domain (not the full path), allowing subdomains, subpaths, wildcards, or using improper regular expressions.
 
 ==== Impact
+
 * Authorization code theft
 * Account takeover
 * Token leakage
@@ -109,6 +114,7 @@ No specific tests for redirect attacks as they're out of scope for the token val
 The mutable claims attack exploits the fact that some OAuth providers allow users to change certain claims (like email) without verification. If a client application uses these mutable claims for user identification instead of the immutable `sub` claim, an attacker could take over user accounts by creating an account with the victim's email.
 
 ==== Impact
+
 * Account takeover
 * Identity spoofing
 
@@ -122,6 +128,7 @@ The library enforces validation of the `sub` claim to mitigate mutable claims at
 * Library ensures `sub` claim is always present and validated in all token types
 
 ==== Test Coverage
+
 * link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidatorTest.java[TokenClaimValidatorTest] - Tests specifically for mutable claims validation:
 ** `shouldValidateTokenWithValidSubjectClaim()` - Verifies that tokens with valid subject claims are accepted
 ** `shouldFailValidationForTokenWithMissingSubjectClaim()` - Verifies that tokens with missing subject claims are rejected
@@ -134,6 +141,7 @@ The library enforces validation of the `sub` claim to mitigate mutable claims at
 When OAuth is used in mobile applications, developers often use custom URL schemes to receive authorization codes. However, multiple applications can register the same URL scheme on a device, potentially allowing a malicious app to intercept authorization codes meant for the legitimate app.
 
 ==== Impact
+
 * Authorization code theft
 * Account takeover
 

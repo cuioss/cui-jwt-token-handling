@@ -4,21 +4,21 @@
 :toc-title: Table of Contents
 :sectnums:
 
-link:../Specification.adoc[Back to Main Specification]
+xref:../Specification.adoc[Back to Main Specification]
 
 == Overview
-_See Requirement link:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits] and link:../Requirements.adoc#CUI-JWT-8.2[CUI-JWT-8.2: Safe Parsing]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits] and xref:../Requirements.adoc#CUI-JWT-8.2[CUI-JWT-8.2: Safe Parsing]_
 
 This document provides recommendations for sensible upper bounds for JWKS (JSON Web Key Set) content size in the JWT Token Validation library. These recommendations are based on analysis of typical JWKS content sizes, industry standards, and security best practices.
 
 === Document Navigation
 
-* link:../../README.adoc[README] - Project overview and introduction
-* link:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
-* link:../Requirements.adoc[Requirements] - Functional and non-functional requirements
-* link:../Specification.adoc[Specification] - Technical specifications
-* link:../LogMessages.adoc[Log Messages] - Reference for all log messages
-* link:../Build.adoc[Building and Development] - Information for contributors
+* xref:../../README.adoc[README] - Project overview and introduction
+* xref:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
+* xref:../Requirements.adoc[Requirements] - Functional and non-functional requirements
+* xref:../Specification.adoc[Specification] - Technical specifications
+* xref:../LogMessages.adoc[Log Messages] - Reference for all log messages
+* xref:../Build.adoc[Building and Development] - Information for contributors
 * link:technical-components.adoc[Technical Components] - Implementation details
 * link:security-specifications.adoc[Security] - Security measures implementation
 * link:testing.adoc[Testing] - Testing approach and coverage
@@ -40,28 +40,33 @@ A JWKS (JSON Web Key Set) typically contains one or more JWK (JSON Web Key) obje
 Based on analysis of the JWKS content generation in the project:
 
 ==== RSA Keys (2048-bit)
+
 * Modulus (n): ~342 bytes (Base64URL encoded)
 * Exponent (e): ~4 bytes (Base64URL encoded)
 * JSON structure overhead: ~50 bytes
 * *Total per key*: ~400 bytes
 
 ==== RSA Keys (4096-bit)
+
 * Modulus (n): ~684 bytes (Base64URL encoded)
 * Exponent (e): ~4 bytes (Base64URL encoded)
 * JSON structure overhead: ~50 bytes
 * *Total per key*: ~750 bytes
 
 ==== EC Keys (P-256)
+
 * X and Y coordinates: ~86 bytes (Base64URL encoded)
 * JSON structure overhead: ~70 bytes
 * *Total per key*: ~160 bytes
 
 ==== EC Keys (P-384)
+
 * X and Y coordinates: ~128 bytes (Base64URL encoded)
 * JSON structure overhead: ~70 bytes
 * *Total per key*: ~200 bytes
 
 ==== EC Keys (P-521)
+
 * X and Y coordinates: ~176 bytes (Base64URL encoded)
 * JSON structure overhead: ~70 bytes
 * *Total per key*: ~250 bytes
@@ -69,15 +74,19 @@ Based on analysis of the JWKS content generation in the project:
 === Size Estimates for JWKS with Multiple Keys
 
 ==== Small JWKS (1-5 keys)
+
 * 1-5 keys (mix of RSA and EC): ~0.5-3 KB
 
 ==== Medium JWKS (6-20 keys)
+
 * 6-20 keys (mix of RSA and EC): ~3-15 KB
 
 ==== Large JWKS (21-100 keys)
+
 * 21-100 keys (mix of RSA and EC): ~15-75 KB
 
 ==== Very Large JWKS (100+ keys)
+
 * 100+ keys (mix of RSA and EC): 75+ KB
 
 == Industry Standards and Practices
@@ -90,22 +99,27 @@ The OAuth 2.0 JWT BCP document (draft-ietf-oauth-jwt-bcp-09) recommends a maximu
 The typical sizes mentioned below are based on observations and may change. (Data last checked: 2025-06-02)
 
 ==== Auth0
+
 * Typical JWKS size: 1-5 KB
 * Contains 2-5 keys (mix of RSA and EC)
 
 ==== Okta
+
 * Typical JWKS size: 2-10 KB
 * Contains 3-10 keys (primarily RSA)
 
 ==== AWS Cognito
+
 * Typical JWKS size: 1-3 KB
 * Contains 1-3 keys (primarily RSA)
 
 ==== Microsoft Azure AD
+
 * Typical JWKS size: 5-15 KB
 * Contains 5-15 keys (mix of RSA and EC)
 
 ==== Google
+
 * Typical JWKS size: 3-8 KB
 * Contains 3-8 keys (mix of RSA and EC)
 

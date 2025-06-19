@@ -4,21 +4,21 @@
 :toc-title: Table of Contents
 :sectnums:
 
-link:../Specification.adoc[Back to Main Specification]
+xref:../Specification.adoc[Back to Main Specification]
 
 == Overview
-_See Requirement link:../Requirements.adoc#CUI-JWT-5[CUI-JWT-5: Performance]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-5[CUI-JWT-5: Performance]_
 
 This document provides detailed specifications for the performance benchmarking aspects of the JWT Token Validation library.
 
 === Document Navigation
 
-* link:../../README.adoc[README] - Project overview and introduction
-* link:../Usage.adoc[Usage Guide] - How to use the library with code examples
-* link:../Requirements.adoc[Requirements] - Functional and non-functional requirements
-* link:../Specification.adoc[Specification] - Technical specifications
-* link:../LogMessages.adoc[Log Messages] - Reference for all log messages
-* link:../Build.adoc[Building and Development] - Information for contributors
+* xref:../../README.adoc[README] - Project overview and introduction
+* xref:../Usage.adoc[Usage Guide] - How to use the library with code examples
+* xref:../Requirements.adoc[Requirements] - Functional and non-functional requirements
+* xref:../Specification.adoc[Specification] - Technical specifications
+* xref:../LogMessages.adoc[Log Messages] - Reference for all log messages
+* xref:../Build.adoc[Building and Development] - Information for contributors
 * link:technical-components.adoc[Technical Components] - Implementation details
 * link:testing.adoc[Testing] - Testing approach and coverage
 * link:security-specifications.adoc[Security] - Security specifications
@@ -27,7 +27,7 @@ This document provides detailed specifications for the performance benchmarking 
 == Performance Requirements
 
 === Token Validation Performance
-_See Requirement link:../Requirements.adoc#CUI-JWT-5.1[CUI-JWT-5.1: Token Validation Performance]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-5.1[CUI-JWT-5.1: Token Validation Performance]_
 
 ==== Status: IMPLEMENTED
 
@@ -39,8 +39,8 @@ The library requires efficient token validation to ensure minimal performance im
 
 The following classes implement this specification:
 
-* link:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
-* link:../../src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator]
+* xref:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
+* xref:../../src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator]
 
 The following tests verify the implementation:
 
@@ -49,7 +49,7 @@ The following tests verify the implementation:
   * `de.cuioss.jwt.validation.benchmark.FailureScenarioBenchmark`
 
 === JWKS Key Retrieval Performance
-_See Requirement link:../Requirements.adoc#CUI-JWT-5.3[CUI-JWT-5.3: Performance Monitoring]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-5.3[CUI-JWT-5.3: Performance Monitoring]_
 
 ==== Status: IMPLEMENTED
 
@@ -61,8 +61,8 @@ The JWKS client must efficiently retrieve and cache keys to support high-volume 
 
 The following classes implement this specification:
 
-* link:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksClient.java[JwksClient]
-* link:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksLoaderFactory.java[JwksLoaderFactory]
+* xref:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksClient.java[JwksClient]
+* xref:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksLoaderFactory.java[JwksLoaderFactory]
 
 The following tests verify the implementation:
 
@@ -71,7 +71,7 @@ The following tests verify the implementation:
   * `de.cuioss.jwt.validation.benchmark.JwksClientFailureBenchmark`
 
 === Concurrent Performance
-_See Requirement link:../Requirements.adoc#CUI-JWT-5.2[CUI-JWT-5.2: Concurrent Token Processing]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-5.2[CUI-JWT-5.2: Concurrent Token Processing]_
 
 ==== Status: IMPLEMENTED
 
@@ -82,7 +82,7 @@ The library must scale efficiently with concurrent validation requests:
 
 The following class implements this specification:
 
-* link:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
+* xref:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
 
 The following tests verify the implementation:
 
@@ -130,8 +130,8 @@ Error cases must be handled efficiently to prevent performance degradation durin
 
 The following classes implement this specification:
 
-* link:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
-* link:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksClient.java[JwksClient]
+* xref:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
+* xref:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksClient.java[JwksClient]
 
 The following benchmark classes will verify the implementation:
 
@@ -219,7 +219,7 @@ Key performance metrics are displayed as badges in the project documentation:
 
 == Related Documentation
 
-* link:../Requirements.adoc#CUI-JWT-5[CUI-JWT-5: Performance] - Performance requirements
+* xref:../Requirements.adoc#CUI-JWT-5[CUI-JWT-5: Performance] - Performance requirements
 * link:security-specifications.adoc[Security] - Security specifications with performance implications
 * link:technical-components.adoc[Technical Components] - Component specifications
 

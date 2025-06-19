@@ -4,21 +4,21 @@
 :toc-title: Table of Contents
 :sectnums:
 
-link:../Specification.adoc[Back to Main Specification]
+xref:../Specification.adoc[Back to Main Specification]
 
 == Overview
-_See Requirement link:../Requirements.adoc#CUI-JWT-1.4[CUI-JWT-1.4: Token Decryption (Optional - Future Version)]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-1.4[CUI-JWT-1.4: Token Decryption (Optional - Future Version)]_
 
 === Document Navigation
 
-* link:../../README.adoc[README] - Project overview and introduction
-* link:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
-* link:../Requirements.adoc[Requirements] - Functional and non-functional requirements
-* link:../Specification.adoc[Specification] - Technical specifications
-* link:../LogMessages.adoc[Log Messages] - Reference for all log messages
-* link:../Build.adoc[Building and Development] - Information for contributors
+* xref:../../README.adoc[README] - Project overview and introduction
+* xref:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
+* xref:../Requirements.adoc[Requirements] - Functional and non-functional requirements
+* xref:../Specification.adoc[Specification] - Technical specifications
+* xref:../LogMessages.adoc[Log Messages] - Reference for all log messages
+* xref:../Build.adoc[Building and Development] - Information for contributors
 * link:technical-components.adoc[Technical Components] - Implementation details
-* link:../security/security-specifications.adoc[Security] - Security measures implementation
+* xref:../security/security-specifications.adoc[Security] - Security measures implementation
 * link:testing.adoc[Testing] - Testing approach and coverage
 
 ==== Status: NOT IMPLEMENTED

@@ -24,6 +24,7 @@ GraalVM native image support for the CUI JWT Quarkus extension with automatic re
 == Testing
 
 Native image support verified through `@QuarkusIntegrationTest` annotations:
+
 * `NativeSimpleIT` - Basic extension functionality
 * `NativeTokenValidatorProducerIT` - CDI injection validation
 
@@ -36,4 +37,4 @@ Native image support verified through `@QuarkusIntegrationTest` annotations:
 
 == Performance
 
-See link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] for native build performance metrics.
+See xref:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] for native build performance metrics.

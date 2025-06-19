@@ -9,39 +9,37 @@ toc::[]
 
 == Maven Coordinates
 
-[source, xml]
-----
-<dependency>
-    <groupId>de.cuioss.jwt</groupId>
-    <artifactId>cui-jwt-quarkus</artifactId>
-</dependency>
-----
+For Maven dependency information, see xref:../README.adoc#maven-coordinates[Maven Coordinates] in the parent module documentation.
 
 == Core Concepts
 
 === Configuration Management
+
 * Type-safe configuration properties using Quarkus ConfigMapping
 * Support for multiple JWT issuers with individual configurations
 * Flexible parser settings for token validation
 * HTTP JWKS loader configuration with caching and retry mechanisms
 
 === CDI Integration
+
 * CDI producers for token validators and issuer configurations
 * Automatic bean registration for JWT validation components
 * Integration with Quarkus dependency injection container
 * Support for multiple named validators per issuer
 
 === Health Monitoring
+
 * Built-in health checks for JWT validation endpoints
 * JWKS endpoint connectivity monitoring
 * Token validator status verification
-* See link:../doc/health-checks.adoc[Health Checks Documentation] for detailed configuration and usage
+* See xref:../doc/health-checks.adoc[Health Checks Documentation] for detailed configuration and usage
 
 === Metrics Collection
+
 * Integration with Micrometer for JWT validation metrics
 * Token validation success/failure counters
 * Performance metrics for validation operations
-* See link:../doc/metrics-integration.adoc[Metrics Integration Documentation] for comprehensive monitoring setup
+* See xref:../doc/metrics-integration.adoc[Metrics Integration Documentation] for comprehensive monitoring setup
 
 == Detailed Component Documentation
 
@@ -84,20 +82,11 @@ Factory for issuer-specific configurations:
 
 === Health Checks
 
-The runtime module provides health check implementations:
-
-* link:src/main/java/de/cuioss/jwt/quarkus/health/TokenValidatorHealthCheck.java[TokenValidatorHealthCheck] - Validates token validator configuration
-* link:src/main/java/de/cuioss/jwt/quarkus/health/JwksEndpointHealthCheck.java[JwksEndpointHealthCheck] - Monitors JWKS endpoint connectivity
-
-For detailed configuration, usage examples, and Kubernetes integration, see link:../doc/health-checks.adoc[Health Checks Documentation].
+For comprehensive health check configuration, implementation details, and Kubernetes integration, see xref:../doc/health-checks.adoc[Health Checks Documentation].
 
 === Metrics Integration
 
-The runtime module provides metrics collection through:
-
-* link:src/main/java/de/cuioss/jwt/quarkus/metrics/JwtMetricsCollector.java[JwtMetricsCollector] - Collects JWT validation metrics
-
-For detailed metrics configuration, Prometheus queries, alerting examples, and Grafana dashboard setup, see link:../doc/metrics-integration.adoc[Metrics Integration Documentation].
+For comprehensive metrics configuration, Prometheus queries, alerting examples, and Grafana dashboard setup, see xref:../doc/metrics-integration.adoc[Metrics Integration Documentation].
 
 === Runtime Services
 
@@ -234,24 +223,28 @@ cui.jwt.issuers.my-issuer.parser.allowed-algorithms=RS256,RS384,RS512
 == Best Practices
 
 === Configuration Management
+
 * Use YAML format for complex configurations with multiple issuers
 * Set appropriate cache TTL values based on key rotation frequency
 * Configure reasonable timeout values for JWKS endpoints
 * Enable health checks in production environments
 
 === Security Considerations
+
 * Validate all required JWT claims (audience, issuer, expiration)
 * Use appropriate leeway values for clock skew tolerance
 * Restrict allowed signing algorithms to secure options
 * Regularly monitor JWKS endpoint availability
 
 === Performance Optimization
+
 * Configure JWKS caching to reduce network calls
 * Set appropriate refresh intervals for key rotation
 * Monitor validation metrics to identify performance issues
 * Use connection pooling for JWKS HTTP clients
 
 === Error Handling
+
 * Implement proper fallback mechanisms for JWKS failures
 * Log validation failures with appropriate detail levels
 * Monitor health check status for early problem detection
@@ -260,18 +253,21 @@ cui.jwt.issuers.my-issuer.parser.allowed-algorithms=RS256,RS384,RS512
 == Technical Details
 
 === Thread Safety
+
 * All CDI beans are thread-safe and can be used concurrently
 * JWKS caching uses thread-safe data structures
 * Metrics collection is atomic and thread-safe
 * Health checks handle concurrent execution appropriately
 
 === Performance Characteristics
+
 * JWKS caching reduces validation latency significantly
 * Token validation is CPU-intensive but scales well
 * Memory usage scales with number of cached keys
 * Network I/O is minimized through intelligent caching
 
 === Dependencies
+
 * Requires Quarkus 3.x framework
 * Integrates with SmallRye Config for configuration management
 * Uses Micrometer for metrics collection
@@ -279,17 +275,18 @@ cui.jwt.issuers.my-issuer.parser.allowed-algorithms=RS256,RS384,RS512
 * Compatible with GraalVM native image compilation
 
 === Native Image Support
+
 * Full GraalVM native image compatibility
 * Automatic reflection and runtime initialization configuration
-* See link:../doc/native-image-support.adoc[Native Image Support Documentation] for detailed configuration and testing information
+* See xref:../doc/native-image-support.adoc[Native Image Support Documentation] for detailed configuration and testing information
 
 == Related Documentation
 
-* link:../cui-jwt-quarkus-deployment/README.adoc[Deployment Module Documentation]
-* link:../doc/quarkus-integration.adoc[Quarkus Integration Architecture]
-* link:../doc/health-checks.adoc[Health Checks Documentation]
-* link:../doc/metrics-integration.adoc[Metrics Integration Documentation]
-* link:../doc/native-image-support.adoc[Native Image Support Documentation]
-* link:../doc/devui-testing.adoc[DevUI Testing Guide]
-* link:../../doc/specification/technical-components.adoc[Technical Components Specification]
-* link:../../doc/specification/security.adoc[Security Specification]
+* xref:../cui-jwt-quarkus-deployment/README.adoc[Deployment Module Documentation]
+* xref:../doc/quarkus-integration.adoc[Quarkus Integration Architecture]
+* xref:../doc/health-checks.adoc[Health Checks Documentation]
+* xref:../doc/metrics-integration.adoc[Metrics Integration Documentation]
+* xref:../doc/native-image-support.adoc[Native Image Support Documentation]
+* xref:../doc/devui-testing.adoc[DevUI Testing Guide]
+* xref:../../doc/specification/technical-components.adoc[Technical Components Specification]
+* xref:../../doc/specification/security.adoc[Security Specification]

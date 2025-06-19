@@ -1,12 +1,24 @@
 = JWT Token Validation Benchmarking Module
-:toc:
+:toc: macro
 :toclevels: 3
-:toc-title: Table of Contents
-:sectnums:
+:sectnumlevels: 1
 
 This module contains benchmarking code for the JWT token validation library. It uses JMH (Java Microbenchmark Harness) to measure performance of various components.
 
-== Overview
+toc::[]
+
+== Maven Coordinates
+
+[source,xml]
+----
+<dependency>
+    <groupId>de.cuioss.jwt</groupId>
+    <artifactId>cui-jwt-benchmarking</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+== Core Concepts
 
 The benchmarking module provides performance measurements for key components of the JWT validation library:
 
@@ -17,11 +29,13 @@ The benchmarking module provides performance measurements for key components of 
 * Concurrent validation performance
 * **Performance Score**: A weighted metric combining throughput and latency
 
-== Running Benchmarks Manually
+== Usage Examples
+
+=== Running Benchmarks Manually
 
 Benchmarks are configured to be skipped by default to prevent them from slowing down regular builds. To run the benchmarks manually, you need to explicitly enable them.
 
-=== Using Maven Command Line
+==== Using Maven Command Line
 
 To run benchmarks from the command line:
 
@@ -38,7 +52,7 @@ To run benchmarks from the command line:
   -Djmh.threads=4
 ----
 
-=== JMH Parameters
+==== JMH Parameters
 
 You can customize the benchmark execution with the following JMH parameters:
 
@@ -49,7 +63,7 @@ You can customize the benchmark execution with the following JMH parameters:
 * `jmh.result.format` - Result format (default: JSON)
 * `jmh.result.filePrefix` - Result file prefix
 
-=== Running Specific Benchmarks
+==== Running Specific Benchmarks
 
 To run specific benchmarks, you can use the `jmh.includes` parameter:
 
@@ -126,6 +140,7 @@ Access comprehensive performance trends at: https://cuioss.github.io/cui-jwt/ben
 === Performance Trend Badge
 
 The **Performance Trend** badge shows:
+
 * **↗ X.X% (improving)** - Green badge for performance gains > 2%
 * **↘ X.X% (declining)** - Orange badge for performance drops > 2%  
 * **→ X.X% (stable)** - Grey badge for changes ≤ 2%
@@ -134,66 +149,14 @@ Clicking the badge opens the detailed trends visualization.
 
 == Understand Performance Metrics
 
-The benchmarking module includes a comprehensive performance scoring system that combines multiple metrics into a single indicator. This system focuses on the most critical performance aspects of JWT validation.
-
-=== Performance Score Composition
-
-The **JWT Performance Score** badge displayed in the main README shows a weighted metric combining:
-
-**1. Token Throughput (57% weight)**
-- Operations per second under maximum concurrent load
-- Measures scalability under high-volume scenarios
-- Higher values indicate better concurrent performance
-
-**2. Average Validation Time (40% weight)**  
-- Milliseconds per operation in single-threaded scenarios
-- Measures baseline validation latency
-- Lower values indicate faster individual validations
-
-**3. Error Resilience (3% weight)**
-- Performance stability when processing invalid tokens
-- Ensures consistent performance under error conditions
-- Critical for production reliability
-
-=== Weighted Score Calculation
-
-The performance score uses the enhanced formula:
-```
-Score = (Throughput × 0.57) + ((1,000,000 ÷ AvgTimeμs) × 0.40) + (ErrorResilience × 0.03)
-```
-
-For backward compatibility, when error resilience data is unavailable:
-```
-Score = (Throughput × 0.60) + ((1,000,000 ÷ AvgTimeμs) × 0.40)
-```
-
-=== Performance Badge Format
-
-The system automatically generates a performance badge that shows:
-- **Weighted Performance Score**: Combined metric for overall performance
-- **Throughput**: Raw operations per second (k ops/s format)
-- **Average Time**: Raw validation time in milliseconds
-
-Example: `Performance Score: 10,843 (13.7k ops/s, 0.15ms)`
-
-=== Understanding the Metrics
-
-**High Performance Score Indicators:**
-- **Score > 10,000**: Excellent performance suitable for high-volume production
-- **Throughput > 10k ops/s**: Good concurrent processing capability  
-- **Average Time < 0.2ms**: Fast individual token validation
-
-**Interpreting Changes:**
-- **Score increases**: Overall performance improvement
-- **Throughput increases**: Better concurrency handling
-- **Average time decreases**: Faster individual operations
+For comprehensive performance metrics methodology, scoring calculations, and interpretation guidelines, see xref:doc/performance-scoring.adoc[Performance Scoring System Documentation].
 
 == Documentation
 
 For detailed information about the benchmarking system:
 
-* link:doc/performance-scoring.adoc[Performance Scoring System] - Complete methodology and calculation details
-* link:doc/README.adoc[Benchmark Documentation] - Visualization templates and additional documentation
+* xref:doc/performance-scoring.adoc[Performance Scoring System] - Complete methodology and calculation details
+* xref:doc/README.adoc[Benchmark Documentation] - Visualization templates and additional documentation
 
 === Templates and Scripts
 

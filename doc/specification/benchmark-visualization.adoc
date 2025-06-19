@@ -121,4 +121,4 @@ For technical details of the implementation, see:
 == Related Documentation
 
 * link:benchmark.adoc[Benchmark Specification]
-* link:../Requirements.adoc#CUI-JWT-5[CUI-JWT-5: Performance Requirements]
+* xref:../Requirements.adoc#CUI-JWT-5[CUI-JWT-5: Performance Requirements]

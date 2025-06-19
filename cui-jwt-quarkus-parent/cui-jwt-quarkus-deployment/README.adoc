@@ -9,13 +9,7 @@ toc::[]
 
 == Maven Coordinates
 
-[source, xml]
-----
-<dependency>
-    <groupId>de.cuioss.jwt</groupId>
-    <artifactId>cui-jwt-quarkus-deployment</artifactId>
-</dependency>
-----
+For Maven dependency information, see xref:../README.adoc#maven-coordinates[Maven Coordinates] in the parent module documentation.
 
 == Core Concepts
 
@@ -29,7 +23,7 @@ toc::[]
 * Development-time debugging interface for JWT validation
 * JSON-RPC services for interactive token analysis
 * Web components for JWT configuration inspection
-* See link:../doc/devui-implementation.adoc[DevUI Implementation Documentation] for comprehensive technical details
+* See xref:../doc/devui-implementation.adoc[DevUI Implementation Documentation] for comprehensive technical details
 
 === Extension Architecture
 * Follows Quarkus extension patterns with separate deployment and runtime modules
@@ -53,7 +47,7 @@ Development interface components:
 * link:src/main/java/de/cuioss/jwt/quarkus/deployment/CuiJwtDevUIJsonRPCService.java[CuiJwtDevUIJsonRPCService] - JSON-RPC service for DevUI communication
 * Web components in `src/main/resources/dev-ui/` for interactive JWT debugging
 
-For detailed component architecture, implementation details, and testing framework, see link:../doc/devui-implementation.adoc[DevUI Implementation Documentation].
+For detailed component architecture, implementation details, and testing framework, see xref:../doc/devui-implementation.adoc[DevUI Implementation Documentation].
 
 == Usage Examples
 
@@ -104,7 +98,7 @@ Automatically registers these classes for reflection:
 === Native Image Support
 Configures GraalVM native image compilation with automatic reflection registration and runtime initialization.
 
-For detailed configuration, reflection classes, and testing information, see link:../doc/native-image-support.adoc[Native Image Support Documentation].
+For detailed configuration, reflection classes, and testing information, see xref:../doc/native-image-support.adoc[Native Image Support Documentation].
 
 == Best Practices
 
@@ -132,9 +126,9 @@ For detailed configuration, reflection classes, and testing information, see lin
 
 == Related Documentation
 
-* link:../cui-jwt-quarkus/README.adoc[Runtime Module Documentation]
-* link:../doc/quarkus-integration.adoc[Quarkus Integration Architecture]
-* link:../doc/devui-implementation.adoc[DevUI Implementation Documentation]
-* link:../doc/devui-testing.adoc[DevUI Testing Guide]
-* link:../doc/native-image-support.adoc[Native Image Support Documentation]
-* link:../../doc/specification/technical-components.adoc[Technical Components Specification]
+* xref:../cui-jwt-quarkus/README.adoc[Runtime Module Documentation]
+* xref:../doc/quarkus-integration.adoc[Quarkus Integration Architecture]
+* xref:../doc/devui-implementation.adoc[DevUI Implementation Documentation]
+* xref:../doc/devui-testing.adoc[DevUI Testing Guide]
+* xref:../doc/native-image-support.adoc[Native Image Support Documentation]
+* xref:../../doc/specification/technical-components.adoc[Technical Components Specification]

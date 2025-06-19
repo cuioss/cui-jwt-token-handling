@@ -4,21 +4,21 @@
 :toc-title: Table of Contents
 :sectnums:
 
-link:../Specification.adoc[Back to Main Specification]
+xref:../Specification.adoc[Back to Main Specification]
 
 == Overview
-_See Requirement link:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits]_
 
 === Document Navigation
 
-* link:../../README.adoc[README] - Project overview and introduction
-* link:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
-* link:../Requirements.adoc[Requirements] - Functional and non-functional requirements
-* link:../Specification.adoc[Specification] - Technical specifications
-* link:../LogMessages.adoc[Log Messages] - Reference for all log messages
-* link:../Build.adoc[Building and Development] - Information for contributors
+* xref:../../README.adoc[README] - Project overview and introduction
+* xref:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
+* xref:../Requirements.adoc[Requirements] - Functional and non-functional requirements
+* xref:../Specification.adoc[Specification] - Technical specifications
+* xref:../LogMessages.adoc[Log Messages] - Reference for all log messages
+* xref:../Build.adoc[Building and Development] - Information for contributors
 * link:technical-components.adoc[Technical Components] - Implementation details
-* link:../security/security-specifications.adoc[Security] - Security measures implementation
+* xref:../security/security-specifications.adoc[Security] - Security measures implementation
 * link:testing.adoc[Testing] - Testing approach and coverage
 * link:token-decryption.adoc[Token Decryption] - Future JWE support
 
@@ -26,9 +26,9 @@ _See Requirement link:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size L
 
 This specification has been implemented in the following classes:
 
-* link:../../src/main/java/de/cuioss/jwt/validation/pipeline/NonValidatingJwtParser.java[NonValidatingJwtParser]
-* link:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
-* link:../../src/main/java/de/cuioss/jwt/validation/ParserConfig.java[ParserConfig]
+* xref:../../src/main/java/de/cuioss/jwt/validation/pipeline/NonValidatingJwtParser.java[NonValidatingJwtParser]
+* xref:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
+* xref:../../src/main/java/de/cuioss/jwt/validation/ParserConfig.java[ParserConfig]
 
 This document provides detailed specifications for enhancing the token size validation capabilities in the JWT Token Validation library. Specifically, it outlines how to implement token size validation in the token processing pipeline.
 

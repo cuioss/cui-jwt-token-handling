@@ -7,7 +7,7 @@ This directory contains documentation and templates for the JWT Validation bench
 
 == Documentation Files
 
-* link:performance-scoring.adoc[Performance Scoring System] - Comprehensive guide to the weighted performance metrics and scoring methodology
+* xref:performance-scoring.adoc[Performance Scoring System] - Comprehensive guide to the weighted performance metrics and scoring methodology
 * This document (README.adoc) - Overview of benchmark visualization templates
 
 == Benchmark Visualization Template

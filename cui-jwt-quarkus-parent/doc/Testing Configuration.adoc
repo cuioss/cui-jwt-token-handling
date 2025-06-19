@@ -238,4 +238,4 @@ void shouldValidateTokensFromMultipleIssuers() {
 </dependency>
 ----
 
-See link:quarkus-test-setup.adoc[Quarkus Test Setup] for framework configuration details.
+See xref:quarkus-test-setup.adoc[Quarkus Test Setup] for framework configuration details.

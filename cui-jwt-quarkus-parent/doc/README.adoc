@@ -10,12 +10,12 @@ Complete documentation for the CUI JWT Quarkus extension - a comprehensive JWT v
 
 == Quick Links
 
-* **link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests]** - Comprehensive testing with Docker containers
+* **xref:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests]** - Comprehensive testing with Docker containers
 * **link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]** - Development standards and best practices
 
 == Architecture & Implementation
 
-=== link:quarkus-integration.adoc[Quarkus Integration]
+=== xref:quarkus-integration.adoc[Quarkus Integration]
 
 Core extension architecture with deployment and runtime modules:
 
@@ -25,7 +25,7 @@ Core extension architecture with deployment and runtime modules:
 * **Metrics Integration**: Automatic Micrometer integration
 * **DevUI Components**: Development interface with JSON-RPC services
 
-=== link:devui-implementation.adoc[DevUI Implementation]
+=== xref:devui-implementation.adoc[DevUI Implementation]
 
 Development UI components for JWT debugging and monitoring:
 
@@ -36,7 +36,7 @@ Development UI components for JWT debugging and monitoring:
 
 == Configuration & Usage
 
-=== link:health-checks.adoc[Health Checks]
+=== xref:health-checks.adoc[Health Checks]
 
 MicroProfile Health integration for production monitoring:
 
@@ -45,7 +45,7 @@ MicroProfile Health integration for production monitoring:
 * **Kubernetes Integration**: Probe configuration and best practices
 * **Performance Considerations**: Caching and timeout strategies
 
-=== link:metrics-integration.adoc[Metrics Integration]
+=== xref:metrics-integration.adoc[Metrics Integration]
 
 Micrometer metrics for security and performance monitoring:
 
@@ -54,7 +54,7 @@ Micrometer metrics for security and performance monitoring:
 * **Prometheus Integration**: Standard metrics format and alerting
 * **Grafana Dashboard**: Pre-configured monitoring visualizations
 
-=== link:native-image-support.adoc[Native Image Support]
+=== xref:native-image-support.adoc[Native Image Support]
 
 GraalVM native compilation configuration:
 
@@ -65,7 +65,7 @@ GraalVM native compilation configuration:
 
 == Development & Testing
 
-=== link:Testing%20Configuration.adoc[JWT Testing Guide]
+=== xref:Testing%20Configuration.adoc[JWT Testing Guide]
 
 Application testing with JWT tokens and test profiles:
 
@@ -74,7 +74,7 @@ Application testing with JWT tokens and test profiles:
 * **Multi-issuer Testing**: Complex configuration scenarios
 * **Validation Testing**: Valid and invalid token handling
 
-=== link:quarkus-test-setup.adoc[Quarkus Test Framework Setup]
+=== xref:quarkus-test-setup.adoc[Quarkus Test Framework Setup]
 
 Test framework configuration and dependencies:
 
@@ -82,7 +82,7 @@ Test framework configuration and dependencies:
 * **Logging Configuration**: JBoss LogManager integration
 * **Dependency Management**: Required test dependencies
 
-=== link:maven-build-configuration.adoc[Maven Build Configuration]
+=== xref:maven-build-configuration.adoc[Maven Build Configuration]
 
 Project build setup and compiler configuration:
 
@@ -92,7 +92,7 @@ Project build setup and compiler configuration:
 
 == Integration Testing
 
-=== link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests]
+=== xref:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests]
 
 Comprehensive integration testing in containerized environments:
 
@@ -119,10 +119,10 @@ This extension follows the **link:https://github.com/cuioss/cui-llm-rules/tree/m
 4. **Add metrics monitoring** with `quarkus-micrometer`
 5. **Test your setup** using the provided test utilities
 
-For detailed configuration examples, see the link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] documentation.
+For detailed configuration examples, see the xref:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] documentation.
 
 == Support
 
 * **Issues**: Report problems via project issue tracker
 * **Standards**: Follow link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]
-* **Testing**: Use link:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] as examples
+* **Testing**: Use xref:../cui-jwt-quarkus-integration-tests/README.adoc[Integration Tests] as examples

@@ -5,21 +5,21 @@
 :sectnums:
 
 == Overview
-_See Requirement link:../Requirements.adoc#CUI-JWT-8[CUI-JWT-8: Security Requirements] and Specification link:../Specification.adoc[Specification] and link:security-specifications.adoc[Security Specification]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8[CUI-JWT-8: Security Requirements] and Specification xref:../Specification.adoc[Specification] and xref:security-specifications.adoc[Security Specification]_
 
 This document outlines the threat model for the JWT Token Validation library. The threat model follows OWASP recommendations and identifies potential security threats, current mitigations, and additional recommendations.
 
 === Document Navigation
 
-* link:../../README.adoc[README] - Project overview and introduction
-* link:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
-* link:../Requirements.adoc[Requirements] - Functional and non-functional requirements
-* link:../Specification.adoc[Specification] - Technical specifications
-* link:../LogMessages.adoc[Log Messages] - Reference for all log messages
-* link:../Build.adoc[Building and Development] - Information for contributors
-* link:threat-coverage-analysis.adoc[Threat Coverage Analysis] - Detailed analysis of security threats
-* link:jwt-attacks-analysis.adoc[JWT Vulnerabilities and Attacks Analysis] - Analysis of common JWT vulnerabilities and their mitigations
-* link:oauth-security-analysis.adoc[OAuth Security Considerations Analysis] - Analysis of OAuth-related security vulnerabilities
+* xref:../../README.adoc[README] - Project overview and introduction
+* xref:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
+* xref:../Requirements.adoc[Requirements] - Functional and non-functional requirements
+* xref:../Specification.adoc[Specification] - Technical specifications
+* xref:../LogMessages.adoc[Log Messages] - Reference for all log messages
+* xref:../Build.adoc[Building and Development] - Information for contributors
+* xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] - Detailed analysis of security threats
+* xref:jwt-attacks-analysis.adoc[JWT Vulnerabilities and Attacks Analysis] - Analysis of common JWT vulnerabilities and their mitigations
+* xref:oauth-security-analysis.adoc[OAuth Security Considerations Analysis] - Analysis of OAuth-related security vulnerabilities
 
 == System Context
 
@@ -39,45 +39,49 @@ image::../plantuml/threat-model-dataflow.png[Threat Model Data Flow]
 == STRIDE Threat Analysis
 
 === Spoofing
-_See Requirement link:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits] and link:../Requirements.adoc#CUI-JWT-8.4[CUI-JWT-8.4: Claims Validation]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits] and xref:../Requirements.adoc#CUI-JWT-8.4[CUI-JWT-8.4: Claims Validation]_
 
 ==== Threats
+
 * S1: Attacker submits forged JWT tokens
 * S2: Attacker impersonates legitimate JWKS endpoint
 * S3: Attacker reuses expired or revoked tokens
 * S4: Attacker uses tokens from untrusted issuers
 * S5: Attacker performs token substitution attacks
 
-For a detailed analysis of threats, current mitigations, and recommendations, please refer to the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
+For a detailed analysis of threats, current mitigations, and recommendations, please refer to the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
 
 === Tampering
-_See Requirement link:../Requirements.adoc#CUI-JWT-8.2[CUI-JWT-8.2: Safe Parsing]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8.2[CUI-JWT-8.2: Safe Parsing]_
 
 ==== Threats
+
 * T1: Modification of token content during transmission
 * T2: Tampering with cached JWKS data
 * T3: Manipulation of token parsing process
 * T4: Algorithm substitution attacks (e.g., changing RS256 to HS256)
 * T5: Header manipulation attacks
 
-For a detailed analysis of threats, current mitigations, and recommendations, please refer to the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
+For a detailed analysis of threats, current mitigations, and recommendations, please refer to the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
 
 === Repudiation
-_See Requirement link:../Requirements.adoc#CUI-JWT-7[CUI-JWT-7: Logging Requirements]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-7[CUI-JWT-7: Logging Requirements]_
 
 ==== Threats
+
 * R1: Denial of token usage
 * R2: Unauthorized token refresh attempts
 * R3: Missing audit trail for token operations
 * R4: Inability to trace token usage
 * R5: Tampering with log data
 
-For a detailed analysis of threats, current mitigations, and recommendations, please refer to the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
+For a detailed analysis of threats, current mitigations, and recommendations, please refer to the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
 
 === Information Disclosure
-_See Requirement link:../Requirements.adoc#CUI-JWT-8.3[CUI-JWT-8.3: Secure Communication]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8.3[CUI-JWT-8.3: Secure Communication]_
 
 ==== Threats
+
 * I1: Exposure of sensitive claims in logs
 * I2: Leakage of token data in error messages
 * I3: Exposure of JWKS cache contents
@@ -85,12 +89,13 @@ _See Requirement link:../Requirements.adoc#CUI-JWT-8.3[CUI-JWT-8.3: Secure Commu
 * I5: Side-channel attacks on token processing
 * I6: Insecure communication with JWKS endpoints
 
-For a detailed analysis of threats, current mitigations, and recommendations, please refer to the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
+For a detailed analysis of threats, current mitigations, and recommendations, please refer to the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
 
 === Denial of Service
-_See Requirement link:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits] and link:../Requirements.adoc#CUI-JWT-9[CUI-JWT-9: Performance]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size Limits] and xref:../Requirements.adoc#CUI-JWT-9[CUI-JWT-9: Performance]_
 
 ==== Threats
+
 * D1: JWKS endpoint flooding
 * D2: Large token processing
 * D3: Complex token structures
@@ -98,12 +103,13 @@ _See Requirement link:../Requirements.adoc#CUI-JWT-8.1[CUI-JWT-8.1: Token Size L
 * D5: Cache poisoning attacks
 * D6: CPU exhaustion through complex cryptographic operations
 
-For a detailed analysis of threats, current mitigations, and recommendations, please refer to the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
+For a detailed analysis of threats, current mitigations, and recommendations, please refer to the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
 
 === Elevation of Privilege
-_See Requirement link:../Requirements.adoc#CUI-JWT-8.4[CUI-JWT-8.4: Claims Validation]_
+_See Requirement xref:../Requirements.adoc#CUI-JWT-8.4[CUI-JWT-8.4: Claims Validation]_
 
 ==== Threats
+
 * E1: Token scope manipulation
 * E2: Role/permission injection
 * E3: Privilege escalation through claim manipulation
@@ -114,17 +120,17 @@ _See Requirement link:../Requirements.adoc#CUI-JWT-8.4[CUI-JWT-8.4: Claims Valid
 * E8: Scope upgrade attacks - Adding additional scopes during token exchange
 * E9: Mutable claims attacks - Using non-immutable identifiers (like email) instead of immutable ones (like subject)
 
-For a detailed analysis of threats, current mitigations, and recommendations, please refer to the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
+For a detailed analysis of threats, current mitigations, and recommendations, please refer to the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
 
 == Security Controls, Testing, and Implementation Guidelines
 
 The following aspects are covered in detail in the specification documents:
 
-* *Security Controls*: For detailed information about security controls, including input validation, cryptographic practices, authentication and authorization, secure communication, error handling and logging, and data protection, please refer to the link:../specification/security-specifications.adoc[Security Specification] document.
+* *Security Controls*: For detailed information about security controls, including input validation, cryptographic practices, authentication and authorization, secure communication, error handling and logging, and data protection, please refer to the xref:../specification/security-specifications.adoc[Security Specification] document.
 
-* *Security Testing*: For detailed information about security testing, including required security tests and vulnerability scanning, please refer to the link:../specification/testing.adoc[Testing Specification] document.
+* *Security Testing*: For detailed information about security testing, including required security tests and vulnerability scanning, please refer to the xref:../specification/testing.adoc[Testing Specification] document.
 
-* *Implementation Guidelines*: For detailed information about implementation guidelines, including secure coding practices and security configuration, please refer to the link:../specification/technical-components.adoc[Technical Components Specification] document.
+* *Implementation Guidelines*: For detailed information about implementation guidelines, including secure coding practices and security configuration, please refer to the xref:../specification/technical-components.adoc[Technical Components Specification] document.
 
 == Coverage Analysis
 
@@ -202,13 +208,13 @@ The following aspects are covered in detail in the specification documents:
 
 === Detailed Analysis
 
-For a detailed analysis of each threat, mitigation, and recommendation, please refer to the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
+For a detailed analysis of each threat, mitigation, and recommendation, please refer to the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document.
 
 === Conclusion
 
 The JWT Token Validation library provides robust security measures for JWT token validation, with comprehensive coverage for most of the threats identified in the threat model. All threats and current mitigations are covered in specifications, and the vast majority are also covered in tests. The recommendations have lower coverage, which is expected as they represent potential future enhancements rather than current requirements.
 
-The areas for improvement identified in the link:threat-coverage-analysis.adoc[Threat Coverage Analysis] document could be addressed in future versions to further enhance the security of the library.
+The areas for improvement identified in the xref:threat-coverage-analysis.adoc[Threat Coverage Analysis] document could be addressed in future versions to further enhance the security of the library.
 
 == References
 
