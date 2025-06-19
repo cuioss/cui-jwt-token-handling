@@ -1,10 +1,8 @@
 = cui-jwt-validation
 
-[discrete]
-== Status
+// Status badges displayed at top  
+*Build & Quality*
 
-[discrete]
-=== Build & Quality
 image:https://github.com/cuioss/cui-jwt/actions/workflows/maven.yml/badge.svg?branch=main[Java CI with Maven,link=https://github.com/cuioss/cui-jwt/actions/workflows/maven.yml]
 image:https://github.com/cuioss/cui-jwt/actions/workflows/integration-tests.yml/badge.svg[Integration Tests,link=https://github.com/cuioss/cui-jwt/actions/workflows/integration-tests.yml]
 image:https://img.shields.io/github/last-commit/cuioss/cui-jwt/main[Last Build,link=https://github.com/cuioss/cui-jwt/commits/main]
@@ -15,8 +13,8 @@ image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-va
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-validation&metric=ncloc[Lines of Code,link=https://sonarcloud.io/summary/new_code?id=cuioss_cui-jwt-validation]
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-validation&metric=coverage[Coverage,link=https://sonarcloud.io/summary/new_code?id=cuioss_cui-jwt-validation]
 
-[discrete]
-=== Performance Benchmarks
+*Performance Benchmarks*
+
 image:https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml/badge.svg[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/performance-badge.json[JWT Performance Score,link=https://cuioss.github.io/cui-jwt/benchmarks/]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/validator-badge.json[Access Token Validation,link=https://cuioss.github.io/cui-jwt/benchmarks/]
@@ -25,6 +23,7 @@ _Access Token Validation shows average time to validate a single JWT token_
 
 https://cuioss.github.io/cui-jwt/about.html[Generated Documentation on github-pages]
 
+// Table of Contents starts here
 :toc:
 :toclevels: 3
 :toc-title: Table of Contents
