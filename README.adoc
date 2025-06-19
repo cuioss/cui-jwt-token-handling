@@ -23,21 +23,6 @@ _Access Token Validation shows average time to validate a single JWT token_
 
 https://cuioss.github.io/cui-jwt/about.html[Generated Documentation on github-pages]
 
-== Table of Contents
-
-* link:#what-is-it[What is it?]
-** link:#why-another-jwt-library[Why another JWT-Library?] 
-** link:#maven-coordinates[Maven Coordinates]
-*** link:#runtime-dependencies[Runtime Dependencies]
-*** link:#test-artifact[Test Artifact]
-* link:#architecture-overview[Architecture Overview]
-* link:#getting-started[Getting Started]
-* link:#documentation[Documentation]
-* link:#additional-modules[Additional Modules]
-** link:#quarkus-integration[Quarkus Integration]
-** link:#performance-benchmarking[Performance Benchmarking]
-* link:#next-steps[Next Steps]
-
 :sectnums:
 
 == What is it?
