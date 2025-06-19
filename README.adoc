@@ -1,4 +1,8 @@
 = cui-jwt-validation
+:toc:
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
 
 [discrete]
 == Status
@@ -22,11 +26,6 @@ image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/bench
 _Access Token Validation shows average time to validate a single JWT token_
 
 https://cuioss.github.io/cui-jwt/about.html[Generated Documentation on github-pages]
-
-:toc:
-:toclevels: 3
-:toc-title: Table of Contents
-:sectnums:
 
 == What is it?
 
