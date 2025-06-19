@@ -215,8 +215,16 @@
         (trend.direction === 'down' ? 'trend-up' : trend.direction === 'up' ? 'trend-down' : 'trend-stable') :
         (trend.direction === 'up' ? 'trend-up' : trend.direction === 'down' ? 'trend-down' : 'trend-stable');
       
+      // Handle Infinity values to align with calculate-trend-badge.sh approach
+      let percentageDisplay;
+      if (!isFinite(trend.percentChange)) {
+        percentageDisplay = ">9999";
+      } else {
+        percentageDisplay = Math.abs(trend.percentChange).toFixed(1);
+      }
+      
       return {
-        html: `<span class="${className}">${arrow} ${Math.abs(trend.percentChange).toFixed(1)}%</span>`,
+        html: `<span class="${className}">${arrow} ${percentageDisplay}%</span>`,
         className
       };
     }
