@@ -23,11 +23,13 @@ _Access Token Validation shows average time to validate a single JWT token_
 
 https://cuioss.github.io/cui-jwt/about.html[Generated Documentation on github-pages]
 
-// Table of Contents starts here
-:toc:
+// Table of Contents
+:toc: macro
 :toclevels: 3
 :toc-title: Table of Contents
 :sectnums:
+
+toc::[]
 
 == What is it?
 
