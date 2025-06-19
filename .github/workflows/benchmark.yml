@@ -170,23 +170,30 @@ jobs:
             
             if [ -f "gh-pages/jmh-result.json" ]; then
               # Extract throughput (ops/sec) from PerformanceIndicatorBenchmark.measureThroughput
-              local throughput=$(grep -A 10 '"benchmark" : "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureThroughput"' gh-pages/jmh-result.json | grep '"score"' | head -1 | grep -o '[0-9.]*' | head -1 || echo "0")
+              local throughput=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureThroughput") | .primaryMetric.score' gh-pages/jmh-result.json 2>/dev/null || echo "0")
               
               # Extract average time (microseconds) from PerformanceIndicatorBenchmark.measureAverageTime  
-              local avg_time=$(grep -A 10 '"benchmark" : "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureAverageTime"' gh-pages/jmh-result.json | grep '"score"' | head -1 | grep -o '[0-9.]*' | head -1 || echo "1000")
+              local avg_time=$(jq -r '.[] | select(.benchmark == "de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureAverageTime") | .primaryMetric.score' gh-pages/jmh-result.json 2>/dev/null || echo "0")
               
-              if [ "$throughput" != "0" ] && [ "$avg_time" != "1000" ]; then
-                # Calculate weighted performance score: (throughput * 0.6) + ((1000000 / avg_time) * 0.4)
-                local latency_ops_per_sec=$(echo "scale=2; 1000000 / $avg_time" | bc -l)
+              echo "Debug: Extracted throughput=$throughput, avg_time=$avg_time"
+              
+              if [ "$throughput" != "0" ] && [ "$throughput" != "null" ] && [ "$avg_time" != "0" ] && [ "$avg_time" != "null" ]; then
+                # Convert scientific notation to regular numbers
+                throughput=$(echo "$throughput" | awk '{printf "%.0f", $1}')
+                avg_time_microseconds=$(echo "$avg_time * 1000000" | bc -l | awk '{printf "%.1f", $1}')
+                
+                # Calculate weighted performance score: (throughput * 0.6) + ((1000000 / avg_time_microseconds) * 0.4)
+                local latency_ops_per_sec=$(echo "scale=2; 1000000 / $avg_time_microseconds" | bc -l)
                 local performance_score=$(echo "scale=2; ($throughput * 0.6) + ($latency_ops_per_sec * 0.4)" | bc -l)
                 local formatted_score=$(printf "%.0f" $performance_score)
+                local throughput_k=$(echo "scale=1; $throughput / 1000" | bc -l)
                 
                 # Create badge with performance score
-                echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"${formatted_score} (${throughput}k ops/s, ${avg_time}μs)\",\"color\":\"brightgreen\"}" > "gh-pages/badges/performance-badge.json"
+                echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"${formatted_score} (${throughput_k}k ops/s, ${avg_time_microseconds}μs)\",\"color\":\"brightgreen\"}" > "gh-pages/badges/performance-badge.json"
                 
-                echo "Created performance badge: Score=$formatted_score (Throughput=${throughput}k ops/s, AvgTime=${avg_time}μs)"
+                echo "Created performance badge: Score=$formatted_score (Throughput=${throughput_k}k ops/s, AvgTime=${avg_time_microseconds}μs)"
               else
-                echo "Warning: Could not extract performance metrics from benchmark results"
+                echo "Warning: Could not extract valid performance metrics (throughput=$throughput, avg_time=$avg_time)"
                 echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"Pending\",\"color\":\"yellow\"}" > "gh-pages/badges/performance-badge.json"
               fi
             else
