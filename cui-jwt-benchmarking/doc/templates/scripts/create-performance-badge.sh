@@ -79,7 +79,7 @@ if [ "$throughput_score" != "0" ] && [ "$throughput_score" != "null" ] && [ "$av
   
   if [ "$throughput_ops_per_sec" != "0" ] && [ "$avg_time_microseconds" != "0" ]; then
     # Calculate latency component
-    latency_ops_per_sec=$(echo "scale=2; 1000000 / $avg_time_microseconds" | bc -l)
+    latency_ops_per_sec=$(if [ "$(echo "$avg_time_microseconds == 0" | bc -l)" -eq 1 ]; then echo "0"; else echo "scale=2; 1000000 / $avg_time_microseconds"; fi | bc -l)
     
     # Calculate comprehensive weighted performance score with error resilience
     if [ "$error_resilience_ops_per_sec" != "0" ]; then
