@@ -6,9 +6,10 @@
 
 == Status
 
+=== Build & Quality
 image:https://img.shields.io/github/actions/workflow/status/cuioss/cui-jwt/maven.yml?branch=main[Java CI with Maven,link=https://github.com/cuioss/cui-jwt/actions/workflows/maven.yml]
 image:https://img.shields.io/github/actions/workflow/status/cuioss/cui-jwt/integration-tests.yml[Integration Tests,link=https://github.com/cuioss/cui-jwt/actions/workflows/integration-tests.yml]
-image:https://img.shields.io/github/actions/workflow/status/cuioss/cui-jwt/benchmark.yml[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
+image:https://img.shields.io/github/last-commit/cuioss/cui-jwt/main[Last Build,link=https://github.com/cuioss/cui-jwt/commits/main]
 image:http://img.shields.io/:license-apache-blue.svg[License,link=http://www.apache.org/licenses/LICENSE-2.0.html]
 image:https://img.shields.io/maven-central/v/de.cuioss.jwt/cui-jwt-parent.svg?label=Maven%20Central["Maven Central", link="https://central.sonatype.com/artifact/de.cuioss.jwt/cui-jwt-parent"]
 
@@ -16,8 +17,12 @@ image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-va
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-validation&metric=ncloc[Lines of Code,link=https://sonarcloud.io/summary/new_code?id=cuioss_cui-jwt-validation]
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-validation&metric=coverage[Coverage,link=https://sonarcloud.io/summary/new_code?id=cuioss_cui-jwt-validation]
 
+=== Performance Benchmarks
+image:https://img.shields.io/github/actions/workflow/status/cuioss/cui-jwt/benchmark.yml[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/performance-badge.json[JWT Performance Score,link=https://cuioss.github.io/cui-jwt/benchmarks/]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/validator-badge.json[Access Token Validation,link=https://cuioss.github.io/cui-jwt/benchmarks/]
+
+_Access Token Validation shows average time to validate a single JWT token_
 
 https://cuioss.github.io/cui-jwt/about.html[Generated Documentation on github-pages]
 
