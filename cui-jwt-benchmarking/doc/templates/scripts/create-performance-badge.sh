@@ -66,7 +66,7 @@ if [ "$throughput_score" != "0" ] && [ "$throughput_score" != "null" ] && [ "$av
       error_resilience_ops_per_sec=$(if [ "$(echo "$error_resilience_score == 0" | bc -l)" -eq 1 ]; then echo "0"; else echo "scale=0; 1000 / $error_resilience_score"; fi | bc -l)
     elif [[ "$error_resilience_unit" == "us/op" ]]; then
       # Convert us/op to ops/s
-      error_resilience_ops_per_sec=$(echo "scale=0; 1000000 / $error_resilience_score" | bc -l)
+      error_resilience_ops_per_sec=$(if [ "$(echo "$error_resilience_score == 0" | bc -l)" -eq 1 ]; then echo "0"; else echo "scale=0; 1000000 / $error_resilience_score"; fi | bc -l)
     else
       echo "Warning: Unknown error resilience unit: $error_resilience_unit"
       error_resilience_ops_per_sec="0"
