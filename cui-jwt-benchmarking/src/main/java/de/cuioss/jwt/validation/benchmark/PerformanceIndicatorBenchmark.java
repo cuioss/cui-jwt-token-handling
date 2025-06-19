@@ -100,17 +100,36 @@ public class PerformanceIndicatorBenchmark {
     }
 
     /**
-     * Calculates a weighted performance score based on throughput and average time.
+     * Calculates a comprehensive weighted performance score based on multiple metrics.
      * <p>
      * The performance score is calculated as:
-     * <code>Score = (Throughput * 0.6) + ((1000000 / AvgTimeInMicros) * 0.4)</code>
+     * <code>Score = (Throughput * 0.57) + ((1000000 / AvgTimeInMicros) * 0.40) + (ErrorResilienceScore * 0.03)</code>
      * <p>
-     * This formula weights throughput at 60% and latency (inverted) at 40%,
-     * providing a balanced view of overall performance where:
+     * This formula weights:
      * <ul>
-     *   <li>Higher throughput contributes positively to the score</li>
-     *   <li>Lower average time (better latency) contributes positively to the score</li>
+     *   <li><strong>Throughput (57%)</strong>: Operations per second under concurrent load</li>
+     *   <li><strong>Latency (40%)</strong>: Inverted average time per operation</li>
+     *   <li><strong>Error Resilience (3%)</strong>: Performance stability under error conditions</li>
      * </ul>
+     * The error resilience component ensures the system maintains good performance
+     * even when processing invalid tokens, which is important for production stability.
+     *
+     * @param throughputOpsPerSec Operations per second from throughput benchmark
+     * @param avgTimeInMicros Average time per operation in microseconds
+     * @param errorResilienceOpsPerSec Operations per second under mixed error conditions (0% error scenario)
+     * @return Weighted performance score
+     */
+    public static double calculatePerformanceScore(double throughputOpsPerSec, double avgTimeInMicros, double errorResilienceOpsPerSec) {
+        // Convert average time to operations per second (inverted metric)
+        double latencyOpsPerSec = 1_000_000.0 / avgTimeInMicros;
+        
+        // Weighted score: 57% throughput, 40% latency, 3% error resilience
+        return (throughputOpsPerSec * 0.57) + (latencyOpsPerSec * 0.40) + (errorResilienceOpsPerSec * 0.03);
+    }
+
+    /**
+     * Backward compatibility method for calculating performance score without error resilience.
+     * Uses the original 60/40 weighting between throughput and latency.
      *
      * @param throughputOpsPerSec Operations per second from throughput benchmark
      * @param avgTimeInMicros Average time per operation in microseconds
@@ -120,7 +139,7 @@ public class PerformanceIndicatorBenchmark {
         // Convert average time to operations per second (inverted metric)
         double latencyOpsPerSec = 1_000_000.0 / avgTimeInMicros;
         
-        // Weighted score: 60% throughput, 40% latency
+        // Weighted score: 60% throughput, 40% latency (original formula)
         return (throughputOpsPerSec * 0.6) + (latencyOpsPerSec * 0.4);
     }
 }

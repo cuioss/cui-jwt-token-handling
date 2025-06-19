@@ -60,32 +60,39 @@ The performance scoring system focuses on two critical metrics that represent th
 
 === Weighted Formula
 
-The performance score uses a weighted combination of both metrics:
+The performance score uses a weighted combination of three key metrics:
 
 [source,text]
 ----
-Performance Score = (Throughput × 0.6) + (Latency_Inverted × 0.4)
+Performance Score = (Throughput × 0.57) + (Latency_Inverted × 0.40) + (Error_Resilience × 0.03)
 
 Where:
 - Throughput = Operations per second from concurrent benchmark
 - Latency_Inverted = 1,000,000 ÷ Average_Time_Microseconds
+- Error_Resilience = Operations per second under mixed error conditions (0% error scenario)
 ----
 
 === Rationale for Weighting
 
-The 60/40 weighting scheme reflects the relative importance of each metric:
+The 57/40/3 weighting scheme reflects the relative importance of each metric:
 
-**Throughput (60% weight)**:
-- More critical for most production scenarios
+**Throughput (57% weight)**:
+- Most critical for production scenarios
 - Represents real-world performance under load
 - Indicates system scalability and resource efficiency
-- Has higher impact on overall system capacity
+- Has highest impact on overall system capacity
 
 **Latency (40% weight)**:
 - Important for user experience
 - Shows algorithmic efficiency
 - Critical for latency-sensitive applications
 - Provides baseline performance measurement
+
+**Error Resilience (3% weight)**:
+- Ensures performance stability under error conditions
+- Validates robust error handling doesn't degrade performance
+- Important for production stability with invalid tokens
+- Small but meaningful contribution to overall score
 
 === Latency Inversion
 
@@ -103,15 +110,16 @@ This inversion ensures that:
 
 == Example Calculations
 
-=== Scenario 1: High Throughput, Good Latency
+=== Scenario 1: High Throughput, Good Latency, Good Error Resilience
 [source,text]
 ----
 Throughput: 45,000 ops/sec
 Average Time: 80 microseconds
+Error Resilience: 40,000 ops/sec
 
 Latency_Inverted = 1,000,000 ÷ 80 = 12,500 ops/sec
-Performance Score = (45,000 × 0.6) + (12,500 × 0.4)
-                  = 27,000 + 5,000 = 32,000
+Performance Score = (45,000 × 0.57) + (12,500 × 0.40) + (40,000 × 0.03)
+                  = 25,650 + 5,000 + 1,200 = 31,850
 ----
 
 === Scenario 2: Moderate Throughput, Excellent Latency
@@ -119,17 +127,19 @@ Performance Score = (45,000 × 0.6) + (12,500 × 0.4)
 ----
 Throughput: 25,000 ops/sec
 Average Time: 40 microseconds
+Error Resilience: 22,000 ops/sec
 
 Latency_Inverted = 1,000,000 ÷ 40 = 25,000 ops/sec
-Performance Score = (25,000 × 0.6) + (25,000 × 0.4)
-                  = 15,000 + 10,000 = 25,000
+Performance Score = (25,000 × 0.57) + (25,000 × 0.40) + (22,000 × 0.03)
+                  = 14,250 + 10,000 + 660 = 24,910
 ----
 
-=== Scenario 3: Balanced Performance
+=== Scenario 3: Balanced Performance (Legacy Calculation)
 [source,text]
 ----
 Throughput: 35,000 ops/sec
 Average Time: 60 microseconds
+(No error resilience data available)
 
 Latency_Inverted = 1,000,000 ÷ 60 = 16,667 ops/sec
 Performance Score = (35,000 × 0.6) + (16,667 × 0.4)

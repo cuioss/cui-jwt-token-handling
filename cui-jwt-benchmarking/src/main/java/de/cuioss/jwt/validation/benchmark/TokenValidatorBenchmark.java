@@ -60,43 +60,16 @@ public class TokenValidatorBenchmark {
         refreshToken = refreshTokenHolder.getRawToken();
     }
 
+    /**
+     * Core benchmark method for access token validation performance.
+     * This provides the baseline measurement for single-threaded validation performance.
+     */
     @Benchmark
     public AccessTokenContent validateAccessToken() {
         try {
             return tokenValidator.createAccessToken(accessToken);
         } catch (TokenValidationException e) {
-            // This should ideally not happen in a performance benchmark for valid tokens
-            // If it does, the setup or token generation needs correction.
-            // For now, rethrow to make it visible in benchmark results if it occurs.
             throw new RuntimeException("Access token validation failed in benchmark", e);
-        }
-    }
-
-    @Benchmark
-    public IdTokenContent validateIdToken() {
-        try {
-            return tokenValidator.createIdToken(idToken);
-        } catch (TokenValidationException e) {
-            throw new RuntimeException("ID token validation failed in benchmark", e);
-        }
-    }
-
-    @Benchmark
-    public RefreshTokenContent validateRefreshToken() {
-        // Refresh token validation is often lighter and might not throw exceptions
-        // for certain "invalid" conditions if it's just parsing.
-        // The createRefreshToken method in TokenValidator seems to try to parse claims
-        // but ignore validation exceptions.
-        return tokenValidator.createRefreshToken(refreshToken);
-    }
-
-    // Example of how to consume with Blackhole if methods don't return or to ensure computation
-    @Benchmark
-    public void validateAccessTokenAndConsume(Blackhole bh) {
-        try {
-            bh.consume(tokenValidator.createAccessToken(accessToken));
-        } catch (TokenValidationException e) {
-            bh.consume(e); // Consume exception if it's part of what's measured
         }
     }
 }
