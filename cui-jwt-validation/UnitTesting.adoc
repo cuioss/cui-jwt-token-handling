@@ -409,4 +409,4 @@ Key benefits of this integration:
 3. **Parameter Injection**: Test methods can receive useful parameters like `URIBuilder` configured with the server's details
 4. **HTTPS Support**: The framework provides HTTPS capability with automatic certificate handling
 
-For more information about the `cui-test-mockwebserver-junit5` framework, see the documentation in the `doc/library/cui-test-mockwebserver-junit5/` directory.
+For more information about the `cui-test-mockwebserver-junit5` framework, see the https://github.com/cuioss/cui-test-mockwebserver-junit5[cui-test-mockwebserver-junit5 repository documentation].

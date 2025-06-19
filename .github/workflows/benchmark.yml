@@ -190,8 +190,8 @@ jobs:
           # Create header for badge markdown
           echo "## Benchmark Results ($TIMESTAMP)" > gh-pages/badge-markdown.txt
 
-          # Create badges for key benchmarks
-          create_badge "de.cuioss.jwt.validation.benchmark.TokenValidatorBenchmark.validateAccessToken" "Access Token Validation" "validator-badge" "blue"
+          # Note: Access Token Validation badge removed as redundant with Performance Score
+          # The Performance Score badge already includes average time information plus comprehensive metrics
 
           # Create performance indicator badge
           create_performance_badge() {
@@ -278,9 +278,11 @@ jobs:
                   
                   local formatted_score=$(printf "%.0f" $performance_score)
                   local throughput_k=$(echo "scale=1; $throughput_ops_per_sec / 1000" | bc -l)
+                  local avg_time_ms=$(echo "scale=3; $avg_time_microseconds / 1000" | bc -l)
+                  local formatted_avg_time_ms=$(printf "%.2f" $avg_time_ms)
                   
-                  # Create badge with performance score
-                  echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"${formatted_score} (${throughput_k}k ops/s, ${avg_time_microseconds}μs)\",\"color\":\"brightgreen\"}" > "gh-pages/badges/performance-badge.json"
+                  # Create badge with performance score (using ms instead of μs)
+                  echo "{\"schemaVersion\":1,\"label\":\"Performance Score\",\"message\":\"${formatted_score} (${throughput_k}k ops/s, ${formatted_avg_time_ms}ms)\",\"color\":\"brightgreen\"}" > "gh-pages/badges/performance-badge.json"
                   
                   echo "Created performance badge: Score=$formatted_score (Throughput=${throughput_k}k ops/s, AvgTime=${avg_time_microseconds}μs)"
                 else
@@ -303,8 +305,7 @@ jobs:
           # Create a combined badge for all benchmarks
           echo "{\"schemaVersion\":1,\"label\":\"JWT Benchmarks\",\"message\":\"Updated $TIMESTAMP\",\"color\":\"brightgreen\"}" > gh-pages/badges/all-benchmarks.json
 
-          # Copy the validator badge to the root for backward compatibility
-          cp -f gh-pages/badges/validator-badge.json gh-pages/validator-badge.json || true
+          # Note: validator-badge.json removed as redundant with comprehensive performance-badge.json
 
       - name: Deploy to cuioss.github.io
         uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8 # v4.7.3

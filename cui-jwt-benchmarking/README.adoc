@@ -95,33 +95,61 @@ This module is configured to run benchmarks automatically via GitHub Actions:
 
 Results are published to GitHub Pages for visualization and comparison over time.
 
-== Performance Scoring System
+== Understand Performance Metrics
 
-The benchmarking module includes a comprehensive performance scoring system that combines multiple metrics into a single indicator. This system focuses on the two most critical performance aspects:
+The benchmarking module includes a comprehensive performance scoring system that combines multiple metrics into a single indicator. This system focuses on the most critical performance aspects of JWT validation.
 
-=== Key Metrics
+=== Performance Score Composition
 
-**Token Throughput**: Operations per second under concurrent load (60% weight)
+The **JWT Performance Score** badge displayed in the main README shows a weighted metric combining:
 
-**Average Validation Time**: Microseconds per operation in single-threaded scenarios (40% weight)
+**1. Token Throughput (57% weight)**
+- Operations per second under maximum concurrent load
+- Measures scalability under high-volume scenarios
+- Higher values indicate better concurrent performance
+
+**2. Average Validation Time (40% weight)**  
+- Milliseconds per operation in single-threaded scenarios
+- Measures baseline validation latency
+- Lower values indicate faster individual validations
+
+**3. Error Resilience (3% weight)**
+- Performance stability when processing invalid tokens
+- Ensures consistent performance under error conditions
+- Critical for production reliability
 
 === Weighted Score Calculation
 
-The performance score uses the formula:
+The performance score uses the enhanced formula:
 ```
-Score = (Throughput × 0.6) + ((1,000,000 ÷ AvgTime) × 0.4)
+Score = (Throughput × 0.57) + ((1,000,000 ÷ AvgTimeμs) × 0.40) + (ErrorResilience × 0.03)
 ```
 
-This provides a balanced view where higher throughput and lower latency both contribute positively to the score.
+For backward compatibility, when error resilience data is unavailable:
+```
+Score = (Throughput × 0.60) + ((1,000,000 ÷ AvgTimeμs) × 0.40)
+```
 
-=== Performance Badge
+=== Performance Badge Format
 
-The system automatically generates a performance badge displayed in the main README that shows:
-- The weighted performance score
-- Raw throughput value (operations/second)  
-- Raw average time value (microseconds)
+The system automatically generates a performance badge that shows:
+- **Weighted Performance Score**: Combined metric for overall performance
+- **Throughput**: Raw operations per second (k ops/s format)
+- **Average Time**: Raw validation time in milliseconds
 
-Example: `Performance Score: 32000 (45k ops/s, 80μs)`
+Example: `Performance Score: 10,843 (13.7k ops/s, 0.15ms)`
+
+=== Understanding the Metrics
+
+**High Performance Score Indicators:**
+- **Score > 10,000**: Excellent performance suitable for high-volume production
+- **Throughput > 10k ops/s**: Good concurrent processing capability  
+- **Average Time < 0.2ms**: Fast individual token validation
+
+**Interpreting Changes:**
+- **Score increases**: Overall performance improvement
+- **Throughput increases**: Better concurrency handling
+- **Average time decreases**: Faster individual operations
 
 == Documentation
 

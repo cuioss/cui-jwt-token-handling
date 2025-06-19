@@ -17,9 +17,8 @@ image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-va
 
 image:https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml/badge.svg[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/performance-badge.json[JWT Performance Score,link=https://cuioss.github.io/cui-jwt/benchmarks/]
-image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/validator-badge.json[Access Token Validation,link=https://cuioss.github.io/cui-jwt/benchmarks/]
 
-_Access Token Validation shows average time to validate a single JWT token_
+link:cui-jwt-benchmarking/README.adoc#understand-performance-metrics[Understand Performance Metrics]
 
 https://cuioss.github.io/cui-jwt/about.html[Generated Documentation on github-pages]
 
