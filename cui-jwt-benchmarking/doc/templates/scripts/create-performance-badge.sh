@@ -37,7 +37,7 @@ if [ "$throughput_score" != "0" ] && [ "$throughput_score" != "null" ] && [ "$av
     throughput_ops_per_sec=$(echo "$throughput_score" | awk '{printf "%.0f", $1}')
   elif [[ "$throughput_unit" == "s/op" ]]; then
     # Convert s/op to ops/s
-    throughput_ops_per_sec=$(echo "scale=0; 1 / $throughput_score" | bc -l)
+    throughput_ops_per_sec=$(if [ "$(echo "$throughput_score == 0" | bc -l)" -eq 1 ]; then echo "0"; else echo "scale=0; 1 / $throughput_score"; fi | bc -l)
   else
     echo "Warning: Unknown throughput unit: $throughput_unit"
     throughput_ops_per_sec="0"
