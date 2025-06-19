@@ -12,7 +12,7 @@ This document provides a comprehensive analysis of common JWT vulnerabilities an
 
 For detailed implementation information on how these mitigations are implemented, see the link:security-specifications.adoc#jwt-attack-mitigations[JWT Attack Mitigations] section in the Security Specifications document.
 
-For guidance on secure token handling practices for application developers, see the link:../jwt-security-best-practices.adoc[JWT Security Best Practices Guide].
+For guidance on secure token handling practices for application developers, see the link:jwt-security-best-practices.adoc[JWT Security Best Practices Guide].
 
 == Vulnerability Analysis
 

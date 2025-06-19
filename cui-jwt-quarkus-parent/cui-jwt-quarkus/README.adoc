@@ -289,4 +289,4 @@ cui.jwt.issuers.my-issuer.parser.allowed-algorithms=RS256,RS384,RS512
 * xref:../doc/native-image-support.adoc[Native Image Support Documentation]
 * xref:../doc/devui-testing.adoc[DevUI Testing Guide]
 * xref:../../doc/specification/technical-components.adoc[Technical Components Specification]
-* xref:../../doc/specification/security.adoc[Security Specification]
+* xref:../../doc/security/security-specifications.adoc[Security Specification]

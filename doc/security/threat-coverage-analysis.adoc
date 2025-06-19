@@ -11,7 +11,7 @@ This document analyzes the coverage of threats, mitigations, and recommendations
 === Document Navigation
 
 * link:../../README.adoc[README] - Project overview and introduction
-* link:../Usage.adoc[Usage Guide] - How to use the library with code examples
+* xref:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
 * link:../Requirements.adoc[Requirements] - Functional and non-functional requirements
 * link:../Specification.adoc[Specification] - Technical specifications
 * link:../LogMessages.adoc[Log Messages] - Reference for all log messages

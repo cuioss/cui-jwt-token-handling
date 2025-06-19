@@ -12,7 +12,7 @@ This document provides a comprehensive analysis of OAuth-related security vulner
 
 For detailed implementation information on how these mitigations are implemented, see the link:security-specifications.adoc#oauth-security-considerations[OAuth Security Considerations] section in the Security Specifications document.
 
-For guidance on secure OAuth implementation practices for application developers, see the link:../jwt-security-best-practices.adoc[JWT Security Best Practices Guide].
+For guidance on secure OAuth implementation practices for application developers, see the link:jwt-security-best-practices.adoc[JWT Security Best Practices Guide].
 
 == Vulnerability Analysis
 
@@ -80,7 +80,7 @@ OAuth CSRF is an attack against OAuth flows, where the browser consuming the aut
 * Unauthorized authentication
 
 ==== Current Implementation Status: OUT OF SCOPE
-CSRF protection is primarily a concern at the application level, not in the token validation library. For best practices on preventing CSRF attacks, see link:../jwt-security-best-practices.adoc#token-lifecycle-management[Token Lifecycle Management] in the JWT Security Best Practices Guide.
+CSRF protection is primarily a concern at the application level, not in the token validation library. For best practices on preventing CSRF attacks, see link:jwt-security-best-practices.adoc#token-lifecycle-management[Token Lifecycle Management] in the JWT Security Best Practices Guide.
 
 **Implementation Details:**
 * CSRF attacks occur during OAuth authorization flows, before token issuance
@@ -103,7 +103,7 @@ If the Authorization Server does not properly validate the `redirect_uri` parame
 * Token leakage
 
 ==== Current Implementation Status: OUT OF SCOPE
-Redirect URI validation is the responsibility of the authorization server, not the token validation library. For best practices on secure OAuth implementation, see link:../jwt-security-best-practices.adoc#secure-token-handling-on-the-client[Secure Token Handling on the Client] in the JWT Security Best Practices Guide.
+Redirect URI validation is the responsibility of the authorization server, not the token validation library. For best practices on secure OAuth implementation, see link:jwt-security-best-practices.adoc#secure-token-handling-on-the-client[Secure Token Handling on the Client] in the JWT Security Best Practices Guide.
 
 ==== Test Coverage
 No specific tests for redirect attacks as they're out of scope for the token validation library.
@@ -146,7 +146,7 @@ When OAuth is used in mobile applications, developers often use custom URL schem
 * Account takeover
 
 ==== Current Implementation Status: OUT OF SCOPE
-Mobile app redirect scheme handling is outside the scope of the token validation library. For best practices on securing mobile OAuth flows, see link:../jwt-security-best-practices.adoc#secure-token-handling-on-the-client[Secure Token Handling on the Client] in the JWT Security Best Practices Guide.
+Mobile app redirect scheme handling is outside the scope of the token validation library. For best practices on securing mobile OAuth flows, see link:jwt-security-best-practices.adoc#secure-token-handling-on-the-client[Secure Token Handling on the Client] in the JWT Security Best Practices Guide.
 
 **Implementation Details:**
 * Redirect scheme hijacking occurs during OAuth authorization flows, before token issuance

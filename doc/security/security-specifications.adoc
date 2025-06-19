@@ -14,7 +14,7 @@ This document provides detailed specifications for the security aspects of the J
 === Document Navigation
 
 * xref:../../README.adoc[README] - Project overview and introduction
-* xref:../Usage.adoc[Usage Guide] - How to use the library with code examples
+* xref:../../cui-jwt-validation/README.adoc[Usage Guide] - How to use the library with code examples
 * xref:../Requirements.adoc[Requirements] - Functional and non-functional requirements
 * xref:../Specification.adoc[Specification] - Technical specifications
 * xref:../LogMessages.adoc[Log Messages] - Reference for all log messages
