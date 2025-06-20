@@ -61,7 +61,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("OAuth 2.0 JWT Best Practices Compliance Tests")
 class OAuth2JWTBestPracticesComplianceTest {
 
-    private static final String ISSUER = "Token-Test-testIssuer";
 
     private TokenValidator tokenValidator;
 
@@ -72,7 +71,7 @@ class OAuth2JWTBestPracticesComplianceTest {
 
         // Create issuer config with explicit audience validation
         IssuerConfig issuerConfig = IssuerConfig.builder()
-                .issuer(ISSUER)
+                .issuer(TestTokenHolder.TEST_ISSUER)
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                 .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
@@ -137,7 +136,7 @@ class OAuth2JWTBestPracticesComplianceTest {
 
             // Then
             assertNotNull(result, "Token should be parsed successfully");
-            assertEquals(ISSUER, result.getIssuer(),
+            assertEquals(TestTokenHolder.TEST_ISSUER, result.getIssuer(),
                     "Issuer claim should match the expected value");
         }
 
@@ -296,7 +295,7 @@ class OAuth2JWTBestPracticesComplianceTest {
                     .maxTokenSize(customMaxSize)
                     .build();
             var factory = new TokenValidator(customConfig, IssuerConfig.builder()
-                    .issuer(ISSUER)
+                    .issuer(TestTokenHolder.TEST_ISSUER)
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent(InMemoryJWKSFactory.createDefaultJwks())

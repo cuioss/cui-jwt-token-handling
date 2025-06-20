@@ -59,7 +59,7 @@ import java.util.*;
  */
 public class TestTokenHolder implements TokenContent {
 
-    private static final String ISSUER = "Token-Test-testIssuer";
+    public static final String TEST_ISSUER = "Token-Test-testIssuer";
     /**
      * Standard test audience value - represents the intended recipient of the token.
      * Used in the 'aud' claim to specify which service/API the token is for.
@@ -234,7 +234,7 @@ public class TestTokenHolder implements TokenContent {
      */
     public IssuerConfig getIssuerConfig() {
         // Get the issuer from the claims
-        String issuer = ISSUER;
+        String issuer = TEST_ISSUER;
         if (claims.containsKey(ClaimName.ISSUER.getName())) {
             issuer = claims.get(ClaimName.ISSUER.getName()).getOriginalString();
         }
@@ -418,7 +418,7 @@ public class TestTokenHolder implements TokenContent {
 
         // Add common mandatory claims unless they should be missing
         if (!claimControl.isMissingIssuer()) {
-            claimsMap.put(ClaimName.ISSUER.getName(), ClaimValue.forPlainString(ISSUER));
+            claimsMap.put(ClaimName.ISSUER.getName(), ClaimValue.forPlainString(TEST_ISSUER));
         }
 
         if (!claimControl.isMissingSubject()) {

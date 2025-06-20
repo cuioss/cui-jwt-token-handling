@@ -51,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests TokenClaimValidator edge cases")
 class TokenClaimValidatorEdgeCaseTest {
 
-    private static final String EXPECTED_CLIENT_ID = "test-client-id";
 
     private final SecurityEventCounter securityEventCounter = new SecurityEventCounter();
 
@@ -71,7 +70,7 @@ class TokenClaimValidatorEdgeCaseTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -91,7 +90,7 @@ class TokenClaimValidatorEdgeCaseTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -118,7 +117,7 @@ class TokenClaimValidatorEdgeCaseTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -138,7 +137,7 @@ class TokenClaimValidatorEdgeCaseTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -159,7 +158,7 @@ class TokenClaimValidatorEdgeCaseTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -190,7 +189,7 @@ class TokenClaimValidatorEdgeCaseTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent("{}")  // Empty JWKS content
                     .build();
 
@@ -260,7 +259,7 @@ class TokenClaimValidatorEdgeCaseTest {
     private TokenContent createValidToken() {
         TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
         // Set the authorized party to match the expected client ID
-        tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+        tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
         return tokenHolder;
     }
 

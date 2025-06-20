@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests TokenClaimValidator functionality")
 class TokenClaimValidatorTest {
 
-    private static final String EXPECTED_CLIENT_ID = "test-client-id";
 
     private static final SecurityEventCounter SECURITY_EVENT_COUNTER = new SecurityEventCounter();
 
@@ -64,7 +63,7 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(Set.of(TestTokenHolder.TEST_AUDIENCE))
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
 
             // When creating the validator
@@ -87,7 +86,7 @@ class TokenClaimValidatorTest {
             // Given an IssuerConfig without expected audience
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
 
             // When creating the validator
@@ -172,14 +171,14 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
             // Create a validation with all mandatory claims using the TestTokenGenerators factory
             TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
             // Set the authorized party to match the expected client ID
-            tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
 
             // When validating the validation - should not throw an exception
             TokenContent result = assertDoesNotThrow(() -> validator.validate(tokenHolder),
@@ -199,7 +198,7 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -238,14 +237,14 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
             // When validating a token with a matching audience - should not throw an exception
             TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
             // Set the authorized party to match the expected client ID
-            tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
             TokenContent result = assertDoesNotThrow(() -> validator.validate(tokenHolder),
                     "Token should be valid with matching audience");
 
@@ -263,7 +262,7 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -297,7 +296,7 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -307,7 +306,7 @@ class TokenClaimValidatorTest {
                             .missingAudience(true)
                             .build());
             // Set the authorized party to match the expected client ID
-            tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
 
             // Then the validation should pass (access tokens can have missing audience)
             TokenContent result = assertDoesNotThrow(() -> validator.validate(tokenHolder),
@@ -328,14 +327,14 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
             // When validating a token with a matching authorized party - should not throw an exception
             TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
             // Set the authorized party to match the expected client ID
-            tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
             TokenContent result = assertDoesNotThrow(() -> validator.validate(tokenHolder),
                     "Token should be valid with matching authorized party");
 
@@ -353,7 +352,7 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -392,14 +391,14 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
             // Create a token with a valid subject claim
             TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
             // Set the authorized party to match the expected client ID
-            tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
             // Ensure subject claim is present with a valid value
             tokenHolder.withClaim("sub", ClaimValue.forPlainString("valid-subject-id"));
 
@@ -421,7 +420,7 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -431,7 +430,7 @@ class TokenClaimValidatorTest {
                             .missingSubject(true)
                             .build());
             // Set the authorized party to match the expected client ID
-            tokenContent.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenContent.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
 
             // When validating the token - should throw an exception
             TokenValidationException exception = assertThrows(TokenValidationException.class,
@@ -457,14 +456,14 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
             // Create a token with an empty subject claim
             TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
             // Set the authorized party to match the expected client ID
-            tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
             // Set an empty subject claim
             tokenHolder.withClaim("sub", ClaimValue.forPlainString(""));
 
@@ -492,14 +491,14 @@ class TokenClaimValidatorTest {
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
-                    .expectedClientId(EXPECTED_CLIENT_ID)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
 
             // Create a token with both subject and mutable claims
             TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
             // Set the authorized party to match the expected client ID
-            tokenHolder.withClaim("azp", ClaimValue.forPlainString(EXPECTED_CLIENT_ID));
+            tokenHolder.withClaim("azp", ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
             // Ensure subject claim is present with a valid value
             tokenHolder.withClaim("sub", ClaimValue.forPlainString("valid-subject-id"));
             // Add mutable claims

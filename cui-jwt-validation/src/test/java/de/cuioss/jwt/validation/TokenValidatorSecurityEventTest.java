@@ -49,9 +49,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests TokenValidator security event counting")
 class TokenValidatorSecurityEventTest {
 
-    private static final String ISSUER = "Token-Test-testIssuer";
-    private static final String AUDIENCE = "test-client";
-    private static final String CLIENT_ID = "test-client";
 
     private TokenValidator tokenValidator;
 
@@ -62,9 +59,9 @@ class TokenValidatorSecurityEventTest {
 
         // Create issuer config
         IssuerConfig issuerConfig = IssuerConfig.builder()
-                .issuer(ISSUER)
-                .expectedAudience(AUDIENCE)
-                .expectedClientId(CLIENT_ID)
+                .issuer(TestTokenHolder.TEST_ISSUER)
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
                 .algorithmPreferences(new AlgorithmPreferences())
                 .build();
