@@ -270,6 +270,29 @@ The following test methods demonstrate the logging test approach:
 
 These tests ensure that the library logs appropriate information at the correct log levels for both successful operations and error scenarios.
 
+=== JWT Semantic Correctness Testing
+_See TestTokenHolder Constants in xref:../../cui-jwt-validation/UnitTesting.adoc[Unit Testing Guide]_
+
+==== Status: IMPLEMENTED
+
+JWT semantic correctness testing has been implemented to ensure proper distinction between OAuth2/OIDC concepts:
+
+* **Audience (`aud`) Testing**: Validates that audience claims identify resource servers correctly
+* **Client ID (`azp`) Testing**: Validates that authorized party claims identify OAuth2 clients correctly  
+* **Semantic Separation**: Tests verify that audience and client ID serve different purposes and use distinct values
+
+The test constants properly model real-world OAuth2/OIDC scenarios:
+
+[source,java]
+----
+// Semantically distinct values for proper OAuth2/OIDC testing
+TestTokenHolder.TEST_AUDIENCE = "test-audience"      // Resource server identifier
+TestTokenHolder.TEST_CLIENT_ID = "test-client-app"   // OAuth2 client identifier
+TestTokenHolder.TEST_ISSUER = "Token-Test-testIssuer" // Authorization server identifier
+----
+
+This ensures compliance with RFC 7519, RFC 9068, and OpenID Connect Core specifications, providing more realistic test scenarios that better reflect production environments.
+
 === Vulnerability Scanning
 _See Requirement xref:../Requirements.adoc#CUI-JWT-12.4[CUI-JWT-12.4: Vulnerability Scanning]_
 
