@@ -45,7 +45,8 @@ public class TokenKeycloakIT extends KeycloakITBase {
     public static final List<String> SCOPES_AS_LIST = Splitter.on(" ").splitToList(SCOPES);
     private static final CuiLogger LOGGER = new CuiLogger(TokenKeycloakIT.class);
 
-    private TokenValidator preConfiguredFactory; // Renamed from 'factory' to avoid confusion
+    private TokenValidator accessTokenValidator; // For access tokens (audience: "account")
+    private TokenValidator idTokenValidator; // For ID tokens (audience: "test_client")
     private String authServerUrlString; // To cache the auth server URL
     private static SSLConfig restAssuredSslConfig;
     private static SSLContext keycloakSslContext;
@@ -131,15 +132,23 @@ public class TokenKeycloakIT extends KeycloakITBase {
                 .sslContext(keycloakSslContext) // Use the secure SSL context with Keycloak's keystore
                 .build();
 
-        // Create an IssuerConfig
-        IssuerConfig issuerConfig = IssuerConfig.builder()
+        // Create IssuerConfig for access tokens (audience: "account")
+        IssuerConfig accessTokenIssuerConfig = IssuerConfig.builder()
                 .issuer(getIssuer()) // Direct Issuer URL from Keycloak container
-                .expectedAudience("test_client") // Using the correct client ID from TestRealm
+                .expectedAudience("account") // Access tokens have "account" audience
                 .httpJwksLoaderConfig(httpJwksConfig)
                 .build();
 
-        // Create the validation factory
-        preConfiguredFactory = new TokenValidator(issuerConfig);
+        // Create IssuerConfig for ID tokens (audience: "test_client")
+        IssuerConfig idTokenIssuerConfig = IssuerConfig.builder()
+                .issuer(getIssuer()) // Direct Issuer URL from Keycloak container
+                .expectedAudience("test_client") // ID tokens have client ID as audience
+                .httpJwksLoaderConfig(httpJwksConfig)
+                .build();
+
+        // Create the validation factories
+        accessTokenValidator = new TokenValidator(accessTokenIssuerConfig);
+        idTokenValidator = new TokenValidator(idTokenIssuerConfig);
     }
 
     private String requestToken(Map<String, String> parameter, String tokenType) {
@@ -159,7 +168,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
         @DisplayName("Should handle valid access token")
         void shouldHandleValidAccessToken() {
             var tokenString = requestToken(parameterForScopedToken(SCOPES), TokenTypes.ACCESS);
-            var accessToken = preConfiguredFactory.createAccessToken(tokenString);
+            var accessToken = accessTokenValidator.createAccessToken(tokenString);
 
             assertFalse(accessToken.isExpired(), "Token should not be expired");
             // Check if all scopes are present in the token
@@ -178,7 +187,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
         @DisplayName("Should handle valid ID-Token")
         void shouldHandleValidIdToken() {
             var tokenString = requestToken(parameterForScopedToken(SCOPES), TokenTypes.ID_TOKEN);
-            var idToken = preConfiguredFactory.createIdToken(tokenString);
+            var idToken = idTokenValidator.createIdToken(tokenString);
 
             assertFalse(idToken.isExpired(), "Token should not be expired");
             assertEquals(TestRealm.TestUser.EMAIL.toLowerCase(), idToken.getEmail().orElse(""), "Email should match test user");
@@ -195,7 +204,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
         @DisplayName("Should handle valid Refresh-Token")
         void shouldHandleValidRefreshToken() {
             var tokenString = requestToken(parameterForScopedToken(SCOPES), TokenTypes.REFRESH);
-            var refreshToken = preConfiguredFactory.createRefreshToken(tokenString);
+            var refreshToken = accessTokenValidator.createRefreshToken(tokenString);
             assertNotNull(refreshToken.getRawToken(), "Token string should not be null");
             assertEquals(TokenType.REFRESH_TOKEN, refreshToken.getTokenType(), "Token type should be REFRESH_TOKEN");
             assertFalse(refreshToken.getClaims().isEmpty());
@@ -237,7 +246,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
             // 4. Configure IssuerConfig and TokenValidator
             IssuerConfig issuerConfig = IssuerConfig.builder()
                     .issuer(keycloakIssuerUrl.toString()) // Use issuer from discovery
-                    .expectedAudience("test_client") // Using the correct client ID from TestRealm
+                    .expectedAudience("account") // Access tokens have "account" audience
                     .httpJwksLoaderConfig(jwksConfig)
                     .build();
             TokenValidator validator = new TokenValidator(issuerConfig);
@@ -283,7 +292,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
             String incorrectIssuer = "https://incorrect-issuer.com/auth/realms/cui-test";
             IssuerConfig issuerConfig = IssuerConfig.builder()
                     .issuer(incorrectIssuer) // Manually set incorrect issuer
-                    .expectedAudience("test_client") // Using the correct client ID from TestRealm
+                    .expectedAudience("account") // Access tokens have "account" audience
                     .httpJwksLoaderConfig(jwksConfig)
                     .build();
             TokenValidator validator = new TokenValidator(issuerConfig);
