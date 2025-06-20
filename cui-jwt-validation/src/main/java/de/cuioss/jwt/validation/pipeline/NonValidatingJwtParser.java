@@ -63,9 +63,9 @@ import java.util.Base64;
  * // Access decoded JWT information using convenience methods
  * decodedJwt.ifPresent(jwt -> {
  *     // Access common JWT fields with convenience methods
- *     jwt.getAlg().ifPresent(alg -> System.out.println("Algorithm: " + alg));
- *     jwt.getIssuer().ifPresent(issuer -> System.out.println("Issuer: " + issuer));
- *     jwt.getKid().ifPresent(kid -> System.out.println("Key ID: " + kid));
+ *     jwt.getAlg().ifPresent(alg -> LOGGER.info("Algorithm: %s", alg));
+ *     jwt.getIssuer().ifPresent(issuer -> LOGGER.info("Issuer: %s", issuer));
+ *     jwt.getKid().ifPresent(kid -> LOGGER.info("Key ID: %s", kid));
  *     
  *     // Access the raw token
  *     String rawToken = jwt.getRawToken();

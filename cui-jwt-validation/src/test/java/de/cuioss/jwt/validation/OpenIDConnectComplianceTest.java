@@ -46,8 +46,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class OpenIDConnectComplianceTest {
 
     private static final String ISSUER = "Token-Test-testIssuer";
-    private static final String AUDIENCE = "test-client";
-    private static final String CLIENT_ID = "test-client";
 
     private TokenValidator tokenValidator;
 
@@ -59,8 +57,8 @@ class OpenIDConnectComplianceTest {
         // Create issuer config
         IssuerConfig issuerConfig = IssuerConfig.builder()
                 .issuer(ISSUER)
-                .expectedAudience(AUDIENCE)
-                .expectedClientId(CLIENT_ID)
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
                 .algorithmPreferences(new AlgorithmPreferences())
                 .build();
@@ -117,7 +115,7 @@ class OpenIDConnectComplianceTest {
             IdTokenContent result = tokenValidator.createIdToken(token);
 
             // Then
-            assertEquals(List.of(CLIENT_ID), result.getAudience(),
+            assertEquals(List.of(TestTokenHolder.TEST_CLIENT_ID), result.getAudience(),
                     "Audience claim should match the expected value");
         }
 
@@ -205,7 +203,7 @@ class OpenIDConnectComplianceTest {
             // Then
             assertTrue(result.getClaimOption(ClaimName.AUTHORIZED_PARTY).isPresent(),
                     "Authorized Party claim should be present");
-            assertEquals(CLIENT_ID, result.getClaimOption(ClaimName.AUTHORIZED_PARTY).get().getOriginalString(),
+            assertEquals(TestTokenHolder.TEST_CLIENT_ID, result.getClaimOption(ClaimName.AUTHORIZED_PARTY).get().getOriginalString(),
                     "Authorized Party claim should match the expected value");
         }
     }

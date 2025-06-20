@@ -60,7 +60,18 @@ import java.util.*;
 public class TestTokenHolder implements TokenContent {
 
     private static final String ISSUER = "Token-Test-testIssuer";
-    private static final String CLIENT_ID = "test-client";
+    /**
+     * Standard test audience value - represents the intended recipient of the token.
+     * Used in the 'aud' claim to specify which service/API the token is for.
+     */
+    public static final String TEST_AUDIENCE = "test-audience";
+
+    /**
+     * Standard test client ID - represents the OAuth2 client identifier.
+     * Used for client identification, authorized party claims, and client-specific validations.
+     * In our simplified test setup, this happens to be the same as the audience.
+     */
+    public static final String TEST_CLIENT_ID = "test-audience";
 
     /**
      * Generator for signing algorithms.
@@ -228,17 +239,13 @@ public class TestTokenHolder implements TokenContent {
             issuer = claims.get(ClaimName.ISSUER.getName()).getOriginalString();
         }
 
-        // Get the audience from the claims or use the default
-        List<String> audience = List.of(CLIENT_ID);
-        if (claims.containsKey(ClaimName.AUDIENCE.getName())) {
-            audience = claims.get(ClaimName.AUDIENCE.getName()).getAsList();
-        }
+        // Always use the fixed TEST_AUDIENCE as expected audience to avoid circular dependency
+        // Tests that need different expected audiences should create their own IssuerConfig
+        List<String> audience = List.of(TEST_AUDIENCE);
 
-        // Get the client ID from the claims or use the default
-        String clientId = CLIENT_ID;
-        if (claims.containsKey(ClaimName.AUTHORIZED_PARTY.getName())) {
-            clientId = claims.get(ClaimName.AUTHORIZED_PARTY.getName()).getOriginalString();
-        }
+        // Always use the fixed TEST_CLIENT_ID as expected client ID to avoid circular dependency
+        // Tests that need different expected client IDs should create their own IssuerConfig
+        String clientId = TEST_CLIENT_ID;
 
         // Create the JWKS content
         String jwksContent = InMemoryKeyMaterialHandler.createJwks(signingAlgorithm, keyId);
@@ -356,7 +363,11 @@ public class TestTokenHolder implements TokenContent {
      * @return this instance for method chaining
      */
     public TestTokenHolder withAuthorizedParty(String authorizedParty) {
-        claims.put(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(authorizedParty));
+        if (authorizedParty == null) {
+            claims.remove(ClaimName.AUTHORIZED_PARTY.getName());
+        } else {
+            claims.put(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(authorizedParty));
+        }
         // Invalidate cached token since claims have changed
         cachedRawToken = null;
         return this;
@@ -493,14 +504,14 @@ public class TestTokenHolder implements TokenContent {
 
                     // Add authorized party claim (azp) - required by TokenClaimValidator unless it should be missing
                     if (!claimControl.isMissingAuthorizedParty()) {
-                        claimsMap.put(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(CLIENT_ID));
+                        claimsMap.put(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(TEST_CLIENT_ID));
                     }
 
                     // Add audience claim - required by TokenClaimValidator unless it should be missing
                     // Note: Using the same value for both azp and audience claims is correct in most cases,
                     // but tests should be able to override these values to test different scenarios
                     if (!claimControl.isMissingAudience()) {
-                        List<String> audienceList = List.of(CLIENT_ID);
+                        List<String> audienceList = List.of(TEST_AUDIENCE);
                         claimsMap.put(ClaimName.AUDIENCE.getName(), ClaimValue.forList(
                                 String.join(",", audienceList), audienceList));
                     }
@@ -512,7 +523,7 @@ public class TestTokenHolder implements TokenContent {
 
                     // Add audience (mandatory for ID_TOKEN) unless it should be missing
                     if (!claimControl.isMissingAudience()) {
-                        List<String> audienceList = List.of(CLIENT_ID);
+                        List<String> audienceList = List.of(TEST_AUDIENCE);
                         claimsMap.put(ClaimName.AUDIENCE.getName(), ClaimValue.forList(
                                 String.join(",", audienceList), audienceList));
                     }
@@ -525,7 +536,7 @@ public class TestTokenHolder implements TokenContent {
 
                     // Add authorized party claim (azp) - required by TokenClaimValidator unless it should be missing
                     if (!claimControl.isMissingAuthorizedParty()) {
-                        claimsMap.put(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(CLIENT_ID));
+                        claimsMap.put(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(TEST_CLIENT_ID));
                     }
                     break;
 

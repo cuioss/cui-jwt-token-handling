@@ -43,8 +43,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class JwtTokenTamperingUtilTest {
 
     private static final String ISSUER = "Token-Test-testIssuer";
-    private static final String CLIENT_ID = "test-client";
-    private static final String AUDIENCE = CLIENT_ID;
 
     private TokenValidator tokenValidator;
 
@@ -54,8 +52,8 @@ class JwtTokenTamperingUtilTest {
         ParserConfig config = ParserConfig.builder().build();
         IssuerConfig issuerConfig = IssuerConfig.builder()
                 .issuer(ISSUER)
-                .expectedAudience(AUDIENCE)
-                .expectedClientId(CLIENT_ID)
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                 .algorithmPreferences(new AlgorithmPreferences())
                 .build();

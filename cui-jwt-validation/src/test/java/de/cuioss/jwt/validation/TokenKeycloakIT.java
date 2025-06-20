@@ -118,10 +118,10 @@ public class TokenKeycloakIT extends KeycloakITBase {
             // This indicates an unexpected issuer format from KeycloakITBase.
             // For now, assign the full issuer string to potentially highlight the issue later,
             // or throw an exception.
-            LOGGER.warn("'/realms/' not found in issuer string '{}', authServerUrlString may be incorrect.", issuerString);
+            LOGGER.warn("'/realms/' not found in issuer string '%s', authServerUrlString may be incorrect.", issuerString);
             this.authServerUrlString = issuerString;
         }
-        LOGGER.info("Derived authServerUrlString: {}", this.authServerUrlString);
+        LOGGER.info("Derived authServerUrlString: %s", this.authServerUrlString);
 
 
         // Create a JwksLoader with the secure SSLContext that uses Keycloak's keystore

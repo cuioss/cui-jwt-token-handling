@@ -116,7 +116,7 @@ public class JwtMetricsCollector {
         Map<SecurityEventCounter.EventType, Long> currentCounts = securityEventCounter.getCounters();
         lastKnownCounts.putAll(currentCounts);
 
-        LOGGER.info("JwtMetricsCollector initialized with {} event types", counters.size());
+        LOGGER.info("JwtMetricsCollector initialized with %s event types", counters.size());
     }
 
     /**

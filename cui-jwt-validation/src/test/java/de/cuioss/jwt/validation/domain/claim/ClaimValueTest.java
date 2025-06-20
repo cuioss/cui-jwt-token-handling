@@ -147,22 +147,22 @@ class ClaimValueTest {
         ClaimValue nullString = ClaimValue.forPlainString(null);
 
         SortedSet<String> nonEmptySet = new TreeSet<>(Set.of("value"));
-        ClaimValue nonEmptySetValue = ClaimValue.forSortedSet(null, nonEmptySet);
+        ClaimValue nonEmptySetValue = ClaimValue.forSortedSet("original", nonEmptySet);
 
         List<String> emptyList = Collections.emptyList();
         List<String> nonEmptyList = List.of("value");
         ClaimValue emptyListValue = ClaimValue.forList(null, emptyList);
-        ClaimValue nonEmptyListValue = ClaimValue.forList(null, nonEmptyList);
+        ClaimValue nonEmptyListValue = ClaimValue.forList("original", nonEmptyList);
 
         ClaimValue nullDateTime = ClaimValue.forDateTime(null, null);
-        ClaimValue nonNullDateTime = ClaimValue.forDateTime(null, TEST_DATE);
+        ClaimValue nonNullDateTime = ClaimValue.forDateTime("original", TEST_DATE);
 
         // When, Then
-        // If originalString is present, method always returns true
-        assertTrue(presentString.isNotPresentForClaimValueType());
+        // If originalString is present and it's a STRING type, it's present for its type
+        assertFalse(presentString.isNotPresentForClaimValueType());
 
-        // For null originalString, behavior depends on type and content
-        assertFalse(nullString.isNotPresentForClaimValueType()); // STRING type returns false when originalString is null
+        // For null originalString, it's not present for any type
+        assertTrue(nullString.isNotPresentForClaimValueType()); // STRING type returns true when originalString is null
 
         assertFalse(nonEmptySetValue.isNotPresentForClaimValueType()); // Non-empty set converted to list returns false
 

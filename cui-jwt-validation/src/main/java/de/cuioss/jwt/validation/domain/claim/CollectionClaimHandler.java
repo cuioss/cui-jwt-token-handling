@@ -42,15 +42,15 @@ import java.util.*;
  * Optional&lt;ClaimValue&gt; scopeClaim = token.getClaimOption(ClaimName.SCOPE);
  * if (scopeClaim.isPresent()) {
  *     CollectionClaimHandler handler = new CollectionClaimHandler(scopeClaim.get());
- *     
+ *
  *     // Check if all required scopes are present
  *     boolean hasAllScopes = handler.providesValues(requiredScopes);
- *     
+ *
  *     // Get missing scopes
  *     Set&lt;String&gt; missingScopes = handler.determineMissingValues(requiredScopes);
  * }
  * </pre>
- * 
+ *
  * @author Oliver Wolff
  * @since 1.0
  */
@@ -98,18 +98,18 @@ public class CollectionClaimHandler {
      *
      * @param expectedValues the values to check for
      * @param logContext additional context information for logging
-     * @param logger the logger to use for logging
+     * @param givenLogger the logger to use for logging
      * @return true if the claim contains all expected values, false otherwise
      */
     public boolean providesValuesAndDebugIfValuesMissing(Collection<String> expectedValues, String logContext,
-            CuiLogger logger) {
+            CuiLogger givenLogger) {
         Set<String> delta = determineMissingValues(expectedValues);
         if (delta.isEmpty()) {
-            logger.trace("All expected values are present: {}, {}", expectedValues, logContext);
+            givenLogger.trace("All expected values are present: %s, %s", expectedValues, logContext);
             return true;
         }
-        logger.debug(
-                "Current claim does not provide all needed values:\nMissing in claim='{}',\nExpected='{}'\nPresent in claim='{}', {}",
+        givenLogger.debug(
+                "Current claim does not provide all needed values:\nMissing in claim='%s',\nExpected='%s'\nPresent in claim='%s', %s",
                 delta, expectedValues, getValues(), logContext);
         return false;
     }

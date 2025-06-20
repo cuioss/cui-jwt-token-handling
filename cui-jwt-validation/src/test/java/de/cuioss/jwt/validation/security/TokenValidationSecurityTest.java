@@ -23,6 +23,7 @@ import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.JwtTokenTamperingUtil;
 import de.cuioss.jwt.validation.test.JwtTokenTamperingUtil.TamperingStrategy;
+import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +60,7 @@ class TokenValidationSecurityTest {
         // Create issuer config with JWKS content
         IssuerConfig issuerConfig = IssuerConfig.builder()
                 .issuer("Token-Test-testIssuer")
-                .expectedAudience("test-client")
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                 .build();
 

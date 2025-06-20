@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests TokenClaimValidator functionality")
 class TokenClaimValidatorTest {
 
-    private static final String EXPECTED_AUDIENCE = "test-audience";
     private static final String EXPECTED_CLIENT_ID = "test-client-id";
 
     private static final SecurityEventCounter SECURITY_EVENT_COUNTER = new SecurityEventCounter();
@@ -64,7 +63,7 @@ class TokenClaimValidatorTest {
             // Given an IssuerConfig with all recommended elements as Sets
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(Set.of(EXPECTED_AUDIENCE))
+                    .expectedAudience(Set.of(TestTokenHolder.TEST_AUDIENCE))
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
 
@@ -115,7 +114,7 @@ class TokenClaimValidatorTest {
             // Given an IssuerConfig without expected client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .build();
 
             // When creating the validator
@@ -172,7 +171,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience and client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -199,7 +198,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience and client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -238,7 +237,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -263,7 +262,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -297,7 +296,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -328,7 +327,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -353,7 +352,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -392,7 +391,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience and client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -421,7 +420,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience and client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -457,7 +456,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience and client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);
@@ -492,7 +491,7 @@ class TokenClaimValidatorTest {
             // Given a validator with expected audience and client ID
             var issuerConfig = IssuerConfig.builder()
                     .issuer("test-issuer")
-                    .expectedAudience(EXPECTED_AUDIENCE)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(EXPECTED_CLIENT_ID)
                     .build();
             var validator = createValidator(issuerConfig);

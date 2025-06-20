@@ -19,6 +19,7 @@ import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
+import de.cuioss.tools.logging.CuiLogger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @EnableTestLogger
 class IssuerConfigFactoryTest {
+
+    private static final CuiLogger LOGGER = new CuiLogger(IssuerConfigFactoryTest.class);
 
     /**
      * Test that verifies the fixed behavior where both connectionTimeoutMs and readTimeoutMs
@@ -79,10 +82,9 @@ class IssuerConfigFactoryTest {
         // because they are encapsulated in the HttpHandler, but this test documents
         // the expected behavior and verifies the fix.
 
-        System.out.println("[DEBUG_LOG] Fixed implementation now uses both connectionTimeoutSeconds (" +
-                jwksConfig.connectionTimeoutSeconds + "s) and readTimeoutSeconds (" +
-                jwksConfig.readTimeoutSeconds + "s) for a total timeout of " +
-                (jwksConfig.connectionTimeoutSeconds + jwksConfig.readTimeoutSeconds) + "s");
+        LOGGER.debug("Fixed implementation now uses both connectionTimeoutSeconds (%ss) and readTimeoutSeconds (%ss) for a total timeout of %ss",
+                jwksConfig.connectionTimeoutSeconds, jwksConfig.readTimeoutSeconds,
+                (jwksConfig.connectionTimeoutSeconds + jwksConfig.readTimeoutSeconds));
     }
 
     /**
@@ -120,8 +122,8 @@ class IssuerConfigFactoryTest {
         IssuerConfig resultIssuerConfig = result.get(0);
         assertNotNull(resultIssuerConfig.getHttpJwksLoaderConfig(), "HttpJwksLoaderConfig should be created");
 
-        System.out.println("[DEBUG_LOG] Successfully created IssuerConfig with HttpJwksLoaderConfig using both timeout values: " +
-                "connectionTimeoutSeconds=" + jwksConfig.connectionTimeoutSeconds + "s, readTimeoutSeconds=" + jwksConfig.readTimeoutSeconds + "s");
+        LOGGER.debug("Successfully created IssuerConfig with HttpJwksLoaderConfig using both timeout values: connectionTimeoutSeconds=%ss, readTimeoutSeconds=%ss",
+                jwksConfig.connectionTimeoutSeconds, jwksConfig.readTimeoutSeconds);
     }
 
     /**

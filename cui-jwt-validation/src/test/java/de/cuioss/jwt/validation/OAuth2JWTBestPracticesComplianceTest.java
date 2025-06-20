@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -61,9 +62,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class OAuth2JWTBestPracticesComplianceTest {
 
     private static final String ISSUER = "Token-Test-testIssuer";
-    private static final String AUDIENCE = "test-client";
-    private static final String CLIENT_ID = "test-client";
-
 
     private TokenValidator tokenValidator;
 
@@ -75,8 +73,8 @@ class OAuth2JWTBestPracticesComplianceTest {
         // Create issuer config with explicit audience validation
         IssuerConfig issuerConfig = IssuerConfig.builder()
                 .issuer(ISSUER)
-                .expectedAudience(AUDIENCE)
-                .expectedClientId(CLIENT_ID)
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
                 .build();
 
@@ -100,7 +98,7 @@ class OAuth2JWTBestPracticesComplianceTest {
             // Then
             assertNotNull(result, "Token should be parsed successfully");
             assertTrue(result.getAudience().isPresent(), "Audience claim should be present");
-            assertTrue(result.getAudience().get().contains(AUDIENCE),
+            assertTrue(result.getAudience().get().contains(TestTokenHolder.TEST_AUDIENCE),
                     "Audience claim should contain the expected value");
         }
 
@@ -108,26 +106,20 @@ class OAuth2JWTBestPracticesComplianceTest {
         @DisplayName("3.1: Reject validation with incorrect audience")
         void shouldRejectTokenWithIncorrectAudience() {
             // Given
-            // First verify that a token with correct audience passes validation
-            String correctToken = TestTokenGenerators.accessTokens().next().getRawToken();
-            assertNotNull(tokenValidator.createAccessToken(correctToken),
-                    "Token with correct audience should be accepted");
+            // Create a token with wrong audience
+            TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
+            tokenHolder.withAudience(List.of("wrong-audience"));
+            String token = tokenHolder.getRawToken();
 
-            // For this test, we'll skip the audience validation since it's optional for access tokens
-            // The test is considered passing if the correct token is accepted
+            // When/Then
+            TokenValidationException exception = assertThrows(TokenValidationException.class,
+                    () -> tokenValidator.createAccessToken(token),
+                    "Token with incorrect audience should be rejected");
 
-            // Note: The audience validation is tested in the RFC7519JWTComplianceTest class
-            // which verifies that tokens with incorrect audience are rejected
+            // Verify the exception has the correct event type
+            assertEquals(SecurityEventCounter.EventType.AUDIENCE_MISMATCH, exception.getEventType(),
+                    "Exception should have AUDIENCE_MISMATCH event type");
         }
-
-        // Note: The audience validation is tested in the RFC7519JWTComplianceTest class
-        // which verifies that tokens with the correct audience are accepted.
-        // The test for rejecting tokens with incorrect audience is not included in this test class
-        // because the current implementation does not enforce audience validation for access tokens,
-        // and the audience validation for ID tokens is handled differently.
-        // 
-        // This is a known limitation of the current implementation and should be addressed in a future update.
-        // For now, we'll skip this test and rely on the other tests to verify the basic functionality.
     }
 
     @Nested
@@ -305,8 +297,8 @@ class OAuth2JWTBestPracticesComplianceTest {
                     .build();
             var factory = new TokenValidator(customConfig, IssuerConfig.builder()
                     .issuer(ISSUER)
-                    .expectedAudience(AUDIENCE)
-                    .expectedClientId(CLIENT_ID)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .algorithmPreferences(new AlgorithmPreferences())
                     .build());

@@ -54,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class RFC7519JWTComplianceTest {
 
     private static final String ISSUER = "Token-Test-testIssuer";
-    private static final String CLIENT_ID = "test-client";
 
     // No longer need a tokenValidator field as we'll create it on demand using tokenHolder.getIssuerConfig()
 
@@ -106,7 +105,7 @@ class RFC7519JWTComplianceTest {
             // Then
             assertNotNull(result, "Token should be parsed successfully");
             assertTrue(result.getAudience().isPresent(), "Audience claim should be present");
-            assertEquals(List.of(CLIENT_ID), result.getAudience().get(),
+            assertEquals(List.of(TestTokenHolder.TEST_CLIENT_ID), result.getAudience().get(),
                     "Audience claim should match the expected value");
         }
 
