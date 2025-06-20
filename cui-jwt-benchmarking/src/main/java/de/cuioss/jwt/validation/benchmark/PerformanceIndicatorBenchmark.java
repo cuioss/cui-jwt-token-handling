@@ -22,10 +22,6 @@ import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.infra.BenchmarkParams;
-import org.openjdk.jmh.results.BenchmarkResult;
-import org.openjdk.jmh.results.Result;
-import org.openjdk.jmh.results.RunResult;
 
 import java.util.concurrent.TimeUnit;
 
@@ -122,7 +118,7 @@ public class PerformanceIndicatorBenchmark {
     public static double calculatePerformanceScore(double throughputOpsPerSec, double avgTimeInMicros, double errorResilienceOpsPerSec) {
         // Convert average time to operations per second (inverted metric)
         double latencyOpsPerSec = 1_000_000.0 / avgTimeInMicros;
-        
+
         // Weighted score: 57% throughput, 40% latency, 3% error resilience
         return (throughputOpsPerSec * 0.57) + (latencyOpsPerSec * 0.40) + (errorResilienceOpsPerSec * 0.03);
     }
@@ -138,7 +134,7 @@ public class PerformanceIndicatorBenchmark {
     public static double calculatePerformanceScore(double throughputOpsPerSec, double avgTimeInMicros) {
         // Convert average time to operations per second (inverted metric)
         double latencyOpsPerSec = 1_000_000.0 / avgTimeInMicros;
-        
+
         // Weighted score: 60% throughput, 40% latency (original formula)
         return (throughputOpsPerSec * 0.6) + (latencyOpsPerSec * 0.4);
     }

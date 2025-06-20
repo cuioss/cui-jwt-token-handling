@@ -29,7 +29,27 @@ The test artifact includes the following packages:
 
 === TestTokenHolder
 
-The `TestTokenHolder` class is a comprehensive implementation of `TokenContent` for testing purposes that allows for dynamic token generation:
+The `TestTokenHolder` class is a comprehensive implementation of `TokenContent` for testing purposes that allows for dynamic token generation.
+
+==== JWT Semantic Constants
+
+The `TestTokenHolder` class provides semantically correct constants for OAuth2/OIDC testing:
+
+[source,java]
+----
+// Audience - identifies resource servers that should accept the token
+public static final String TEST_AUDIENCE = "test-audience";
+
+// Client ID - identifies the OAuth2 client application that requested the token  
+public static final String TEST_CLIENT_ID = "test-client-app";
+
+// Issuer - identifies the token issuer/authorization server
+public static final String TEST_ISSUER = "Token-Test-testIssuer";
+----
+
+These constants properly model the semantic distinctions required by RFC 7519, RFC 9068, and OpenID Connect Core specifications, where audience and client ID serve different purposes and should typically have different values.
+
+==== Usage Examples
 
 [source,java]
 ----
@@ -149,7 +169,7 @@ void shouldTestWithAccessToken(TestTokenHolder tokenHolder) {
 
     // Then
     assertNotNull(result, "Token should be parsed successfully");
-    assertEquals(ISSUER, result.getIssuer(), "Issuer claim should match the expected value");
+    assertEquals(TestTokenHolder.TEST_ISSUER, result.getIssuer(), "Issuer claim should match the expected value");
 }
 ----
 
@@ -219,9 +239,9 @@ void shouldRejectTokenWithMissingClaims() {
 
     // Create an IssuerConfig for validation
     IssuerConfig issuerConfig = IssuerConfig.builder()
-        .issuer("Token-Test-testIssuer")
-        .expectedAudience("test-client")
-        .expectedClientId("test-client")
+        .issuer(TestTokenHolder.TEST_ISSUER)
+        .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+        .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
         .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
         .build();
 

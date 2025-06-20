@@ -313,7 +313,7 @@ This section provides guidance on implementing effective security logging. For i
 try {
     validator.validateToken(token);
 } catch (TokenValidationException e) {
-    logger.warn("Token validation failed: {} for subject: {}, issuer: {}, correlationId: {}",
+    LOGGER.warn("Token validation failed: %s for subject: %s, issuer: %s, correlationId: %s",
         e.getErrorCode(), e.getSubject(), e.getIssuer(), requestContext.getCorrelationId());
 }
 ```

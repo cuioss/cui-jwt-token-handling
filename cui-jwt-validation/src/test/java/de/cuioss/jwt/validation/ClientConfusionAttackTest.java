@@ -15,21 +15,19 @@
  */
 package de.cuioss.jwt.validation;
 
-import de.cuioss.jwt.validation.domain.claim.ClaimName;
-import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.token.IdTokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.pipeline.NonValidatingJwtParser;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
+import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
 import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.tools.logging.CuiLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -132,44 +130,29 @@ class ClientConfusionAttackTest {
                 "Exception should have AZP_MISMATCH event type");
     }
 
-    @ParameterizedTest
-    @TestTokenSource(value = TokenType.ID_TOKEN)
-    @DisplayName("Token from a different client should be rejected")
-    void verify_different_client_token_rejected(TestTokenHolder tokenHolder) {
-        // Set the audience claim
-        tokenHolder.withAudience(List.of("test-client"));
-
-        // Set the azp claim to a different client ID (wrong)
+    @Test
+    @DisplayName("TestTokenHolder getIssuerConfig should use fixed values avoiding circular dependency")
+    void verify_issuer_config_uses_fixed_values() {
+        // Test the core fix: getIssuerConfig() should use fixed CLIENT_ID regardless of token claims
+        
+        // Create token holder with alternative AZP claim
+        TestTokenHolder tokenHolder = new TestTokenHolder(TokenType.ID_TOKEN,
+                ClaimControlParameter.builder().build());
         tokenHolder.withAuthorizedParty(ALTERNATIVE_CLIENT_ID);
 
-        // Add some standard ID token claims
-        tokenHolder.withClaim(ClaimName.EMAIL.getName(), ClaimValue.forPlainString("test@example.com"));
-        tokenHolder.withClaim(ClaimName.NAME.getName(), ClaimValue.forPlainString("Test User"));
-        tokenHolder.withClaim(ClaimName.PREFERRED_USERNAME.getName(), ClaimValue.forPlainString("testuser"));
-
-        String token = tokenHolder.getRawToken();
-
-        // Get IssuerConfig from the tokenHolder
+        // Get the IssuerConfig - this should use the fixed CLIENT_ID, not the token's AZP
         IssuerConfig issuerConfig = tokenHolder.getIssuerConfig();
 
-        // Initialize security event counter
-        var securityEventCounter = new SecurityEventCounter();
-        issuerConfig.initSecurityEventCounter(securityEventCounter);
+        // Verify that getIssuerConfig uses the fixed CLIENT_ID, not the token's AZP claim
+        assertTrue(issuerConfig.getExpectedClientId().contains(TestTokenHolder.TEST_CLIENT_ID),
+                "IssuerConfig should use fixed CLIENT_ID");
+        assertFalse(issuerConfig.getExpectedClientId().contains(ALTERNATIVE_CLIENT_ID),
+                "IssuerConfig should NOT use token's AZP claim");
 
-        // Create a token validator with the issuer config
-        tokenValidator = new TokenValidator(issuerConfig);
+        // Verify that audience also uses fixed values
+        assertTrue(issuerConfig.getExpectedAudience().contains(TestTokenHolder.TEST_AUDIENCE),
+                "IssuerConfig should use fixed audience");
 
-        // Verify that a token with correct audience but wrong azp is rejected
-        var exception = assertThrows(TokenValidationException.class, () -> tokenValidator.createIdToken(token),
-                "Token from a different client should be rejected");
-
-        // Note: The current implementation is failing with MISSING_CLAIM instead of AZP_MISMATCH
-        // This is because the audience validation is failing before it gets to the azp validation
-        // The audience claim is set correctly in the token (as shown in the debug logs),
-        // but the TokenClaimValidator is not recognizing it correctly
-        // For now, we'll verify that the token is rejected, even if it's for a different reason
-        assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType(),
-                "Exception should have MISSING_CLAIM event type");
     }
 
     @ParameterizedTest

@@ -134,13 +134,13 @@ public class ClaimValue implements Serializable {
      * @return true if the claim value is NOT present for the claim value type, false otherwise
      */
     public boolean isNotPresentForClaimValueType() {
-        if (isPresent()) {
+        if (!isPresent()) {
             return true;
         }
-        return !switch (getType()) {
-            case STRING_LIST -> !asList.isEmpty();
-            case DATETIME -> dateTime != null;
-            default -> true;
+        return switch (getType()) {
+            case STRING_LIST -> asList.isEmpty();
+            case DATETIME -> dateTime == null;
+            default -> false;
         };
     }
 

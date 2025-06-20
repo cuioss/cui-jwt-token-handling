@@ -54,9 +54,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests TokenValidator functionality")
 class TokenValidatorTest {
 
-    private static final String ISSUER = "Token-Test-testIssuer";
-    private static final String AUDIENCE = "test-client";
-    private static final String CLIENT_ID = "test-client";
 
     private TokenValidator tokenValidator;
     private IssuerConfig issuerConfig;
@@ -68,9 +65,9 @@ class TokenValidatorTest {
 
         // Create issuer config
         issuerConfig = IssuerConfig.builder()
-                .issuer(ISSUER)
-                .expectedAudience(AUDIENCE)
-                .expectedClientId(CLIENT_ID)
+                .issuer(TestTokenHolder.TEST_ISSUER)
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
                 .algorithmPreferences(new AlgorithmPreferences())
                 .build();
@@ -391,9 +388,9 @@ class TokenValidatorTest {
 
             // Create a new issuer config with a JWKS that doesn't contain the key ID
             IssuerConfig newIssuerConfig = IssuerConfig.builder()
-                    .issuer(ISSUER)
-                    .expectedAudience(AUDIENCE)
-                    .expectedClientId(CLIENT_ID)
+                    .issuer(TestTokenHolder.TEST_ISSUER)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent(InMemoryJWKSFactory.createEmptyJwks())
                     .build();
 
@@ -419,16 +416,16 @@ class TokenValidatorTest {
         void shouldLogInfoMessageWhenTokenFactoryIsInitialized() {
             // Create multiple issuer configs to test the count in the log message
             IssuerConfig issuerConfig1 = IssuerConfig.builder()
-                    .issuer(ISSUER)
-                    .expectedAudience(AUDIENCE)
-                    .expectedClientId(CLIENT_ID)
+                    .issuer(TestTokenHolder.TEST_ISSUER)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
 
             IssuerConfig issuerConfig2 = IssuerConfig.builder()
                     .issuer("https://another-issuer.com")
-                    .expectedAudience(AUDIENCE)
-                    .expectedClientId(CLIENT_ID)
+                    .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                    .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
 

@@ -15,12 +15,13 @@
  */
 package de.cuioss.jwt.validation.benchmark;
 
-import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
+
+import java.io.File;
 
 /**
  * Main class for running all benchmarks.
@@ -87,8 +88,8 @@ public class BenchmarkRunner {
         if (filePrefix != null && !filePrefix.isEmpty()) {
             String resultFile = filePrefix + ".json";
             // Ensure parent directory exists
-            java.io.File file = new java.io.File(resultFile);
-            java.io.File parentDir = file.getParentFile();
+            File file = new File(resultFile);
+            File parentDir = file.getParentFile();
             if (parentDir != null && !parentDir.exists()) {
                 parentDir.mkdirs();
             }

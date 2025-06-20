@@ -175,7 +175,7 @@ try {
     // This handler can then be used to configure HttpJwksLoaderConfig
 } catch (WellKnownDiscoveryException e) {
     // Handle exceptions related to discovery, e.g., network issues, malformed JSON, missing required fields
-    System.err.println("OIDC Discovery failed: " + e.getMessage());
+    LOGGER.error("OIDC Discovery failed: %s", e.getMessage());
 }
 ----
 The `WellKnownHandler.builder().url().build()` pattern will fetch the document, parse it, and validate key aspects like the issuer consistency. It may throw a `WellKnownDiscoveryException` if the process fails.

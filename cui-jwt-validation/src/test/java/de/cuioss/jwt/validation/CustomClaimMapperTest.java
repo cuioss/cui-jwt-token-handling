@@ -38,9 +38,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests Custom ClaimMapper functionality")
 class CustomClaimMapperTest {
 
-    private static final String ISSUER = "https://test-issuer.com";
-    private static final String AUDIENCE = "test-client";
-    private static final String CLIENT_ID = "test-client";
     private static final String ROLE_CLAIM = "role";
     private static final List<String> ROLES = Arrays.asList("admin", "user", "manager");
 
@@ -58,9 +55,9 @@ class CustomClaimMapperTest {
 
         // Create issuer config with the custom claim mapper
         IssuerConfig issuerConfig = IssuerConfig.builder()
-                .issuer(ISSUER)
-                .expectedAudience(AUDIENCE)
-                .expectedClientId(CLIENT_ID)
+                .issuer(TestTokenHolder.TEST_ISSUER)
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
                 .claimMapper(ROLE_CLAIM, roleMapper)
                 .build();
@@ -73,11 +70,11 @@ class CustomClaimMapperTest {
         var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
 
         // Set the audience claim
-        tokenHolder.withClaim(ClaimName.AUDIENCE.getName(), ClaimValue.forList(AUDIENCE, List.of(AUDIENCE)));
+        tokenHolder.withClaim(ClaimName.AUDIENCE.getName(), ClaimValue.forList(TestTokenHolder.TEST_AUDIENCE, List.of(TestTokenHolder.TEST_AUDIENCE)));
 
         // Set the issuer and authorized party claims
-        tokenHolder.withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString(ISSUER));
-        tokenHolder.withClaim(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(CLIENT_ID));
+        tokenHolder.withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString(TestTokenHolder.TEST_ISSUER));
+        tokenHolder.withClaim(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
 
         // Add the role claim with an array of roles
         tokenHolder.withClaim(ROLE_CLAIM, ClaimValue.forList(String.join(",", ROLES), ROLES));
@@ -109,9 +106,9 @@ class CustomClaimMapperTest {
     void shouldUseDefaultMapperWhenNoCustomMapperIsConfigured() {
         // Create issuer config without custom claim mapper
         IssuerConfig issuerConfigWithoutCustomMapper = IssuerConfig.builder()
-                .issuer(ISSUER)
-                .expectedAudience(AUDIENCE)
-                .expectedClientId(CLIENT_ID)
+                .issuer(TestTokenHolder.TEST_ISSUER)
+                .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
+                .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
                 .build();
 
