@@ -115,7 +115,7 @@ class OpenIDConnectComplianceTest {
             IdTokenContent result = tokenValidator.createIdToken(token);
 
             // Then
-            assertEquals(List.of(TestTokenHolder.TEST_CLIENT_ID), result.getAudience(),
+            assertEquals(List.of(TestTokenHolder.TEST_AUDIENCE), result.getAudience(),
                     "Audience claim should match the expected value");
         }
 

@@ -104,7 +104,7 @@ class RFC7519JWTComplianceTest {
             // Then
             assertNotNull(result, "Token should be parsed successfully");
             assertTrue(result.getAudience().isPresent(), "Audience claim should be present");
-            assertEquals(List.of(TestTokenHolder.TEST_CLIENT_ID), result.getAudience().get(),
+            assertEquals(List.of(TestTokenHolder.TEST_AUDIENCE), result.getAudience().get(),
                     "Audience claim should match the expected value");
         }
 

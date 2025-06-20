@@ -63,15 +63,27 @@ public class TestTokenHolder implements TokenContent {
     /**
      * Standard test audience value - represents the intended recipient of the token.
      * Used in the 'aud' claim to specify which service/API the token is for.
+     * 
+     * <p>In OAuth2/OIDC semantics, the audience identifies the resource server(s) that should
+     * accept and validate the token. This is typically a service URL or identifier.</p>
+     * 
+     * @see <a href="https://tools.ietf.org/html/rfc7519#section-4.1.3">RFC 7519 Section 4.1.3</a>
      */
     public static final String TEST_AUDIENCE = "test-audience";
 
     /**
      * Standard test client ID - represents the OAuth2 client identifier.
      * Used for client identification, authorized party claims, and client-specific validations.
-     * In our simplified test setup, this happens to be the same as the audience.
+     * 
+     * <p>In OAuth2/OIDC semantics, the client ID identifies the OAuth2 client application that
+     * requested the token. This is used in the 'azp' (authorized party) claim and for client
+     * validation. It is semantically distinct from the audience to properly model real-world
+     * OAuth2/OIDC scenarios where clients and resource servers are different entities.</p>
+     * 
+     * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html#IDToken">OpenID Connect Core</a>
+     * @see <a href="https://tools.ietf.org/html/rfc9068">RFC 9068 - JWT Profile for OAuth 2.0</a>
      */
-    public static final String TEST_CLIENT_ID = "test-audience";
+    public static final String TEST_CLIENT_ID = "test-client-app";
 
     /**
      * Generator for signing algorithms.
