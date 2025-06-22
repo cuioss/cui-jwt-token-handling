@@ -103,8 +103,6 @@ public class TokenKeycloakIT extends KeycloakITBase {
         LOGGER.debug(() -> "KEYSTORE_PATH: " + TestRealm.ProvidedKeyStore.KEYSTORE_PATH);
         LOGGER.debug(() -> "PASSWORD: " + TestRealm.ProvidedKeyStore.PASSWORD);
     }
-
-
     @BeforeEach
     void setUp() {
         String issuerString = getIssuer(); // This is String as per KeycloakITBase
@@ -123,8 +121,6 @@ public class TokenKeycloakIT extends KeycloakITBase {
             this.authServerUrlString = issuerString;
         }
         LOGGER.info("Derived authServerUrlString: %s", this.authServerUrlString);
-
-
         // Create a JwksLoader with the secure SSLContext that uses Keycloak's keystore
         HttpJwksLoaderConfig httpJwksConfig = HttpJwksLoaderConfig.builder()
                 .url(getJWKSUrl()) // Direct JWKS URL from Keycloak container

@@ -43,31 +43,27 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should create with default parameters")
         void shouldCreateWithDefaultParameters() {
-            // Given
+
             var tokenType = TokenType.ACCESS_TOKEN;
             var claimControl = ClaimControlParameter.builder().build();
-
-            // When
             var tokenHolder = new TestTokenHolder(tokenType, claimControl);
-
-            // Then
-            assertEquals(tokenType, tokenHolder.getTokenType());
-            assertNotNull(tokenHolder.getClaims());
-            assertFalse(tokenHolder.getClaims().isEmpty());
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.ISSUER.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.SUBJECT.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.EXPIRATION.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.ISSUED_AT.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.TOKEN_ID.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.TYPE.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.SCOPE.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey("roles"));
+            assertEquals(tokenType, tokenHolder.getTokenType(), "Token type should match");
+            assertNotNull(tokenHolder.getClaims(), "Claims should not be null");
+            assertFalse(tokenHolder.getClaims().isEmpty(), "Claims should not be empty");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.ISSUER.getName()), "Should contain issuer claim");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.SUBJECT.getName()), "Should contain subject claim");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.EXPIRATION.getName()), "Should contain expiration claim");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.ISSUED_AT.getName()), "Should contain issued at claim");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.TOKEN_ID.getName()), "Should contain token ID claim");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.TYPE.getName()), "Should contain type claim");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.SCOPE.getName()), "Should contain scope claim");
+            assertTrue(tokenHolder.getClaims().containsKey("roles"), "Should contain roles claim");
         }
 
         @Test
         @DisplayName("Should create with missing claims")
         void shouldCreateWithMissingClaims() {
-            // Given
+
             var tokenType = TokenType.ACCESS_TOKEN;
             var claimControl = ClaimControlParameter.builder()
                     .missingIssuer(true)
@@ -77,22 +73,18 @@ class TestTokenHolderTest {
                     .missingTokenType(true)
                     .missingScope(true)
                     .build();
-
-            // When
             var tokenHolder = new TestTokenHolder(tokenType, claimControl);
-
-            // Then
-            assertEquals(tokenType, tokenHolder.getTokenType());
-            assertNotNull(tokenHolder.getClaims());
-            assertFalse(tokenHolder.getClaims().isEmpty());
-            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.ISSUER.getName()));
-            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.SUBJECT.getName()));
-            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.EXPIRATION.getName()));
-            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.ISSUED_AT.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.TOKEN_ID.getName()));
-            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.TYPE.getName()));
-            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.SCOPE.getName()));
-            assertTrue(tokenHolder.getClaims().containsKey("roles"));
+            assertEquals(tokenType, tokenHolder.getTokenType(), "Token type should match");
+            assertNotNull(tokenHolder.getClaims(), "Claims should not be null");
+            assertFalse(tokenHolder.getClaims().isEmpty(), "Claims should not be empty");
+            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.ISSUER.getName()), "Should not contain issuer claim");
+            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.SUBJECT.getName()), "Should not contain subject claim");
+            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.EXPIRATION.getName()), "Should not contain expiration claim");
+            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.ISSUED_AT.getName()), "Should not contain issued at claim");
+            assertTrue(tokenHolder.getClaims().containsKey(ClaimName.TOKEN_ID.getName()), "Should contain token ID claim");
+            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.TYPE.getName()), "Should not contain type claim");
+            assertFalse(tokenHolder.getClaims().containsKey(ClaimName.SCOPE.getName()), "Should not contain scope claim");
+            assertTrue(tokenHolder.getClaims().containsKey("roles"), "Should contain roles claim");
         }
     }
 
@@ -103,19 +95,15 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should generate valid JWT token")
         void shouldGenerateValidJwtToken() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
-
-            // When
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
-            assertNotNull(rawToken);
-            assertFalse(rawToken.isEmpty());
+            assertNotNull(rawToken, "Raw token should not be null");
+            assertFalse(rawToken.isEmpty(), "Raw token should not be empty");
 
             // Verify token structure (header.payload.signature)
             String[] parts = rawToken.split("\\.");
-            assertEquals(3, parts.length);
+            assertEquals(3, parts.length, "JWT should have 3 parts");
 
             // Verify token can be parsed by JWT library
             var jwt = Jwts.parser()
@@ -123,7 +111,7 @@ class TestTokenHolderTest {
                     .build()
                     .parseSignedClaims(rawToken);
 
-            assertNotNull(jwt);
+            assertNotNull(jwt, "JWT should not be null");
             assertNotNull(jwt.getPayload());
             assertEquals(tokenHolder.getIssuer(), jwt.getPayload().get(ClaimName.ISSUER.getName()));
             assertEquals("test-subject", jwt.getPayload().get(ClaimName.SUBJECT.getName()));
@@ -132,7 +120,7 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should cache token and regenerate after mutation")
         void shouldCacheTokenAndRegenerateAfterMutation() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
 
             // When - get token first time
@@ -140,14 +128,14 @@ class TestTokenHolderTest {
 
             // Then - get token second time (should be cached)
             var secondToken = tokenHolder.getRawToken();
-            assertEquals(firstToken, secondToken);
+            assertEquals(firstToken, secondToken, "Tokens should be equal");
 
             // When - mutate token
             tokenHolder.withClaim("custom-claim", ClaimValue.forPlainString("custom-value"));
 
             // Then - get token third time (should be regenerated)
             var thirdToken = tokenHolder.getRawToken();
-            assertNotEquals(firstToken, thirdToken);
+            assertNotEquals(firstToken, thirdToken, "Tokens should not be equal");
         }
     }
 
@@ -158,56 +146,44 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should add claim")
         void shouldAddClaim() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
             var claimName = "custom-claim";
             var claimValue = ClaimValue.forPlainString("custom-value");
-
-            // When
             tokenHolder.withClaim(claimName, claimValue);
-
-            // Then
-            assertTrue(tokenHolder.getClaims().containsKey(claimName));
-            assertEquals(claimValue, tokenHolder.getClaims().get(claimName));
+            assertTrue(tokenHolder.getClaims().containsKey(claimName), "Claims should contain added claim");
+            assertEquals(claimValue, tokenHolder.getClaims().get(claimName), "Claim value should match expected");
         }
 
         @Test
         @DisplayName("Should remove claim")
         void shouldRemoveClaim() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
             var claimName = ClaimName.SUBJECT.getName();
-
-            // When
             tokenHolder.withoutClaim(claimName);
-
-            // Then
-            assertFalse(tokenHolder.getClaims().containsKey(claimName));
+            assertFalse(tokenHolder.getClaims().containsKey(claimName), "Claims should not contain removed claim");
         }
 
         @Test
         @DisplayName("Should replace all claims")
         void shouldReplaceAllClaims() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
             var newClaims = Map.of(
                     "claim1", ClaimValue.forPlainString("value1"),
                     "claim2", ClaimValue.forPlainString("value2")
             );
-
-            // When
             tokenHolder.withClaims(newClaims);
-
-            // Then
-            assertEquals(2, tokenHolder.getClaims().size());
-            assertTrue(tokenHolder.getClaims().containsKey("claim1"));
-            assertTrue(tokenHolder.getClaims().containsKey("claim2"));
+            assertEquals(2, tokenHolder.getClaims().size(), "Should have exactly 2 claims");
+            assertTrue(tokenHolder.getClaims().containsKey("claim1"), "Should contain claim1");
+            assertTrue(tokenHolder.getClaims().containsKey("claim2"), "Should contain claim2");
         }
 
         @Test
         @DisplayName("Should regenerate claims")
         void shouldRegenerateClaims() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
 
             // When - modify claims
@@ -234,30 +210,22 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should create ACCESS_TOKEN")
         void shouldCreateAccessToken() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
-
-            // When
             var claims = tokenHolder.getClaims();
-
-            // Then
-            assertEquals(TokenType.ACCESS_TOKEN, tokenHolder.getTokenType());
+            assertEquals(TokenType.ACCESS_TOKEN, tokenHolder.getTokenType(), "Token type should be ACCESS_TOKEN");
             assertEquals(TokenType.ACCESS_TOKEN.getTypeClaimName(),
-                    claims.get(ClaimName.TYPE.getName()).getOriginalString());
-            assertTrue(claims.containsKey(ClaimName.SCOPE.getName()));
-            assertTrue(claims.containsKey("roles"));
+                    claims.get(ClaimName.TYPE.getName()).getOriginalString(), "Type claim should match ACCESS_TOKEN");
+            assertTrue(claims.containsKey(ClaimName.SCOPE.getName()), "Should contain scope claim");
+            assertTrue(claims.containsKey("roles"), "Should contain roles claim");
         }
 
         @Test
         @DisplayName("Should create ID_TOKEN")
         void shouldCreateIdToken() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ID_TOKEN, ClaimControlParameter.builder().build());
-
-            // When
             var claims = tokenHolder.getClaims();
-
-            // Then
             assertEquals(TokenType.ID_TOKEN, tokenHolder.getTokenType());
             assertEquals(TokenType.ID_TOKEN.getTypeClaimName(),
                     claims.get(ClaimName.TYPE.getName()).getOriginalString());
@@ -270,13 +238,9 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should create REFRESH_TOKEN")
         void shouldCreateRefreshToken() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.REFRESH_TOKEN, ClaimControlParameter.builder().build());
-
-            // When
             var claims = tokenHolder.getClaims();
-
-            // Then
             assertEquals(TokenType.REFRESH_TOKEN, tokenHolder.getTokenType());
             assertEquals(TokenType.REFRESH_TOKEN.getTypeClaimName(),
                     claims.get(ClaimName.TYPE.getName()).getOriginalString());
@@ -290,14 +254,10 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("asDecodedJwt should convert TestTokenHolder to DecodedJwt")
         void asDecodedJwtShouldConvertTestTokenHolderToDecodedJwt() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
             var rawToken = tokenHolder.getRawToken();
-
-            // When
             var decodedJwt = tokenHolder.asDecodedJwt();
-
-            // Then
             assertNotNull(decodedJwt, "DecodedJwt should not be null");
 
             // Verify raw token
@@ -329,7 +289,7 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("asDecodedJwt should handle custom claims and headers")
         void asDecodedJwtShouldHandleCustomClaimsAndHeaders() {
-            // Given
+
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build());
 
             // Add custom claim
@@ -340,11 +300,7 @@ class TestTokenHolderTest {
             // Use custom key ID
             String customKeyId = "custom-key-id";
             tokenHolder.withKeyId(customKeyId);
-
-            // When
             var decodedJwt = tokenHolder.asDecodedJwt();
-
-            // Then
             assertNotNull(decodedJwt, "DecodedJwt should not be null");
 
             // Verify custom claim
@@ -365,19 +321,15 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should expose generated key ID")
         void shouldExposeGeneratedKeyId() {
-            // Given
+
             var claimControl = ClaimControlParameter.builder()
                     .build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
-
-            // When
             var keyId = tokenHolder.getKeyId();
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
-            assertNotNull(keyId);
-            assertEquals(InMemoryKeyMaterialHandler.DEFAULT_KEY_ID, keyId);
-            assertNotNull(rawToken);
+            assertNotNull(keyId, "Key ID should not be null");
+            assertEquals(InMemoryKeyMaterialHandler.DEFAULT_KEY_ID, keyId, "Key ID should match default");
+            assertNotNull(rawToken, "Raw token should not be null");
 
             // Parse the token and verify the key ID in the header
             var jwt = Jwts.parser()
@@ -392,19 +344,15 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should expose generated signing algorithm")
         void shouldExposeGeneratedSigningAlgorithm() {
-            // Given
+
             var claimControl = ClaimControlParameter.builder()
                     .build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
-
-            // When
             var algorithm = tokenHolder.getSigningAlgorithm();
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
-            assertNotNull(algorithm);
-            assertEquals(InMemoryKeyMaterialHandler.Algorithm.RS256, algorithm);
-            assertNotNull(rawToken);
+            assertNotNull(algorithm, "Algorithm should not be null");
+            assertEquals(InMemoryKeyMaterialHandler.Algorithm.RS256, algorithm, "Algorithm should be RS256");
+            assertNotNull(rawToken, "Raw token should not be null");
 
             // Parse the token and verify it was signed with the correct algorithm
             var jwt = Jwts.parser()
@@ -418,21 +366,17 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should allow changing key ID")
         void shouldAllowChangingKeyId() {
-            // Given
+
             var claimControl = ClaimControlParameter.builder()
                     .build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
             var originalKeyId = tokenHolder.getKeyId();
             var newKeyId = "custom-key-id";
-
-            // When
             tokenHolder.withKeyId(newKeyId);
             var updatedKeyId = tokenHolder.getKeyId();
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
             assertNotEquals(originalKeyId, updatedKeyId);
-            assertEquals(newKeyId, updatedKeyId);
+            assertEquals(newKeyId, updatedKeyId, "Updated key ID should match");
 
             // Parse the token and verify the key ID in the header
             var jwt = Jwts.parser()
@@ -447,21 +391,17 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should allow changing signing algorithm")
         void shouldAllowChangingSigningAlgorithm() {
-            // Given
+
             var claimControl = ClaimControlParameter.builder()
                     .build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
             var originalAlgorithm = tokenHolder.getSigningAlgorithm();
             var newAlgorithm = InMemoryKeyMaterialHandler.Algorithm.RS384;
-
-            // When
             tokenHolder.withSigningAlgorithm(newAlgorithm);
             var updatedAlgorithm = tokenHolder.getSigningAlgorithm();
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
             assertNotEquals(originalAlgorithm, updatedAlgorithm);
-            assertEquals(newAlgorithm, updatedAlgorithm);
+            assertEquals(newAlgorithm, updatedAlgorithm, "Updated algorithm should match");
 
             // Parse the token and verify it was signed with the correct algorithm
             var jwt = Jwts.parser()
@@ -476,20 +416,16 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should provide public key aligned with key ID and algorithm")
         void shouldProvidePublicKeyAlignedWithKeyIdAndAlgorithm() {
-            // Given
+
             var claimControl = ClaimControlParameter.builder()
                     .build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
             var customKeyId = "custom-key-id-for-public-key";
             var customAlgorithm = InMemoryKeyMaterialHandler.Algorithm.RS512;
-
-            // When
             tokenHolder.withKeyId(customKeyId).withSigningAlgorithm(customAlgorithm);
             var publicKey = tokenHolder.getPublicKey();
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
-            assertNotNull(publicKey);
+            assertNotNull(publicKey, "Public key should not be null");
 
             // Verify that the public key can be used to verify the token
             var jwt = Jwts.parser()
@@ -497,7 +433,7 @@ class TestTokenHolderTest {
                     .build()
                     .parseSignedClaims(rawToken);
 
-            assertNotNull(jwt);
+            assertNotNull(jwt, "JWT should not be null");
             assertEquals(customKeyId, jwt.getHeader().get("kid"));
             assertEquals(customAlgorithm.name(), jwt.getHeader().getAlgorithm());
         }
@@ -505,7 +441,7 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should invalidate cached token when header attributes change")
         void shouldInvalidateCachedTokenWhenHeaderAttributesChange() {
-            // Given
+
             var claimControl = ClaimControlParameter.builder()
                     .build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
@@ -515,18 +451,18 @@ class TestTokenHolderTest {
 
             // Then - get token second time (should be cached)
             var secondToken = tokenHolder.getRawToken();
-            assertEquals(firstToken, secondToken);
+            assertEquals(firstToken, secondToken, "Tokens should be equal");
 
             // When - change key ID
             tokenHolder.withKeyId("new-key-id");
 
             // Then - get token third time (should be regenerated)
             var thirdToken = tokenHolder.getRawToken();
-            assertNotEquals(firstToken, thirdToken);
+            assertNotEquals(firstToken, thirdToken, "Tokens should not be equal");
 
             // When - get token fourth time (should be cached again)
             var fourthToken = tokenHolder.getRawToken();
-            assertEquals(thirdToken, fourthToken);
+            assertEquals(thirdToken, fourthToken, "Tokens should be equal");
 
             // When - change signing algorithm
             tokenHolder.withSigningAlgorithm(InMemoryKeyMaterialHandler.Algorithm.RS384);
@@ -539,25 +475,21 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should use custom audience")
         void shouldUseCustomAudience() {
-            // Given
+
             List<String> customAudience = List.of("custom-audience-1", "custom-audience-2");
             var claimControl = ClaimControlParameter.builder().build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
 
             // Set custom audience using the new method
             tokenHolder.withAudience(customAudience);
-
-            // When
             var claims = tokenHolder.getClaims();
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
-            assertNotNull(claims);
+            assertNotNull(claims, "Claims should not be null");
             assertTrue(claims.containsKey(ClaimName.AUDIENCE.getName()));
 
             // Verify the audience claim using the new getter method
             var audience = tokenHolder.getAudience();
-            assertEquals(customAudience, audience);
+            assertEquals(customAudience, audience, "Audience should match custom value");
 
             // Parse the token and verify the audience claim in the JWT
             var jwt = Jwts.parser()
@@ -581,20 +513,16 @@ class TestTokenHolderTest {
         @Test
         @DisplayName("Should provide public key as JwksLoader")
         void shouldProvidePublicKeyAsLoader() {
-            // Given
+
             var claimControl = ClaimControlParameter.builder()
                     .build();
             var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
             var customKeyId = "custom-key-id-for-jwks-loader";
             var customAlgorithm = InMemoryKeyMaterialHandler.Algorithm.RS512;
-
-            // When
             tokenHolder.withKeyId(customKeyId).withSigningAlgorithm(customAlgorithm);
             var jwksLoader = tokenHolder.getPublicKeyAsLoader();
             var rawToken = tokenHolder.getRawToken();
-
-            // Then
-            assertNotNull(jwksLoader);
+            assertNotNull(jwksLoader, "JWKS loader should not be null");
 
             // Verify that the JwksLoader contains the key with the expected ID
             var keyInfo = jwksLoader.getKeyInfo(customKeyId);
@@ -606,7 +534,7 @@ class TestTokenHolderTest {
                     .build()
                     .parseSignedClaims(rawToken);
 
-            assertNotNull(jwt);
+            assertNotNull(jwt, "JWT should not be null");
             assertEquals(customKeyId, jwt.getHeader().get("kid"));
             assertEquals(customAlgorithm.name(), jwt.getHeader().getAlgorithm());
         }

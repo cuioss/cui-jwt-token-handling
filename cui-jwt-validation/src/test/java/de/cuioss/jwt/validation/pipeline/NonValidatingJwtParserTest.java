@@ -19,6 +19,8 @@ import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SecurityEventCounter.EventType;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
+import de.cuioss.test.juli.junit5.EnableTestLogger;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
@@ -40,6 +42,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test for {@link NonValidatingJwtParser}
  */
+@EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests NonValidatingJwtParser functionality")
 class NonValidatingJwtParserTest {
 
@@ -73,30 +77,30 @@ class NonValidatingJwtParserTest {
             // Verify header
             assertTrue(jwt.getHeader().isPresent(), "Header should be present");
             JsonObject header = jwt.getHeader().get();
-            assertEquals("RS256", header.getString("alg"), "Algorithm should match");
-            assertEquals("JWT", header.getString("typ"), "Type should match");
-            assertEquals("test-key-id", header.getString("kid"), "Key ID should match");
+            assertEquals("RS256", header.getString("alg"), "Algorithm should be RS256");
+            assertEquals("JWT", header.getString("typ"), "Type should be JWT");
+            assertEquals("test-key-id", header.getString("kid"), "Key ID should match expected");
 
             // Verify body
             assertTrue(jwt.getBody().isPresent(), "Body should be present");
             JsonObject body = jwt.getBody().get();
-            assertEquals("1234567890", body.getString("sub"), "Subject should match");
-            assertEquals("John Doe", body.getString("name"), "Name should match");
-            assertEquals("https://example.com", body.getString("iss"), "Issuer should match");
-            assertEquals(1735689600, body.getInt("exp"), "Expiration should match");
+            assertEquals("1234567890", body.getString("sub"), "Subject should match expected");
+            assertEquals("John Doe", body.getString("name"), "Name should match expected");
+            assertEquals("https://example.com", body.getString("iss"), "Issuer should match expected");
+            assertEquals(1735689600, body.getInt("exp"), "Expiration should match expected");
 
             // Verify signature
             assertTrue(jwt.getSignature().isPresent(), "Signature should be present");
 
             // Verify extracted fields
-            assertTrue(jwt.getIssuer().isPresent(), "Issuer should be extracted");
-            assertEquals("https://example.com", jwt.getIssuer().get(), "Extracted issuer should match");
+            assertTrue(jwt.getIssuer().isPresent(), "Issuer should be present");
+            assertEquals("https://example.com", jwt.getIssuer().get(), "Issuer should match expected");
 
-            assertTrue(jwt.getKid().isPresent(), "Key ID should be extracted");
-            assertEquals("test-key-id", jwt.getKid().get(), "Extracted key ID should match");
+            assertTrue(jwt.getKid().isPresent(), "Key ID should be present");
+            assertEquals("test-key-id", jwt.getKid().get(), "Key ID should match expected");
 
             // Verify raw token
-            assertEquals(VALID_TOKEN, jwt.getRawToken(), "Raw validation should match the original validation");
+            assertEquals(VALID_TOKEN, jwt.getRawToken(), "Raw token should match original");
         }
     }
 

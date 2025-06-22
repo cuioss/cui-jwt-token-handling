@@ -60,8 +60,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableTestLogger
 @EnableGeneratorController
 class TokenValidatorTest {
-
-
     private TokenValidator tokenValidator;
     private IssuerConfig issuerConfig;
 
@@ -281,8 +279,6 @@ class TokenValidatorTest {
                     "Should indicate missing claim");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "missing required claim");
         }
-
-
         @ParameterizedTest
         @TestTokenSource(value = TokenType.ACCESS_TOKEN)
         @DisplayName("Log warning when key is not found")

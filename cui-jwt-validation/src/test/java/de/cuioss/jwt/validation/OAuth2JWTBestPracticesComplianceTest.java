@@ -60,8 +60,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableGeneratorController
 @DisplayName("OAuth 2.0 JWT Best Practices Compliance Tests")
 class OAuth2JWTBestPracticesComplianceTest {
-
-
     private TokenValidator tokenValidator;
 
     @BeforeEach
@@ -88,13 +86,9 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.1: Validate audience claim")
         void shouldValidateAudienceClaim() {
-            // Given
+
             String token = TestTokenGenerators.accessTokens().next().getRawToken();
-
-            // When
             AccessTokenContent result = tokenValidator.createAccessToken(token);
-
-            // Then
             assertNotNull(result, "Token should be parsed successfully");
             assertTrue(result.getAudience().isPresent(), "Audience claim should be present");
             assertTrue(result.getAudience().get().contains(TestTokenHolder.TEST_AUDIENCE),
@@ -104,13 +98,11 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.1: Reject validation with incorrect audience")
         void shouldRejectTokenWithIncorrectAudience() {
-            // Given
+
             // Create a token with wrong audience
             TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
             tokenHolder.withAudience(List.of("wrong-audience"));
             String token = tokenHolder.getRawToken();
-
-            // When/Then
             TokenValidationException exception = assertThrows(TokenValidationException.class,
                     () -> tokenValidator.createAccessToken(token),
                     "Token with incorrect audience should be rejected");
@@ -128,13 +120,9 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.2: Validate issuer claim")
         void shouldValidateIssuerClaim() {
-            // Given
+
             String token = TestTokenGenerators.accessTokens().next().getRawToken();
-
-            // When
             AccessTokenContent result = tokenValidator.createAccessToken(token);
-
-            // Then
             assertNotNull(result, "Token should be parsed successfully");
             assertEquals(TestTokenHolder.TEST_ISSUER, result.getIssuer(),
                     "Issuer claim should match the expected value");
@@ -143,7 +131,7 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.2: Reject validation with incorrect issuer")
         void shouldRejectTokenWithIncorrectIssuer() {
-            // Given
+
             String wrongIssuer = "https://wrong-issuer.com";
 
             // Create a token with wrong issuer using TestTokenGenerators and withClaim
@@ -151,8 +139,6 @@ class OAuth2JWTBestPracticesComplianceTest {
                     .withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString(wrongIssuer));
 
             String token = tokenHolder.getRawToken();
-
-            // When/Then
             TokenValidationException exception = assertThrows(TokenValidationException.class,
                     () -> tokenValidator.createAccessToken(token),
                     "Token with incorrect issuer should be rejected");
@@ -171,13 +157,9 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.3: Validate validation signature")
         void shouldValidateTokenSignature() {
-            // Given
+
             String token = TestTokenGenerators.accessTokens().next().getRawToken();
-
-            // When
             AccessTokenContent result = tokenValidator.createAccessToken(token);
-
-            // Then
             assertNotNull(result, "Token with valid signature should be parsed successfully");
         }
 
@@ -195,7 +177,7 @@ class OAuth2JWTBestPracticesComplianceTest {
             assertNotEquals(tamperedToken, token, "Token should be tampered");
 
             TokenValidator validator = new TokenValidator(tokenHolder.getIssuerConfig());
-            // When/Then
+
             TokenValidationException exception = assertThrows(TokenValidationException.class,
                     () -> validator.createAccessToken(tamperedToken),
                     "Token with invalid signature should be rejected, offending validation: " + tamperedToken);
@@ -219,8 +201,6 @@ class OAuth2JWTBestPracticesComplianceTest {
 
             assertNotEquals(tamperedToken, token, "Token should be tampered");
             TokenValidator validator = new TokenValidator(tokenHolder.getIssuerConfig());
-
-            // When/Then
             TokenValidationException exception = assertThrows(TokenValidationException.class,
                     () -> validator.createIdToken(tamperedToken),
                     "Token with invalid signature should be rejected, offending validation: " + tamperedToken);
@@ -238,13 +218,9 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.8: Validate validation expiration")
         void shouldValidateTokenExpiration() {
-            // Given
+
             String token = TestTokenGenerators.accessTokens().next().getRawToken();
-
-            // When
             AccessTokenContent result = tokenValidator.createAccessToken(token);
-
-            // Then
             assertNotNull(result, "Token should be parsed successfully");
             assertNotNull(result.getExpirationTime(),
                     "Expiration time claim should be present");
@@ -255,7 +231,7 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.8: Reject expired validation")
         void shouldRejectExpiredToken() {
-            // Given
+
             Instant expiredTime = Instant.now().minus(1, ChronoUnit.HOURS);
             OffsetDateTime expiredDateTime = OffsetDateTime.ofInstant(expiredTime, ZoneId.systemDefault());
 
@@ -267,8 +243,6 @@ class OAuth2JWTBestPracticesComplianceTest {
                     ClaimValue.forDateTime(String.valueOf(expiredDateTime.toEpochSecond()), expiredDateTime));
 
             String token = tokenHolder.getRawToken();
-
-            // When/Then
             TokenValidationException exception = assertThrows(TokenValidationException.class,
                     () -> tokenValidator.createAccessToken(token),
                     "Expired token should be rejected");
@@ -286,7 +260,7 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.11: Validate validation size limits")
         void shouldRespectTokenSizeLimits() {
-            // Given
+
             int customMaxSize = 1024;
             String largeToken = "a".repeat(customMaxSize + 1);
 
@@ -301,8 +275,6 @@ class OAuth2JWTBestPracticesComplianceTest {
                     .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .algorithmPreferences(new AlgorithmPreferences())
                     .build());
-
-            // When/Then
             TokenValidationException exception = assertThrows(TokenValidationException.class,
                     () -> factory.createAccessToken(largeToken),
                     "Token exceeding max size should be rejected");
@@ -315,10 +287,8 @@ class OAuth2JWTBestPracticesComplianceTest {
         @Test
         @DisplayName("3.11: Default validation size limit should be 8KB")
         void defaultTokenSizeLimitShouldBe8KB() {
-            // Given
-            ParserConfig config = ParserConfig.builder().build();
 
-            // Then
+            ParserConfig config = ParserConfig.builder().build();
             assertEquals(8192, config.getMaxTokenSize(),
                     "Default validation size limit should be 8KB (8192 bytes)");
         }

@@ -93,7 +93,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
     @Test
     @DisplayName("Should disable background refresh for zero refresh interval")
     void shouldDisableBackgroundRefreshForZeroRefreshInterval(URIBuilder uriBuilder) {
-        // Given
+
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
@@ -168,7 +168,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
     @Test
     @DisplayName("Should respect background refresh percentage")
     void shouldRespectBackgroundRefreshPercentage(URIBuilder uriBuilder) {
-        // Given
+
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         // Create a loader with a different background refresh percentage

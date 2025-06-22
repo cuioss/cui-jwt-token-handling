@@ -103,8 +103,8 @@ class JwkKeyHandlerTest {
         Key key = JwkKeyHandler.parseRsaKey(jwk);
 
         // Then the key should be parsed correctly
-        assertNotNull(key);
-        assertEquals("RSA", key.getAlgorithm());
+        assertNotNull(key, "RSA key should not be null");
+        assertEquals("RSA", key.getAlgorithm(), "Key algorithm should be RSA");
     }
 
     @Test
@@ -258,13 +258,13 @@ class JwkKeyHandlerTest {
         // Then the correct algorithm should be returned
         switch (curve) {
             case "P-256":
-                assertEquals("ES256", algorithm);
+                assertEquals("ES256", algorithm, "Algorithm should be ES256 for P-256 curve");
                 break;
             case "P-384":
-                assertEquals("ES384", algorithm);
+                assertEquals("ES384", algorithm, "Algorithm should be ES384 for P-384 curve");
                 break;
             case "P-521":
-                assertEquals("ES512", algorithm);
+                assertEquals("ES512", algorithm, "Algorithm should be ES512 for P-521 curve");
                 break;
             default:
                 fail("Unexpected curve: " + curve);
@@ -280,7 +280,7 @@ class JwkKeyHandlerTest {
         String algorithm = JwkKeyHandler.determineEcAlgorithm(curve);
 
         // Then the default algorithm should be returned
-        assertEquals("ES256", algorithm);
+        assertEquals("ES256", algorithm, "Default algorithm should be ES256 for unknown curve");
     }
 
     @Test
@@ -301,8 +301,8 @@ class JwkKeyHandlerTest {
         Key key = JwkKeyHandler.parseEcKey(jwk);
 
         // Then the key should be parsed correctly
-        assertNotNull(key);
-        assertEquals("EC", key.getAlgorithm());
+        assertNotNull(key, "EC key should not be null");
+        assertEquals("EC", key.getAlgorithm(), "Key algorithm should be EC");
     }
 
     @Test

@@ -67,8 +67,8 @@ class AccessTokenContentTest {
 
     static Stream<Arguments> claimTestData() {
         return Stream.of(
-                Arguments.of(ClaimName.ROLES, Arrays.asList("admin", "user", "manager"), "roles"),
-                Arguments.of(ClaimName.GROUPS, Arrays.asList("group1", "group2", "group3"), "groups")
+                Arguments.of(ClaimName.ROLES, List.of("admin", "user", "manager"), "roles"),
+                Arguments.of(ClaimName.GROUPS, List.of("group1", "group2", "group3"), "groups")
         );
     }
 
@@ -95,12 +95,10 @@ class AccessTokenContentTest {
             default -> throw new IllegalArgumentException("Unsupported claim: " + claimName);
         };
     }
-
-
     @Test
     @DisplayName("Return audience when present")
     void shouldReturnAudienceWhenPresent() {
-        List<String> testAudience = Arrays.asList("client1", "client2");
+        List<String> testAudience = List.of("client1", "client2");
         var accessTokenContent = createTokenWithClaim(
                 ClaimName.AUDIENCE, ClaimValue.forList(testAudience.toString(), testAudience));
 
@@ -109,12 +107,10 @@ class AccessTokenContentTest {
         assertTrue(audience.isPresent(), "Audience should be present");
         assertEquals(testAudience, audience.get(), "Audience should match expected");
     }
-
-
     @Test
     @DisplayName("Return scopes when present")
     void shouldReturnScopesWhenPresent() {
-        List<String> testScopes = Arrays.asList("openid", "profile", "email");
+        List<String> testScopes = List.of("openid", "profile", "email");
         var accessTokenContent = createTokenWithClaim(
                 ClaimName.SCOPE, ClaimValue.forList(testScopes.toString(), testScopes));
 
@@ -131,8 +127,6 @@ class AccessTokenContentTest {
         assertThrows(IllegalStateException.class, accessTokenContent::getScopes,
                 "Should throw exception when scopes missing");
     }
-
-
     @Test
     @DisplayName("Return email from claims")
     void shouldReturnEmailFromClaims() {
@@ -146,8 +140,6 @@ class AccessTokenContentTest {
         assertTrue(email.isPresent(), "Email should be present");
         assertEquals(TEST_EMAIL, email.get(), "Email should match expected");
     }
-
-
     @Test
     @DisplayName("Return preferred username when present")
     void shouldReturnPreferredUsernameWhenPresent() {
@@ -160,8 +152,6 @@ class AccessTokenContentTest {
         assertTrue(preferredUsername.isPresent(), "Preferred username should be present");
         assertEquals(username, preferredUsername.get(), "Preferred username should match");
     }
-
-
     @ParameterizedTest
     @MethodSource("claimTestData")
     @DisplayName("Return claim values when present")
@@ -173,17 +163,13 @@ class AccessTokenContentTest {
 
         assertEquals(testValues, values, description + " should match expected");
     }
-
-
     @ParameterizedTest
     @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Provide scopes when all expected are present")
     void shouldProvideScopesWhenAllExpectedArePresent(TestTokenHolder tokenHolder) {
-        // Get scopes from the generated token
         List<String> allScopes = tokenHolder.getClaims().get(ClaimName.SCOPE.getName()).getAsList();
         var accessTokenContent = new AccessTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken(), TEST_EMAIL);
 
-        // Test with subset of scopes (if we have more than one scope)
         List<String> expectedScopes = allScopes.size() > 1 ?
                 allScopes.subList(0, allScopes.size() - 1) : allScopes;
         boolean result = accessTokenContent.providesScopes(expectedScopes);
@@ -195,7 +181,6 @@ class AccessTokenContentTest {
     @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
     @DisplayName("Not provide scopes when some missing")
     void shouldNotProvideScopesWhenSomeMissing(TestTokenHolder tokenHolder) {
-        // Get scopes from the generated token and add a non-existent scope
         List<String> existingScopes = tokenHolder.getClaims().get(ClaimName.SCOPE.getName()).getAsList();
         var accessTokenContent = new AccessTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken(), TEST_EMAIL);
 
@@ -209,7 +194,7 @@ class AccessTokenContentTest {
     @Test
     @DisplayName("Provide empty scopes")
     void shouldProvideEmptyScopes() {
-        List<String> testScopes = Arrays.asList("openid", "profile", "email");
+        List<String> testScopes = List.of("openid", "profile", "email");
         var accessTokenContent = createTokenWithClaim(
                 ClaimName.SCOPE, ClaimValue.forList(testScopes.toString(), testScopes));
 
@@ -217,8 +202,6 @@ class AccessTokenContentTest {
 
         assertTrue(result, "Should provide empty scope list");
     }
-
-
     @Test
     @DisplayName("Return missing scopes when some are absent")
     void shouldReturnMissingScopes() {
@@ -297,6 +280,4 @@ class AccessTokenContentTest {
         assertTrue(missingValues.contains(missing1), "Should contain first missing value");
         assertTrue(missingValues.contains(missing2), "Should contain second missing value");
     }
-
-
 }

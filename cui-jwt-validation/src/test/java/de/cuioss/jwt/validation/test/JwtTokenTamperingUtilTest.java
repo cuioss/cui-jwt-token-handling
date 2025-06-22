@@ -64,26 +64,18 @@ class JwtTokenTamperingUtilTest {
     @Test
     @DisplayName("Should validate untampered access token")
     void shouldValidateUntamperedAccessToken() {
-        // Given
+
         String token = TestTokenGenerators.accessTokens().next().getRawToken();
-
-        // When
         AccessTokenContent result = tokenValidator.createAccessToken(token);
-
-        // Then
         assertNotNull(result, "Untampered token should be valid");
     }
 
     @Test
     @DisplayName("Should validate untampered ID-Token")
     void shouldValidateUntamperedIdToken() {
-        // Given
+
         String token = TestTokenGenerators.idTokens().next().getRawToken();
-
-        // When
         IdTokenContent result = tokenValidator.createIdToken(token);
-
-        // Then
         assertNotNull(result, "Untampered token should be valid");
     }
 
@@ -91,15 +83,13 @@ class JwtTokenTamperingUtilTest {
     @EnumSource(TamperingStrategy.class)
     @DisplayName("Should reject tampered access token")
     void shouldRejectTamperedAccessToken(TamperingStrategy strategy) {
-        // Given
+
         String originalToken = TestTokenGenerators.accessTokens().next().getRawToken();
         String tamperedToken = JwtTokenTamperingUtil.applyTamperingStrategy(originalToken, strategy);
 
         // Verify that the validation was actually tampered
         assertNotEquals(originalToken, tamperedToken,
                 "Token should be tampered using strategy: " + strategy.getDescription());
-
-        // When/Then
         TokenValidationException exception = assertThrows(TokenValidationException.class,
                 () -> tokenValidator.createAccessToken(tamperedToken),
                 "Tampered token should be rejected. Strategy: " + strategy.getDescription());
@@ -113,15 +103,13 @@ class JwtTokenTamperingUtilTest {
     @EnumSource(TamperingStrategy.class)
     @DisplayName("Should reject tampered ID-Token")
     void shouldRejectTamperedIdToken(TamperingStrategy strategy) {
-        // Given
+
         String originalToken = TestTokenGenerators.idTokens().next().getRawToken();
         String tamperedToken = JwtTokenTamperingUtil.applyTamperingStrategy(originalToken, strategy);
 
         // Verify that the validation was actually tampered
         assertNotEquals(originalToken, tamperedToken,
                 "Token should be tampered using strategy: " + strategy.getDescription());
-
-        // When/Then
         TokenValidationException exception = assertThrows(TokenValidationException.class,
                 () -> tokenValidator.createIdToken(tamperedToken),
                 "Tampered token should be rejected. Strategy: " + strategy.getDescription());
@@ -134,10 +122,8 @@ class JwtTokenTamperingUtilTest {
     @Test
     @DisplayName("Should apply all tampering strategies to a validation")
     void shouldApplyAllTamperingStrategiesToToken() {
-        // Given
-        String originalToken = TestTokenGenerators.accessTokens().next().getRawToken();
 
-        // When/Then
+        String originalToken = TestTokenGenerators.accessTokens().next().getRawToken();
         for (TamperingStrategy strategy : TamperingStrategy.values()) {
             String tamperedToken = JwtTokenTamperingUtil.applyTamperingStrategy(originalToken, strategy);
             assertNotEquals(originalToken, tamperedToken,

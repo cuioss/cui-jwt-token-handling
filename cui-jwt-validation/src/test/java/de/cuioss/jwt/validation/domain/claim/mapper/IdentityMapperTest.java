@@ -39,14 +39,10 @@ class IdentityMapperTest {
     @Test
     @DisplayName("Should correctly map a regular string")
     void shouldMapRegularString() {
-        // Given
+
         String input = "some-regular-string";
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, input);
-
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(input, result.getOriginalString(), "Original string should be preserved");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");
@@ -57,15 +53,11 @@ class IdentityMapperTest {
     @ValueSource(strings = {" ", "\t", "\n"})
     @DisplayName("Should handle null, empty, and whitespace inputs")
     void shouldHandleSpecialInputs(String input) {
-        // Given
+
         JsonObject jsonObject = input == null
                 ? createJsonObjectWithNullClaim(CLAIM_NAME)
                 : createJsonObjectWithStringClaim(CLAIM_NAME, input);
-
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(input, result.getOriginalString(), "Original string should be preserved");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");
@@ -74,14 +66,10 @@ class IdentityMapperTest {
     @Test
     @DisplayName("Should handle special characters")
     void shouldHandleSpecialCharacters() {
-        // Given
+
         String input = "!@#$%^&*()_+{}|:<>?~`-=[]\\;',./";
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, input);
-
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(input, result.getOriginalString(), "Original string should be preserved");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");
@@ -90,14 +78,10 @@ class IdentityMapperTest {
     @Test
     @DisplayName("Should handle very long strings")
     void shouldHandleVeryLongStrings() {
-        // Given
+
         String longString = "a".repeat(1000);
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, longString);
-
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(longString, result.getOriginalString(), "Original string should be preserved");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");
@@ -106,16 +90,12 @@ class IdentityMapperTest {
     @Test
     @DisplayName("Should handle numeric values")
     void shouldHandleNumericValues() {
-        // Given
+
         int input = 12345;
         JsonObject jsonObject = Json.createObjectBuilder()
                 .add(CLAIM_NAME, input)
                 .build();
-
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(String.valueOf(input), result.getOriginalString(), "Original string should be the string representation of the number");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");
@@ -124,16 +104,12 @@ class IdentityMapperTest {
     @Test
     @DisplayName("Should handle boolean values")
     void shouldHandleBooleanValues() {
-        // Given
+
         boolean input = true;
         JsonObject jsonObject = Json.createObjectBuilder()
                 .add(CLAIM_NAME, input)
                 .build();
-
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(String.valueOf(input), result.getOriginalString(), "Original string should be the string representation of the boolean");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");
@@ -142,13 +118,9 @@ class IdentityMapperTest {
     @Test
     @DisplayName("Should handle missing claim")
     void shouldHandleMissingClaim() {
-        // Given
+
         JsonObject jsonObject = Json.createObjectBuilder().build();
-
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertNull(result.getOriginalString(), "Original string should be null");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");
@@ -157,13 +129,9 @@ class IdentityMapperTest {
     @Test
     @DisplayName("Should handle empty JsonObject")
     void shouldHandleEmptyJsonObject() {
-        // Given
+
         JsonObject emptyJsonObject = Json.createObjectBuilder().build();
-
-        // When
         ClaimValue result = underTest.map(emptyJsonObject, CLAIM_NAME);
-
-        // Then
         assertNotNull(result, "Result should not be null");
         assertNull(result.getOriginalString(), "Original string should be null");
         assertEquals(ClaimValueType.STRING, result.getType(), "Type should be STRING");

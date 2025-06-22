@@ -23,6 +23,7 @@ import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.jwt.validation.test.junit.TestTokenSource;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
+@EnableGeneratorController
 @DisplayName("OpenID Connect Compliance Tests")
 class OpenIDConnectComplianceTest {
 
@@ -74,137 +76,94 @@ class OpenIDConnectComplianceTest {
         @Test
         @DisplayName("2.2: Required Claims - 'iss' (Issuer) Claim")
         void shouldHandleIssuerClaim() {
-            // Given
+
             String token = TestTokenGenerators.idTokens().next().getRawToken();
-
-            // When
             IdTokenContent result = tokenValidator.createIdToken(token);
-
-            // Then
-            assertEquals(ISSUER, result.getIssuer(),
-                    "Issuer claim should match the expected value");
+            assertEquals(ISSUER, result.getIssuer());
         }
 
         @ParameterizedTest
         @TestTokenSource(value = TokenType.ID_TOKEN, count = 5)
         @DisplayName("2.2: Required Claims - 'sub' (Subject) Claim")
         void shouldHandleSubjectClaim(TestTokenHolder tokenHolder) {
-            // Given
+
             String subject = "test-subject";
 
             // Set a specific subject
             tokenHolder.withClaim(ClaimName.SUBJECT.getName(), ClaimValue.forPlainString(subject));
 
             String token = tokenHolder.getRawToken();
-
-            // When
             IdTokenContent result = new TokenValidator(tokenHolder.getIssuerConfig()).createIdToken(token);
-
-            // Then
-            assertEquals(subject, result.getSubject(),
-                    "Subject claim should match the expected value");
+            assertEquals(subject, result.getSubject());
         }
 
         @Test
         @DisplayName("2.2: Required Claims - 'aud' (Audience) Claim")
         void shouldHandleAudienceClaim() {
-            // Given
+
             String token = TestTokenGenerators.idTokens().next().getRawToken();
-
-            // When
             IdTokenContent result = tokenValidator.createIdToken(token);
-
-            // Then
-            assertEquals(List.of(TestTokenHolder.TEST_AUDIENCE), result.getAudience(),
-                    "Audience claim should match the expected value");
+            assertEquals(List.of(TestTokenHolder.TEST_AUDIENCE), result.getAudience());
         }
 
         @Test
         @DisplayName("2.2: Required Claims - 'exp' (Expiration Time) Claim")
         void shouldHandleExpirationTimeClaim() {
-            // Given
+
             String token = TestTokenGenerators.idTokens().next().getRawToken();
-
-            // When
             IdTokenContent result = tokenValidator.createIdToken(token);
-
-            // Then
-            assertNotNull(result.getExpirationTime(),
-                    "Expiration time claim should be present");
-            assertFalse(result.isExpired(),
-                    "Token should not be expired");
+            assertNotNull(result.getExpirationTime());
+            assertFalse(result.isExpired());
         }
 
         @Test
         @DisplayName("2.2: Required Claims - 'iat' (Issued At) Claim")
         void shouldHandleIssuedAtClaim() {
-            // Given
+
             String token = TestTokenGenerators.idTokens().next().getRawToken();
-
-            // When
             IdTokenContent result = tokenValidator.createIdToken(token);
-
-            // Then
-            assertNotNull(result.getIssuedAtTime(),
-                    "Issued At claim should be present");
+            assertNotNull(result.getIssuedAtTime());
         }
 
         @ParameterizedTest
         @TestTokenSource(value = TokenType.ID_TOKEN, count = 5)
         @DisplayName("2.2: Optional Claims - 'auth_time' (Authentication Time) Claim")
         void shouldHandleAuthTimeClaim(TestTokenHolder tokenHolder) {
-            // Given
+
             Instant authTime = Instant.now().minus(5, ChronoUnit.MINUTES);
 
             // Add auth_time claim
             tokenHolder.withClaim("auth_time", ClaimValue.forPlainString(String.valueOf(authTime.getEpochSecond())));
 
             String token = tokenHolder.getRawToken();
-
-            // When
             IdTokenContent result = new TokenValidator(tokenHolder.getIssuerConfig()).createIdToken(token);
-
-            // Then
-            assertTrue(result.getClaims().containsKey("auth_time"),
-                    "Authentication Time claim should be present");
+            assertTrue(result.getClaims().containsKey("auth_time"));
         }
 
         @ParameterizedTest
         @TestTokenSource(value = TokenType.ID_TOKEN, count = 5)
         @DisplayName("2.2: Optional Claims - 'nonce' Claim")
         void shouldHandleNonceClaim(TestTokenHolder tokenHolder) {
-            // Given
+
             String nonce = "test-nonce";
 
             // Add nonce claim
             tokenHolder.withClaim("nonce", ClaimValue.forPlainString(nonce));
 
             String token = tokenHolder.getRawToken();
-
-            // When
             IdTokenContent result = new TokenValidator(tokenHolder.getIssuerConfig()).createIdToken(token);
-
-            // Then
-            assertTrue(result.getClaims().containsKey("nonce"),
-                    "Nonce claim should be present");
-            assertEquals(nonce, result.getClaims().get("nonce").getOriginalString(),
-                    "Nonce claim should match the expected value");
+            assertTrue(result.getClaims().containsKey("nonce"));
+            assertEquals(nonce, result.getClaims().get("nonce").getOriginalString());
         }
 
         @Test
         @DisplayName("2.2: Optional Claims - 'azp' (Authorized Party) Claim")
         void shouldHandleAuthorizedPartyClaim() {
-            // Given
+
             String token = TestTokenGenerators.idTokens().next().getRawToken();
-
-            // When
             IdTokenContent result = tokenValidator.createIdToken(token);
-
-            // Then
-            assertTrue(result.getClaimOption(ClaimName.AUTHORIZED_PARTY).isPresent(),
-                    "Authorized Party claim should be present");
-            assertEquals(TestTokenHolder.TEST_CLIENT_ID, result.getClaimOption(ClaimName.AUTHORIZED_PARTY).get().getOriginalString(),
-                    "Authorized Party claim should match the expected value");
+            assertTrue(result.getClaimOption(ClaimName.AUTHORIZED_PARTY).isPresent());
+            assertEquals(TestTokenHolder.TEST_CLIENT_ID, result.getClaimOption(ClaimName.AUTHORIZED_PARTY).get().getOriginalString());
         }
     }
 
@@ -216,62 +175,46 @@ class OpenIDConnectComplianceTest {
         @TestTokenSource(value = TokenType.ID_TOKEN, count = 5)
         @DisplayName("5.1: Standard Claims - 'name' Claim")
         void shouldHandleNameClaim(TestTokenHolder tokenHolder) {
-            // Given
+
             String name = "Test User";
 
             // Add name claim
             tokenHolder.withClaim(ClaimName.NAME.getName(), ClaimValue.forPlainString(name));
 
             String token = tokenHolder.getRawToken();
-
-            // When
             IdTokenContent result = new TokenValidator(tokenHolder.getIssuerConfig()).createIdToken(token);
-
-            // Then
-            assertEquals(name, result.getName().orElse(null),
-                    "Name claim should match the expected value");
+            assertEquals(name, result.getName().orElse(null));
         }
 
         @ParameterizedTest
         @TestTokenSource(value = TokenType.ID_TOKEN, count = 5)
         @DisplayName("5.1: Standard Claims - 'email' Claim")
         void shouldHandleEmailClaim(TestTokenHolder tokenHolder) {
-            // Given
+
             String email = "test@example.com";
 
             // Add email claim
             tokenHolder.withClaim(ClaimName.EMAIL.getName(), ClaimValue.forPlainString(email));
 
             String token = tokenHolder.getRawToken();
-
-            // When
             IdTokenContent result = new TokenValidator(tokenHolder.getIssuerConfig()).createIdToken(token);
-
-            // Then
-            assertEquals(email, result.getEmail().orElse(null),
-                    "Email claim should match the expected value");
+            assertEquals(email, result.getEmail().orElse(null));
         }
 
         @ParameterizedTest
         @TestTokenSource(value = TokenType.ID_TOKEN, count = 5)
         @DisplayName("5.1: Standard Claims - 'preferred_username' Claim")
         void shouldHandlePreferredUsernameClaim(TestTokenHolder tokenHolder) {
-            // Given
+
             String preferredUsername = "testuser";
 
             // Add preferred_username claim
             tokenHolder.withClaim(ClaimName.PREFERRED_USERNAME.getName(), ClaimValue.forPlainString(preferredUsername));
 
             String token = tokenHolder.getRawToken();
-
-            // When
             IdTokenContent result = new TokenValidator(tokenHolder.getIssuerConfig()).createIdToken(token);
-
-            // Then
-            assertTrue(result.getClaimOption(ClaimName.PREFERRED_USERNAME).isPresent(),
-                    "Preferred Username claim should be present");
-            assertEquals(preferredUsername, result.getClaimOption(ClaimName.PREFERRED_USERNAME).get().getOriginalString(),
-                    "Preferred Username claim should match the expected value");
+            assertTrue(result.getClaimOption(ClaimName.PREFERRED_USERNAME).isPresent());
+            assertEquals(preferredUsername, result.getClaimOption(ClaimName.PREFERRED_USERNAME).get().getOriginalString());
         }
     }
 }

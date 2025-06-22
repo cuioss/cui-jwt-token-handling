@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.domain.claim.mapper;
 
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.claim.ClaimValueType;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
@@ -28,12 +29,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests JsonCollectionMapper functionality")
 class JsonCollectionMapperTest {
 
@@ -41,16 +42,13 @@ class JsonCollectionMapperTest {
     private final JsonCollectionMapper underTest = new JsonCollectionMapper();
 
     @Test
-    @DisplayName("Should map array of strings to list")
+    @DisplayName("Map array of strings to list")
     void shouldMapArrayOfStrings() {
-        // Given
-        List<String> expectedValues = Arrays.asList("value1", "value2", "value3");
+        List<String> expectedValues = List.of("value1", "value2", "value3");
         JsonObject jsonObject = createJsonObjectWithArrayClaim(CLAIM_NAME, expectedValues);
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertEquals(expectedValues.size(), result.getAsList().size(), "List size should match");
@@ -62,16 +60,13 @@ class JsonCollectionMapperTest {
     }
 
     @Test
-    @DisplayName("Should map single string to single-element list")
+    @DisplayName("Map single string to single-element list")
     void shouldMapSingleString() {
-        // Given
         String input = "single-value";
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, input);
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertEquals(1, result.getAsList().size(), "List should have exactly one element");
@@ -79,18 +74,15 @@ class JsonCollectionMapperTest {
     }
 
     @Test
-    @DisplayName("Should map numeric value to single-element list")
+    @DisplayName("Map numeric value to single-element list")
     void shouldMapNumericValue() {
-        // Given
         int input = 12345;
         JsonObject jsonObject = Json.createObjectBuilder()
                 .add(CLAIM_NAME, input)
                 .build();
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertEquals(1, result.getAsList().size(), "List should have exactly one element");
@@ -99,18 +91,15 @@ class JsonCollectionMapperTest {
     }
 
     @Test
-    @DisplayName("Should map boolean value to single-element list")
+    @DisplayName("Map boolean value to single-element list")
     void shouldMapBooleanValue() {
-        // Given
         boolean input = true;
         JsonObject jsonObject = Json.createObjectBuilder()
                 .add(CLAIM_NAME, input)
                 .build();
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertEquals(1, result.getAsList().size(), "List should have exactly one element");
@@ -121,41 +110,33 @@ class JsonCollectionMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t", "\n"})
-    @DisplayName("Should handle null, empty, and whitespace inputs")
+    @DisplayName("Handle null, empty, and whitespace inputs")
     void shouldHandleSpecialInputs(String input) {
-        // Given
         JsonObject jsonObject = input == null
                 ? createJsonObjectWithNullClaim(CLAIM_NAME)
                 : createJsonObjectWithStringClaim(CLAIM_NAME, input);
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
 
         if (input == null) {
-            // For null input, we expect an empty list
             assertTrue(result.getAsList().isEmpty(), "List should be empty for null input");
         } else if (input.trim().isEmpty()) {
-            // For empty or whitespace-only input, we expect a list with one element
             assertEquals(1, result.getAsList().size(), "List should have one element for empty/whitespace input");
             assertEquals(input, result.getAsList().get(0), "List element should match input string");
         }
     }
 
     @Test
-    @DisplayName("Should handle special characters in strings")
+    @DisplayName("Handle special characters in strings")
     void shouldHandleSpecialCharacters() {
-        // Given
         String input = "!@#$%^&*()_+{}|:<>?~`-=[]\\;',./";
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, input);
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertEquals(1, result.getAsList().size(), "List should have exactly one element");
@@ -163,16 +144,13 @@ class JsonCollectionMapperTest {
     }
 
     @Test
-    @DisplayName("Should handle special characters in array elements")
+    @DisplayName("Handle special characters in array elements")
     void shouldHandleSpecialCharactersInArray() {
-        // Given
-        List<String> inputs = Arrays.asList("!@#$", "%^&*()", "_+{}|:", "<>?~`-=", "[]\\;',./");
+        List<String> inputs = List.of("!@#$", "%^&*()", "_+{}|:", "<>?~`-=", "[]\\;',./");
         JsonObject jsonObject = createJsonObjectWithArrayClaim(CLAIM_NAME, inputs);
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertEquals(inputs.size(), result.getAsList().size(), "List size should match");
@@ -184,39 +162,32 @@ class JsonCollectionMapperTest {
     }
 
     @Test
-    @DisplayName("Should handle missing claim")
+    @DisplayName("Handle missing claim")
     void shouldHandleMissingClaim() {
-        // Given
         JsonObject jsonObject = Json.createObjectBuilder().build();
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertTrue(result.getAsList().isEmpty(), "List should be empty for missing claim");
     }
 
     @Test
-    @DisplayName("Should handle empty JSON object")
+    @DisplayName("Handle empty JSON object")
     void shouldHandleEmptyJsonObject() {
-        // Given
         JsonObject emptyJsonObject = Json.createObjectBuilder().build();
 
-        // When
         ClaimValue result = underTest.map(emptyJsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertTrue(result.getAsList().isEmpty(), "List should be empty for empty JSON object");
     }
 
     @Test
-    @DisplayName("Should handle non-string array elements")
+    @DisplayName("Handle non-string array elements")
     void shouldHandleNonStringArrayElements() {
-        // Given
         JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
         arrayBuilder.add("string-value");
         arrayBuilder.add(123);
@@ -227,15 +198,12 @@ class JsonCollectionMapperTest {
                 .add(CLAIM_NAME, arrayBuilder)
                 .build();
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
         assertEquals(4, result.getAsList().size(), "List should have 4 elements");
         assertEquals("string-value", result.getAsList().get(0), "First element should be string-value");
-        // Note: The exact string representation of non-string values may vary depending on the JSON implementation
     }
 
     // Helper methods

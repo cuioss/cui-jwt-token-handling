@@ -37,18 +37,14 @@ class BackgroundRefreshManagerTest {
     @Test
     @DisplayName("Should create manager with config")
     void shouldCreateManagerWithConfig() {
-        // Given
+
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(JWKS_URI)
                 .refreshIntervalSeconds(60)
                 .build();
 
         JwksCacheManager cacheManager = createCacheManager(config);
-
-        // When
         BackgroundRefreshManager manager = new BackgroundRefreshManager(config, cacheManager);
-
-        // Then
         assertNotNull(manager);
         assertTrue(manager.isEnabled(), "Background refresh should be enabled for positive refresh interval");
 
@@ -59,18 +55,14 @@ class BackgroundRefreshManagerTest {
     @Test
     @DisplayName("Should disable background refresh for zero refresh interval")
     void shouldDisableBackgroundRefreshForZeroRefreshInterval() {
-        // Given
+
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(JWKS_URI)
                 .refreshIntervalSeconds(0)
                 .build();
 
         JwksCacheManager cacheManager = createCacheManager(config);
-
-        // When
         BackgroundRefreshManager manager = new BackgroundRefreshManager(config, cacheManager);
-
-        // Then
         assertNotNull(manager);
         assertFalse(manager.isEnabled(), "Background refresh should be disabled for zero refresh interval");
 
@@ -81,18 +73,14 @@ class BackgroundRefreshManagerTest {
     @Test
     @DisplayName("Should skip scheduling for very short refresh intervals")
     void shouldSkipSchedulingForVeryShortRefreshIntervals() {
-        // Given
+
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(JWKS_URI)
                 .refreshIntervalSeconds(1) // Very short interval
                 .build();
 
         JwksCacheManager cacheManager = createCacheManager(config);
-
-        // When
         BackgroundRefreshManager manager = new BackgroundRefreshManager(config, cacheManager);
-
-        // Then
         assertNotNull(manager);
         assertTrue(manager.isEnabled(), "Background refresh should be enabled even for short refresh interval");
 
@@ -103,7 +91,7 @@ class BackgroundRefreshManagerTest {
     @Test
     @DisplayName("Should close executor service")
     void shouldCloseExecutorService() {
-        // Given
+
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(JWKS_URI)
                 .refreshIntervalSeconds(60)
@@ -111,11 +99,7 @@ class BackgroundRefreshManagerTest {
 
         JwksCacheManager cacheManager = createCacheManager(config);
         BackgroundRefreshManager manager = new BackgroundRefreshManager(config, cacheManager);
-
-        // When
         manager.close();
-
-        // Then
         // No exception should be thrown
         assertTrue(true, "Close should complete without exceptions");
     }
@@ -123,7 +107,7 @@ class BackgroundRefreshManagerTest {
     @Test
     @DisplayName("Should handle close when already closed")
     void shouldHandleCloseWhenAlreadyClosed() {
-        // Given
+
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(JWKS_URI)
                 .refreshIntervalSeconds(60)
@@ -131,12 +115,8 @@ class BackgroundRefreshManagerTest {
 
         JwksCacheManager cacheManager = createCacheManager(config);
         BackgroundRefreshManager manager = new BackgroundRefreshManager(config, cacheManager);
-
-        // When
         manager.close();
         manager.close(); // Close again
-
-        // Then
         // No exception should be thrown
         assertTrue(true, "Multiple close calls should complete without exceptions");
     }
@@ -144,7 +124,7 @@ class BackgroundRefreshManagerTest {
     @Test
     @DisplayName("Should handle close when executor service is null")
     void shouldHandleCloseWhenExecutorServiceIsNull() {
-        // Given
+
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(JWKS_URI)
                 .refreshIntervalSeconds(0) // Zero refresh interval means no executor service
@@ -152,11 +132,7 @@ class BackgroundRefreshManagerTest {
 
         JwksCacheManager cacheManager = createCacheManager(config);
         BackgroundRefreshManager manager = new BackgroundRefreshManager(config, cacheManager);
-
-        // When
         manager.close();
-
-        // Then
         // No exception should be thrown
         assertTrue(true, "Close should complete without exceptions when executor service is null");
     }

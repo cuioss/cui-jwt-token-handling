@@ -48,8 +48,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableTestLogger
 @DisplayName("Tests TokenValidator security event counting")
 class TokenValidatorSecurityEventTest {
-
-
     private TokenValidator tokenValidator;
 
     @BeforeEach

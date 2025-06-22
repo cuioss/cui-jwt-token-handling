@@ -83,8 +83,6 @@ class KeyInjectionAttackTest {
 
         // Get the issuer config from the token
         IssuerConfig issuerConfig = validToken.getIssuerConfig();
-
-
         // Create the token validator
         ParserConfig config = ParserConfig.builder().build();
         tokenValidator = new TokenValidator(config, issuerConfig);
@@ -197,8 +195,6 @@ class KeyInjectionAttackTest {
         assertEquals(1, tokenValidator.getSecurityEventCounter().getCount(expectedEventType),
                 "Security event counter should be incremented for " + expectedEventType);
     }
-
-
     @Test
     @DisplayName("Should accept token with valid KID header")
     void shouldAcceptTokenWithValidKidHeader() {

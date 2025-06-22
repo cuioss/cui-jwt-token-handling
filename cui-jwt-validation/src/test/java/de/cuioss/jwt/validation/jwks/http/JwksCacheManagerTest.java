@@ -70,21 +70,19 @@ class JwksCacheManagerTest {
     @Test
     @DisplayName("Should create cache manager with config")
     void shouldCreateCacheManagerWithConfig() {
-        // Then
-        assertNotNull(cacheManager);
+
+        assertNotNull(cacheManager, "Cache manager should not be null");
         assertEquals(CACHE_KEY_PREFIX + JWKS_URI, cacheManager.getCacheKey());
     }
 
     @Test
     @DisplayName("Should cache results")
     void shouldCacheResults() {
-        // When
+
         JWKSKeyLoader result1 = cacheManager.resolve();
         JWKSKeyLoader result2 = cacheManager.resolve();
-
-        // Then
-        assertNotNull(result1);
-        assertNotNull(result2);
+        assertNotNull(result1, "First result should not be null");
+        assertNotNull(result2, "Second result should not be null");
         assertEquals(1, loaderCallCount.get(), "Cache loader should be called only once");
         assertSame(result1, result2, "Cached results should be the same instance");
     }
@@ -92,16 +90,12 @@ class JwksCacheManagerTest {
     @Test
     @DisplayName("Should update cache with new content")
     void shouldUpdateCacheWithNewContent() {
-        // Given
+
         String newContent = InMemoryJWKSFactory.createDefaultJwks(); // Different instance but same content
         String newEtag = "\"new-etag\"";
-
-        // When
         JWKSKeyLoader initialResult = cacheManager.resolve();
         JwksCacheManager.KeyRotationResult result = cacheManager.updateCache(newContent, newEtag);
         JWKSKeyLoader updatedResult = result.keyLoader();
-
-        // Then
         assertNotNull(initialResult);
         assertNotNull(updatedResult);
         assertEquals(newEtag, cacheManager.getCurrentEtag());
@@ -115,15 +109,11 @@ class JwksCacheManagerTest {
     @Test
     @DisplayName("Should handle not modified response")
     void shouldHandleNotModifiedResponse() {
-        // Given
+
         // First, update the cache to set the lastValidResult
         JwksCacheManager.KeyRotationResult result = cacheManager.updateCache(JWKS_CONTENT, ETAG);
         JWKSKeyLoader initialResult = result.keyLoader();
-
-        // When
         JWKSKeyLoader notModifiedResult = cacheManager.handleNotModified();
-
-        // Then
         assertNotNull(initialResult);
         assertNotNull(notModifiedResult);
         assertSame(initialResult, notModifiedResult, "Not modified result should be the same as initial result");
@@ -132,15 +122,11 @@ class JwksCacheManagerTest {
     @Test
     @DisplayName("Should refresh cache")
     void shouldRefreshCache() {
-        // Given
+
         JWKSKeyLoader initialResult = cacheManager.resolve();
         int initialCallCount = loaderCallCount.get();
-
-        // When
         cacheManager.refresh();
         JWKSKeyLoader refreshedResult = cacheManager.resolve();
-
-        // Then
         assertNotNull(initialResult);
         assertNotNull(refreshedResult);
         // Starting with Java 21 wie nee a slight delay here.
@@ -161,48 +147,36 @@ class JwksCacheManagerTest {
 
         // Set the last valid result
         failingCacheManager.updateCache(JWKS_CONTENT, ETAG);
-
-        // When
         JWKSKeyLoader result = failingCacheManager.resolve();
-
-        // Then
-        assertNotNull(result);
+        assertNotNull(result, "Result should not be null");
         assertTrue(result.isNotEmpty(), "Result should not be empty");
     }
 
     @Test
     @DisplayName("Should return empty result when no last valid result and loader throws exception")
     void shouldReturnEmptyResultWhenNoLastValidResultAndLoaderThrowsException() {
-        // Given
+
         // Create a cache manager with a loader that throws an exception
         Function<String, JWKSKeyLoader> failingLoader = key -> {
             throw new RuntimeException("Test exception");
         };
 
         JwksCacheManager failingCacheManager = new JwksCacheManager(config, failingLoader, securityEventCounter);
-
-        // When
         JWKSKeyLoader result = failingCacheManager.resolve();
-
-        // Then
-        assertNotNull(result);
+        assertNotNull(result, "Result should not be null");
         assertFalse(result.isNotEmpty(), "Result should be empty");
     }
 
     @Test
     @DisplayName("Should get last valid result")
     void shouldGetLastValidResult() {
-        // Given
+
         // Initially there is no last valid result
         Optional<JWKSKeyLoader> initialLastValidResult = cacheManager.getLastValidResult();
-
-        // When
         // Update the cache to set the lastValidResult
         JwksCacheManager.KeyRotationResult rotationResult = cacheManager.updateCache(JWKS_CONTENT, ETAG);
         JWKSKeyLoader updatedResult = rotationResult.keyLoader();
         Optional<JWKSKeyLoader> lastValidResult = cacheManager.getLastValidResult();
-
-        // Then
         assertFalse(initialLastValidResult.isPresent(), "Initial last valid result should be empty");
         assertTrue(lastValidResult.isPresent(), "Last valid result should be present after update");
         assertSame(updatedResult, lastValidResult.get(), "Last valid result should be the same as updated result");

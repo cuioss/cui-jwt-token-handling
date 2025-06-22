@@ -24,22 +24,23 @@ import de.cuioss.jwt.validation.domain.token.AccessTokenContent;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests Custom ClaimMapper functionality")
 class CustomClaimMapperTest {
 
     private static final String ROLE_CLAIM = "role";
-    private static final List<String> ROLES = Arrays.asList("admin", "user", "manager");
+    private static final List<String> ROLES = List.of("admin", "user", "manager");
 
     private TokenValidator tokenValidator;
     private String tokenWithRoles;
@@ -47,13 +48,10 @@ class CustomClaimMapperTest {
 
     @BeforeEach
     void setUp() {
-        // Create a JWKSKeyLoader with the default JWKS content
         jwksContent = InMemoryJWKSFactory.createDefaultJwks();
 
-        // Create a custom claim mapper for the "role" claim
         ClaimMapper roleMapper = new JsonCollectionMapper();
 
-        // Create issuer config with the custom claim mapper
         IssuerConfig issuerConfig = IssuerConfig.builder()
                 .issuer(TestTokenHolder.TEST_ISSUER)
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
@@ -62,39 +60,27 @@ class CustomClaimMapperTest {
                 .claimMapper(ROLE_CLAIM, roleMapper)
                 .build();
 
-        // Create validation factory
         tokenValidator = new TokenValidator(issuerConfig);
 
-        // Create a token with a "role" claim containing an array of roles using TestTokenHolder
         var claimControl = ClaimControlParameter.builder().build();
         var tokenHolder = new TestTokenHolder(TokenType.ACCESS_TOKEN, claimControl);
 
-        // Set the audience claim
         tokenHolder.withClaim(ClaimName.AUDIENCE.getName(), ClaimValue.forList(TestTokenHolder.TEST_AUDIENCE, List.of(TestTokenHolder.TEST_AUDIENCE)));
-
-        // Set the issuer and authorized party claims
         tokenHolder.withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString(TestTokenHolder.TEST_ISSUER));
         tokenHolder.withClaim(ClaimName.AUTHORIZED_PARTY.getName(), ClaimValue.forPlainString(TestTokenHolder.TEST_CLIENT_ID));
-
-        // Add the role claim with an array of roles
         tokenHolder.withClaim(ROLE_CLAIM, ClaimValue.forList(String.join(",", ROLES), ROLES));
-
-        // Add scope claim
         tokenHolder.withClaim(ClaimName.SCOPE.getName(), ClaimValue.forList("openid profile email",
-                Arrays.asList("openid", "profile", "email")));
+                List.of("openid", "profile", "email")));
 
-        // Get the raw token
         tokenWithRoles = tokenHolder.getRawToken();
     }
 
     @Test
-    @DisplayName("Should use custom claim mapper for role claim")
+    @DisplayName("Use custom claim mapper for role claim")
     void shouldUseCustomClaimMapperForRoleClaim() {
-        // Parse the validation
         AccessTokenContent tokenContent = tokenValidator.createAccessToken(tokenWithRoles);
         ClaimValue roleClaim = tokenContent.getClaims().get(ROLE_CLAIM);
 
-        // Verify the role claim was mapped correctly
         assertNotNull(roleClaim, "Role claim should not be null");
         assertEquals(ClaimValueType.STRING_LIST, roleClaim.getType(), "Role claim should be a STRING_LIST");
         assertEquals(ROLES.size(), roleClaim.getAsList().size(), "Role claim should have the correct number of roles");
@@ -102,9 +88,8 @@ class CustomClaimMapperTest {
     }
 
     @Test
-    @DisplayName("Should use default mapper when no custom mapper is configured")
+    @DisplayName("Use default mapper when no custom mapper is configured")
     void shouldUseDefaultMapperWhenNoCustomMapperIsConfigured() {
-        // Create issuer config without custom claim mapper
         IssuerConfig issuerConfigWithoutCustomMapper = IssuerConfig.builder()
                 .issuer(TestTokenHolder.TEST_ISSUER)
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
@@ -112,17 +97,13 @@ class CustomClaimMapperTest {
                 .jwksContent(jwksContent)
                 .build();
 
-        // Create validation factory
         TokenValidator factoryWithoutCustomMapper = new TokenValidator(
                 issuerConfigWithoutCustomMapper);
 
-        // Parse the validation
         AccessTokenContent tokenContent = factoryWithoutCustomMapper.createAccessToken(tokenWithRoles);
         ClaimValue roleClaim = tokenContent.getClaims().get(ROLE_CLAIM);
 
-        // Verify the role claim was mapped using the default mapper
         assertNotNull(roleClaim, "Role claim should not be null");
-        // The default mapper would not recognize this as a collection
         assertNotEquals(ClaimValueType.STRING_LIST, roleClaim.getType(), "Role claim should not be a STRING_LIST with default mapper");
     }
 }

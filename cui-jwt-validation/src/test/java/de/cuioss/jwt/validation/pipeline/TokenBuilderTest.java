@@ -55,8 +55,6 @@ class TokenBuilderTest {
 
         tokenBuilder = new TokenBuilder(issuerConfig);
     }
-
-
     @Nested
     @DisplayName("AccessToken Tests")
     class AccessTokenTests {
@@ -69,8 +67,6 @@ class TokenBuilderTest {
 
             // When creating an AccessTokenContent
             Optional<AccessTokenContent> result = tokenBuilder.createAccessToken(decodedJwt);
-
-            // Then
             assertTrue(result.isPresent(), "Should return AccessTokenContent");
             AccessTokenContent accessTokenContent = result.get();
 
@@ -96,8 +92,6 @@ class TokenBuilderTest {
 
             // When creating an AccessTokenContent
             Optional<AccessTokenContent> result = tokenBuilder.createAccessToken(decodedJwt);
-
-            // Then
             assertTrue(result.isEmpty(), "Should return empty Optional when body is missing");
         }
     }
@@ -114,8 +108,6 @@ class TokenBuilderTest {
 
             // When creating an IdTokenContent
             Optional<IdTokenContent> result = tokenBuilder.createIdToken(decodedJwt);
-
-            // Then
             assertTrue(result.isPresent(), "Should return IdTokenContent");
             IdTokenContent idTokenContent = result.get();
 
@@ -143,8 +135,6 @@ class TokenBuilderTest {
 
             // When creating an IdTokenContent
             Optional<IdTokenContent> result = tokenBuilder.createIdToken(decodedJwt);
-
-            // Then
             assertTrue(result.isEmpty(), "Should return empty Optional when body is missing");
         }
     }
@@ -165,8 +155,6 @@ class TokenBuilderTest {
 
             // When extracting claims
             Map<String, ClaimValue> claims = TokenBuilder.extractClaimsForRefreshToken(jsonObject);
-
-            // Then
             assertNotNull(claims, "Claims should not be null");
             assertFalse(claims.isEmpty(), "Claims should not be empty");
             assertEquals(3, claims.size(), "Should extract all claims");
@@ -191,8 +179,6 @@ class TokenBuilderTest {
 
             // When extracting claims
             Map<String, ClaimValue> claims = TokenBuilder.extractClaimsForRefreshToken(jsonObject);
-
-            // Then
             assertNotNull(claims, "Claims should not be null");
             assertTrue(claims.isEmpty(), "Claims should be empty");
         }

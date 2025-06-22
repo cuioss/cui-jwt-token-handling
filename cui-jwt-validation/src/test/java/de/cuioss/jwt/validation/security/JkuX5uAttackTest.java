@@ -89,8 +89,6 @@ class JkuX5uAttackTest {
         // Verify that the token is rejected
         assertThrows(TokenValidationException.class,
                 () -> tokenValidator.createAccessToken(tamperedToken));
-
-
         // For JKU header attacks, we expect SIGNATURE_VALIDATION_FAILED to be triggered
         // This makes the test deterministic by checking for a specific event
         assertEquals(1, tokenValidator.getSecurityEventCounter().getCount(SecurityEventCounter.EventType.SIGNATURE_VALIDATION_FAILED),
@@ -121,8 +119,6 @@ class JkuX5uAttackTest {
 
         // Reconstruct the token with the original signature
         String tamperedToken = tamperedHeader + "." + parts[1] + "." + parts[2];
-
-
         // Verify that the token is rejected
         assertThrows(TokenValidationException.class,
                 () -> tokenValidator.createAccessToken(tamperedToken));

@@ -61,16 +61,12 @@ class JwksLoaderFactoryTest {
     @Test
     @DisplayName("Should create HTTP loader")
     void shouldCreateHttpLoader() {
-        // Given
+
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url("https://example.com/.well-known/jwks.json")
                 .refreshIntervalSeconds(60)
                 .build();
-
-        // When
         JwksLoader loader = JwksLoaderFactory.createHttpLoader(config, securityEventCounter);
-
-        // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(HttpJwksLoader.class, loader, "Loader should be an instance of HttpJwksLoader");
         assertEquals(JwksType.HTTP, loader.getJwksType(), "Loader should have HTTP type");
@@ -80,14 +76,10 @@ class JwksLoaderFactoryTest {
     @Test
     @DisplayName("Should create file loader")
     void shouldCreateFileLoader(@TempDir Path tempDir) throws IOException {
-        // Given
+
         Path jwksFile = tempDir.resolve("jwks.json");
         Files.writeString(jwksFile, jwksContent);
-
-        // When
         JwksLoader loader = JwksLoaderFactory.createFileLoader(jwksFile.toString(), securityEventCounter);
-
-        // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.FILE, loader.getJwksType(), "Loader should have FILE type");
@@ -97,13 +89,9 @@ class JwksLoaderFactoryTest {
     @Test
     @DisplayName("Should create file loader with fallback for non-existent file")
     void shouldCreateFileLoaderWithFallbackForNonExistentFile() {
-        // Given
+
         String nonExistentFile = "non-existent-file.json";
-
-        // When
         JwksLoader loader = JwksLoaderFactory.createFileLoader(nonExistentFile, securityEventCounter);
-
-        // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.FILE, loader.getJwksType(), "Loader should have FILE type");
@@ -113,10 +101,8 @@ class JwksLoaderFactoryTest {
     @Test
     @DisplayName("Should create in-memory loader")
     void shouldCreateInMemoryLoader() {
-        // When
-        JwksLoader loader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
 
-        // Then
+        JwksLoader loader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.MEMORY, loader.getJwksType(), "Loader should have MEMORY type");
@@ -126,13 +112,9 @@ class JwksLoaderFactoryTest {
     @Test
     @DisplayName("Should create in-memory loader with fallback for invalid content")
     void shouldCreateInMemoryLoaderWithFallbackForInvalidContent() {
-        // Given
+
         String invalidContent = "invalid-json";
-
-        // When
         JwksLoader loader = JwksLoaderFactory.createInMemoryLoader(invalidContent, securityEventCounter);
-
-        // Then
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.MEMORY, loader.getJwksType(), "Loader should have MEMORY type");

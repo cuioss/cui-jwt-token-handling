@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation;
 
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -24,6 +25,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@EnableGeneratorController
 @DisplayName("Tests the TokenType enum functionality")
 class TokenTypeTest {
 
@@ -32,9 +34,8 @@ class TokenTypeTest {
     @DisplayName("Should correctly parse valid type claims")
     void shouldHandleValidTokenTypes(TokenType tokenType) {
         assertNotNull(tokenType.getTypeClaimName(), "Type claim name should not be null");
-        assertNotNull(tokenType.getMandatoryClaims(), "Mandatory claims should not be null, but can be empty");
-        assertEquals(tokenType, TokenType.fromTypClaim(tokenType.getTypeClaimName()),
-                "Should correctly parse " + tokenType.name());
+        assertNotNull(tokenType.getMandatoryClaims(), "Mandatory claims should not be null");
+        assertEquals(tokenType, TokenType.fromTypClaim(tokenType.getTypeClaimName()), "Should parse back to same token type");
     }
 
     @ParameterizedTest
@@ -42,7 +43,6 @@ class TokenTypeTest {
     @ValueSource(strings = {"invalid", "unknown", "not_a_token_type"})
     @DisplayName("Should return UNKNOWN for invalid type claims")
     void shouldDefaultToUnknown(String invalidType) {
-        assertEquals(TokenType.UNKNOWN, TokenType.fromTypClaim(invalidType),
-                "Should return UNKNOWN for invalid type: " + invalidType);
+        assertEquals(TokenType.UNKNOWN, TokenType.fromTypClaim(invalidType), "Invalid type should return UNKNOWN");
     }
 }
