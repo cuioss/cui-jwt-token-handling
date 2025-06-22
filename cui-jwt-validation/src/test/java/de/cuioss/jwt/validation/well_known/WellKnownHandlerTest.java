@@ -58,6 +58,7 @@ class WellKnownHandlerTest {
     private static final WellKnownDispatcher wellKnownDispatcher = new WellKnownDispatcher();
 
     private URL baseUrl;
+
     /**
      * Returns the WellKnownDispatcher for the ModuleDispatcher annotation.
      * This method is called by the ModuleDispatcher framework.

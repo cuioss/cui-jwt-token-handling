@@ -136,6 +136,7 @@ class HttpJwksLoaderConfigTest {
                 .adaptiveWindowSize(negativeAdaptiveWindowSize)
                 .build());
     }
+
     @Test
     @DisplayName("Should throw exception for negative background refresh percentage")
     void shouldThrowExceptionForNegativeBackgroundRefreshPercentage() {
@@ -347,6 +348,7 @@ class HttpJwksLoaderConfigTest {
                 .readTimeoutSeconds(negativeReadTimeout)
                 .build());
     }
+
     @Test
     @DisplayName("Should test toString method")
     void shouldTestToStringMethod() {

@@ -18,11 +18,15 @@ package de.cuioss.jwt.validation.domain.token;
 import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.domain.claim.ClaimName;
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
+import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
+import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
+import de.cuioss.test.valueobjects.junit5.contracts.ShouldHandleObjectContracts;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,33 +41,31 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableTestLogger
 @EnableGeneratorController
 @DisplayName("Tests IdTokenContent functionality")
-class IdTokenContentTest {
+class IdTokenContentTest implements ShouldHandleObjectContracts<IdTokenContent> {
 
     private static final String SAMPLE_TOKEN = TestTokenGenerators.idTokens().next().getRawToken();
     private static final String TEST_NAME = "Test User";
     private static final String TEST_EMAIL = "test@example.com";
     private static final List<String> TEST_AUDIENCE = List.of("client1", "client2");
 
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ID_TOKEN, count = 3)
     @DisplayName("Create IdTokenContent with valid parameters")
-    void shouldCreateIdTokenContentWithValidParameters() {
-        Map<String, ClaimValue> claims = new HashMap<>();
-        String rawToken = SAMPLE_TOKEN;
-
-        var idTokenContent = new IdTokenContent(claims, rawToken);
+    void shouldCreateIdTokenContentWithValidParameters(TestTokenHolder tokenHolder) {
+        var idTokenContent = new IdTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken());
 
         assertNotNull(idTokenContent, "IdTokenContent should not be null");
-        assertEquals(claims, idTokenContent.getClaims(), "Claims should match");
-        assertEquals(rawToken, idTokenContent.getRawToken(), "Raw token should match");
+        assertEquals(tokenHolder.getClaims(), idTokenContent.getClaims(), "Claims should match");
+        assertEquals(tokenHolder.getRawToken(), idTokenContent.getRawToken(), "Raw token should match");
         assertEquals(TokenType.ID_TOKEN, idTokenContent.getTokenType(), "Token type should be ID_TOKEN");
     }
 
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ID_TOKEN, count = 2)
     @DisplayName("Return audience correctly when present")
-    void shouldReturnAudienceCorrectlyWhenPresent() {
-        Map<String, ClaimValue> claims = new HashMap<>();
-        claims.put(ClaimName.AUDIENCE.getName(), ClaimValue.forList(TEST_AUDIENCE.toString(), TEST_AUDIENCE));
-        var idTokenContent = new IdTokenContent(claims, SAMPLE_TOKEN);
+    void shouldReturnAudienceCorrectlyWhenPresent(TestTokenHolder tokenHolder) {
+        tokenHolder.withClaim(ClaimName.AUDIENCE.getName(), ClaimValue.forList(TEST_AUDIENCE.toString(), TEST_AUDIENCE));
+        var idTokenContent = new IdTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken());
 
         List<String> audience = idTokenContent.getAudience();
 
@@ -80,12 +82,12 @@ class IdTokenContentTest {
                 "Should throw IllegalStateException for missing audience claim");
     }
 
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ID_TOKEN, count = 2)
     @DisplayName("Return name when present")
-    void shouldReturnNameWhenPresent() {
-        Map<String, ClaimValue> claims = new HashMap<>();
-        claims.put(ClaimName.NAME.getName(), ClaimValue.forPlainString(TEST_NAME));
-        var idTokenContent = new IdTokenContent(claims, SAMPLE_TOKEN);
+    void shouldReturnNameWhenPresent(TestTokenHolder tokenHolder) {
+        tokenHolder.withClaim(ClaimName.NAME.getName(), ClaimValue.forPlainString(TEST_NAME));
+        var idTokenContent = new IdTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken());
 
         Optional<String> name = idTokenContent.getName();
 
@@ -104,12 +106,12 @@ class IdTokenContentTest {
         assertTrue(name.isEmpty(), "Name should be empty");
     }
 
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ID_TOKEN, count = 2)
     @DisplayName("Return email when present")
-    void shouldReturnEmailWhenPresent() {
-        Map<String, ClaimValue> claims = new HashMap<>();
-        claims.put(ClaimName.EMAIL.getName(), ClaimValue.forPlainString(TEST_EMAIL));
-        var idTokenContent = new IdTokenContent(claims, SAMPLE_TOKEN);
+    void shouldReturnEmailWhenPresent(TestTokenHolder tokenHolder) {
+        tokenHolder.withClaim(ClaimName.EMAIL.getName(), ClaimValue.forPlainString(TEST_EMAIL));
+        var idTokenContent = new IdTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken());
 
         Optional<String> email = idTokenContent.getEmail();
 
@@ -128,4 +130,9 @@ class IdTokenContentTest {
         assertTrue(email.isEmpty(), "Email should be empty");
     }
 
+    @Override
+    public IdTokenContent getUnderTest() {
+        var tokenHolder = TestTokenGenerators.idTokens().next();
+        return new IdTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken());
+    }
 }

@@ -23,6 +23,7 @@ import de.cuioss.jwt.validation.test.generator.ScopeGenerator;
 import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
+import de.cuioss.test.valueobjects.junit5.contracts.ShouldHandleObjectContracts;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @DisplayName("AccessTokenContent")
 @EnableGeneratorController
-class AccessTokenContentTest {
+class AccessTokenContentTest implements ShouldHandleObjectContracts<AccessTokenContent> {
 
     private static final String TEST_EMAIL = "test@example.com";
 
@@ -95,6 +96,7 @@ class AccessTokenContentTest {
             default -> throw new IllegalArgumentException("Unsupported claim: " + claimName);
         };
     }
+
     @Test
     @DisplayName("Return audience when present")
     void shouldReturnAudienceWhenPresent() {
@@ -107,6 +109,7 @@ class AccessTokenContentTest {
         assertTrue(audience.isPresent(), "Audience should be present");
         assertEquals(testAudience, audience.get(), "Audience should match expected");
     }
+
     @Test
     @DisplayName("Return scopes when present")
     void shouldReturnScopesWhenPresent() {
@@ -127,31 +130,34 @@ class AccessTokenContentTest {
         assertThrows(IllegalStateException.class, accessTokenContent::getScopes,
                 "Should throw exception when scopes missing");
     }
-    @Test
+
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
     @DisplayName("Return email from claims")
-    void shouldReturnEmailFromClaims() {
-        Map<String, ClaimValue> claims = new HashMap<>();
-        claims.put(ClaimName.EMAIL.getName(), ClaimValue.forPlainString(TEST_EMAIL));
-        TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
-        var accessTokenContent = new AccessTokenContent(claims, tokenHolder.getRawToken(), null);
+    void shouldReturnEmailFromClaims(TestTokenHolder tokenHolder) {
+        tokenHolder.withClaim(ClaimName.EMAIL.getName(), ClaimValue.forPlainString(TEST_EMAIL));
+        var accessTokenContent = new AccessTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken(), null);
 
         Optional<String> email = accessTokenContent.getEmail();
 
         assertTrue(email.isPresent(), "Email should be present");
         assertEquals(TEST_EMAIL, email.get(), "Email should match expected");
     }
-    @Test
+
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Return preferred username when present")
-    void shouldReturnPreferredUsernameWhenPresent() {
+    void shouldReturnPreferredUsernameWhenPresent(TestTokenHolder tokenHolder) {
         String username = "testuser";
-        var accessTokenContent = createTokenWithClaim(
-                ClaimName.PREFERRED_USERNAME, ClaimValue.forPlainString(username));
+        tokenHolder.withClaim(ClaimName.PREFERRED_USERNAME.getName(), ClaimValue.forPlainString(username));
+        var accessTokenContent = new AccessTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken(), TEST_EMAIL);
 
         Optional<String> preferredUsername = accessTokenContent.getPreferredUsername();
 
         assertTrue(preferredUsername.isPresent(), "Preferred username should be present");
         assertEquals(username, preferredUsername.get(), "Preferred username should match");
     }
+
     @ParameterizedTest
     @MethodSource("claimTestData")
     @DisplayName("Return claim values when present")
@@ -163,6 +169,7 @@ class AccessTokenContentTest {
 
         assertEquals(testValues, values, description + " should match expected");
     }
+
     @ParameterizedTest
     @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Provide scopes when all expected are present")
@@ -191,17 +198,17 @@ class AccessTokenContentTest {
         assertFalse(result, "Should not provide scopes when some are missing");
     }
 
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
     @DisplayName("Provide empty scopes")
-    void shouldProvideEmptyScopes() {
-        List<String> testScopes = List.of("openid", "profile", "email");
-        var accessTokenContent = createTokenWithClaim(
-                ClaimName.SCOPE, ClaimValue.forList(testScopes.toString(), testScopes));
+    void shouldProvideEmptyScopes(TestTokenHolder tokenHolder) {
+        var accessTokenContent = new AccessTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken(), TEST_EMAIL);
 
         boolean result = accessTokenContent.providesScopes(Collections.emptyList());
 
         assertTrue(result, "Should provide empty scope list");
     }
+
     @Test
     @DisplayName("Return missing scopes when some are absent")
     void shouldReturnMissingScopes() {
@@ -279,5 +286,11 @@ class AccessTokenContentTest {
         assertEquals(2, missingValues.size(), "Should find 2 missing " + description);
         assertTrue(missingValues.contains(missing1), "Should contain first missing value");
         assertTrue(missingValues.contains(missing2), "Should contain second missing value");
+    }
+
+    @Override
+    public AccessTokenContent getUnderTest() {
+        TestTokenHolder tokenHolder = TestTokenGenerators.accessTokens().next();
+        return new AccessTokenContent(tokenHolder.getClaims(), tokenHolder.getRawToken(), TEST_EMAIL);
     }
 }

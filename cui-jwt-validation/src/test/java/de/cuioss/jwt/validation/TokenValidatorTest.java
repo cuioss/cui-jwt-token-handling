@@ -107,7 +107,7 @@ class TokenValidatorTest {
         }
 
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ACCESS_TOKEN)
+        @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
         @DisplayName("Fail access token validation with invalid issuer")
         void shouldFailAccessTokenValidationWithInvalidIssuer(TestTokenHolder tokenHolder) {
             tokenHolder.withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString("invalid-issuer"));
@@ -118,7 +118,7 @@ class TokenValidatorTest {
         }
 
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ID_TOKEN)
+        @TestTokenSource(value = TokenType.ID_TOKEN, count = 2)
         @DisplayName("Fail ID token validation with invalid issuer")
         void shouldFailIdTokenValidationWithInvalidIssuer(TestTokenHolder tokenHolder) {
             tokenHolder.withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString("invalid-issuer"));
@@ -151,7 +151,7 @@ class TokenValidatorTest {
         }
 
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ACCESS_TOKEN)
+        @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
         @DisplayName("Respect custom payload size limits")
         void shouldRespectCustomPayloadSizeLimits(TestTokenHolder tokenHolder) {
             ParserConfig customConfig = ParserConfig.builder()
@@ -200,7 +200,7 @@ class TokenValidatorTest {
         }
 
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ACCESS_TOKEN)
+        @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
         @DisplayName("Handle unknown issuer")
         void shouldHandleUnknownIssuer(TestTokenHolder tokenHolder) {
             tokenHolder.withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString("https://unknown-issuer.com"));
@@ -238,7 +238,7 @@ class TokenValidatorTest {
         }
 
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ACCESS_TOKEN)
+        @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
         @DisplayName("Log warning when token validation fails")
         void shouldLogWarningWhenTokenValidationFails(TestTokenHolder tokenHolder) {
             tokenHolder.withClaim(ClaimName.ISSUER.getName(), ClaimValue.forPlainString("unknown-issuer"));
@@ -251,7 +251,7 @@ class TokenValidatorTest {
         }
 
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ACCESS_TOKEN)
+        @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
         @DisplayName("Log warning when token is missing claims")
         void shouldLogWarningWhenTokenIsMissingClaims(TestTokenHolder tokenHolder) {
             tokenHolder.withoutClaim(ClaimName.SCOPE.getName());
@@ -266,7 +266,7 @@ class TokenValidatorTest {
         }
 
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ID_TOKEN)
+        @TestTokenSource(value = TokenType.ID_TOKEN, count = 2)
         @DisplayName("Log warning when ID token is missing claims")
         void shouldLogWarningWhenIdTokenIsMissingClaims(TestTokenHolder tokenHolder) {
             tokenHolder.withoutClaim(ClaimName.AUDIENCE.getName());
@@ -279,8 +279,9 @@ class TokenValidatorTest {
                     "Should indicate missing claim");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "missing required claim");
         }
+
         @ParameterizedTest
-        @TestTokenSource(value = TokenType.ACCESS_TOKEN)
+        @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
         @DisplayName("Log warning when key is not found")
         void shouldLogWarningWhenKeyIsNotFound(TestTokenHolder tokenHolder) {
             String token = tokenHolder.getRawToken();
@@ -303,4 +304,5 @@ class TokenValidatorTest {
         }
 
     }
+
 }

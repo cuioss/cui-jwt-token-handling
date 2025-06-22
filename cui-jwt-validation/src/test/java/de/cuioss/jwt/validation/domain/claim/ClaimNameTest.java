@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.domain.claim;
 
 import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
+import de.cuioss.test.valueobjects.junit5.contracts.ShouldHandleObjectContracts;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
@@ -40,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableTestLogger
 @EnableGeneratorController
 @DisplayName("Tests ClaimName functionality")
-class ClaimNameTest {
+class ClaimNameTest implements ShouldHandleObjectContracts<ClaimName> {
 
     @ParameterizedTest
     @MethodSource("provideClaimNameMapTestData")
@@ -191,6 +192,7 @@ class ClaimNameTest {
                 )
         );
     }
+
     private static JsonObject createJsonObjectWithStringClaim(String claimName, String value) {
         JsonObjectBuilder builder = Json.createObjectBuilder();
         if (value != null) {
@@ -276,11 +278,10 @@ class ClaimNameTest {
     @Test
     @DisplayName("Should find ClaimName by string name")
     void shouldFindClaimNameByString() {
-
         String issuerName = "iss";
         Optional<ClaimName> result = ClaimName.fromString(issuerName);
-        assertTrue(result.isPresent());
-        assertEquals(ClaimName.ISSUER, result.get());
+        assertTrue(result.isPresent(), "Should find ClaimName for valid string");
+        assertEquals(ClaimName.ISSUER, result.get(), "Should return correct ClaimName");
     }
 
     @Test
@@ -288,8 +289,8 @@ class ClaimNameTest {
     void shouldFindAllClaimNamesByString() {
         for (ClaimName claimName : ClaimName.values()) {
             Optional<ClaimName> result = ClaimName.fromString(claimName.getName());
-            assertTrue(result.isPresent());
-            assertEquals(claimName, result.get());
+            assertTrue(result.isPresent(), "Should find ClaimName for " + claimName.getName());
+            assertEquals(claimName, result.get(), "Should return correct ClaimName for " + claimName.getName());
         }
     }
 
@@ -299,6 +300,11 @@ class ClaimNameTest {
     @DisplayName("Should return empty Optional for null, empty, or unknown claim names")
     void shouldReturnEmptyForUnknownNames(String input) {
         Optional<ClaimName> result = ClaimName.fromString(input);
-        assertFalse(result.isPresent());
+        assertFalse(result.isPresent(), "Should return empty for unknown input: " + input);
+    }
+
+    @Override
+    public ClaimName getUnderTest() {
+        return ClaimName.ISSUER;
     }
 }

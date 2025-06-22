@@ -121,6 +121,7 @@ public class WellKnownDispatcher implements ModuleDispatcherElement {
         this.responseStrategy = ResponseStrategy.DEFAULT;
         return this;
     }
+
     /**
      * Determines the issuer URL based on the request.
      * 

@@ -70,10 +70,9 @@ class HttpJwksLoaderTest {
     @Test
     @DisplayName("Should create loader with constructor")
     void shouldCreateLoaderWithConstructor() {
-
-        assertNotNull(httpJwksLoader);
-        assertNotNull(httpJwksLoader.getConfig());
-        assertEquals(REFRESH_INTERVAL, httpJwksLoader.getConfig().getRefreshIntervalSeconds());
+        assertNotNull(httpJwksLoader, "HttpJwksLoader should not be null");
+        assertNotNull(httpJwksLoader.getConfig(), "Config should not be null");
+        assertEquals(REFRESH_INTERVAL, httpJwksLoader.getConfig().getRefreshIntervalSeconds(), "Refresh interval should match");
     }
 
     @Test
@@ -242,4 +241,5 @@ class HttpJwksLoaderTest {
                         httpJwksLoader.getConfig().getHttpHandler().getUri().toString(),
                         1)); // We expect 1 key in the test JWKS
     }
+
 }

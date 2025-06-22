@@ -48,10 +48,10 @@ class InMemoryJwksLoaderTest {
         // Create the InMemoryJwksLoader with the valid content
         inMemoryJwksLoader = JwksLoaderFactory.createInMemoryLoader(InMemoryJWKSFactory.createDefaultJwks(), securityEventCounter);
     }
+
     @Test
     @DisplayName("Should load and parse JWKS from string")
     void shouldLoadAndParseJwksFromString() {
-
         Optional<Key> key = inMemoryJwksLoader.getKeyInfo(InMemoryJWKSFactory.DEFAULT_KEY_ID).map(KeyInfo::getKey);
         assertTrue(key.isPresent(), "Key should be present for valid kid");
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Resolving key loader for in-memory JWKS data");
@@ -61,7 +61,6 @@ class InMemoryJwksLoaderTest {
     @Test
     @DisplayName("Should return empty when kid is null")
     void shouldReturnEmptyWhenKidIsNull() {
-
         Optional<Key> key = inMemoryJwksLoader.getKeyInfo(null).map(KeyInfo::getKey);
         assertFalse(key.isPresent(), "Key should not be present for null kid");
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Key ID is null or empty");
@@ -70,7 +69,6 @@ class InMemoryJwksLoaderTest {
     @Test
     @DisplayName("Should return empty when kid is not found")
     void shouldReturnEmptyWhenKidNotFound() {
-
         Optional<Key> key = inMemoryJwksLoader.getKeyInfo("unknown-kid").map(KeyInfo::getKey);
         assertFalse(key.isPresent(), "Key should not be present for unknown kid");
     }
@@ -145,4 +143,5 @@ class InMemoryJwksLoaderTest {
         Optional<Key> key = loader.getKeyInfo(InMemoryJWKSFactory.DEFAULT_KEY_ID).map(KeyInfo::getKey);
         assertTrue(key.isPresent(), "Key should be present from factory-created loader");
     }
+
 }

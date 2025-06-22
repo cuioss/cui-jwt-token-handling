@@ -156,6 +156,7 @@ class TokenClaimValidatorTest {
             assertNotNull(result, "Token content should not be null");
         }
     }
+
     @Nested
     class TokenTypeValidationTests {
         @Test

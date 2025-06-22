@@ -103,6 +103,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
         LOGGER.debug(() -> "KEYSTORE_PATH: " + TestRealm.ProvidedKeyStore.KEYSTORE_PATH);
         LOGGER.debug(() -> "PASSWORD: " + TestRealm.ProvidedKeyStore.PASSWORD);
     }
+
     @BeforeEach
     void setUp() {
         String issuerString = getIssuer(); // This is String as per KeycloakITBase
