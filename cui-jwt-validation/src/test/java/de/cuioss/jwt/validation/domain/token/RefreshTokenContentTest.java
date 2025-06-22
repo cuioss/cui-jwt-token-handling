@@ -19,7 +19,6 @@ import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimValueGenerator;
-import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.Generators;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
@@ -38,8 +37,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableGeneratorController
 @DisplayName("Tests RefreshTokenContent functionality")
 class RefreshTokenContentTest implements ShouldHandleObjectContracts<RefreshTokenContent> {
-
-    private static final String SAMPLE_TOKEN = TestTokenGenerators.refreshTokens().next().getRawToken();
 
     @ParameterizedTest
     @TestTokenSource(value = TokenType.REFRESH_TOKEN, count = 3)

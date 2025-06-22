@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.security;
 
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
@@ -27,7 +28,6 @@ import de.cuioss.test.juli.junit5.EnableTestLogger;
 import de.cuioss.tools.logging.CuiLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -76,13 +76,12 @@ class KeyInjectionAttackTest {
     private static final CuiLogger LOGGER = new CuiLogger(KeyInjectionAttackTest.class);
 
     private TokenValidator tokenValidator;
-    private TestTokenHolder validToken;
 
     @BeforeEach
     void setUp() {
 
         // Create a valid token
-        validToken = TestTokenGenerators.accessTokens().next();
+        TestTokenHolder validToken = TestTokenGenerators.accessTokens().next();
 
         // Get the issuer config from the token
         IssuerConfig issuerConfig = validToken.getIssuerConfig();
@@ -200,7 +199,7 @@ class KeyInjectionAttackTest {
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should accept token with valid KID header")
     void shouldAcceptTokenWithValidKidHeader(TestTokenHolder tokenHolder) {
         String token = tokenHolder.getRawToken();

@@ -17,22 +17,22 @@ package de.cuioss.jwt.validation.security;
 
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
-import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Base64;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for validating protection against JKU/X5U header abuse attacks.
@@ -66,7 +66,7 @@ class JkuX5uAttackTest {
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should reject tokens with JKU header pointing to malicious URL")
     void shouldRejectTokenWithJkuHeader(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();
@@ -89,7 +89,7 @@ class JkuX5uAttackTest {
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should reject tokens with X5U header pointing to malicious URL")
     void shouldRejectTokenWithX5uHeader(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();

@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.security;
 
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.AccessTokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
@@ -28,10 +29,10 @@ import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Base64;
 
@@ -74,7 +75,7 @@ class TokenValidationSecurityTest {
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should reject tokens with tampered payloads")
     void shouldRejectTokensWithTamperedPayloads(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();
@@ -89,31 +90,31 @@ class TokenValidationSecurityTest {
         String tamperedToken = parts[0] + "." + tamperedPayload + ".";
 
         assertThrows(TokenValidationException.class, () ->
-                tokenValidator.createAccessToken(tamperedToken),
+                        tokenValidator.createAccessToken(tamperedToken),
                 "Should reject token with tampered payload");
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should reject tokens with tampered signatures")
     void shouldRejectTokensWithTamperedSignatures(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();
         String tamperedToken = JwtTokenTamperingUtil.applyTamperingStrategy(validToken, TamperingStrategy.MODIFY_SIGNATURE_RANDOM_CHAR);
 
         assertThrows(TokenValidationException.class, () ->
-                tokenValidator.createAccessToken(tamperedToken),
+                        tokenValidator.createAccessToken(tamperedToken),
                 "Should reject token with tampered signature");
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should reject tokens with algorithm 'none'")
     void shouldRejectTokensWithAlgorithmNone(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();
         String tamperedToken = JwtTokenTamperingUtil.applyTamperingStrategy(validToken, TamperingStrategy.ALGORITHM_NONE);
 
         assertThrows(TokenValidationException.class, () ->
-                tokenValidator.createAccessToken(tamperedToken),
+                        tokenValidator.createAccessToken(tamperedToken),
                 "Should reject token with 'none' algorithm");
     }
 
@@ -146,7 +147,7 @@ class TokenValidationSecurityTest {
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 5)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 5)
     @DisplayName("Should accept valid tokens")
     void shouldAcceptValidTokens(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();
@@ -157,26 +158,26 @@ class TokenValidationSecurityTest {
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should reject tokens with algorithm downgrade")
     void shouldRejectTokensWithAlgorithmDowngrade(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();
         String tamperedToken = JwtTokenTamperingUtil.applyTamperingStrategy(validToken, TamperingStrategy.ALGORITHM_DOWNGRADE);
 
         assertThrows(TokenValidationException.class, () ->
-                tokenValidator.createAccessToken(tamperedToken),
+                        tokenValidator.createAccessToken(tamperedToken),
                 "Should reject token with downgraded algorithm");
     }
 
     @ParameterizedTest
-    @TestTokenSource(value = de.cuioss.jwt.validation.TokenType.ACCESS_TOKEN, count = 3)
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should reject tokens with invalid key ID")
     void shouldRejectTokensWithInvalidKeyId(TestTokenHolder tokenHolder) {
         String validToken = tokenHolder.getRawToken();
         String tamperedToken = JwtTokenTamperingUtil.applyTamperingStrategy(validToken, TamperingStrategy.INVALID_KID);
 
         assertThrows(TokenValidationException.class, () ->
-                tokenValidator.createAccessToken(tamperedToken),
+                        tokenValidator.createAccessToken(tamperedToken),
                 "Should reject token with invalid key ID");
     }
 }
