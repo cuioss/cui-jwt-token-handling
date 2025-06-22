@@ -41,7 +41,7 @@ The library's design enforces signature verification:
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Comprehensive tests for the signature validation process:
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Comprehensive tests for the signature validation process:
 ** `shouldValidateTokenWithValidSignature()` - Verifies that valid signatures are accepted
 ** `shouldRejectTokenWithInvalidSignature()` - Verifies that invalid signatures are rejected
 ** `shouldRejectTokenWithAlgorithmConfusionAttack()` - Verifies protection against algorithm confusion
@@ -66,7 +66,7 @@ The library explicitly rejects the "none" algorithm. For implementation details,
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorAlgorithmTest.java[TokenSignatureValidatorAlgorithmTest] - Tests algorithm validation
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorAlgorithmTest.java[TokenSignatureValidatorAlgorithmTest] - Tests algorithm validation
 
 === 3. Trivial Secret (Weak HMAC Keys)
 
@@ -88,8 +88,8 @@ The library provides protection against weak keys. For implementation details, s
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/security/AlgorithmPreferencesTest.java[AlgorithmPreferencesTest] - Tests algorithm preferences
-* link:../../src/test/java/de/cuioss/jwt/validation/security/KeyDisclosureVulnerabilityTest.java[KeyDisclosureVulnerabilityTest] - Tests protection against key disclosure
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/AlgorithmPreferencesTest.java[AlgorithmPreferencesTest] - Tests algorithm preferences
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/KeyDisclosureVulnerabilityTest.java[KeyDisclosureVulnerabilityTest] - Tests protection against key disclosure
 
 === 4. Algorithm Confusion (RSA to HMAC)
 
@@ -111,7 +111,7 @@ The library implements several protections against algorithm confusion attacks. 
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Tests algorithm confusion protection through `shouldRejectAlgorithmConfusionAttack()`
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Tests algorithm confusion protection through `shouldRejectAlgorithmConfusionAttack()`
 
 === 5. `kid` Injection (Key ID Manipulation)
 
@@ -140,8 +140,8 @@ The library implements several protections against Key ID injection attacks. For
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Tests rejection of tokens with invalid `kid` values in `shouldRejectTokenWhenKeyNotFound()`
-* link:../../src/test/java/de/cuioss/jwt/validation/security/KeyInjectionAttackTest.java[KeyInjectionAttackTest] - Comprehensive tests for KID injection attacks:
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidatorTest.java[TokenSignatureValidatorTest] - Tests rejection of tokens with invalid `kid` values in `shouldRejectTokenWhenKeyNotFound()`
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/KeyInjectionAttackTest.java[KeyInjectionAttackTest] - Comprehensive tests for KID injection attacks:
 ** Tests path traversal via `kid` header
 ** Tests SQL injection via `kid` header
 ** Tests null byte injection via `kid` header
@@ -168,7 +168,7 @@ The library mitigates this vulnerability by refusing to accept keys from tokens.
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/security/EmbeddedJwkAttackTest.java[EmbeddedJwkAttackTest] - Tests rejection of tokens with embedded JWK in the header
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/EmbeddedJwkAttackTest.java[EmbeddedJwkAttackTest] - Tests rejection of tokens with embedded JWK in the header
 
 === 7. JKU / X5U Header Abuse
 
@@ -192,7 +192,7 @@ The library prevents JKU/X5U header abuse by not following arbitrary URLs in tok
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/security/JkuX5uAttackTest.java[JkuX5uAttackTest] - Tests rejection of tokens with JKU or X5U headers pointing to malicious URLs
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/JkuX5uAttackTest.java[JkuX5uAttackTest] - Tests rejection of tokens with JKU or X5U headers pointing to malicious URLs
 
 === 8. CVE-2022-21449 (Psychic Signature)
 
@@ -214,7 +214,7 @@ The library is protected against the "Psychic Signature" vulnerability. For impl
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/security/PsychicSignatureAttackTest.java[PsychicSignatureAttackTest] - Tests rejection of tokens with all-zero ECDSA signatures (ES256, ES384, ES512)
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/PsychicSignatureAttackTest.java[PsychicSignatureAttackTest] - Tests rejection of tokens with all-zero ECDSA signatures (ES256, ES384, ES512)
 
 == Summary and Recommendations
 

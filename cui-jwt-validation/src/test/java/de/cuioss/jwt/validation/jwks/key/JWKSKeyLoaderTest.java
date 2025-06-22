@@ -58,30 +58,24 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should parse JWKS content")
         void shouldParseJwksContent() {
-            // When
-            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo(TEST_KID);
 
-            // Then
+            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo(TEST_KID);
             assertTrue(keyInfo.isPresent(), "Key info should be present");
         }
 
         @Test
         @DisplayName("Should get first key when available")
         void shouldGetFirstKeyWhenAvailable() {
-            // When
-            Optional<KeyInfo> keyInfo = keyLoader.getFirstKeyInfo();
 
-            // Then
+            Optional<KeyInfo> keyInfo = keyLoader.getFirstKeyInfo();
             assertTrue(keyInfo.isPresent(), "First key info should be present");
         }
 
         @Test
         @DisplayName("Should return correct keySet")
         void shouldReturnCorrectKeySet() {
-            // When
-            var keySet = keyLoader.keySet();
 
-            // Then
+            var keySet = keyLoader.keySet();
             assertFalse(keySet.isEmpty(), "KeySet should not be empty");
             assertTrue(keySet.contains(TEST_KID), "KeySet should contain the test key ID");
             assertEquals(1, keySet.size(), "KeySet should contain exactly one key");
@@ -94,10 +88,8 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should return empty when kid is null")
         void shouldReturnEmptyWhenKidIsNull() {
-            // When
-            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo(null);
 
-            // Then
+            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo(null);
             assertFalse(keyInfo.isPresent(), "Key info should not be present when kid is null");
             // Note: Log assertion removed as it's not essential to the test's purpose
         }
@@ -105,27 +97,21 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should return empty when kid is not found")
         void shouldReturnEmptyWhenKidNotFound() {
-            // When
-            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo("unknown-kid");
 
-            // Then
+            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo("unknown-kid");
             assertFalse(keyInfo.isPresent(), "Key info should not be present when kid is not found");
         }
 
         @Test
         @DisplayName("Should handle invalid JWKS format")
         void shouldHandleInvalidJwksFormat() {
-            // Given
+
             String invalidJwksContent = InMemoryJWKSFactory.createInvalidJson();
             JWKSKeyLoader invalidLoader = JWKSKeyLoader.builder()
                     .originalString(invalidJwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // When
             Optional<KeyInfo> keyInfo = invalidLoader.getKeyInfo(TEST_KID);
-
-            // Then
             assertFalse(keyInfo.isPresent(), "Key info should not be present when JWKS is invalid");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, "Failed to parse JWKS JSON");
         }
@@ -133,17 +119,13 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should handle missing required fields in JWK")
         void shouldHandleMissingRequiredFieldsInJwk() {
-            // Given
+
             String missingFieldsJwksContent = InMemoryJWKSFactory.createJwksWithMissingFields(TEST_KID);
             JWKSKeyLoader missingFieldsLoader = JWKSKeyLoader.builder()
                     .originalString(missingFieldsJwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // When
             Optional<KeyInfo> keyInfo = missingFieldsLoader.getKeyInfo(TEST_KID);
-
-            // Then
             assertFalse(keyInfo.isPresent(), "Key info should not be present when JWK is missing required fields");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Failed to parse RSA key");
         }
@@ -155,63 +137,49 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should store original JWKS content")
         void shouldStoreOriginalJwksContent() {
-            // When
-            String originalString = keyLoader.getOriginalString();
 
-            // Then
+            String originalString = keyLoader.getOriginalString();
             assertEquals(jwksContent, originalString, "Original JWKS content should be stored");
         }
 
         @Test
         @DisplayName("Should store ETag value")
         void shouldStoreEtagValue() {
-            // When
-            String etag = keyLoader.getEtag();
 
-            // Then
+            String etag = keyLoader.getEtag();
             assertEquals(TEST_ETAG, etag, "ETag value should be stored");
         }
 
         @Test
         @DisplayName("Should return null for ETag when not provided")
         void shouldReturnNullForEtagWhenNotProvided() {
-            // Given
+
             JWKSKeyLoader loaderWithoutEtag = JWKSKeyLoader.builder()
                     .originalString(jwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // When
             String etag = loaderWithoutEtag.getEtag();
-
-            // Then
             assertNull(etag, "ETag should be null when not provided");
         }
 
         @Test
         @DisplayName("Should report not empty when keys are present")
         void shouldReportNotEmptyWhenKeysArePresent() {
-            // When
-            boolean notEmpty = keyLoader.isNotEmpty();
 
-            // Then
+            boolean notEmpty = keyLoader.isNotEmpty();
             assertTrue(notEmpty, "Loader should report not empty when keys are present");
         }
 
         @Test
         @DisplayName("Should report empty when no keys are present")
         void shouldReportEmptyWhenNoKeysArePresent() {
-            // Given
+
             String emptyJwksContent = "{}";
             JWKSKeyLoader emptyLoader = JWKSKeyLoader.builder()
                     .originalString(emptyJwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // When
             boolean notEmpty = emptyLoader.isNotEmpty();
-
-            // Then
             assertFalse(notEmpty, "Loader should report empty when no keys are present");
         }
     }
@@ -222,23 +190,19 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should use custom ParserConfig")
         void shouldUseCustomParserConfig() {
-            // Given
+
             ParserConfig customConfig = ParserConfig.builder()
                     .maxPayloadSize(1024)
                     .maxStringSize(512)
                     .maxArraySize(10)
                     .maxDepth(5)
                     .build();
-
-            // When
             JWKSKeyLoader loaderWithCustomConfig = JWKSKeyLoader.builder()
                     .originalString(jwksContent)
                     .etag(TEST_ETAG)
                     .parserConfig(customConfig)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // Then
             assertEquals(customConfig, loaderWithCustomConfig.getParserConfig(),
                     "Loader should use the provided ParserConfig");
             assertTrue(loaderWithCustomConfig.isNotEmpty(),
@@ -248,7 +212,7 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should reject JWKS content exceeding maximum size")
         void shouldRejectJwksContentExceedingMaximumSize() {
-            // Given
+
             int maxSize = 100; // Small size for testing
             ParserConfig restrictiveConfig = ParserConfig.builder()
                     .maxPayloadSize(maxSize)
@@ -256,17 +220,13 @@ class JWKSKeyLoaderTest {
 
             // Create a large JWKS content that exceeds the maximum size
             // Add enough padding to exceed maxSize
-
-            // When
             JWKSKeyLoader loader = JWKSKeyLoader.builder()
                     .originalString("{\"keys\":[" + "\"x\":\"" + "a".repeat(maxSize) + "\"}]}"
-                    // When
+
                     )
                     .parserConfig(restrictiveConfig)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // Then
             assertFalse(loader.isNotEmpty(), "Loader should reject content exceeding maximum size");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, JWKS_CONTENT_SIZE_EXCEEDED.resolveIdentifierString());
         }
@@ -279,8 +239,6 @@ class JWKSKeyLoaderTest {
                     .originalString(jwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // Then
             assertNotNull(defaultLoader.getParserConfig(), "Default ParserConfig should not be null");
             assertEquals(ParserConfig.DEFAULT_MAX_PAYLOAD_SIZE,
                     defaultLoader.getParserConfig().getMaxPayloadSize(),
@@ -294,7 +252,7 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should be equal when content, etag, and ParserConfig are the same")
         void shouldBeEqualWhenContentAndEtagAreSame() {
-            // Given
+
             ParserConfig config = keyLoader.getParserConfig();
             JWKSKeyLoader sameLoader = JWKSKeyLoader.builder()
                     .originalString(jwksContent)
@@ -302,8 +260,6 @@ class JWKSKeyLoaderTest {
                     .parserConfig(config)
                     .securityEventCounter(securityEventCounter)
                     .build();
-
-            // When/Then
             assertEquals(keyLoader, sameLoader, "Loaders with same content, etag, and ParserConfig should be equal");
             assertEquals(keyLoader.hashCode(), sameLoader.hashCode(), "Hash codes should be equal");
         }
@@ -311,15 +267,13 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should not be equal when content is different")
         void shouldNotBeEqualWhenContentIsDifferent() {
-            // Given
+
             String differentContent = InMemoryJWKSFactory.createValidJwksWithKeyId("different-kid");
             JWKSKeyLoader differentLoader = JWKSKeyLoader.builder()
                     .originalString(differentContent)
                     .etag(TEST_ETAG)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // When/Then
             assertNotEquals(keyLoader, differentLoader, "Loaders with different content should not be equal");
             assertNotEquals(keyLoader.hashCode(), differentLoader.hashCode(), "Hash codes should not be equal");
         }
@@ -327,14 +281,12 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should not be equal when etag is different")
         void shouldNotBeEqualWhenEtagIsDifferent() {
-            // Given
+
             JWKSKeyLoader differentEtagLoader = JWKSKeyLoader.builder()
                     .originalString(jwksContent)
                     .etag("different-etag")
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // When/Then
             assertNotEquals(keyLoader, differentEtagLoader, "Loaders with different etags should not be equal");
             assertNotEquals(keyLoader.hashCode(), differentEtagLoader.hashCode(), "Hash codes should not be equal");
         }
@@ -342,7 +294,7 @@ class JWKSKeyLoaderTest {
         @Test
         @DisplayName("Should not be equal when ParserConfig is different")
         void shouldNotBeEqualWhenParserConfigIsDifferent() {
-            // Given
+
             ParserConfig customConfig = ParserConfig.builder()
                     .maxPayloadSize(1024)
                     .build();
@@ -352,8 +304,6 @@ class JWKSKeyLoaderTest {
                     .parserConfig(customConfig)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
-
-            // When/Then
             assertNotEquals(keyLoader, differentConfigLoader, "Loaders with different ParserConfig should not be equal");
             assertNotEquals(keyLoader.hashCode(), differentConfigLoader.hashCode(), "Hash codes should not be equal");
         }

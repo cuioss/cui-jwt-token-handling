@@ -27,6 +27,7 @@ import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.InMemoryKeyMaterialHandler;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
@@ -58,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @see <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/security.adoc">Security Specification</a>
  */
 @EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
+@EnableGeneratorController
 @DisplayName("Tests TokenSignatureValidator")
 class TokenSignatureValidatorTest {
 
@@ -81,7 +83,7 @@ class TokenSignatureValidatorTest {
 
         // Parse the validation
         DecodedJwt decodedJwt = jwtParser.decode(token);
-        assertNotNull(decodedJwt, "Token should be decoded successfully");
+        assertNotNull(decodedJwt, "Decoded JWT should not be null");
 
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
@@ -91,8 +93,7 @@ class TokenSignatureValidatorTest {
         TokenSignatureValidator validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
 
         // Validate the signature - should not throw an exception
-        assertDoesNotThrow(() -> validator.validateSignature(decodedJwt),
-                "Token with valid signature should be validated without exceptions");
+        assertDoesNotThrow(() -> validator.validateSignature(decodedJwt));
     }
 
     @Test
@@ -119,7 +120,7 @@ class TokenSignatureValidatorTest {
 
         // Parse the tampered validation
         DecodedJwt decodedJwt = jwtParser.decode(tamperedToken);
-        assertNotNull(decodedJwt, "Tampered validation should be decoded successfully");
+        assertNotNull(decodedJwt, "Decoded JWT should not be null");
 
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
@@ -130,19 +131,16 @@ class TokenSignatureValidatorTest {
 
         // Validate the signature - should throw an exception
         TokenValidationException exception = assertThrows(TokenValidationException.class,
-                () -> validator.validateSignature(decodedJwt),
-                "Token with invalid signature should be rejected");
+                () -> validator.validateSignature(decodedJwt));
 
         // Verify the exception has the correct event type
-        assertEquals(SecurityEventCounter.EventType.SIGNATURE_VALIDATION_FAILED, exception.getEventType(),
-                "Exception should have SIGNATURE_VALIDATION_FAILED event type");
+        assertEquals(SecurityEventCounter.EventType.SIGNATURE_VALIDATION_FAILED, exception.getEventType());
 
         // Verify log message
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Invalid signature");
 
         // Verify security event was recorded
-        assertTrue(securityEventCounter.getCount(SecurityEventCounter.EventType.SIGNATURE_VALIDATION_FAILED) > initialCount,
-                "SIGNATURE_VALIDATION_FAILED event should be incremented");
+        assertTrue(securityEventCounter.getCount(SecurityEventCounter.EventType.SIGNATURE_VALIDATION_FAILED) > initialCount);
     }
 
     @Test
@@ -156,7 +154,7 @@ class TokenSignatureValidatorTest {
 
         // Parse the validation
         DecodedJwt decodedJwt = jwtParser.decode(token);
-        assertNotNull(decodedJwt, "Token should be decoded successfully");
+        assertNotNull(decodedJwt, "Decoded JWT should not be null");
 
         // Create an in-memory JwksLoader with a different key ID
         String jwksContent = InMemoryJWKSFactory.createValidJwksWithKeyId("different-key-id");
@@ -167,19 +165,16 @@ class TokenSignatureValidatorTest {
 
         // Validate the signature - should throw an exception
         TokenValidationException exception = assertThrows(TokenValidationException.class,
-                () -> validator.validateSignature(decodedJwt),
-                "Token with unknown key ID should be rejected");
+                () -> validator.validateSignature(decodedJwt));
 
         // Verify the exception has the correct event type
-        assertEquals(SecurityEventCounter.EventType.KEY_NOT_FOUND, exception.getEventType(),
-                "Exception should have KEY_NOT_FOUND event type");
+        assertEquals(SecurityEventCounter.EventType.KEY_NOT_FOUND, exception.getEventType());
 
         // Verify log message
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "No key found with ID");
 
         // Verify security event was recorded
-        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.KEY_NOT_FOUND),
-                "KEY_NOT_FOUND event should be incremented");
+        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.KEY_NOT_FOUND));
     }
 
     @Test
@@ -193,7 +188,7 @@ class TokenSignatureValidatorTest {
 
         // Parse the validation
         DecodedJwt decodedJwt = jwtParser.decode(token);
-        assertNotNull(decodedJwt, "Token should be decoded successfully");
+        assertNotNull(decodedJwt, "Decoded JWT should not be null");
 
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
@@ -204,19 +199,16 @@ class TokenSignatureValidatorTest {
 
         // Validate the signature - should throw an exception
         TokenValidationException exception = assertThrows(TokenValidationException.class,
-                () -> validator.validateSignature(decodedJwt),
-                "Token with missing kid should be rejected");
+                () -> validator.validateSignature(decodedJwt));
 
         // Verify the exception has the correct event type
-        assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType(),
-                "Exception should have MISSING_CLAIM event type");
+        assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType());
 
         // Verify log message
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Token is missing required claim: kid");
 
         // Verify security event was recorded
-        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM),
-                "MISSING_CLAIM event should be incremented");
+        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM));
     }
 
     @Test
@@ -231,7 +223,7 @@ class TokenSignatureValidatorTest {
 
         // Parse the validation
         DecodedJwt decodedJwt = jwtParser.decode(token);
-        assertNotNull(decodedJwt, "Token should be decoded successfully");
+        assertNotNull(decodedJwt, "Decoded JWT should not be null");
 
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
@@ -242,19 +234,16 @@ class TokenSignatureValidatorTest {
 
         // Validate the signature - should throw an exception
         TokenValidationException exception = assertThrows(TokenValidationException.class,
-                () -> validator.validateSignature(decodedJwt),
-                "Token with algorithm confusion should be rejected");
+                () -> validator.validateSignature(decodedJwt));
 
         // Verify the exception has the correct event type
-        assertEquals(SecurityEventCounter.EventType.KEY_NOT_FOUND, exception.getEventType(),
-                "Exception should have KEY_NOT_FOUND event type");
+        assertEquals(SecurityEventCounter.EventType.KEY_NOT_FOUND, exception.getEventType());
 
         // Verify log message
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "No key found with ID: wrong-key-id");
 
         // Verify security event was recorded
-        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.KEY_NOT_FOUND),
-                "KEY_NOT_FOUND event should be incremented");
+        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.KEY_NOT_FOUND));
     }
 
     @Test
@@ -268,7 +257,7 @@ class TokenSignatureValidatorTest {
 
         // Parse the validation
         DecodedJwt decodedJwt = jwtParser.decode(token);
-        assertNotNull(decodedJwt, "Token should be decoded successfully");
+        assertNotNull(decodedJwt, "Decoded JWT should not be null");
 
         // Create a custom JwksLoader that returns a key with incompatible algorithm
         JwksLoader jwksLoader = new JwksLoader() {
@@ -311,19 +300,16 @@ class TokenSignatureValidatorTest {
 
         // Validate the signature - should throw an exception
         TokenValidationException exception = assertThrows(TokenValidationException.class,
-                () -> validator.validateSignature(decodedJwt),
-                "Token with algorithm mismatch should be rejected");
+                () -> validator.validateSignature(decodedJwt));
 
         // Verify the exception has the correct event type
-        assertEquals(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM, exception.getEventType(),
-                "Exception should have UNSUPPORTED_ALGORITHM event type");
+        assertEquals(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM, exception.getEventType());
 
         // Verify log message
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Unsupported algorithm");
 
         // Verify security event was recorded
-        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM),
-                "UNSUPPORTED_ALGORITHM event should be incremented");
+        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM));
     }
 
     /**

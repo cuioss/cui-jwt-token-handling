@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.domain.claim;
 
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests ClaimValueType functionality")
 class ClaimValueTypeTest {
 
@@ -29,11 +31,11 @@ class ClaimValueTypeTest {
     @DisplayName("Should have all expected enum values")
     void shouldHaveAllExpectedValues() {
         // Given, When, Then
-        assertEquals(3, ClaimValueType.values().length, "Should have exactly 3 enum values");
+        assertEquals(3, ClaimValueType.values().length);
 
-        assertNotNull(ClaimValueType.STRING);
-        assertNotNull(ClaimValueType.STRING_LIST);
-        assertNotNull(ClaimValueType.DATETIME);
+        assertNotNull(ClaimValueType.STRING, "STRING enum value should not be null");
+        assertNotNull(ClaimValueType.STRING_LIST, "STRING_LIST enum value should not be null");
+        assertNotNull(ClaimValueType.DATETIME, "DATETIME enum value should not be null");
     }
 
     @Test

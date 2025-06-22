@@ -38,7 +38,7 @@ The library has implemented protections against client confusion attacks. For im
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/ClientConfusionAttackTest.java[ClientConfusionAttackTest] - Tests specifically for client confusion attacks:
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/ClientConfusionAttackTest.java[ClientConfusionAttackTest] - Tests specifically for client confusion attacks:
 ** `verify_azp_validation()` - Verifies that tokens with valid `azp` claims are accepted
 ** `verify_azp_validation_failure()` - Verifies that tokens with invalid `azp` claims are rejected
 ** `verify_different_client_token_rejected()` - Verifies that tokens from different clients are rejected
@@ -129,7 +129,7 @@ The library enforces validation of the `sub` claim to mitigate mutable claims at
 
 ==== Test Coverage
 
-* link:../../src/test/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidatorTest.java[TokenClaimValidatorTest] - Tests specifically for mutable claims validation:
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidatorTest.java[TokenClaimValidatorTest] - Tests specifically for mutable claims validation:
 ** `shouldValidateTokenWithValidSubjectClaim()` - Verifies that tokens with valid subject claims are accepted
 ** `shouldFailValidationForTokenWithMissingSubjectClaim()` - Verifies that tokens with missing subject claims are rejected
 ** `shouldValidateTokenWithEmptySubjectClaim()` - Documents current behavior with empty subject claims

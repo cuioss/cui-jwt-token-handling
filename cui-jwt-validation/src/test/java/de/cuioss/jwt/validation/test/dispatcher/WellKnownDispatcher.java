@@ -122,7 +122,6 @@ public class WellKnownDispatcher implements ModuleDispatcherElement {
         return this;
     }
 
-
     /**
      * Determines the issuer URL based on the request.
      * 

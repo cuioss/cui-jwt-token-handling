@@ -35,11 +35,9 @@ class BouncyCastleProviderSingletonTest {
     @Test
     @DisplayName("Should return the same instance on multiple calls")
     void shouldReturnSameInstance() {
-        // When
+
         BouncyCastleProviderSingleton instance1 = BouncyCastleProviderSingleton.getInstance();
         BouncyCastleProviderSingleton instance2 = BouncyCastleProviderSingleton.getInstance();
-
-        // Then
         assertNotNull(instance1, "Instance should not be null");
         assertSame(instance1, instance2, "Multiple calls should return the same instance");
     }
@@ -47,20 +45,16 @@ class BouncyCastleProviderSingletonTest {
     @Test
     @DisplayName("Should return the correct provider name")
     void shouldReturnCorrectProviderName() {
-        // When
-        String providerName = BouncyCastleProviderSingleton.getInstance().getProviderName();
 
-        // Then
+        String providerName = BouncyCastleProviderSingleton.getInstance().getProviderName();
         assertEquals(BouncyCastleProvider.PROVIDER_NAME, providerName, "Provider name should match BouncyCastleProvider.PROVIDER_NAME");
     }
 
     @Test
     @DisplayName("Should return a valid provider instance")
     void shouldReturnValidProvider() {
-        // When
-        Provider provider = BouncyCastleProviderSingleton.getInstance().getProvider();
 
-        // Then
+        Provider provider = BouncyCastleProviderSingleton.getInstance().getProvider();
         assertNotNull(provider, "Provider should not be null");
         assertEquals(BouncyCastleProvider.PROVIDER_NAME, provider.getName(), "Provider name should match BouncyCastleProvider.PROVIDER_NAME");
     }
@@ -68,10 +62,8 @@ class BouncyCastleProviderSingletonTest {
     @Test
     @DisplayName("Should register the provider with the JVM security system")
     void shouldRegisterProviderWithJvm() {
-        // When
-        assertNotNull(BouncyCastleProviderSingleton.getInstance()); // Ensure provider is registered
 
-        // Then
+        assertNotNull(BouncyCastleProviderSingleton.getInstance()); // Ensure provider is registered
         Provider registeredProvider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME);
         assertNotNull(registeredProvider, "Provider should be registered with the JVM security system");
         assertEquals(BouncyCastleProvider.PROVIDER_NAME, registeredProvider.getName(), "Registered provider name should match BouncyCastleProvider.PROVIDER_NAME");
@@ -80,18 +72,14 @@ class BouncyCastleProviderSingletonTest {
     @Test
     @DisplayName("Should use existing provider if already registered")
     void shouldUseExistingProvider() {
-        // Given
+
         Provider existingProvider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME);
         if (existingProvider == null) {
             // If not already registered, register it
             Security.addProvider(new BouncyCastleProvider());
             existingProvider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME);
         }
-
-        // When
         Provider provider = BouncyCastleProviderSingleton.getInstance().getProvider();
-
-        // Then
         assertNotNull(provider, "Provider should not be null");
         assertEquals(existingProvider.getName(), provider.getName(), "Provider name should match existing provider");
     }

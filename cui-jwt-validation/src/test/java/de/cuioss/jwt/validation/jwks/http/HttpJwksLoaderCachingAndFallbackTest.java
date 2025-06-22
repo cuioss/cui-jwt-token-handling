@@ -81,7 +81,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
         @Test
         @DisplayName("Should handle HTTP 304 Not Modified response")
         void shouldHandleHttp304NotModifiedResponse() {
-            // Given
+
             // First request to populate the cache
             Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
@@ -91,8 +91,6 @@ class HttpJwksLoaderCachingAndFallbackTest {
 
             // When - make another request
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
-
-            // Then
             assertTrue(keyInfo.isPresent(), "Key info should be present even with 304 response");
             // The key should still be available even though the server returned 304
             assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
@@ -101,7 +99,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
         @Test
         @DisplayName("Should include If-None-Match header when ETag is available")
         void shouldIncludeIfNoneMatchHeaderWhenEtagIsAvailable() {
-            // Given
+
             // First request to populate the cache with ETag
             httpJwksLoader.getKeyInfo(TEST_KID);
 
@@ -113,8 +111,6 @@ class HttpJwksLoaderCachingAndFallbackTest {
 
             // When - make another request
             httpJwksLoader.getKeyInfo(TEST_KID);
-
-            // Then
             assertTrue(moduleDispatcher.wasIfNoneMatchHeaderPresent(), "If-None-Match header should be present");
         }
     }
@@ -130,7 +126,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
         @Test
         @DisplayName("Should reuse existing loader when content is unchanged")
         void shouldReuseExistingLoaderWhenContentUnchanged() {
-            // Given
+
             // First request to populate the cache
             Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
@@ -140,8 +136,6 @@ class HttpJwksLoaderCachingAndFallbackTest {
 
             // When - make another request
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
-
-            // Then
             assertTrue(keyInfo.isPresent(), "Key info should be present");
             // The key should still be available and be the same as the initial key
             assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
@@ -150,7 +144,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
         @Test
         @DisplayName("Should handle content changes")
         void shouldCreateNewLoaderWhenContentChanges() {
-            // Given
+
             // First request to populate the cache
             Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
@@ -163,8 +157,6 @@ class HttpJwksLoaderCachingAndFallbackTest {
 
             // When - make another request for the same key
             Optional<KeyInfo> refreshedKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
-
-            // Then
             // The key should still be available
             assertTrue(refreshedKeyInfo.isPresent(), "Refreshed key info should be present");
             // Verify that a new request was made to the server
@@ -184,7 +176,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
         @Test
         @DisplayName("Should fallback to last valid result when server returns error")
         void shouldFallbackToLastValidResultWhenServerReturnsError() {
-            // Given
+
             // First request to populate the cache
             Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
@@ -194,8 +186,6 @@ class HttpJwksLoaderCachingAndFallbackTest {
 
             // When - make another request
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
-
-            // Then
             // The key should still be available even though the server returned an error
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
@@ -205,7 +195,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
         @Test
         @DisplayName("Should fallback to last valid result when server returns empty JWKS")
         void shouldFallbackToLastValidResultWhenServerReturnsEmptyJwks() {
-            // Given
+
             // First request to populate the cache
             Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
@@ -215,8 +205,6 @@ class HttpJwksLoaderCachingAndFallbackTest {
 
             // When - make another request
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
-
-            // Then
             // The key should still be available even though the server returned an empty JWKS
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
@@ -226,7 +214,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
         @Test
         @DisplayName("Should fallback to last valid result when connection fails")
         void shouldFallbackToLastValidResultWhenConnectionFails() {
-            // Given
+
             // First request to populate the cache
             Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
@@ -236,8 +224,6 @@ class HttpJwksLoaderCachingAndFallbackTest {
 
             // When - make another request
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
-
-            // Then
             // The key should still be available even though the connection failed
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key

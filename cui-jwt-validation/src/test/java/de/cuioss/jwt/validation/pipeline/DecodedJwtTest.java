@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.pipeline;
 
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for {@link DecodedJwt}.
  */
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests for DecodedJwt")
 class DecodedJwtTest {
 
@@ -40,14 +42,10 @@ class DecodedJwtTest {
     @Test
     @DisplayName("Should create DecodedJwt with all values")
     void shouldCreateDecodedJwtWithAllValues() {
-        // Given
+
         JsonObject header = createTestHeader();
         JsonObject body = createTestBody();
-
-        // When
         DecodedJwt jwt = new DecodedJwt(header, body, SIGNATURE, PARTS, RAW_TOKEN);
-
-        // Then
         assertTrue(jwt.getHeader().isPresent());
         assertEquals(header, jwt.getHeader().get());
 
@@ -73,10 +71,8 @@ class DecodedJwtTest {
     @Test
     @DisplayName("Should create DecodedJwt with null values")
     void shouldCreateDecodedJwtWithNullValues() {
-        // When
-        DecodedJwt jwt = new DecodedJwt(null, null, null, PARTS, RAW_TOKEN);
 
-        // Then
+        DecodedJwt jwt = new DecodedJwt(null, null, null, PARTS, RAW_TOKEN);
         assertFalse(jwt.getHeader().isPresent());
         assertFalse(jwt.getBody().isPresent());
         assertFalse(jwt.getSignature().isPresent());
@@ -90,14 +86,10 @@ class DecodedJwtTest {
     @Test
     @DisplayName("Should create DecodedJwt with empty header and body")
     void shouldCreateDecodedJwtWithEmptyHeaderAndBody() {
-        // Given
+
         JsonObject emptyHeader = Json.createObjectBuilder().build();
         JsonObject emptyBody = Json.createObjectBuilder().build();
-
-        // When
         DecodedJwt jwt = new DecodedJwt(emptyHeader, emptyBody, SIGNATURE, PARTS, RAW_TOKEN);
-
-        // Then
         assertTrue(jwt.getHeader().isPresent());
         assertEquals(emptyHeader, jwt.getHeader().get());
 
@@ -118,11 +110,9 @@ class DecodedJwtTest {
     @Test
     @DisplayName("Should create DecodedJwt using builder")
     void shouldCreateDecodedJwtUsingBuilder() {
-        // Given
+
         JsonObject header = createTestHeader();
         JsonObject body = createTestBody();
-
-        // When
         DecodedJwt jwt = DecodedJwt.builder()
                 .header(header)
                 .body(body)
@@ -133,8 +123,6 @@ class DecodedJwtTest {
                 .parts(PARTS)
                 .rawToken(RAW_TOKEN)
                 .build();
-
-        // Then
         assertTrue(jwt.getHeader().isPresent());
         assertEquals(header, jwt.getHeader().get());
 
@@ -160,7 +148,7 @@ class DecodedJwtTest {
     @Test
     @DisplayName("Should have proper equals and hashCode")
     void shouldHaveProperEqualsAndHashCode() {
-        // Given
+
         JsonObject header1 = createTestHeader();
         JsonObject body1 = createTestBody();
         DecodedJwt jwt1 = new DecodedJwt(header1, body1, SIGNATURE, PARTS, RAW_TOKEN);
@@ -168,8 +156,6 @@ class DecodedJwtTest {
         JsonObject header2 = createTestHeader();
         JsonObject body2 = createTestBody();
         DecodedJwt jwt2 = new DecodedJwt(header2, body2, SIGNATURE, PARTS, RAW_TOKEN);
-
-        // Then
         assertEquals(jwt1, jwt2);
         assertEquals(jwt1.hashCode(), jwt2.hashCode());
     }
@@ -177,16 +163,12 @@ class DecodedJwtTest {
     @Test
     @DisplayName("Should have proper toString")
     void shouldHaveProperToString() {
-        // Given
+
         JsonObject header = createTestHeader();
         JsonObject body = createTestBody();
         DecodedJwt jwt = new DecodedJwt(header, body, SIGNATURE, PARTS, RAW_TOKEN);
-
-        // When
         String toString = jwt.toString();
-
-        // Then
-        assertNotNull(toString);
+        assertNotNull(toString, "toString() result should not be null");
         assertTrue(toString.contains(ISSUER));
         assertTrue(toString.contains(KID));
         assertTrue(toString.contains(ALG));

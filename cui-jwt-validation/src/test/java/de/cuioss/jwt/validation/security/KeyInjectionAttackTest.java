@@ -17,15 +17,17 @@ package de.cuioss.jwt.validation.security;
 
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
+import de.cuioss.jwt.validation.test.junit.TestTokenSource;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import de.cuioss.tools.logging.CuiLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -67,24 +69,22 @@ import static org.junit.jupiter.api.Assertions.*;
  * security event counters.
  */
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("KID Injection Attack Tests")
 class KeyInjectionAttackTest {
 
     private static final CuiLogger LOGGER = new CuiLogger(KeyInjectionAttackTest.class);
 
     private TokenValidator tokenValidator;
-    private TestTokenHolder validToken;
 
     @BeforeEach
     void setUp() {
 
         // Create a valid token
-        validToken = TestTokenGenerators.accessTokens().next();
+        TestTokenHolder validToken = TestTokenGenerators.accessTokens().next();
 
         // Get the issuer config from the token
         IssuerConfig issuerConfig = validToken.getIssuerConfig();
-
-
         // Create the token validator
         ParserConfig config = ParserConfig.builder().build();
         tokenValidator = new TokenValidator(config, issuerConfig);
@@ -198,22 +198,16 @@ class KeyInjectionAttackTest {
                 "Security event counter should be incremented for " + expectedEventType);
     }
 
-
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 3)
     @DisplayName("Should accept token with valid KID header")
-    void shouldAcceptTokenWithValidKidHeader() {
-        // Use the valid token directly
-        String token = validToken.getRawToken();
+    void shouldAcceptTokenWithValidKidHeader(TestTokenHolder tokenHolder) {
+        String token = tokenHolder.getRawToken();
 
         LOGGER.debug("Using valid token: %s", token);
 
-        // Verify that the token is accepted
         var accessToken = tokenValidator.createAccessToken(token);
-
-        // Verify that the token is valid
         assertNotNull(accessToken, "Token with valid KID should be accepted");
-
-        // Verify that no security events were recorded
         assertEquals(0, tokenValidator.getSecurityEventCounter().getCount(SecurityEventCounter.EventType.KEY_NOT_FOUND),
                 "No KEY_NOT_FOUND security events should be recorded for valid token");
     }

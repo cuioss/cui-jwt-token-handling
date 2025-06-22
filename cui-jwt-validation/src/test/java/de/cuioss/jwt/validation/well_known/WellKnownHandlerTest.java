@@ -59,7 +59,6 @@ class WellKnownHandlerTest {
 
     private URL baseUrl;
 
-
     /**
      * Returns the WellKnownDispatcher for the ModuleDispatcher annotation.
      * This method is called by the ModuleDispatcher framework.
@@ -100,17 +99,13 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should successfully fetch and parse discovery document")
         void shouldFetchAndParseDiscoveryDocument(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 
@@ -207,15 +202,13 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception when server returns error")
         void shouldThrowExceptionWhenServerReturnsError(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             wellKnownDispatcher.returnError();
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
 
             var builder = WellKnownHandler.builder().url(wellKnownUrl);
-
-
             // When/Then - Verify that the expected exception is thrown
             assertThrows(
                     WellKnownDiscoveryException.class, builder::build,
@@ -229,15 +222,13 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception for invalid JSON response")
         void shouldThrowExceptionForInvalidJsonResponse(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             wellKnownDispatcher.returnInvalidJson();
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
 
             var builder = WellKnownHandler.builder().url(wellKnownUrl);
-
-
             // When/Then - Verify that the expected exception is thrown
             assertThrows(
                     WellKnownDiscoveryException.class, builder::build,
@@ -252,7 +243,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception when issuer is missing")
         void shouldThrowExceptionWhenIssuerIsMissing(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             wellKnownDispatcher.returnMissingIssuer();
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
@@ -276,7 +267,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception when jwks_uri is missing")
         void shouldThrowExceptionWhenJwksUriIsMissing(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             wellKnownDispatcher.returnMissingJwksUri();
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
@@ -300,7 +291,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception when issuer validation fails")
         void shouldThrowExceptionWhenIssuerValidationFails(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             wellKnownDispatcher.returnInvalidIssuer();
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
@@ -344,7 +335,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exceptions during build for missing required endpoints")
         void shouldThrowExceptionDuringBuildForMissingRequiredEndpoints(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             // Configure the dispatcher to return a document with only issuer and jwks_uri
             wellKnownDispatcher.returnOnlyRequiredFields();
             URL wellKnownUrl = URI.create(uriBuilder
@@ -389,15 +380,11 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should log messages for successful operations")
         void shouldLogDebugMessagesForSuccessfulOperations(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
-
-            // When
             WellKnownHandler.builder().url(wellKnownUrl).build();
-
-            // Then
             // Verify that at least one log message is present
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
                     JWTValidationLogMessages.WARN.ACCESSIBILITY_CHECK_HTTP_ERROR.resolveIdentifierString());
@@ -406,7 +393,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should log error messages for failed operations")
         void shouldLogErrorMessagesForFailedOperations(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             wellKnownDispatcher.returnInvalidIssuer();
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
@@ -444,21 +431,17 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should use custom TLS versions configuration")
         void shouldUseCustomTlsVersionsConfiguration(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
 
             // Create a custom SecureSSLContextProvider with TLS 1.3 as minimum
             SecureSSLContextProvider secureSSLContextProvider = new SecureSSLContextProvider(SecureSSLContextProvider.TLS_V1_3);
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .tlsVersions(secureSSLContextProvider)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 
@@ -475,7 +458,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should use custom parser configuration")
         void shouldUseCustomParserConfiguration(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
@@ -486,14 +469,10 @@ class WellKnownHandlerTest {
                     .maxArraySize(32)
                     .maxDepth(5)
                     .build();
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .parserConfig(parserConfig)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 
@@ -504,7 +483,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should use custom SSL context")
         void shouldUseCustomSslContext(URIBuilder uriBuilder) throws Exception {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
@@ -512,14 +491,10 @@ class WellKnownHandlerTest {
             // Create a custom SSLContext with proper initialization
             SSLContext sslContext = SSLContext.getInstance(SecureSSLContextProvider.TLS_V1_2);
             sslContext.init(null, null, new SecureRandom());
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .sslContext(sslContext)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 
@@ -536,18 +511,14 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should use custom connect timeout")
         void shouldUseCustomConnectTimeout(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .connectTimeoutSeconds(30)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 
@@ -564,18 +535,14 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should use custom read timeout")
         void shouldUseCustomReadTimeout(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .readTimeoutSeconds(60)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 
@@ -592,19 +559,15 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should use both timeout configurations")
         void shouldUseBothTimeoutConfigurations(URIBuilder uriBuilder) throws MalformedURLException {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .connectTimeoutSeconds(15)
                     .readTimeoutSeconds(45)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 
@@ -621,7 +584,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception for zero connect timeout")
         void shouldThrowExceptionForZeroConnectTimeout() {
-            // Given
+
             var builder = WellKnownHandler.builder()
                     .url("https://example.com/.well-known/openid-configuration");
 
@@ -632,7 +595,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception for negative connect timeout")
         void shouldThrowExceptionForNegativeConnectTimeout() {
-            // Given
+
             var builder = WellKnownHandler.builder()
                     .url("https://example.com/.well-known/openid-configuration");
 
@@ -643,7 +606,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception for zero read timeout")
         void shouldThrowExceptionForZeroReadTimeout() {
-            // Given
+
             var builder = WellKnownHandler.builder()
                     .url("https://example.com/.well-known/openid-configuration");
 
@@ -654,7 +617,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should throw exception for negative read timeout")
         void shouldThrowExceptionForNegativeReadTimeout() {
-            // Given
+
             var builder = WellKnownHandler.builder()
                     .url("https://example.com/.well-known/openid-configuration");
 
@@ -665,7 +628,7 @@ class WellKnownHandlerTest {
         @Test
         @DisplayName("Should use all builder methods together")
         void shouldUseAllBuilderMethodsTogether(URIBuilder uriBuilder) throws Exception {
-            // Given
+
             URL wellKnownUrl = URI.create(uriBuilder
                     .addPathSegment("/.well-known/openid-configuration")
                     .buildAsString()).toURL();
@@ -683,8 +646,6 @@ class WellKnownHandlerTest {
                     .maxArraySize(32)
                     .maxDepth(5)
                     .build();
-
-            // When
             WellKnownHandler handler = WellKnownHandler.builder()
                     .url(wellKnownUrl)
                     .connectTimeoutSeconds(20)
@@ -693,8 +654,6 @@ class WellKnownHandlerTest {
                     .sslContext(sslContext)
                     .parserConfig(parserConfig)
                     .build();
-
-            // Then
             assertNotNull(handler, "Handler should not be null");
             assertEquals(wellKnownUrl, handler.getWellKnownUrl(), "Well-known URL should match");
 

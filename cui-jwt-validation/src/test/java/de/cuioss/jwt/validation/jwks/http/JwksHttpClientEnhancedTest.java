@@ -68,8 +68,6 @@ class JwksHttpClientEnhancedTest {
 
         // When - fetch with a previous ETag
         JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(TEST_ETAG);
-
-        // Then
         assertTrue(response.isNotModified(), "Response should indicate not modified");
         assertNull(response.getContent(), "Content should be null for not modified response");
         assertEquals(Optional.empty(), response.getEtag(), "ETag should be empty for not modified response");
@@ -83,8 +81,6 @@ class JwksHttpClientEnhancedTest {
 
         // When - fetch with a previous ETag
         client.fetchJwksContent(TEST_ETAG);
-
-        // Then
         assertTrue(moduleDispatcher.wasIfNoneMatchHeaderPresent(), "If-None-Match header should be present");
     }
 
@@ -93,11 +89,7 @@ class JwksHttpClientEnhancedTest {
     void shouldHandleErrorResponse() {
         // Configure dispatcher to return error
         moduleDispatcher.returnError();
-
-        // When
         JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(null);
-
-        // Then
         assertFalse(response.isNotModified(), "Response should not indicate not modified");
         // The JwksHttpClient only returns empty JWKS for non-200 status codes
         // The EnhancedJwksResolveDispatcher's returnError method returns a valid JWKS
@@ -110,11 +102,7 @@ class JwksHttpClientEnhancedTest {
     void shouldHandleConnectionFailure() {
         // Configure dispatcher to simulate connection failure
         moduleDispatcher.simulateConnectionFailure();
-
-        // When
         JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(null);
-
-        // Then
         assertFalse(response.isNotModified(), "Response should not indicate not modified");
         assertEquals("{}", response.getContent(), "Content should be empty JWKS for connection failure");
         assertEquals(Optional.empty(), response.getEtag(), "ETag should be empty for connection failure");
@@ -125,11 +113,7 @@ class JwksHttpClientEnhancedTest {
     void shouldHandleSameContentWithDifferentETag() {
         // Configure dispatcher to return same content
         moduleDispatcher.returnSameContent();
-
-        // When
         JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(null);
-
-        // Then
         assertFalse(response.isNotModified(), "Response should not indicate not modified");
         assertNotNull(response.getContent(), "Content should not be null");
         assertTrue(response.getContent().contains("keys"), "Content should contain keys");
@@ -142,11 +126,7 @@ class JwksHttpClientEnhancedTest {
         // Configure dispatcher to return different content
         String newKeyId = "new-key-id";
         moduleDispatcher.returnDifferentContent(newKeyId);
-
-        // When
         JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(null);
-
-        // Then
         assertFalse(response.isNotModified(), "Response should not indicate not modified");
         assertNotNull(response.getContent(), "Content should not be null");
         assertTrue(response.getContent().contains(newKeyId), "Content should contain the new key ID");
@@ -157,11 +137,7 @@ class JwksHttpClientEnhancedTest {
     @DisplayName("Should extract ETag from response headers")
     void shouldExtractEtagFromResponseHeaders() {
         // The default response already includes an ETag
-
-        // When
         JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(null);
-
-        // Then
         assertFalse(response.isNotModified(), "Response should not indicate not modified");
         assertNotNull(response.getContent(), "Content should not be null");
         assertTrue(response.getEtag().isPresent(), "ETag should be extracted from response");

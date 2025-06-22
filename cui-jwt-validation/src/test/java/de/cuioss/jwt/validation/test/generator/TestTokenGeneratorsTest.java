@@ -36,13 +36,9 @@ class TestTokenGeneratorsTest {
     @Test
     @DisplayName("accessTokens() should create generator for ACCESS_TOKEN type")
     void accessTokensShouldCreateGeneratorForAccessTokenType() {
-        // Given
+
         TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.accessTokens();
-
-        // When
         TestTokenHolder token = generator.next();
-
-        // Then
         assertNotNull(token, "Generated token should not be null");
         assertEquals(TokenType.ACCESS_TOKEN, token.getTokenType(), "Token type should be ACCESS_TOKEN");
 
@@ -59,13 +55,9 @@ class TestTokenGeneratorsTest {
     @Test
     @DisplayName("idTokens() should create generator for ID_TOKEN type")
     void idTokensShouldCreateGeneratorForIdTokenType() {
-        // Given
+
         TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.idTokens();
-
-        // When
         TestTokenHolder token = generator.next();
-
-        // Then
         assertNotNull(token, "Generated token should not be null");
         assertEquals(TokenType.ID_TOKEN, token.getTokenType(), "Token type should be ID_TOKEN");
 
@@ -82,13 +74,9 @@ class TestTokenGeneratorsTest {
     @Test
     @DisplayName("refreshTokens() should create generator for REFRESH_TOKEN type")
     void refreshTokensShouldCreateGeneratorForRefreshTokenType() {
-        // Given
+
         TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.refreshTokens();
-
-        // When
         TestTokenHolder token = generator.next();
-
-        // Then
         assertNotNull(token, "Generated token should not be null");
         assertEquals(TokenType.REFRESH_TOKEN, token.getTokenType(), "Token type should be REFRESH_TOKEN");
 
@@ -109,13 +97,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("accessTokens(TokenSize) should create generator for ACCESS_TOKEN with specified size")
         void accessTokensWithSizeShouldCreateGeneratorForAccessTokenWithSpecifiedSize(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.accessTokens(size);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.ACCESS_TOKEN, token.getTokenType(), "Token type should be ACCESS_TOKEN");
 
@@ -133,13 +117,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("idTokens(TokenSize) should create generator for ID_TOKEN with specified size")
         void idTokensWithSizeShouldCreateGeneratorForIdTokenWithSpecifiedSize(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.idTokens(size);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.ID_TOKEN, token.getTokenType(), "Token type should be ID_TOKEN");
 
@@ -157,13 +137,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("refreshTokens(TokenSize) should create generator for REFRESH_TOKEN with specified size")
         void refreshTokensWithSizeShouldCreateGeneratorForRefreshTokenWithSpecifiedSize(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.refreshTokens(size);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.REFRESH_TOKEN, token.getTokenType(), "Token type should be REFRESH_TOKEN");
 
@@ -185,13 +161,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("accessTokens(TokenSize, SIMPLE) should create generator for ACCESS_TOKEN with specified size and SIMPLE complexity")
         void accessTokensWithSizeAndSimpleComplexityShouldCreateGeneratorForAccessTokenWithSpecifiedSizeAndSimpleComplexity(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.accessTokens(size, TokenComplexity.SIMPLE);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.ACCESS_TOKEN, token.getTokenType(), "Token type should be ACCESS_TOKEN");
 
@@ -209,13 +181,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("accessTokens(TokenSize, COMPLEX) should create generator for ACCESS_TOKEN with specified size and COMPLEX complexity")
         void accessTokensWithSizeAndComplexComplexityShouldCreateGeneratorForAccessTokenWithSpecifiedSizeAndComplexComplexity(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.accessTokens(size, TokenComplexity.COMPLEX);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.ACCESS_TOKEN, token.getTokenType(), "Token type should be ACCESS_TOKEN");
 
@@ -233,13 +201,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("idTokens(TokenSize, SIMPLE) should create generator for ID_TOKEN with specified size and SIMPLE complexity")
         void idTokensWithSizeAndSimpleComplexityShouldCreateGeneratorForIdTokenWithSpecifiedSizeAndSimpleComplexity(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.idTokens(size, TokenComplexity.SIMPLE);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.ID_TOKEN, token.getTokenType(), "Token type should be ID_TOKEN");
 
@@ -257,13 +221,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("idTokens(TokenSize, COMPLEX) should create generator for ID_TOKEN with specified size and COMPLEX complexity")
         void idTokensWithSizeAndComplexComplexityShouldCreateGeneratorForIdTokenWithSpecifiedSizeAndComplexComplexity(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.idTokens(size, TokenComplexity.COMPLEX);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.ID_TOKEN, token.getTokenType(), "Token type should be ID_TOKEN");
 
@@ -281,13 +241,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("refreshTokens(TokenSize, SIMPLE) should create generator for REFRESH_TOKEN with specified size and SIMPLE complexity")
         void refreshTokensWithSizeAndSimpleComplexityShouldCreateGeneratorForRefreshTokenWithSpecifiedSizeAndSimpleComplexity(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.refreshTokens(size, TokenComplexity.SIMPLE);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.REFRESH_TOKEN, token.getTokenType(), "Token type should be REFRESH_TOKEN");
 
@@ -304,13 +260,9 @@ class TestTokenGeneratorsTest {
         @EnumSource(TokenSize.class)
         @DisplayName("refreshTokens(TokenSize, COMPLEX) should create generator for REFRESH_TOKEN with specified size and COMPLEX complexity")
         void refreshTokensWithSizeAndComplexComplexityShouldCreateGeneratorForRefreshTokenWithSpecifiedSizeAndComplexComplexity(TokenSize size) {
-            // Given
+
             TypedGenerator<TestTokenHolder> generator = TestTokenGenerators.refreshTokens(size, TokenComplexity.COMPLEX);
-
-            // When
             TestTokenHolder token = generator.next();
-
-            // Then
             assertNotNull(token, "Generated token should not be null");
             assertEquals(TokenType.REFRESH_TOKEN, token.getTokenType(), "Token type should be REFRESH_TOKEN");
 

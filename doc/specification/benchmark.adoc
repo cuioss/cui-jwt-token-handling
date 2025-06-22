@@ -39,8 +39,8 @@ The library requires efficient token validation to ensure minimal performance im
 
 The following classes implement this specification:
 
-* xref:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
-* xref:../../src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator]
+* xref:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
+* xref:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator]
 
 The following tests verify the implementation:
 
@@ -61,8 +61,8 @@ The JWKS client must efficiently retrieve and cache keys to support high-volume 
 
 The following classes implement this specification:
 
-* xref:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksClient.java[JwksClient]
-* xref:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksLoaderFactory.java[JwksLoaderFactory]
+* xref:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/jwks/http/HttpJwksLoader.java[HttpJwksLoader]
+* xref:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/jwks/JwksLoaderFactory.java[JwksLoaderFactory]
 
 The following tests verify the implementation:
 
@@ -82,7 +82,7 @@ The library must scale efficiently with concurrent validation requests:
 
 The following class implements this specification:
 
-* xref:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
+* xref:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
 
 The following tests verify the implementation:
 
@@ -130,8 +130,8 @@ Error cases must be handled efficiently to prevent performance degradation durin
 
 The following classes implement this specification:
 
-* xref:../../src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
-* xref:../../src/main/java/de/cuioss/jwt/validation/jwks/JwksClient.java[JwksClient]
+* xref:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator]
+* xref:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/jwks/http/HttpJwksLoader.java[HttpJwksLoader]
 
 The following benchmark classes will verify the implementation:
 

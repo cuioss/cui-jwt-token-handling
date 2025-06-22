@@ -68,7 +68,7 @@ class HttpJwksLoaderMultiIssuerTest {
     @Test
     @DisplayName("Should handle multiple issuers with different keys")
     void shouldHandleMultipleIssuersWithDifferentKeys(URIBuilder uriBuilder) {
-        // Given
+
         String issuer1Endpoint = uriBuilder.addPathSegment(MultiIssuerJwksDispatcher.ISSUER1_PATH).buildAsString();
         String issuer2Endpoint = uriBuilder.addPathSegment(MultiIssuerJwksDispatcher.ISSUER2_PATH).buildAsString();
 
@@ -91,12 +91,8 @@ class HttpJwksLoaderMultiIssuerTest {
         // Add to list for cleanup
         loaders.add(loader1);
         loaders.add(loader2);
-
-        // When
         Optional<KeyInfo> keyInfo1 = loader1.getKeyInfo(ISSUER1_KID);
         Optional<KeyInfo> keyInfo2 = loader2.getKeyInfo(ISSUER2_KID);
-
-        // Then
         assertTrue(keyInfo1.isPresent(), "Key info for issuer 1 should be present");
         assertTrue(keyInfo2.isPresent(), "Key info for issuer 2 should be present");
 
@@ -111,7 +107,7 @@ class HttpJwksLoaderMultiIssuerTest {
     @Test
     @DisplayName("Should respect max cache size with multiple issuers")
     void shouldRespectMaxCacheSizeWithMultipleIssuers(URIBuilder uriBuilder) {
-        // Given
+
         String issuer1Endpoint = uriBuilder.addPathSegment(MultiIssuerJwksDispatcher.ISSUER1_PATH).buildAsString();
         String issuer2Endpoint = uriBuilder.addPathSegment(MultiIssuerJwksDispatcher.ISSUER2_PATH).buildAsString();
 
@@ -151,7 +147,7 @@ class HttpJwksLoaderMultiIssuerTest {
     @Test
     @DisplayName("Should handle multiple loaders with same URI but different refresh intervals")
     void shouldHandleMultipleLoadersWithSameUriButDifferentRefreshIntervals(URIBuilder uriBuilder) {
-        // Given
+
         String jwksEndpoint = uriBuilder.addPathSegment(MultiIssuerJwksDispatcher.ISSUER1_PATH).buildAsString();
 
         // Create loaders with different refresh intervals
@@ -171,16 +167,12 @@ class HttpJwksLoaderMultiIssuerTest {
         // Add to list for cleanup
         loaders.add(loader1);
         loaders.add(loader2);
-
-        // When
         Optional<KeyInfo> keyInfo1 = loader1.getKeyInfo(ISSUER1_KID);
 
         // Reset the call counter after the first loader has loaded the keys
         moduleDispatcher.setCallCounter(0);
 
         Optional<KeyInfo> keyInfo2 = loader2.getKeyInfo(ISSUER1_KID);
-
-        // Then
         assertTrue(keyInfo1.isPresent(), "Key info from loader 1 should be present");
         assertTrue(keyInfo2.isPresent(), "Key info from loader 2 should be present");
 
@@ -198,7 +190,7 @@ class HttpJwksLoaderMultiIssuerTest {
     @Test
     @DisplayName("Should handle switching between issuers")
     void shouldHandleSwitchingBetweenIssuers(URIBuilder uriBuilder) {
-        // Given
+
         String issuer1Endpoint = uriBuilder.addPathSegment(MultiIssuerJwksDispatcher.ISSUER1_PATH).buildAsString();
         String issuer2Endpoint = uriBuilder.addPathSegment(MultiIssuerJwksDispatcher.ISSUER2_PATH).buildAsString();
 

@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.domain.claim.mapper;
 
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.claim.ClaimValueType;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -33,6 +34,7 @@ import java.time.ZoneId;
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests OffsetDateTimeMapper functionality")
 class OffsetDateTimeMapperTest {
 
@@ -40,10 +42,8 @@ class OffsetDateTimeMapperTest {
     private final OffsetDateTimeMapper underTest = new OffsetDateTimeMapper();
 
     @Test
-    @DisplayName("Should correctly map a valid numeric timestamp as number (JWT NumericDate)")
+    @DisplayName("Map valid numeric timestamp as number (JWT NumericDate)")
     void shouldMapValidNumericTimestampAsNumber() {
-        // Given
-        // 2023-01-15T12:30:45Z as epoch seconds
         long epochSeconds = 1673785845;
         OffsetDateTime expected = OffsetDateTime.ofInstant(
                 Instant.ofEpochSecond(epochSeconds),
@@ -54,10 +54,8 @@ class OffsetDateTimeMapperTest {
                 .add(CLAIM_NAME, epochSeconds)
                 .build();
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(String.valueOf(epochSeconds), result.getOriginalString(), "Original string should be preserved");
         assertEquals(expected, result.getDateTime(), "DateTime should be correctly parsed");
@@ -65,43 +63,35 @@ class OffsetDateTimeMapperTest {
     }
 
     @Test
-    @DisplayName("Should throw exception for numeric timestamp as string (not compliant with JWT spec)")
+    @DisplayName("Throw exception for numeric timestamp as string (not compliant with JWT spec)")
     void shouldThrowExceptionForNumericTimestampAsString() {
-        // Given
-        // 2023-01-15T12:30:45Z as epoch seconds
         long epochSeconds = 1673785845;
         String validTimestamp = String.valueOf(epochSeconds);
 
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, validTimestamp);
 
-        // Then
         assertThrows(IllegalArgumentException.class, () -> underTest.map(jsonObject, CLAIM_NAME),
                 "Should throw IllegalArgumentException for string value (even if it's a valid numeric timestamp)");
     }
 
     @Test
-    @DisplayName("Should throw exception for ISO-8601 date-time string (not compliant with JWT spec)")
+    @DisplayName("Throw exception for ISO-8601 date-time string (not compliant with JWT spec)")
     void shouldMapValidIsoDateTime() {
-        // Given
         String validDateTime = "2023-01-15T12:30:45Z";
 
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, validDateTime);
 
-        // Then
         assertThrows(IllegalArgumentException.class, () -> underTest.map(jsonObject, CLAIM_NAME),
                 "Should throw IllegalArgumentException for string value (even if it's a valid ISO-8601 date-time)");
     }
 
     @Test
-    @DisplayName("Should handle null claim value")
+    @DisplayName("Handle null claim value")
     void shouldHandleNullClaimValue() {
-        // Given
         JsonObject jsonObject = createJsonObjectWithNullClaim(CLAIM_NAME);
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertNull(result.getOriginalString(), "Original string should be null");
         assertNull(result.getDateTime(), "DateTime should be null for null claim value");
@@ -110,12 +100,10 @@ class OffsetDateTimeMapperTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "\t", "\n"})
-    @DisplayName("Should throw exception for blank string inputs (not compliant with JWT spec)")
+    @DisplayName("Throw exception for blank string inputs (not compliant with JWT spec)")
     void shouldThrowExceptionForBlankStringInputs(String blankInput) {
-        // Given
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, blankInput);
 
-        // Then
         assertThrows(IllegalArgumentException.class, () -> underTest.map(jsonObject, CLAIM_NAME),
                 "Should throw IllegalArgumentException for string value (even if it's blank)");
     }
@@ -132,26 +120,21 @@ class OffsetDateTimeMapperTest {
             "2023-01-01T12:30:60Z", // Invalid second
             "2023-01-01T12:30:45" // Missing timezone
     })
-    @DisplayName("Should throw exception for invalid date-time formats")
+    @DisplayName("Throw exception for invalid date-time formats")
     void shouldThrowExceptionForInvalidFormats(String invalidDateTime) {
-        // Given
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, invalidDateTime);
 
-        // Then
         assertThrows(IllegalArgumentException.class, () -> underTest.map(jsonObject, CLAIM_NAME),
                 "Should throw IllegalArgumentException for invalid date-time format");
     }
 
     @Test
-    @DisplayName("Should handle missing claim")
+    @DisplayName("Handle missing claim")
     void shouldHandleMissingClaim() {
-        // Given
         JsonObject jsonObject = Json.createObjectBuilder().build();
 
-        // When
         ClaimValue result = underTest.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertNull(result.getOriginalString(), "Original string should be null");
         assertNull(result.getDateTime(), "DateTime should be null for missing claim");
@@ -159,15 +142,12 @@ class OffsetDateTimeMapperTest {
     }
 
     @Test
-    @DisplayName("Should handle empty JsonObject")
+    @DisplayName("Handle empty JsonObject")
     void shouldHandleEmptyJsonObject() {
-        // Given
         JsonObject emptyJsonObject = Json.createObjectBuilder().build();
 
-        // When
         ClaimValue result = underTest.map(emptyJsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertNull(result.getOriginalString(), "Original string should be null");
         assertNull(result.getDateTime(), "DateTime should be null for empty JsonObject");
@@ -175,14 +155,12 @@ class OffsetDateTimeMapperTest {
     }
 
     @Test
-    @DisplayName("Should throw exception for unsupported JSON value types")
+    @DisplayName("Throw exception for unsupported JSON value types")
     void shouldThrowExceptionForUnsupportedTypes() {
-        // Given
         JsonObject jsonObject = Json.createObjectBuilder()
-                .add(CLAIM_NAME, Json.createObjectBuilder().build()) // Object type is not supported
+                .add(CLAIM_NAME, Json.createObjectBuilder().build())
                 .build();
 
-        // Then
         assertThrows(IllegalArgumentException.class, () -> underTest.map(jsonObject, CLAIM_NAME),
                 "Should throw IllegalArgumentException for unsupported JSON value type");
     }

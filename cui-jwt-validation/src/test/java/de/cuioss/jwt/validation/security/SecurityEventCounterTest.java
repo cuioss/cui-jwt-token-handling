@@ -15,11 +15,12 @@
  */
 package de.cuioss.jwt.validation.security;
 
+import de.cuioss.test.generator.junit.EnableGeneratorController;
+import de.cuioss.test.juli.junit5.EnableTestLogger;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -42,95 +43,77 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Oliver Wolff
  * @see <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/security.adoc#security-controls">Security Controls Specification</a>
  */
+@EnableTestLogger
+@EnableGeneratorController
+@DisplayName("Tests SecurityEventCounter functionality")
 class SecurityEventCounterTest {
 
     @Test
+    @DisplayName("Should increment counter")
     void shouldIncrementCounter() {
-        // Given
-        SecurityEventCounter counter = new SecurityEventCounter();
-
-        // When
-        long count = counter.increment(SecurityEventCounter.EventType.TOKEN_EMPTY);
-
-        // Then
-        assertEquals(1, count);
-        assertEquals(1, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY));
+        var counter = new SecurityEventCounter();
+        var count = counter.increment(SecurityEventCounter.EventType.TOKEN_EMPTY);
+        assertEquals(1, count, "Increment should return 1");
+        assertEquals(1, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY), "Counter should be 1 after increment");
     }
 
     @Test
+    @DisplayName("Should return zero for non-existing counter")
     void shouldReturnZeroForNonExistingCounter() {
-        // Given
-        SecurityEventCounter counter = new SecurityEventCounter();
-
-        // When
-        long count = counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY);
-
-        // Then
-        assertEquals(0, count);
+        var counter = new SecurityEventCounter();
+        var count = counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY);
+        assertEquals(0, count, "Non-existing counter should return 0");
     }
 
     @Test
+    @DisplayName("Should reset all counters")
     void shouldResetAllCounters() {
-        // Given
-        SecurityEventCounter counter = new SecurityEventCounter();
+        var counter = new SecurityEventCounter();
         counter.increment(SecurityEventCounter.EventType.TOKEN_EMPTY);
         counter.increment(SecurityEventCounter.EventType.MISSING_CLAIM);
-
-        // When
         counter.reset();
-
-        // Then
-        assertEquals(0, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY));
-        assertEquals(0, counter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM));
+        assertEquals(0, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY), "TOKEN_EMPTY counter should be reset to 0");
+        assertEquals(0, counter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM), "MISSING_CLAIM counter should be reset to 0");
     }
 
     @Test
+    @DisplayName("Should reset specific counter")
     void shouldResetSpecificCounter() {
-        // Given
-        SecurityEventCounter counter = new SecurityEventCounter();
+        var counter = new SecurityEventCounter();
         counter.increment(SecurityEventCounter.EventType.TOKEN_EMPTY);
         counter.increment(SecurityEventCounter.EventType.MISSING_CLAIM);
-
-        // When
         counter.reset(SecurityEventCounter.EventType.TOKEN_EMPTY);
-
-        // Then
-        assertEquals(0, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY));
-        assertEquals(1, counter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM));
+        assertEquals(0, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY), "TOKEN_EMPTY counter should be reset to 0");
+        assertEquals(1, counter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM), "MISSING_CLAIM counter should remain 1");
     }
 
     @Test
+    @DisplayName("Should get all counters")
     void shouldGetAllCounters() {
-        // Given
-        SecurityEventCounter counter = new SecurityEventCounter();
+        var counter = new SecurityEventCounter();
         counter.increment(SecurityEventCounter.EventType.TOKEN_EMPTY);
         counter.increment(SecurityEventCounter.EventType.MISSING_CLAIM);
         counter.increment(SecurityEventCounter.EventType.MISSING_CLAIM);
-
-        // When
-        Map<SecurityEventCounter.EventType, Long> counters = counter.getCounters();
-
-        // Then
-        assertEquals(2, counters.size());
-        assertEquals(1L, counters.get(SecurityEventCounter.EventType.TOKEN_EMPTY));
-        assertEquals(2L, counters.get(SecurityEventCounter.EventType.MISSING_CLAIM));
+        var counters = counter.getCounters();
+        assertEquals(2, counters.size(), "Should have 2 counter types");
+        assertEquals(1L, counters.get(SecurityEventCounter.EventType.TOKEN_EMPTY), "TOKEN_EMPTY should be 1");
+        assertEquals(2L, counters.get(SecurityEventCounter.EventType.MISSING_CLAIM), "MISSING_CLAIM should be 2");
     }
 
     @Test
+    @DisplayName("Should be thread safe")
     void shouldBeThreadSafe() throws InterruptedException {
-        // Given
-        final int threadCount = 10;
-        final int incrementsPerThread = 1000;
-        final SecurityEventCounter counter = new SecurityEventCounter();
-        final CountDownLatch startLatch = new CountDownLatch(1);
-        final CountDownLatch endLatch = new CountDownLatch(threadCount);
-        final ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        var threadCount = 10;
+        var incrementsPerThread = 1000;
+        var counter = new SecurityEventCounter();
+        var startLatch = new CountDownLatch(1);
+        var endLatch = new CountDownLatch(threadCount);
+        var executor = Executors.newFixedThreadPool(threadCount);
 
-        // When
         for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 try {
-                    startLatch.await(); // Wait for all threads to be ready
+                    startLatch.await();
                     for (int j = 0; j < incrementsPerThread; j++) {
                         counter.increment(SecurityEventCounter.EventType.TOKEN_EMPTY);
                     }
@@ -142,12 +125,11 @@ class SecurityEventCounterTest {
             });
         }
 
-        startLatch.countDown(); // Start all threads
-        boolean completed = endLatch.await(10, TimeUnit.SECONDS); // Wait for all threads to complete
+        startLatch.countDown();
+        var completed = endLatch.await(10, TimeUnit.SECONDS);
         executor.shutdown();
 
-        // Then
-        assertTrue(completed, "All threads should have completed");
-        assertEquals(threadCount * incrementsPerThread, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY));
+        assertTrue(completed, "All threads should complete within timeout");
+        assertEquals(threadCount * incrementsPerThread, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY), "Counter should equal total increments from all threads");
     }
 }

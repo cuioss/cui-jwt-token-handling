@@ -50,8 +50,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableGeneratorController
 @DisplayName("Tests TokenClaimValidator edge cases")
 class TokenClaimValidatorEdgeCaseTest {
-
-
     private final SecurityEventCounter securityEventCounter = new SecurityEventCounter();
 
     // Helper method to create a TokenClaimValidator with the shared SecurityEventCounter

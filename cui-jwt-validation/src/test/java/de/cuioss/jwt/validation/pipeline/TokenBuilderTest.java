@@ -22,7 +22,7 @@ import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.token.AccessTokenContent;
 import de.cuioss.jwt.validation.domain.token.IdTokenContent;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
-import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
+import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Map;
 import java.util.Optional;
@@ -56,31 +57,22 @@ class TokenBuilderTest {
         tokenBuilder = new TokenBuilder(issuerConfig);
     }
 
-
     @Nested
     @DisplayName("AccessToken Tests")
     class AccessTokenTests {
 
-        @Test
+        @ParameterizedTest
+        @TestTokenSource(value = TokenType.ACCESS_TOKEN, count = 2)
         @DisplayName("createAccessToken should create AccessTokenContent from DecodedJwt")
-        void createAccessTokenShouldCreateAccessTokenContent() {
-            // Given a DecodedJwt with ACCESS_TOKEN type
-            DecodedJwt decodedJwt = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.builder().build()).asDecodedJwt();
+        void createAccessTokenShouldCreateAccessTokenContent(TestTokenHolder tokenHolder) {
+            DecodedJwt decodedJwt = tokenHolder.asDecodedJwt();
 
-            // When creating an AccessTokenContent
             Optional<AccessTokenContent> result = tokenBuilder.createAccessToken(decodedJwt);
-
-            // Then
             assertTrue(result.isPresent(), "Should return AccessTokenContent");
             AccessTokenContent accessTokenContent = result.get();
 
-            // Verify validation type
             assertEquals(TokenType.ACCESS_TOKEN, accessTokenContent.getTokenType(), "Token type should be ACCESS_TOKEN");
-
-            // Verify raw token
-            assertEquals(decodedJwt.getRawToken(), accessTokenContent.getRawToken(), "Raw validation should match");
-
-            // Verify claims are extracted
+            assertEquals(decodedJwt.getRawToken(), accessTokenContent.getRawToken(), "Raw token should match");
             assertFalse(accessTokenContent.getClaims().isEmpty(), "Claims should not be empty");
             assertTrue(accessTokenContent.getClaims().containsKey(ClaimName.SUBJECT.getName()),
                     "Claims should contain subject");
@@ -96,8 +88,6 @@ class TokenBuilderTest {
 
             // When creating an AccessTokenContent
             Optional<AccessTokenContent> result = tokenBuilder.createAccessToken(decodedJwt);
-
-            // Then
             assertTrue(result.isEmpty(), "Should return empty Optional when body is missing");
         }
     }
@@ -106,26 +96,18 @@ class TokenBuilderTest {
     @DisplayName("IdToken Tests")
     class IdTokenTests {
 
-        @Test
+        @ParameterizedTest
+        @TestTokenSource(value = TokenType.ID_TOKEN, count = 2)
         @DisplayName("createIdToken should create IdTokenContent from DecodedJwt")
-        void createIdTokenShouldCreateIdTokenContent() {
-            // Given a DecodedJwt with ID_TOKEN type
-            DecodedJwt decodedJwt = new TestTokenHolder(TokenType.ID_TOKEN, ClaimControlParameter.builder().build()).asDecodedJwt();
+        void createIdTokenShouldCreateIdTokenContent(TestTokenHolder tokenHolder) {
+            DecodedJwt decodedJwt = tokenHolder.asDecodedJwt();
 
-            // When creating an IdTokenContent
             Optional<IdTokenContent> result = tokenBuilder.createIdToken(decodedJwt);
-
-            // Then
             assertTrue(result.isPresent(), "Should return IdTokenContent");
             IdTokenContent idTokenContent = result.get();
 
-            // Verify validation type
             assertEquals(TokenType.ID_TOKEN, idTokenContent.getTokenType(), "Token type should be ID_TOKEN");
-
-            // Verify raw token
-            assertEquals(decodedJwt.getRawToken(), idTokenContent.getRawToken(), "Raw validation should match");
-
-            // Verify claims are extracted
+            assertEquals(decodedJwt.getRawToken(), idTokenContent.getRawToken(), "Raw token should match");
             assertFalse(idTokenContent.getClaims().isEmpty(), "Claims should not be empty");
             assertTrue(idTokenContent.getClaims().containsKey(ClaimName.SUBJECT.getName()),
                     "Claims should contain subject");
@@ -143,8 +125,6 @@ class TokenBuilderTest {
 
             // When creating an IdTokenContent
             Optional<IdTokenContent> result = tokenBuilder.createIdToken(decodedJwt);
-
-            // Then
             assertTrue(result.isEmpty(), "Should return empty Optional when body is missing");
         }
     }
@@ -165,8 +145,6 @@ class TokenBuilderTest {
 
             // When extracting claims
             Map<String, ClaimValue> claims = TokenBuilder.extractClaimsForRefreshToken(jsonObject);
-
-            // Then
             assertNotNull(claims, "Claims should not be null");
             assertFalse(claims.isEmpty(), "Claims should not be empty");
             assertEquals(3, claims.size(), "Should extract all claims");
@@ -191,10 +169,9 @@ class TokenBuilderTest {
 
             // When extracting claims
             Map<String, ClaimValue> claims = TokenBuilder.extractClaimsForRefreshToken(jsonObject);
-
-            // Then
             assertNotNull(claims, "Claims should not be null");
             assertTrue(claims.isEmpty(), "Claims should be empty");
         }
     }
+
 }

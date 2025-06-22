@@ -96,8 +96,6 @@ class ClientConfusionAttackTest {
         } catch (Exception e) {
             // Error handling is done by the test assertions
         }
-
-
         // Create a token validator with the issuer config
         tokenValidator = new TokenValidator(tokenHolder.getIssuerConfig());
 

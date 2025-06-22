@@ -23,6 +23,7 @@ import de.cuioss.jwt.validation.security.AlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for {@link TokenHeaderValidator}.
  */
 @EnableTestLogger(debug = TokenHeaderValidator.class, warn = TokenHeaderValidator.class)
+@EnableGeneratorController
 @DisplayName("Tests TokenHeaderValidator functionality")
 class TokenHeaderValidatorTest {
 
@@ -69,9 +71,9 @@ class TokenHeaderValidatorTest {
             TokenHeaderValidator validator = createValidator(issuerConfig);
 
             // Then the validator should be created without warnings
-            assertNotNull(validator, "Validator should not be null");
-            assertEquals(EXPECTED_ISSUER, issuerConfig.getIssuer(), "IssuerConfig should have the expected issuer");
-            assertNotNull(issuerConfig.getAlgorithmPreferences(), "Algorithm preferences should not be null");
+            assertNotNull(validator);
+            assertEquals(EXPECTED_ISSUER, issuerConfig.getIssuer());
+            assertNotNull(issuerConfig.getAlgorithmPreferences());
         }
 
         @Test
@@ -88,9 +90,8 @@ class TokenHeaderValidatorTest {
             TokenHeaderValidator validator = createValidator(issuerConfig);
 
             // Then the validator should be created with the custom algorithm preferences
-            assertNotNull(validator, "Validator should not be null");
-            assertSame(customAlgorithmPreferences, issuerConfig.getAlgorithmPreferences(),
-                    "Algorithm preferences should be the same instance");
+            assertNotNull(validator);
+            assertSame(customAlgorithmPreferences, issuerConfig.getAlgorithmPreferences());
         }
 
     }
@@ -113,8 +114,7 @@ class TokenHeaderValidatorTest {
             DecodedJwt decodedJwt = JWT_PARSER.decode(token);
 
             // When validating the validation, it should not throw an exception
-            assertDoesNotThrow(() -> validator.validate(decodedJwt),
-                    "Token with supported algorithm should be valid");
+            assertDoesNotThrow(() -> validator.validate(decodedJwt));
         }
 
         @Test
@@ -134,23 +134,20 @@ class TokenHeaderValidatorTest {
             // And a validation with an unsupported algorithm (RS256)
             String token = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.defaultForTokenType(TokenType.ACCESS_TOKEN)).getRawToken();
             DecodedJwt decodedJwt = JWT_PARSER.decode(token);
-            assertEquals("RS256", decodedJwt.getAlg().orElse(null), "Token should use RS256 algorithm");
+            assertEquals("RS256", decodedJwt.getAlg().orElse(null));
 
             // When validating the validation, it should throw an exception
             var exception = assertThrows(TokenValidationException.class,
-                    () -> validator.validate(decodedJwt),
-                    "Token with unsupported algorithm should throw TokenValidationException");
+                    () -> validator.validate(decodedJwt));
 
             // Verify the exception has the correct event type
-            assertEquals(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM, exception.getEventType(),
-                    "Exception should have UNSUPPORTED_ALGORITHM event type");
+            assertEquals(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM, exception.getEventType());
 
             // And a warning should be logged
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Unsupported algorithm: RS256");
 
             // Verify security event was recorded
-            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM),
-                    "UNSUPPORTED_ALGORITHM event should be incremented");
+            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM));
         }
 
         @Test
@@ -170,19 +167,16 @@ class TokenHeaderValidatorTest {
 
             // When validating the validation, it should throw an exception
             var exception = assertThrows(TokenValidationException.class,
-                    () -> validator.validate(decodedJwt),
-                    "Token with missing algorithm should throw TokenValidationException");
+                    () -> validator.validate(decodedJwt));
 
             // Verify the exception has the correct event type
-            assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType(),
-                    "Exception should have MISSING_CLAIM event type");
+            assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType());
 
             // And a warning should be logged
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Token is missing required claim: alg");
 
             // Verify security event was recorded
-            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.MISSING_CLAIM),
-                    "MISSING_CLAIM event should be incremented");
+            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.MISSING_CLAIM));
         }
     }
 
@@ -202,11 +196,10 @@ class TokenHeaderValidatorTest {
             // And a validation with the expected issuer
             String token = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.defaultForTokenType(TokenType.ACCESS_TOKEN)).getRawToken();
             DecodedJwt decodedJwt = JWT_PARSER.decode(token);
-            assertEquals(EXPECTED_ISSUER, decodedJwt.getIssuer().orElse(null), "Token should have expected issuer");
+            assertEquals(EXPECTED_ISSUER, decodedJwt.getIssuer().orElse(null));
 
             // When validating the validation, it should not throw an exception
-            assertDoesNotThrow(() -> validator.validate(decodedJwt),
-                    "Token with expected issuer should be valid");
+            assertDoesNotThrow(() -> validator.validate(decodedJwt));
         }
 
         @Test
@@ -228,20 +221,17 @@ class TokenHeaderValidatorTest {
 
             // When validating the validation, it should throw an exception
             var exception = assertThrows(TokenValidationException.class,
-                    () -> validator.validate(decodedJwt),
-                    "Token with wrong issuer should throw TokenValidationException");
+                    () -> validator.validate(decodedJwt));
 
             // Verify the exception has the correct event type
-            assertEquals(SecurityEventCounter.EventType.ISSUER_MISMATCH, exception.getEventType(),
-                    "Exception should have ISSUER_MISMATCH event type");
+            assertEquals(SecurityEventCounter.EventType.ISSUER_MISMATCH, exception.getEventType());
 
             // And a warning should be logged
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
                     "Token issuer '" + WRONG_ISSUER + "' does not match expected issuer");
 
             // Verify security event was recorded
-            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.ISSUER_MISMATCH),
-                    "ISSUER_MISMATCH event should be incremented");
+            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.ISSUER_MISMATCH));
         }
 
         @Test
@@ -264,8 +254,7 @@ class TokenHeaderValidatorTest {
 
             // When validating the validation, it should throw an exception
             var exception = assertThrows(TokenValidationException.class,
-                    () -> validator.validate(decodedJwt),
-                    "Token with missing issuer should throw TokenValidationException");
+                    () -> validator.validate(decodedJwt));
 
             // Verify the exception has the correct event type
             assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType(),
@@ -275,8 +264,7 @@ class TokenHeaderValidatorTest {
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Token is missing required claim: iss");
 
             // Verify security event was recorded
-            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.MISSING_CLAIM),
-                    "MISSING_CLAIM event should be incremented");
+            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.MISSING_CLAIM));
         }
 
         @Test
@@ -294,24 +282,21 @@ class TokenHeaderValidatorTest {
             // And a validation with a different issuer
             String token = new TestTokenHolder(TokenType.ACCESS_TOKEN, ClaimControlParameter.defaultForTokenType(TokenType.ACCESS_TOKEN)).getRawToken();
             DecodedJwt decodedJwt = JWT_PARSER.decode(token);
-            assertEquals(EXPECTED_ISSUER, decodedJwt.getIssuer().orElse(null), "Token should have expected issuer");
+            assertEquals(EXPECTED_ISSUER, decodedJwt.getIssuer().orElse(null));
 
             // When validating the validation, it should throw an exception
             var exception = assertThrows(TokenValidationException.class,
-                    () -> validator.validate(decodedJwt),
-                    "Token with mismatched issuer should throw TokenValidationException");
+                    () -> validator.validate(decodedJwt));
 
             // Verify the exception has the correct event type
-            assertEquals(SecurityEventCounter.EventType.ISSUER_MISMATCH, exception.getEventType(),
-                    "Exception should have ISSUER_MISMATCH event type");
+            assertEquals(SecurityEventCounter.EventType.ISSUER_MISMATCH, exception.getEventType());
 
             // And a warning should be logged
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
                     "Token issuer '" + EXPECTED_ISSUER + "' does not match expected issuer 'dummy-issuer'");
 
             // Verify security event was recorded
-            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.ISSUER_MISMATCH),
-                    "ISSUER_MISMATCH event should be incremented");
+            assertEquals(initialCount + 1, SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.ISSUER_MISMATCH));
         }
     }
 }

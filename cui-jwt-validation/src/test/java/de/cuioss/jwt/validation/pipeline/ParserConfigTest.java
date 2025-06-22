@@ -16,6 +16,7 @@
 package de.cuioss.jwt.validation.pipeline;
 
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import jakarta.json.JsonReaderFactory;
 import org.junit.jupiter.api.DisplayName;
@@ -27,16 +28,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for {@link ParserConfig}.
  */
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests for ParserConfig")
 class ParserConfigTest {
 
     @Test
     @DisplayName("Should create config with default values")
     void shouldCreateConfigWithDefaultValues() {
-        // When
-        ParserConfig config = ParserConfig.builder().build();
 
-        // Then
+        ParserConfig config = ParserConfig.builder().build();
         assertEquals(ParserConfig.DEFAULT_MAX_TOKEN_SIZE, config.getMaxTokenSize());
         assertEquals(ParserConfig.DEFAULT_MAX_PAYLOAD_SIZE, config.getMaxPayloadSize());
         assertEquals(ParserConfig.DEFAULT_MAX_STRING_SIZE, config.getMaxStringSize());
@@ -48,15 +48,13 @@ class ParserConfigTest {
     @Test
     @DisplayName("Should create config with custom values")
     void shouldCreateConfigWithCustomValues() {
-        // Given
+
         int customMaxTokenSize = 4096;
         int customMaxPayloadSize = 2048;
         int customMaxStringSize = 1024;
         int customMaxArraySize = 32;
         int customMaxDepth = 5;
         boolean customLogWarnings = false;
-
-        // When
         ParserConfig config = ParserConfig.builder()
                 .maxTokenSize(customMaxTokenSize)
                 .maxPayloadSize(customMaxPayloadSize)
@@ -65,8 +63,6 @@ class ParserConfigTest {
                 .maxDepth(customMaxDepth)
                 .logWarningsOnDecodeFailure(customLogWarnings)
                 .build();
-
-        // Then
         assertEquals(customMaxTokenSize, config.getMaxTokenSize());
         assertEquals(customMaxPayloadSize, config.getMaxPayloadSize());
         assertEquals(customMaxStringSize, config.getMaxStringSize());
@@ -78,20 +74,16 @@ class ParserConfigTest {
     @Test
     @DisplayName("Should create JsonReaderFactory with security settings")
     void shouldCreateJsonReaderFactoryWithSecuritySettings() {
-        // Given
+
         ParserConfig config = ParserConfig.builder().build();
-
-        // When
         JsonReaderFactory factory = config.getJsonReaderFactory();
-
-        // Then
         assertNotNull(factory, "JsonReaderFactory should not be null");
     }
 
     @Test
     @DisplayName("Should create JsonReaderFactory with custom security settings")
     void shouldCreateJsonReaderFactoryWithCustomSecuritySettings() {
-        // Given
+
         int customMaxStringSize = 1024;
         int customMaxArraySize = 32;
         int customMaxDepth = 5;
@@ -101,12 +93,8 @@ class ParserConfigTest {
                 .maxArraySize(customMaxArraySize)
                 .maxDepth(customMaxDepth)
                 .build();
-
-        // When
         JsonReaderFactory factory = config.getJsonReaderFactory();
-
-        // Then
-        assertNotNull(factory, "JsonReaderFactory should not be null");
+        assertNotNull(factory, "JsonReaderFactory with custom settings should not be null");
         // Note: We can't directly verify the configuration of the factory
         // as there's no public API to access its configuration
     }

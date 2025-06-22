@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.domain.claim.mapper;
 
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.claim.ClaimValueType;
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -29,13 +30,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger
+@EnableGeneratorController
 @DisplayName("Tests StringSplitterMapper functionality")
 class StringSplitterMapperTest {
 
@@ -44,16 +45,13 @@ class StringSplitterMapperTest {
 
     @ParameterizedTest
     @MethodSource("provideSeparatorTestCases")
-    @DisplayName("Should correctly map values with different separators")
+    @DisplayName("Map values with different separators")
     void shouldMapValuesWithDifferentSeparators(char separator, String input, List<String> expected) {
-        // Given
         StringSplitterMapper mapper = new StringSplitterMapper(separator);
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, input);
 
-        // When
         ClaimValue result = mapper.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(input, result.getOriginalString(), "Original string should be preserved");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
@@ -63,24 +61,21 @@ class StringSplitterMapperTest {
     static Stream<Arguments> provideSeparatorTestCases() {
         return Stream.of(
                 // separator, input string, expected list
-                Arguments.of(',', "admin,user,manager", Arrays.asList("admin", "user", "manager")),
-                Arguments.of(':', "admin:user:manager", Arrays.asList("admin", "user", "manager")),
-                Arguments.of(';', "admin;user;manager", Arrays.asList("admin", "user", "manager")),
-                Arguments.of('|', "admin|user|manager", Arrays.asList("admin", "user", "manager"))
+                Arguments.of(',', "admin,user,manager", List.of("admin", "user", "manager")),
+                Arguments.of(':', "admin:user:manager", List.of("admin", "user", "manager")),
+                Arguments.of(';', "admin;user;manager", List.of("admin", "user", "manager")),
+                Arguments.of('|', "admin|user|manager", List.of("admin", "user", "manager"))
         );
     }
 
     @ParameterizedTest
     @MethodSource("provideInputFormatTestCases")
-    @DisplayName("Should handle different input formats")
+    @DisplayName("Handle different input formats")
     void shouldHandleDifferentInputFormats(String input, List<String> expected, String testDescription) {
-        // Given
         JsonObject jsonObject = createJsonObjectWithStringClaim(CLAIM_NAME, input);
 
-        // When
         ClaimValue result = commaMapper.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(input, result.getOriginalString(), "Original string should be preserved");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
@@ -91,13 +86,13 @@ class StringSplitterMapperTest {
         return Stream.of(
                 // input string, expected list, test description
                 Arguments.of("  admin  ,  user  ,  manager  ",
-                        Arrays.asList("admin", "user", "manager"),
+                        List.of("admin", "user", "manager"),
                         "Values should be correctly parsed with whitespace trimmed"),
                 Arguments.of("admin,,user,,manager",
-                        Arrays.asList("admin", "user", "manager"),
+                        List.of("admin", "user", "manager"),
                         "Empty segments should be omitted"),
                 Arguments.of("role1,role-with-dash,role_with_underscore,role.with.dots,role@with@at",
-                        Arrays.asList("role1", "role-with-dash", "role_with_underscore", "role.with.dots", "role@with@at"),
+                        List.of("role1", "role-with-dash", "role_with_underscore", "role.with.dots", "role@with@at"),
                         "Values with special characters should be correctly parsed")
         );
     }
@@ -105,17 +100,14 @@ class StringSplitterMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t", "\n"})
-    @DisplayName("Should handle null, empty, and whitespace inputs")
+    @DisplayName("Handle null, empty, and whitespace inputs")
     void shouldHandleSpecialInputs(String input) {
-        // Given
         JsonObject jsonObject = input == null
                 ? createJsonObjectWithNullClaim(CLAIM_NAME)
                 : createJsonObjectWithStringClaim(CLAIM_NAME, input);
 
-        // When
         ClaimValue result = commaMapper.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertEquals(input, result.getOriginalString(), "Original string should be preserved");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
@@ -123,15 +115,12 @@ class StringSplitterMapperTest {
     }
 
     @Test
-    @DisplayName("Should handle missing claim")
+    @DisplayName("Handle missing claim")
     void shouldHandleMissingClaim() {
-        // Given
         JsonObject jsonObject = Json.createObjectBuilder().build();
 
-        // When
         ClaimValue result = commaMapper.map(jsonObject, CLAIM_NAME);
 
-        // Then
         assertNotNull(result, "Result should not be null");
         assertNull(result.getOriginalString(), "Original string should be null");
         assertEquals(ClaimValueType.STRING_LIST, result.getType(), "Type should be STRING_LIST");
@@ -140,9 +129,8 @@ class StringSplitterMapperTest {
 
     @ParameterizedTest
     @MethodSource("provideUnsupportedValueTypes")
-    @DisplayName("Should throw exception for unsupported value types")
+    @DisplayName("Throw exception for unsupported value types")
     void shouldThrowExceptionForUnsupportedValueTypes(JsonObject jsonObject, String valueTypeName) {
-        // When, Then
         assertThrows(IllegalArgumentException.class, () -> commaMapper.map(jsonObject, CLAIM_NAME),
                 "Should throw IllegalArgumentException for " + valueTypeName + " value type");
     }
@@ -182,9 +170,8 @@ class StringSplitterMapperTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when constructor is called with null")
+    @DisplayName("Throw exception when constructor is called with null")
     void shouldThrowExceptionForNullSplitChar() {
-        // When, Then
         assertThrows(NullPointerException.class, () -> new StringSplitterMapper(null),
                 "Should throw NullPointerException when constructor is called with null");
     }

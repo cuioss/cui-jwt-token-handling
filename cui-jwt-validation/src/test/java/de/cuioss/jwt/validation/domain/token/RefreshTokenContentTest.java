@@ -17,15 +17,15 @@ package de.cuioss.jwt.validation.domain.token;
 
 import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
+import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimValueGenerator;
-import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
+import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.Generators;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.valueobjects.junit5.contracts.ShouldHandleObjectContracts;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,41 +38,30 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests RefreshTokenContent functionality")
 class RefreshTokenContentTest implements ShouldHandleObjectContracts<RefreshTokenContent> {
 
-    private static final String SAMPLE_TOKEN = TestTokenGenerators.refreshTokens().next().getRawToken();
-
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.REFRESH_TOKEN, count = 3)
     @DisplayName("Should create RefreshTokenContent with valid validation")
-    void shouldCreateRefreshTokenContentWithValidToken() {
-        // Given a valid validation
-        var token = SAMPLE_TOKEN;
-        Map<String, ClaimValue> claims = Collections.emptyMap();
+    void shouldCreateRefreshTokenContentWithValidToken(TestTokenHolder tokenHolder) {
+        var refreshTokenContent = new RefreshTokenContent(tokenHolder.getRawToken(), tokenHolder.getClaims());
 
-        // When creating a RefreshTokenContent
-        var refreshTokenContent = new RefreshTokenContent(token, claims);
-
-        // Then the content should be correctly initialized
         assertNotNull(refreshTokenContent, "RefreshTokenContent should not be null");
-        assertEquals(token, refreshTokenContent.getRawToken(), "Raw validation should match");
+        assertEquals(tokenHolder.getRawToken(), refreshTokenContent.getRawToken(), "Raw validation should match");
         assertEquals(TokenType.REFRESH_TOKEN, refreshTokenContent.getTokenType(), "Token type should be REFRESH_TOKEN");
         assertNotNull(refreshTokenContent.getClaims(), "Claims should not be null");
-        assertTrue(refreshTokenContent.getClaims().isEmpty(), "Claims should be empty");
+        assertEquals(tokenHolder.getClaims(), refreshTokenContent.getClaims(), "Claims should match");
     }
 
-    @Test
+    @ParameterizedTest
+    @TestTokenSource(value = TokenType.REFRESH_TOKEN, count = 2)
     @DisplayName("Should create RefreshTokenContent with claims")
-    void shouldCreateRefreshTokenContentWithClaims() {
-        // Given a valid validation and claims
-        var token = SAMPLE_TOKEN;
-        Map<String, ClaimValue> claims = new HashMap<>();
+    void shouldCreateRefreshTokenContentWithClaims(TestTokenHolder tokenHolder) {
         String testValue = "test-value";
-        claims.put("test-claim", ClaimValue.forPlainString(testValue));
+        tokenHolder.withClaim("test-claim", ClaimValue.forPlainString(testValue));
 
-        // When creating a RefreshTokenContent
-        var refreshTokenContent = new RefreshTokenContent(token, claims);
+        var refreshTokenContent = new RefreshTokenContent(tokenHolder.getRawToken(), tokenHolder.getClaims());
 
-        // Then the content should be correctly initialized with claims
         assertNotNull(refreshTokenContent, "RefreshTokenContent should not be null");
-        assertEquals(token, refreshTokenContent.getRawToken(), "Raw validation should match");
+        assertEquals(tokenHolder.getRawToken(), refreshTokenContent.getRawToken(), "Raw validation should match");
         assertEquals(TokenType.REFRESH_TOKEN, refreshTokenContent.getTokenType(), "Token type should be REFRESH_TOKEN");
         assertNotNull(refreshTokenContent.getClaims(), "Claims should not be null");
         assertFalse(refreshTokenContent.getClaims().isEmpty(), "Claims should not be empty");

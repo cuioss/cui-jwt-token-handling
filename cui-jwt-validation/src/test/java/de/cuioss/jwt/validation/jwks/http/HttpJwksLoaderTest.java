@@ -70,19 +70,16 @@ class HttpJwksLoaderTest {
     @Test
     @DisplayName("Should create loader with constructor")
     void shouldCreateLoaderWithConstructor() {
-        // Then
-        assertNotNull(httpJwksLoader);
-        assertNotNull(httpJwksLoader.getConfig());
-        assertEquals(REFRESH_INTERVAL, httpJwksLoader.getConfig().getRefreshIntervalSeconds());
+        assertNotNull(httpJwksLoader, "HttpJwksLoader should not be null");
+        assertNotNull(httpJwksLoader.getConfig(), "Config should not be null");
+        assertEquals(REFRESH_INTERVAL, httpJwksLoader.getConfig().getRefreshIntervalSeconds(), "Refresh interval should match");
     }
 
     @Test
     @DisplayName("Should get key info by ID")
     void shouldGetKeyInfoById() {
-        // When
-        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
 
-        // Then
+        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
         assertTrue(keyInfo.isPresent(), "Key info should be present");
         assertEquals(TEST_KID, keyInfo.get().getKeyId(), "Key ID should match");
         assertEquals(1, moduleDispatcher.getCallCounter(), "JWKS endpoint should be called once");
@@ -93,11 +90,7 @@ class HttpJwksLoaderTest {
     void shouldReturnEmptyForUnknownKeyId() {
         // Get initial count
         long initialCount = securityEventCounter.getCount(SecurityEventCounter.EventType.KEY_NOT_FOUND);
-
-        // When
         Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo("unknown-kid");
-
-        // Then
         assertFalse(keyInfo.isPresent(), "Key info should not be present for unknown key ID");
 
         // Verify security event was recorded
@@ -108,30 +101,24 @@ class HttpJwksLoaderTest {
     @Test
     @DisplayName("Should return empty for null key ID")
     void shouldReturnEmptyForNullKeyId() {
-        // When
-        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(null);
 
-        // Then
+        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(null);
         assertFalse(keyInfo.isPresent(), "Key info should not be present for null key ID");
     }
 
     @Test
     @DisplayName("Should get first key info")
     void shouldGetFirstKeyInfo() {
-        // When
-        Optional<KeyInfo> keyInfo = httpJwksLoader.getFirstKeyInfo();
 
-        // Then
+        Optional<KeyInfo> keyInfo = httpJwksLoader.getFirstKeyInfo();
         assertTrue(keyInfo.isPresent(), "First key info should be present");
     }
 
     @Test
     @DisplayName("Should get all key infos")
     void shouldGetAllKeyInfos() {
-        // When
-        List<KeyInfo> keyInfos = httpJwksLoader.getAllKeyInfos();
 
-        // Then
+        List<KeyInfo> keyInfos = httpJwksLoader.getAllKeyInfos();
         assertNotNull(keyInfos, "Key infos should not be null");
         assertFalse(keyInfos.isEmpty(), "Key infos should not be empty");
     }
@@ -139,10 +126,8 @@ class HttpJwksLoaderTest {
     @Test
     @DisplayName("Should get key set")
     void shouldGetKeySet() {
-        // When
-        Set<String> keySet = httpJwksLoader.keySet();
 
-        // Then
+        Set<String> keySet = httpJwksLoader.keySet();
         assertNotNull(keySet, "Key set should not be null");
         assertFalse(keySet.isEmpty(), "Key set should not be empty");
         assertTrue(keySet.contains(TEST_KID), "Key set should contain test key ID");
@@ -151,23 +136,19 @@ class HttpJwksLoaderTest {
     @Test
     @DisplayName("Should cache keys and minimize HTTP requests")
     void shouldCacheKeysAndMinimizeHttpRequests() {
-        // When
+
         for (int i = 0; i < 5; i++) {
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(keyInfo.isPresent(), "Key info should be present on call " + i);
         }
-
-        // Then
         assertEquals(1, moduleDispatcher.getCallCounter(), "JWKS endpoint should be called only once due to caching");
     }
 
     @Test
     @DisplayName("Should close resources")
     void shouldCloseResources() {
-        // When
-        httpJwksLoader.close();
 
-        // Then
+        httpJwksLoader.close();
         // No exception should be thrown
         assertTrue(true, "Close should complete without exceptions");
     }
@@ -176,10 +157,8 @@ class HttpJwksLoaderTest {
     @ModuleDispatcher
     @DisplayName("Should create new loader with custom parameters")
     void shouldCreateNewLoaderWithCustomParameters(URIBuilder uriBuilder) {
-        // Given
-        String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
-        // When
+        String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(jwksEndpoint)
                 .refreshIntervalSeconds(30)
@@ -189,8 +168,6 @@ class HttpJwksLoaderTest {
                 .build();
 
         HttpJwksLoader customLoader = new HttpJwksLoader(config, securityEventCounter);
-
-        // Then
         assertNotNull(customLoader);
         assertEquals(30, customLoader.getConfig().getRefreshIntervalSeconds());
         assertEquals(200, customLoader.getConfig().getMaxCacheSize());
@@ -264,4 +241,5 @@ class HttpJwksLoaderTest {
                         httpJwksLoader.getConfig().getHttpHandler().getUri().toString(),
                         1)); // We expect 1 key in the test JWKS
     }
+
 }

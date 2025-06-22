@@ -58,7 +58,7 @@ class JwksHttpClientTest {
     @Test
     @DisplayName("Should create client with config")
     void shouldCreateClientWithConfig() {
-        // Then
+
         assertNotNull(client);
         assertNotNull(client.getHttpClient());
     }
@@ -66,10 +66,8 @@ class JwksHttpClientTest {
     @Test
     @DisplayName("Should handle 200 OK response")
     void shouldHandle200OkResponse() {
-        // When
-        JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(null);
 
-        // Then
+        JwksHttpClient.JwksHttpResponse response = client.fetchJwksContent(null);
         assertFalse(response.isNotModified());
         assertNotNull(response.getContent());
         assertTrue(response.getContent().contains("keys"));
@@ -79,10 +77,8 @@ class JwksHttpClientTest {
     @Test
     @DisplayName("Should create empty response")
     void shouldCreateEmptyResponse() {
-        // When
-        JwksHttpClient.JwksHttpResponse response = JwksHttpClient.JwksHttpResponse.empty();
 
-        // Then
+        JwksHttpClient.JwksHttpResponse response = JwksHttpClient.JwksHttpResponse.empty();
         assertFalse(response.isNotModified());
         assertEquals("{}", response.getContent());
         assertEquals(Optional.empty(), response.getEtag());
@@ -91,10 +87,8 @@ class JwksHttpClientTest {
     @Test
     @DisplayName("Should create not modified response")
     void shouldCreateNotModifiedResponse() {
-        // When
-        JwksHttpClient.JwksHttpResponse response = JwksHttpClient.JwksHttpResponse.notModified();
 
-        // Then
+        JwksHttpClient.JwksHttpResponse response = JwksHttpClient.JwksHttpResponse.notModified();
         assertTrue(response.isNotModified());
         assertNull(response.getContent());
         assertEquals(Optional.empty(), response.getEtag());
@@ -103,14 +97,10 @@ class JwksHttpClientTest {
     @Test
     @DisplayName("Should create response with content")
     void shouldCreateResponseWithContent() {
-        // Given
+
         String content = JWKS_CONTENT;
         String etag = "\"test-etag\"";
-
-        // When
         JwksHttpClient.JwksHttpResponse response = JwksHttpClient.JwksHttpResponse.withContent(content, etag);
-
-        // Then
         assertFalse(response.isNotModified());
         assertEquals(content, response.getContent());
         assertEquals(Optional.of(etag), response.getEtag());

@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.security;
 
+import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
@@ -25,10 +26,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * See: doc/specification/security-specifications.adoc
  */
 @EnableTestLogger(debug = AlgorithmPreferences.class, warn = AlgorithmPreferences.class)
+@EnableGeneratorController
 @DisplayName("Tests AlgorithmPreferences")
 class AlgorithmPreferencesTest {
 
@@ -50,39 +50,27 @@ class AlgorithmPreferencesTest {
     class ConstructorTests {
 
         @Test
-        @DisplayName("Default constructor should initialize with default preferred algorithms")
-        void defaultConstructorShouldInitializeWithDefaultPreferredAlgorithms() {
-            // When
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-
-            // Then
+        @DisplayName("Initialize with default algorithms")
+        void shouldInitializeWithDefaults() {
+            var preferences = new AlgorithmPreferences();
             assertEquals(AlgorithmPreferences.getDefaultPreferredAlgorithms(), preferences.getPreferredAlgorithms(),
                     "Default constructor should initialize with default preferred algorithms");
         }
 
         @Test
-        @DisplayName("Constructor with custom preferred algorithms should initialize correctly")
-        void constructorWithCustomPreferredAlgorithmsShouldInitializeCorrectly() {
-            // Given
-            List<String> customAlgorithms = Arrays.asList("RS256", "ES256");
-
-            // When
-            AlgorithmPreferences preferences = new AlgorithmPreferences(customAlgorithms);
-
-            // Then
+        @DisplayName("Initialize with custom algorithms")
+        void shouldInitializeWithCustom() {
+            var customAlgorithms = List.of("RS256", "ES256");
+            var preferences = new AlgorithmPreferences(customAlgorithms);
             assertEquals(customAlgorithms, preferences.getPreferredAlgorithms(),
                     "Constructor should initialize with custom preferred algorithms");
         }
 
         @Test
-        @DisplayName("Constructor should create an unmodifiable list")
-        void constructorShouldCreateUnmodifiableList() {
-            // Given
-            List<String> customAlgorithms = Arrays.asList("RS256", "ES256");
-            AlgorithmPreferences preferences = new AlgorithmPreferences(customAlgorithms);
-
-            List<String> preferredAlgorithms = preferences.getPreferredAlgorithms();
-            // When/Then
+        @DisplayName("Create unmodifiable list")
+        void shouldCreateUnmodifiableList() {
+            var preferences = new AlgorithmPreferences(List.of("RS256", "ES256"));
+            var preferredAlgorithms = preferences.getPreferredAlgorithms();
             assertThrows(UnsupportedOperationException.class, () -> preferredAlgorithms.add("RS384"),
                     "The preferred algorithms list should be unmodifiable");
         }
@@ -93,17 +81,12 @@ class AlgorithmPreferencesTest {
     class GetDefaultPreferredAlgorithmsTests {
 
         @Test
-        @DisplayName("getDefaultPreferredAlgorithms should return the expected default algorithms")
-        void getDefaultPreferredAlgorithmsShouldReturnExpectedDefaultAlgorithms() {
-            // When
-            List<String> defaultAlgorithms = AlgorithmPreferences.getDefaultPreferredAlgorithms();
-
-            // Then
+        @DisplayName("Return expected defaults")
+        void shouldReturnExpectedDefaults() {
+            var defaultAlgorithms = AlgorithmPreferences.getDefaultPreferredAlgorithms();
             assertNotNull(defaultAlgorithms, "Default algorithms should not be null");
             assertFalse(defaultAlgorithms.isEmpty(), "Default algorithms should not be empty");
-
-            // Verify the default algorithms include the expected ones
-            List<String> expectedAlgorithms = Arrays.asList(
+            var expectedAlgorithms = List.of(
                     "ES512", "ES384", "ES256", "PS512", "PS384", "PS256", "RS512", "RS384", "RS256");
             assertEquals(expectedAlgorithms, defaultAlgorithms,
                     "Default algorithms should match the expected list");
@@ -117,70 +100,42 @@ class AlgorithmPreferencesTest {
     class IsSupportedTests {
 
         @ParameterizedTest
-        @DisplayName("isSupported should return true for supported algorithms")
+        @DisplayName("Return true for supported algorithms")
         @ValueSource(strings = {"RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512"})
-        void isSupportedShouldReturnTrueForSupportedAlgorithms(String algorithm) {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-
-            // When
-            boolean isSupported = preferences.isSupported(algorithm);
-
-            // Then
-            assertTrue(isSupported, "Algorithm " + algorithm + " should be supported");
+        void shouldReturnTrueForSupported(String algorithm) {
+            var preferences = new AlgorithmPreferences();
+            assertTrue(preferences.isSupported(algorithm), "Algorithm " + algorithm + " should be supported");
         }
 
         @ParameterizedTest
-        @DisplayName("isSupported should return false for rejected algorithms")
+        @DisplayName("Return false for rejected algorithms")
         @ValueSource(strings = {"HS256", "HS384", "HS512", "none"})
-        void isSupportedShouldReturnFalseForRejectedAlgorithms(String algorithm) {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-
-            // When
-            boolean isSupported = preferences.isSupported(algorithm);
-
-            // Then
-            assertFalse(isSupported, "Algorithm " + algorithm + " should be rejected");
+        void shouldReturnFalseForRejected(String algorithm) {
+            var preferences = new AlgorithmPreferences();
+            assertFalse(preferences.isSupported(algorithm), "Algorithm " + algorithm + " should be rejected");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
                     "Algorithm " + algorithm + " is explicitly rejected for security reasons");
         }
 
         @ParameterizedTest
-        @DisplayName("isSupported should return false for null or empty algorithm")
+        @DisplayName("Return false for null or empty algorithm")
         @NullAndEmptySource
-        void isSupportedShouldReturnFalseForNullOrEmptyAlgorithm(String algorithm) {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-
-            // When
-            boolean isSupported = preferences.isSupported(algorithm);
-
-            // Then
-            assertFalse(isSupported, "Null or empty algorithm should not be supported");
+        void shouldReturnFalseForNullOrEmpty(String algorithm) {
+            var preferences = new AlgorithmPreferences();
+            assertFalse(preferences.isSupported(algorithm), "Null or empty algorithm should not be supported");
         }
 
         @Test
-        @DisplayName("isSupported should return false for unsupported algorithms")
-        void isSupportedShouldReturnFalseForUnsupportedAlgorithms() {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-
-            // When
-            boolean isSupported = preferences.isSupported("UNSUPPORTED_ALG");
-
-            // Then
-            assertFalse(isSupported, "Unsupported algorithm should return false");
+        @DisplayName("Return false for unsupported algorithms")
+        void shouldReturnFalseForUnsupported() {
+            var preferences = new AlgorithmPreferences();
+            assertFalse(preferences.isSupported("UNSUPPORTED_ALG"), "Unsupported algorithm should return false");
         }
 
         @Test
-        @DisplayName("isSupported should respect custom preferred algorithms")
-        void isSupportedShouldRespectCustomPreferredAlgorithms() {
-            // Given
-            List<String> customAlgorithms = List.of("RS256");
-            AlgorithmPreferences preferences = new AlgorithmPreferences(customAlgorithms);
-
-            // When/Then
+        @DisplayName("Respect custom algorithms")
+        void shouldRespectCustomAlgorithms() {
+            var preferences = new AlgorithmPreferences(List.of("RS256"));
             assertTrue(preferences.isSupported("RS256"), "RS256 should be supported");
             assertFalse(preferences.isSupported("ES256"), "ES256 should not be supported");
         }
@@ -191,88 +146,53 @@ class AlgorithmPreferencesTest {
     class GetMostPreferredAlgorithmTests {
 
         @Test
-        @DisplayName("getMostPreferredAlgorithm should return the most preferred available algorithm")
-        void getMostPreferredAlgorithmShouldReturnMostPreferredAvailableAlgorithm() {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-            List<String> availableAlgorithms = Arrays.asList("RS256", "ES256");
-
-            // When
-            Optional<String> result = preferences.getMostPreferredAlgorithm(availableAlgorithms);
-
-            // Then
+        @DisplayName("Return most preferred available")
+        void shouldReturnMostPreferred() {
+            var preferences = new AlgorithmPreferences();
+            var result = preferences.getMostPreferredAlgorithm(List.of("RS256", "ES256"));
             assertTrue(result.isPresent(), "Result should be present");
             assertEquals("ES256", result.get(), "ES256 should be the most preferred available algorithm");
         }
 
         @Test
-        @DisplayName("getMostPreferredAlgorithm should return empty for no matching algorithms")
-        void getMostPreferredAlgorithmShouldReturnEmptyForNoMatchingAlgorithms() {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-            List<String> availableAlgorithms = List.of("UNSUPPORTED_ALG");
-
-            // When
-            Optional<String> result = preferences.getMostPreferredAlgorithm(availableAlgorithms);
-
-            // Then
+        @DisplayName("Return empty for no matches")
+        void shouldReturnEmptyForNoMatches() {
+            var preferences = new AlgorithmPreferences();
+            var result = preferences.getMostPreferredAlgorithm(List.of("UNSUPPORTED_ALG"));
             assertFalse(result.isPresent(), "Result should be empty for no matching algorithms");
         }
 
         @Test
-        @DisplayName("getMostPreferredAlgorithm should return empty for null available algorithms")
-        void getMostPreferredAlgorithmShouldReturnEmptyForNullAvailableAlgorithms() {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-
-            // When
-            Optional<String> result = preferences.getMostPreferredAlgorithm(null);
-
-            // Then
+        @DisplayName("Return empty for null")
+        void shouldReturnEmptyForNull() {
+            var preferences = new AlgorithmPreferences();
+            var result = preferences.getMostPreferredAlgorithm(null);
             assertFalse(result.isPresent(), "Result should be empty for null available algorithms");
         }
 
         @Test
-        @DisplayName("getMostPreferredAlgorithm should return empty for empty available algorithms")
-        void getMostPreferredAlgorithmShouldReturnEmptyForEmptyAvailableAlgorithms() {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-
-            // When
-            Optional<String> result = preferences.getMostPreferredAlgorithm(Collections.emptyList());
-
-            // Then
+        @DisplayName("Return empty for empty list")
+        void shouldReturnEmptyForEmptyList() {
+            var preferences = new AlgorithmPreferences();
+            var result = preferences.getMostPreferredAlgorithm(Collections.emptyList());
             assertFalse(result.isPresent(), "Result should be empty for empty available algorithms");
         }
 
         @Test
-        @DisplayName("getMostPreferredAlgorithm should respect order of preference")
-        void getMostPreferredAlgorithmShouldRespectOrderOfPreference() {
-            // Given
-            AlgorithmPreferences preferences = new AlgorithmPreferences();
-            // Available algorithms in reverse order of preference
-            List<String> availableAlgorithms = Arrays.asList("RS256", "RS384", "RS512", "ES256", "ES384", "ES512");
-
-            // When
-            Optional<String> result = preferences.getMostPreferredAlgorithm(availableAlgorithms);
-
-            // Then
+        @DisplayName("Respect preference order")
+        void shouldRespectPreferenceOrder() {
+            var preferences = new AlgorithmPreferences();
+            var availableAlgorithms = List.of("RS256", "RS384", "RS512", "ES256", "ES384", "ES512");
+            var result = preferences.getMostPreferredAlgorithm(availableAlgorithms);
             assertTrue(result.isPresent(), "Result should be present");
             assertEquals("ES512", result.get(), "ES512 should be the most preferred available algorithm");
         }
 
         @Test
-        @DisplayName("getMostPreferredAlgorithm should work with custom preferences")
-        void getMostPreferredAlgorithmShouldWorkWithCustomPreferences() {
-            // Given
-            List<String> customAlgorithms = Arrays.asList("RS256", "ES256");
-            AlgorithmPreferences preferences = new AlgorithmPreferences(customAlgorithms);
-            List<String> availableAlgorithms = Arrays.asList("ES256", "RS256");
-
-            // When
-            Optional<String> result = preferences.getMostPreferredAlgorithm(availableAlgorithms);
-
-            // Then
+        @DisplayName("Work with custom preferences")
+        void shouldWorkWithCustomPreferences() {
+            var preferences = new AlgorithmPreferences(List.of("RS256", "ES256"));
+            var result = preferences.getMostPreferredAlgorithm(List.of("ES256", "RS256"));
             assertTrue(result.isPresent(), "Result should be present");
             assertEquals("RS256", result.get(), "RS256 should be the most preferred available algorithm");
         }
