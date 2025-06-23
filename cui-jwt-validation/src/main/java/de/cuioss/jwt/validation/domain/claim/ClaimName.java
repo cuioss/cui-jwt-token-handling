@@ -24,7 +24,9 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Defines standard JWT claim names and their expected value types.
@@ -244,6 +246,9 @@ public enum ClaimName {
     private final String name;
     private final ClaimValueType valueType;
 
+    // Thread-safe cache for ClaimName lookups to improve performance
+    private static final Map<String, Optional<ClaimName>> CLAIM_NAME_CACHE = new ConcurrentHashMap<>();
+
     /**
      * Extract the claim value from the given JSON object using the appropriate mapper.
      *
@@ -253,6 +258,7 @@ public enum ClaimName {
 
     /**
      * Gets a ClaimName by its string name.
+     * This method uses a thread-safe cache to improve performance for repeated lookups.
      *
      * @param name the claim name string
      * @return an Optional containing the ClaimName if found, empty otherwise
@@ -262,12 +268,23 @@ public enum ClaimName {
             return Optional.empty();
         }
 
+        // Check cache first for performance
+        return CLAIM_NAME_CACHE.computeIfAbsent(name, ClaimName::findClaimByName);
+    }
+
+    /**
+     * Internal method to find a ClaimName by its string name.
+     * Used by the cache when a new claim name is encountered.
+     *
+     * @param name the claim name string
+     * @return an Optional containing the ClaimName if found, empty otherwise
+     */
+    private static Optional<ClaimName> findClaimByName(String name) {
         for (ClaimName claimName : values()) {
             if (claimName.getName().equals(name)) {
                 return Optional.of(claimName);
             }
         }
-
         return Optional.empty();
     }
 
