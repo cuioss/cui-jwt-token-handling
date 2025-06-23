@@ -26,6 +26,7 @@ import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SecurityEventCounter.EventType;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.string.MoreStrings;
+import jakarta.json.JsonArray;
 import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
@@ -210,22 +211,44 @@ public class JWKSKeyLoader implements JwksLoader {
         this.securityEventCounter = securityEventCounter;
         this.jwksType = jwksType;
 
-        // Parse JWKS content, handling any exceptions
-        Map<String, KeyInfo> parsedMap;
-        LoaderStatus determinedStatus;
+        ParseResult result = parseJwksContent(originalString, securityEventCounter);
+        this.keyInfoMap = result.keyInfoMap();
+        this.status = result.status();
+    }
+
+    /**
+     * Factory method to create a JWKS key loader with comprehensive validation.
+     *
+     * @param originalString       the JWKS JSON string
+     * @param etag                 the ETag for caching (can be null)
+     * @param parserConfig         the parser configuration (can be null, will use default)
+     * @param securityEventCounter the security event counter for tracking events
+     * @param jwksType             the type of JWKS (file, HTTP, etc.)
+     * @return a new JWKSKeyLoader instance
+     * @throws IllegalArgumentException if originalString or securityEventCounter is null
+     */
+    public static JWKSKeyLoader create(
+            @NonNull String originalString,
+            String etag,
+            ParserConfig parserConfig,
+            @NonNull SecurityEventCounter securityEventCounter,
+            @NonNull JwksType jwksType) {
+        return new JWKSKeyLoader(originalString, etag, parserConfig, securityEventCounter, jwksType);
+    }
+
+    private ParseResult parseJwksContent(String originalString, SecurityEventCounter securityEventCounter) {
         try {
-            parsedMap = parseJwks(originalString);
-            // Determine status based on whether keys were loaded
-            determinedStatus = parsedMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
+            Map<String, KeyInfo> parsedMap = parseJwks(originalString);
+            LoaderStatus determinedStatus = parsedMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
+            return new ParseResult(parsedMap, determinedStatus);
         } catch (JsonException e) {
-            // If parsing fails, log the error and use an empty map
             LOGGER.warn(e, WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
-            parsedMap = new ConcurrentHashMap<>();
-            determinedStatus = LoaderStatus.ERROR;
+            return new ParseResult(new ConcurrentHashMap<>(), LoaderStatus.ERROR);
         }
-        this.keyInfoMap = parsedMap;
-        this.status = determinedStatus;
+    }
+
+    private record ParseResult(Map<String, KeyInfo> keyInfoMap, LoaderStatus status) {
     }
 
     /**
@@ -279,11 +302,20 @@ public class JWKSKeyLoader implements JwksLoader {
 
     /**
      * Parse a JSON Web Key Set object and extract keys.
+     * Enhanced with comprehensive validation:
+     * - Validates JWKS structure and required fields
+     * - Validates key parameters and algorithms
+     * - Enforces size limits for security
      *
      * @param jwks   the JSON Web Key Set object
      * @param result the map to store the extracted keys
      */
     private void parseJsonWebKeySet(JsonObject jwks, Map<String, KeyInfo> result) {
+        // Validate basic JWKS structure
+        if (!validateJwksStructure(jwks)) {
+            return;
+        }
+
         // Check if this is a JWKS with a "keys" array or a single key
         if (JwkKeyConstants.Keys.isPresent(jwks)) {
             parseKeysArray(jwks, result);
@@ -314,11 +346,17 @@ public class JWKSKeyLoader implements JwksLoader {
 
     /**
      * Process a single JWK and add it to the result map.
+     * Enhanced with comprehensive validation.
      *
      * @param jwk    the JWK object
      * @param result the map to store the extracted key
      */
     private void processSingleKey(JsonObject jwk, Map<String, KeyInfo> result) {
+        // Validate key parameters first
+        if (!validateKeyParameters(jwk)) {
+            return;
+        }
+
         var keyType = JwkKeyConstants.KeyType.getString(jwk);
         if (keyType.isEmpty()) {
             LOGGER.warn(WARN.JWK_MISSING_KTY::format);
@@ -438,5 +476,111 @@ public class JWKSKeyLoader implements JwksLoader {
     @Override
     public LoaderStatus getStatus() {
         return status;
+    }
+
+    /**
+     * Validates the structure and content of a JWKS object.
+     * This method performs comprehensive validation to prevent malformed
+     * or malicious JWKS content from being processed.
+     * 
+     * @param jwks the JWKS object to validate
+     * @return true if the JWKS structure is valid, false otherwise
+     */
+    private boolean validateJwksStructure(JsonObject jwks) {
+        // Basic null check
+        if (jwks == null) {
+            LOGGER.warn("JWKS object is null");
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+
+        // Check for excessive number of top-level properties
+        if (jwks.size() > 10) {
+            LOGGER.warn("JWKS object has excessive number of properties: {}", jwks.size());
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+
+        // If it has a "keys" array, validate it
+        if (JwkKeyConstants.Keys.isPresent(jwks)) {
+            JsonArray keysArray = jwks.getJsonArray(JwkKeyConstants.Keys.KEY);
+
+            // Check array size limits
+            if (keysArray.size() > 50) {
+                LOGGER.warn("JWKS keys array exceeds maximum size: {}", keysArray.size());
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+
+            if (keysArray.isEmpty()) {
+                LOGGER.warn("JWKS keys array is empty");
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validates individual key parameters and algorithms.
+     * This method ensures that keys contain required fields and use
+     * supported algorithms.
+     * 
+     * @param keyObject the individual key object to validate
+     * @return true if the key is valid, false otherwise
+     */
+    private boolean validateKeyParameters(JsonObject keyObject) {
+        // Validate required key type
+        if (!JwkKeyConstants.KeyType.isPresent(keyObject)) {
+            LOGGER.warn("Key missing required 'kty' parameter");
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+
+        String keyType = keyObject.getString(JwkKeyConstants.KeyType.KEY);
+
+        // Validate key type is supported
+        if (!"RSA".equals(keyType) && !"EC".equals(keyType)) {
+            LOGGER.warn("Unsupported key type: {}", keyType);
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+
+        // Validate key ID exists and is reasonable length
+        if (keyObject.containsKey(JwkKeyConstants.KeyId.KEY)) {
+            String keyId = keyObject.getString(JwkKeyConstants.KeyId.KEY);
+            if (keyId.length() > 100) {
+                LOGGER.warn("Key ID exceeds maximum length: {}", keyId.length());
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+        }
+
+        // Validate algorithm if present
+        if (keyObject.containsKey(JwkKeyConstants.Algorithm.KEY)) {
+            String algorithm = keyObject.getString(JwkKeyConstants.Algorithm.KEY);
+            if (!isValidAlgorithm(algorithm)) {
+                LOGGER.warn("Invalid or unsupported algorithm: {}", algorithm);
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validates if an algorithm is supported and secure.
+     * 
+     * @param algorithm the algorithm to validate
+     * @return true if the algorithm is valid and supported
+     */
+    private boolean isValidAlgorithm(String algorithm) {
+        return algorithm != null && (
+                "RS256".equals(algorithm) || "RS384".equals(algorithm) || "RS512".equals(algorithm) ||
+                        "ES256".equals(algorithm) || "ES384".equals(algorithm) || "ES512".equals(algorithm) ||
+                        "PS256".equals(algorithm) || "PS384".equals(algorithm) || "PS512".equals(algorithm)
+        );
     }
 }

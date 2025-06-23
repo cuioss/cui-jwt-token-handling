@@ -28,7 +28,8 @@ import java.util.Map;
  * Configuration class for the TokenValidator.
  * <p>
  * This class provides configuration options for the TokenValidator, such as
- * maximum token size, maximum payload size, and logging behavior.
+ * maximum token size, maximum payload size, logging behavior, and HTTP timeout
+ * settings for well-known endpoint requests.
  * It also includes JSON parsing security settings like maximum string size,
  * maximum array size, and maximum depth.
  * <p>
@@ -40,6 +41,8 @@ import java.util.Map;
  *     .maxTokenSize(16 * 1024)
  *     .maxPayloadSize(16 * 1024)
  *     .logWarningsOnDecodeFailure(false)
+ *     .wellKnownConnectTimeoutSeconds(2)
+ *     .wellKnownReadTimeoutSeconds(3)
  *     .build();
  * </pre>
  * <p>
@@ -86,6 +89,16 @@ public class ParserConfig {
     public static final int DEFAULT_MAX_DEPTH = 10;
 
     /**
+     * Default connection timeout for well-known endpoint HTTP requests in seconds.
+     */
+    public static final int DEFAULT_WELL_KNOWN_CONNECT_TIMEOUT_SECONDS = 2;
+
+    /**
+     * Default read timeout for well-known endpoint HTTP requests in seconds.
+     */
+    public static final int DEFAULT_WELL_KNOWN_READ_TIMEOUT_SECONDS = 3;
+
+    /**
      * Maximum size of a JWT token in bytes to prevent overflow attacks.
      */
     @Builder.Default
@@ -120,6 +133,22 @@ public class ParserConfig {
      */
     @Builder.Default
     boolean logWarningsOnDecodeFailure = true;
+
+    /**
+     * Connection timeout for well-known endpoint HTTP requests in seconds.
+     * This value determines how long to wait when establishing connections to
+     * well-known OpenID configuration endpoints.
+     */
+    @Builder.Default
+    int wellKnownConnectTimeoutSeconds = DEFAULT_WELL_KNOWN_CONNECT_TIMEOUT_SECONDS;
+
+    /**
+     * Read timeout for well-known endpoint HTTP requests in seconds.
+     * This value determines how long to wait when reading data from
+     * well-known OpenID configuration endpoints.
+     */
+    @Builder.Default
+    int wellKnownReadTimeoutSeconds = DEFAULT_WELL_KNOWN_READ_TIMEOUT_SECONDS;
 
     /**
      * Cached JsonReaderFactory with security settings.

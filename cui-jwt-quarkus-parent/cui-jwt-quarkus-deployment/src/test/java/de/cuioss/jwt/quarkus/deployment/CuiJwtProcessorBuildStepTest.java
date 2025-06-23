@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.quarkus.deployment;
 
+import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
@@ -23,6 +24,9 @@ import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,10 +45,21 @@ class CuiJwtProcessorBuildStepTest {
     @Test
     @DisplayName("Should create feature build item")
     void shouldCreateFeatureBuildItem() {
-        FeatureBuildItem featureItem = processor.feature();
+        JwtValidationConfig mockConfig = createMockConfig();
+        FeatureBuildItem featureItem = processor.feature(mockConfig);
 
         assertNotNull(featureItem, "Feature build item should not be null");
         assertEquals("cui-jwt", featureItem.getName(), "Feature name should be 'cui-jwt'");
+    }
+
+    @Test
+    @DisplayName("Should create feature build item with valid configuration and validation")
+    void shouldCreateFeatureBuildItemWithValidation() {
+        JwtValidationConfig mockConfig = createMockConfig();
+
+        // This should not throw any exceptions due to validation
+        assertDoesNotThrow(() -> processor.feature(mockConfig),
+                "Feature creation with valid config should not throw exceptions");
     }
 
     @Test
@@ -125,7 +140,8 @@ class CuiJwtProcessorBuildStepTest {
     @DisplayName("Should execute all build steps without exceptions")
     void shouldExecuteAllBuildStepsWithoutExceptions() {
         // Test that all build step methods can be called without throwing exceptions
-        assertDoesNotThrow(processor::feature, "feature() should not throw exceptions");
+        JwtValidationConfig mockConfig = createMockConfig();
+        assertDoesNotThrow(() -> processor.feature(mockConfig), "feature() should not throw exceptions");
         assertDoesNotThrow(processor::registerConfigForReflection,
                 "registerConfigForReflection() should not throw exceptions");
         assertDoesNotThrow(processor::registerNestedConfigForReflection,
@@ -138,5 +154,164 @@ class CuiJwtProcessorBuildStepTest {
                 "createJwtDevUICard() should not throw exceptions");
         assertDoesNotThrow(processor::createJwtDevUIJsonRPCService,
                 "createJwtDevUIJsonRPCService() should not throw exceptions");
+    }
+
+    /**
+     * Creates a test JWT validation configuration for testing.
+     *
+     * @return A test configuration with valid test data
+     */
+    private JwtValidationConfig createMockConfig() {
+        return new TestJwtValidationConfig();
+    }
+
+    /**
+     * Test implementation of JwtValidationConfig for testing purposes.
+     */
+    private static class TestJwtValidationConfig implements JwtValidationConfig {
+        @Override
+        public Map<String, IssuerConfig> issuers() {
+            return Map.of("default", new TestIssuerConfig());
+        }
+
+        @Override
+        public ParserConfig parser() {
+            return new TestParserConfig();
+        }
+
+        @Override
+        public HealthConfig health() {
+            return new TestHealthConfig();
+        }
+    }
+
+    private static class TestIssuerConfig implements JwtValidationConfig.IssuerConfig {
+        @Override
+        public String url() {
+            return "https://example.com/issuer";
+        }
+
+        @Override
+        public Optional<String> publicKeyLocation() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<JwtValidationConfig.HttpJwksLoaderConfig> jwks() {
+            return Optional.of(new TestHttpJwksLoaderConfig());
+        }
+
+        @Override
+        public Optional<JwtValidationConfig.ParserConfig> parser() {
+            return Optional.empty();
+        }
+
+        @Override
+        public boolean enabled() {
+            return true;
+        }
+    }
+
+    private static class TestParserConfig implements JwtValidationConfig.ParserConfig {
+        @Override
+        public Optional<String> audience() {
+            return Optional.empty();
+        }
+
+        @Override
+        public int leewaySeconds() {
+            return 30;
+        }
+
+        @Override
+        public int maxTokenSizeBytes() {
+            return 8192;
+        }
+
+        @Override
+        public boolean validateNotBefore() {
+            return true;
+        }
+
+        @Override
+        public boolean validateExpiration() {
+            return true;
+        }
+
+        @Override
+        public boolean validateIssuedAt() {
+            return false;
+        }
+
+        @Override
+        public String allowedAlgorithms() {
+            return "RS256,RS384,RS512";
+        }
+    }
+
+    private static class TestHttpJwksLoaderConfig implements JwtValidationConfig.HttpJwksLoaderConfig {
+        @Override
+        public Optional<String> url() {
+            return Optional.of("https://example.com/jwks");
+        }
+
+        @Override
+        public Optional<String> wellKnownUrl() {
+            return Optional.empty();
+        }
+
+        @Override
+        public int cacheTtlSeconds() {
+            return 3600;
+        }
+
+        @Override
+        public int refreshIntervalSeconds() {
+            return 300;
+        }
+
+        @Override
+        public int connectionTimeoutSeconds() {
+            return 5;
+        }
+
+        @Override
+        public int readTimeoutSeconds() {
+            return 5;
+        }
+
+        @Override
+        public int maxRetries() {
+            return 3;
+        }
+
+        @Override
+        public boolean useSystemProxy() {
+            return false;
+        }
+    }
+
+    private static class TestHealthConfig implements JwtValidationConfig.HealthConfig {
+        @Override
+        public boolean enabled() {
+            return true;
+        }
+
+        @Override
+        public JwtValidationConfig.JwksHealthConfig jwks() {
+            return new TestJwksHealthConfig();
+        }
+    }
+
+    private static class TestJwksHealthConfig implements JwtValidationConfig.JwksHealthConfig {
+        @Override
+        public int cacheSeconds() {
+            return 30;
+        }
+
+        @Override
+        public int timeoutSeconds() {
+            return 5;
+        }
     }
 }

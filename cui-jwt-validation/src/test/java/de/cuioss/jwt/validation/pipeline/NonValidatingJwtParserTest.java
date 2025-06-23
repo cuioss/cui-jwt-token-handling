@@ -100,7 +100,7 @@ class NonValidatingJwtParserTest {
             assertEquals("test-key-id", jwt.getKid().get(), "Key ID should match expected");
 
             // Verify raw token
-            assertEquals(VALID_TOKEN, jwt.getRawToken(), "Raw token should match original");
+            assertEquals(VALID_TOKEN, jwt.rawToken(), "Raw token should match original");
         }
     }
 
@@ -176,7 +176,7 @@ class NonValidatingJwtParserTest {
 
             // Verify issuer is not present
             assertFalse(jwt.getIssuer().isPresent(), "Issuer should not be present");
-            assertEquals(tokenWithoutIssuer, jwt.getRawToken(), "Raw validation should match the original validation");
+            assertEquals(tokenWithoutIssuer, jwt.rawToken(), "Raw validation should match the original validation");
         }
 
         @Test
@@ -195,7 +195,7 @@ class NonValidatingJwtParserTest {
 
             // Verify kid is not present
             assertFalse(jwt.getKid().isPresent(), "Key ID should not be present");
-            assertEquals(tokenWithoutKid, jwt.getRawToken(), "Raw validation should match the original validation");
+            assertEquals(tokenWithoutKid, jwt.rawToken(), "Raw validation should match the original validation");
         }
     }
 
@@ -295,7 +295,7 @@ class NonValidatingJwtParserTest {
             // Verify it works with a valid validation
             DecodedJwt result = defaultParser.decode(VALID_TOKEN);
             assertNotNull(result, "Default parser should decode a valid validation");
-            assertEquals(VALID_TOKEN, result.getRawToken(), "Raw validation should match the original validation");
+            assertEquals(VALID_TOKEN, result.rawToken(), "Raw validation should match the original validation");
         }
     }
 
@@ -442,7 +442,7 @@ class NonValidatingJwtParserTest {
             DecodedJwt result2 = parser.decode(VALID_TOKEN);
 
             // Both results should be equal
-            assertEquals(result1.getRawToken(), result2.getRawToken(),
+            assertEquals(result1.rawToken(), result2.rawToken(),
                     "Both decodes should produce the same result");
         }
     }

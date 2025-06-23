@@ -16,7 +16,6 @@
 package de.cuioss.jwt.validation.jwks.http;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Expiry;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
@@ -26,7 +25,6 @@ import de.cuioss.tools.logging.CuiLogger;
 import lombok.NonNull;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -89,37 +87,8 @@ class JwksCacheManager {
 
         // If refreshIntervalSeconds is 0, don't set expiration or refresh policies
         if (config.getRefreshIntervalSeconds() > 0) {
-            // Use custom expiry to implement adaptive caching
-            builder.expireAfter(new Expiry<String, JWKSKeyLoader>() {
-                @Override
-                public long expireAfterCreate(@NonNull String key, @NonNull JWKSKeyLoader value, long currentTime) {
-                    return TimeUnit.SECONDS.toNanos(config.getRefreshIntervalSeconds());
-                }
-
-                @Override
-                public long expireAfterUpdate(@NonNull String key, @NonNull JWKSKeyLoader value, long currentTime, long currentDuration) {
-                    return currentDuration;
-                }
-
-                @Override
-                public long expireAfterRead(@NonNull String key, @NonNull JWKSKeyLoader value, long currentTime, long currentDuration) {
-                    // Implement adaptive caching: extend expiration time for frequently accessed keys
-                    int localAccessCount = JwksCacheManager.this.accessCount.get();
-                    int localHitCount = JwksCacheManager.this.hitCount.get();
-
-                    // Reset counters after adaptive window size is reached
-                    if (localAccessCount >= config.getAdaptiveWindowSize()) {
-                        JwksCacheManager.this.accessCount.set(0);
-                        JwksCacheManager.this.hitCount.set(0);
-                    }
-
-                    // If hit ratio is high, extend expiration time
-                    if (localAccessCount > 0 && (double) localHitCount / localAccessCount > 0.8) {
-                        return TimeUnit.SECONDS.toNanos(config.getRefreshIntervalSeconds() * 2L);
-                    }
-                    return currentDuration;
-                }
-            });
+            AdaptiveCacheExpiryPolicy expiryPolicy = new AdaptiveCacheExpiryPolicy(config, accessCount, hitCount);
+            builder.expireAfter(expiryPolicy);
         }
 
         this.jwksCache = builder.build(cacheLoader::apply);

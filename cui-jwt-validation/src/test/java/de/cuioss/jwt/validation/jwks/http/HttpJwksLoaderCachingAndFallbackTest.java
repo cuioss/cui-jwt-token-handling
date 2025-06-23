@@ -93,7 +93,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(keyInfo.isPresent(), "Key info should be present even with 304 response");
             // The key should still be available even though the server returned 304
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -138,7 +138,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(keyInfo.isPresent(), "Key info should be present");
             // The key should still be available and be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -189,7 +189,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             // The key should still be available even though the server returned an error
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -208,7 +208,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             // The key should still be available even though the server returned an empty JWKS
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -227,7 +227,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             // The key should still be available even though the connection failed
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
     }
 }

@@ -124,7 +124,7 @@ public class TokenHeaderValidator {
             securityEventCounter.increment(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM);
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM,
-                    "Unsupported algorithm: " + algorithm.get()
+                    "Unsupported algorithm: %s".formatted(algorithm.get())
             );
         }
 
@@ -156,7 +156,7 @@ public class TokenHeaderValidator {
             securityEventCounter.increment(SecurityEventCounter.EventType.ISSUER_MISMATCH);
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.ISSUER_MISMATCH,
-                    "Issuer mismatch: expected '" + issuerConfig.getIssuer() + "' but found '" + givenIssuer + "'"
+                    "Issuer mismatch: expected '%s' but found '%s'".formatted(issuerConfig.getIssuer(), givenIssuer)
             );
         }
 

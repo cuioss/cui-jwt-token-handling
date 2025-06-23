@@ -143,9 +143,9 @@ class InMemoryKeyHandlingTest {
         // Verify the loader contains the default key
         Optional<KeyInfo> keyInfo = jwksLoader.getKeyInfo(InMemoryKeyMaterialHandler.DEFAULT_KEY_ID);
         assertTrue(keyInfo.isPresent(), "Key info should be present");
-        assertEquals(InMemoryKeyMaterialHandler.DEFAULT_KEY_ID, keyInfo.get().getKeyId(), "Key ID should match");
-        assertEquals("RS256", keyInfo.get().getAlgorithm(), "Algorithm should be RS256");
-        assertNotNull(keyInfo.get().getKey(), "Key should not be null");
+        assertEquals(InMemoryKeyMaterialHandler.DEFAULT_KEY_ID, keyInfo.get().keyId(), "Key ID should match");
+        assertEquals("RS256", keyInfo.get().algorithm(), "Algorithm should be RS256");
+        assertNotNull(keyInfo.get().key(), "Key should not be null");
     }
 
     @Test

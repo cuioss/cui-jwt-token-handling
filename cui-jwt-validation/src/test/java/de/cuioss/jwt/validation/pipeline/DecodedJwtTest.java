@@ -64,8 +64,8 @@ class DecodedJwtTest {
         assertTrue(jwt.getAlg().isPresent());
         assertEquals(ALG, jwt.getAlg().get());
 
-        assertEquals(PARTS, jwt.getParts());
-        assertEquals(RAW_TOKEN, jwt.getRawToken());
+        assertEquals(PARTS, jwt.parts());
+        assertEquals(RAW_TOKEN, jwt.rawToken());
     }
 
     @Test
@@ -79,8 +79,8 @@ class DecodedJwtTest {
         assertFalse(jwt.getIssuer().isPresent());
         assertFalse(jwt.getKid().isPresent());
         assertFalse(jwt.getAlg().isPresent());
-        assertEquals(PARTS, jwt.getParts());
-        assertEquals(RAW_TOKEN, jwt.getRawToken());
+        assertEquals(PARTS, jwt.parts());
+        assertEquals(RAW_TOKEN, jwt.rawToken());
     }
 
     @Test
@@ -103,8 +103,8 @@ class DecodedJwtTest {
         assertFalse(jwt.getKid().isPresent());
         assertFalse(jwt.getAlg().isPresent());
 
-        assertEquals(PARTS, jwt.getParts());
-        assertEquals(RAW_TOKEN, jwt.getRawToken());
+        assertEquals(PARTS, jwt.parts());
+        assertEquals(RAW_TOKEN, jwt.rawToken());
     }
 
     @Test
@@ -117,9 +117,6 @@ class DecodedJwtTest {
                 .header(header)
                 .body(body)
                 .signature(SIGNATURE)
-                .issuer(ISSUER)
-                .kid(KID)
-                .alg(ALG)
                 .parts(PARTS)
                 .rawToken(RAW_TOKEN)
                 .build();
@@ -141,8 +138,8 @@ class DecodedJwtTest {
         assertTrue(jwt.getAlg().isPresent());
         assertEquals(ALG, jwt.getAlg().get());
 
-        assertEquals(PARTS, jwt.getParts());
-        assertEquals(RAW_TOKEN, jwt.getRawToken());
+        assertEquals(PARTS, jwt.parts());
+        assertEquals(RAW_TOKEN, jwt.rawToken());
     }
 
     @Test
@@ -161,6 +158,30 @@ class DecodedJwtTest {
     }
 
     @Test
+    @DisplayName("Should properly compare array fields in equals")
+    void shouldProperlyCompareArrayFieldsInEquals() {
+        JsonObject header = createTestHeader();
+        JsonObject body = createTestBody();
+        
+        // Create two identical arrays with same content but different references
+        String[] parts1 = {"header", "payload", "signature"};
+        String[] parts2 = {"header", "payload", "signature"};
+        
+        DecodedJwt jwt1 = new DecodedJwt(header, body, SIGNATURE, parts1, RAW_TOKEN);
+        DecodedJwt jwt2 = new DecodedJwt(header, body, SIGNATURE, parts2, RAW_TOKEN);
+        
+        // Should be equal based on content, not reference
+        assertEquals(jwt1, jwt2, "DecodedJwt objects should be equal when arrays have same content");
+        assertEquals(jwt1.hashCode(), jwt2.hashCode(), "Hash codes should be equal for equal objects");
+        
+        // Test with different array content
+        String[] differentParts = {"different", "content", "here"};
+        DecodedJwt jwt3 = new DecodedJwt(header, body, SIGNATURE, differentParts, RAW_TOKEN);
+        
+        assertNotEquals(jwt1, jwt3, "DecodedJwt objects should not be equal when arrays have different content");
+    }
+
+    @Test
     @DisplayName("Should have proper toString")
     void shouldHaveProperToString() {
 
@@ -173,6 +194,12 @@ class DecodedJwtTest {
         assertTrue(toString.contains(KID));
         assertTrue(toString.contains(ALG));
         assertTrue(toString.contains(SIGNATURE));
+        
+        // Verify array is properly represented in toString
+        assertTrue(toString.contains("[header, payload, signature]"), 
+                "toString should include array content representation");
+        assertTrue(toString.contains("DecodedJwt["), 
+                "toString should follow expected format");
     }
 
     private JsonObject createTestHeader() {

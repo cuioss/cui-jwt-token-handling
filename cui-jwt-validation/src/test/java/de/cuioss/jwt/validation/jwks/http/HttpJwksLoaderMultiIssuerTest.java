@@ -97,8 +97,8 @@ class HttpJwksLoaderMultiIssuerTest {
         assertTrue(keyInfo2.isPresent(), "Key info for issuer 2 should be present");
 
         // Verify that each loader got the correct key
-        assertEquals(ISSUER1_KID, keyInfo1.get().getKeyId(), "Key ID for issuer 1 should match");
-        assertEquals(ISSUER2_KID, keyInfo2.get().getKeyId(), "Key ID for issuer 2 should match");
+        assertEquals(ISSUER1_KID, keyInfo1.get().keyId(), "Key ID for issuer 1 should match");
+        assertEquals(ISSUER2_KID, keyInfo2.get().keyId(), "Key ID for issuer 2 should match");
 
         // Verify that the server was called for each issuer
         assertEquals(2, moduleDispatcher.getCallCounter(), "Server should be called once for each issuer");
@@ -182,9 +182,9 @@ class HttpJwksLoaderMultiIssuerTest {
         assertEquals(0, moduleDispatcher.getCallCounter(), "Server should not be called for the second loader");
 
         // Verify that both loaders got the same key
-        assertEquals(ISSUER1_KID, keyInfo1.get().getKeyId(), "Key ID from loader 1 should match");
-        assertEquals(ISSUER1_KID, keyInfo2.get().getKeyId(), "Key ID from loader 2 should match");
-        assertEquals(keyInfo1.get().getKey(), keyInfo2.get().getKey(), "Keys from both loaders should be the same");
+        assertEquals(ISSUER1_KID, keyInfo1.get().keyId(), "Key ID from loader 1 should match");
+        assertEquals(ISSUER1_KID, keyInfo2.get().keyId(), "Key ID from loader 2 should match");
+        assertEquals(keyInfo1.get().key(), keyInfo2.get().key(), "Keys from both loaders should be the same");
     }
 
     @Test
@@ -225,7 +225,7 @@ class HttpJwksLoaderMultiIssuerTest {
         assertEquals(2, moduleDispatcher.getCallCounter(), "Server should be called once for each issuer");
 
         // Verify that we got different keys
-        assertNotEquals(keyInfo1.get().getKey(), keyInfo2.get().getKey(), "Keys from different issuers should be different");
+        assertNotEquals(keyInfo1.get().key(), keyInfo2.get().key(), "Keys from different issuers should be different");
     }
 
     /**

@@ -79,7 +79,7 @@ public class TokenBuilder {
         JsonObject body = bodyOption.get();
         Map<String, ClaimValue> claims = extractClaims(body);
 
-        return Optional.of(new AccessTokenContent(claims, decodedJwt.getRawToken(), null));
+        return Optional.of(new AccessTokenContent(claims, decodedJwt.rawToken(), null));
     }
 
     /**
@@ -97,7 +97,7 @@ public class TokenBuilder {
         JsonObject body = bodyOption.get();
         Map<String, ClaimValue> claims = extractClaims(body);
 
-        return Optional.of(new IdTokenContent(claims, decodedJwt.getRawToken()));
+        return Optional.of(new IdTokenContent(claims, decodedJwt.rawToken()));
     }
 
 

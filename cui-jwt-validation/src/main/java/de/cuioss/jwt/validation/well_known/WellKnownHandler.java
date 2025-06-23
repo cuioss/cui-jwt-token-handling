@@ -16,17 +16,12 @@
 package de.cuioss.jwt.validation.well_known;
 
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
-import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
-import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.tools.base.Preconditions;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
-import de.cuioss.tools.net.http.HttpStatusFamily;
 import de.cuioss.tools.net.http.SecureSSLContextProvider;
 import jakarta.json.JsonObject;
-import jakarta.json.JsonReader;
-import jakarta.json.JsonString;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,14 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import javax.net.ssl.SSLContext;
-import java.io.IOException;
-import java.io.StringReader;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -49,13 +37,21 @@ import java.util.Optional;
 /**
  * Handles the discovery of OpenID Connect (OIDC) Provider metadata from a
  * .well-known/openid-configuration endpoint.
- * This class fetches, parses, and validates the OIDC discovery document.
+ * <p>
+ * This class orchestrates the fetching, parsing, and validation of OIDC discovery documents.
  * It provides access to the discovered endpoint URLs like {@code jwks_uri},
  * {@code authorization_endpoint}, etc.
- * The implementation uses {@link java.net.http.HttpClient} for fetching the
- * discovery document and {@link jakarta.json.Json} for parsing the JSON response.
+ * <p>
+ * The implementation uses composition with specialized components:
+ * <ul>
+ *   <li>{@link WellKnownClient} - for HTTP operations</li>
+ *   <li>{@link WellKnownParser} - for JSON parsing and validation</li>
+ *   <li>{@link WellKnownEndpointMapper} - for endpoint mapping</li>
+ * </ul>
+ * <p>
  * Issuer validation is performed to ensure the 'issuer' claim in the discovery
  * document is consistent with the .well-known URL from which it was fetched.
+ * <p>
  * Use the builder to create instances of this class:
  * <pre>
  * WellKnownHandler handler = WellKnownHandler.builder()
@@ -107,8 +103,8 @@ public final class WellKnownHandler {
     public static class WellKnownHandlerBuilder {
         private ParserConfig parserConfig;
         private final HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
-        private int connectTimeoutSeconds = CONNECT_TIMEOUT_SECONDS;
-        private int readTimeoutSeconds = READ_TIMEOUT_SECONDS;
+        private Integer connectTimeoutSeconds;
+        private Integer readTimeoutSeconds;
 
         /**
          * Constructor initializing the HttpHandlerBuilder.
@@ -173,6 +169,9 @@ public final class WellKnownHandler {
 
         /**
          * Sets the connection timeout in seconds.
+         * <p>
+         * If not set, the timeout will be taken from the ParserConfig if available,
+         * otherwise the default value will be used.
          *
          * @param connectTimeoutSeconds the connection timeout in seconds
          * @return this builder instance
@@ -186,6 +185,9 @@ public final class WellKnownHandler {
 
         /**
          * Sets the read timeout in seconds.
+         * <p>
+         * If not set, the timeout will be taken from the ParserConfig if available,
+         * otherwise the default value will be used.
          *
          * @param readTimeoutSeconds the read timeout in seconds
          * @return this builder instance
@@ -198,9 +200,11 @@ public final class WellKnownHandler {
         }
 
         /**
-         * Sets the parser configuration for JSON parsing.
+         * Sets the parser configuration for JSON parsing and HTTP timeouts.
          * <p>
          * If not set, a default secure parser configuration will be used.
+         * The ParserConfig also provides default timeout values if explicit timeouts
+         * are not set via {@link #connectTimeoutSeconds(int)} and {@link #readTimeoutSeconds(int)}.
          * </p>
          *
          * @param parserConfig The parser configuration to use.
@@ -209,134 +213,6 @@ public final class WellKnownHandler {
         public WellKnownHandlerBuilder parserConfig(ParserConfig parserConfig) {
             this.parserConfig = parserConfig;
             return this;
-        }
-
-        /**
-         * Parses a JSON response string into a JsonObject.
-         *
-         * @param responseBody The JSON response string to parse
-         * @param wellKnownUrl The well-known URL (used for error messages)
-         * @return The parsed JsonObject
-         * @throws WellKnownDiscoveryException If parsing fails
-         */
-        private JsonObject parseJsonResponse(String responseBody, URL wellKnownUrl) {
-            // Use the provided ParserConfig or create a default one
-            ParserConfig config = parserConfig != null ? parserConfig : ParserConfig.builder().build();
-            try (JsonReader jsonReader = config.getJsonReaderFactory().createReader(new StringReader(responseBody))) {
-                return jsonReader.readObject();
-            } catch (Exception e) {
-                throw new WellKnownDiscoveryException("Failed to parse JSON from " + wellKnownUrl, e);
-            }
-        }
-
-        /**
-         * Extracts a string value from a JsonObject.
-         *
-         * @param jsonObject The JsonObject to extract from
-         * @param key The key to extract
-         * @return An Optional containing the string value, or empty if not found
-         */
-        private Optional<String> getString(JsonObject jsonObject, String key) {
-            if (jsonObject.containsKey(key) && !jsonObject.isNull(key)) {
-                JsonString jsonString = jsonObject.getJsonString(key);
-                if (jsonString != null) {
-                    return Optional.of(jsonString.getString());
-                }
-            }
-            return Optional.empty();
-        }
-
-        /**
-         * Adds an HttpHandler to the map of endpoints.
-         *
-         * @param map The map to add to
-         * @param key The key for the HttpHandler
-         * @param urlString The URL string to add
-         * @param wellKnownUrl The well-known URL (used for error messages)
-         * @param isRequired Whether this URL is required
-         * @param baseHandler The base HttpHandler to use for configuration
-         */
-        private void addHttpHandlerToMap(Map<String, HttpHandler> map, String key, String urlString, URL wellKnownUrl, boolean isRequired, HttpHandler baseHandler) {
-            if (urlString == null) {
-                if (isRequired) {
-                    throw new WellKnownDiscoveryException("Required URL field '" + key + "' is missing in discovery document from " + wellKnownUrl);
-                }
-                LOGGER.debug(DEBUG.OPTIONAL_URL_FIELD_MISSING.format(key, wellKnownUrl));
-                return;
-            }
-            try {
-                // Use asBuilder() to efficiently reuse the configuration from the base handler
-                HttpHandler handler = baseHandler.asBuilder()
-                        .uri(urlString)
-                        .build();
-                map.put(key, handler);
-            } catch (IllegalArgumentException e) {
-                throw new WellKnownDiscoveryException(
-                        "Malformed URL for field '" + key + "': " + urlString + " from " + wellKnownUrl, e);
-            }
-        }
-
-        /**
-         * Validates that the issuer from the discovery document matches the well-known URL.
-         *
-         * @param issuerFromDocument The issuer from the discovery document
-         * @param wellKnownUrl The well-known URL
-         */
-        private void validateIssuer(String issuerFromDocument, URL wellKnownUrl) {
-            LOGGER.debug(DEBUG.VALIDATING_ISSUER.format(issuerFromDocument, wellKnownUrl));
-            // The OpenID Connect Discovery 1.0 spec, section 4.3 states:
-            // "The issuer value returned MUST be identical to the Issuer URL that was
-            // used as the prefix to /.well-known/openid-configuration to retrieve the
-            // configuration information."
-            // A simple check is to see if the url starts with the issuer string,
-            // and that the path component matches.
-            // For example, if issuer is "https://example.com", url should be "https://example.com/.well-known/openid-configuration"
-            // If issuer is "https://example.com/path", url should be "https://example.com/path/.well-known/openid-configuration"
-
-            URL issuerAsUrl;
-            try {
-                issuerAsUrl = URI.create(issuerFromDocument).toURL();
-            } catch (MalformedURLException | IllegalArgumentException e) {
-                throw new WellKnownDiscoveryException("Issuer URL from discovery document is malformed: " + issuerFromDocument, e);
-            }
-
-            String expectedWellKnownPath = determineWellKnownPath(issuerAsUrl);
-
-
-            boolean schemeMatch = issuerAsUrl.getProtocol().equals(wellKnownUrl.getProtocol());
-            boolean hostMatch = issuerAsUrl.getHost().equalsIgnoreCase(wellKnownUrl.getHost());
-            int issuerPort = issuerAsUrl.getPort() == -1 ? issuerAsUrl.getDefaultPort() : issuerAsUrl.getPort();
-            int wellKnownPort = wellKnownUrl.getPort() == -1 ? wellKnownUrl.getDefaultPort() : wellKnownUrl.getPort();
-            boolean portMatch = issuerPort == wellKnownPort;
-            boolean pathMatch = wellKnownUrl.getPath().equals(expectedWellKnownPath);
-
-
-            if (!(schemeMatch && hostMatch && portMatch && pathMatch)) {
-                String errorMessage = ERROR.ISSUER_VALIDATION_FAILED.format(
-                        issuerFromDocument, issuerAsUrl.getProtocol(), issuerAsUrl.getHost(),
-                        (issuerAsUrl.getPort() != -1 ? ":" + issuerAsUrl.getPort() : ""),
-                        (issuerAsUrl.getPath() == null ? "" : issuerAsUrl.getPath()),
-                        wellKnownUrl.toString(),
-                        expectedWellKnownPath,
-                        schemeMatch, hostMatch, portMatch, issuerPort, wellKnownPort, pathMatch, wellKnownUrl.getPath());
-                LOGGER.error(errorMessage);
-                throw new WellKnownDiscoveryException(errorMessage);
-            }
-            LOGGER.debug(DEBUG.ISSUER_VALIDATION_SUCCESSFUL.format(issuerFromDocument));
-        }
-
-        private String determineWellKnownPath(URL issuerAsUrl) {
-            String expectedWellKnownPath;
-            if (issuerAsUrl.getPath() == null || issuerAsUrl.getPath().isEmpty() || "/".equals(issuerAsUrl.getPath())) {
-                expectedWellKnownPath = WELL_KNOWN_OPENID_CONFIGURATION;
-            } else {
-                String issuerPath = issuerAsUrl.getPath();
-                if (issuerPath.endsWith("/")) {
-                    issuerPath = issuerPath.substring(0, issuerPath.length() - 1);
-                }
-                expectedWellKnownPath = issuerPath + WELL_KNOWN_OPENID_CONFIGURATION;
-            }
-            return expectedWellKnownPath;
         }
 
 
@@ -350,9 +226,28 @@ public final class WellKnownHandler {
          */
         @SuppressWarnings("try") // HttpClient implements AutoCloseable in Java 17 but doesn't need to be closed
         public WellKnownHandler build() {
+            // Use ParserConfig timeout values if not explicitly set
+            int actualConnectTimeout;
+            if (connectTimeoutSeconds != null) {
+                actualConnectTimeout = connectTimeoutSeconds;
+            } else if (parserConfig != null) {
+                actualConnectTimeout = parserConfig.getWellKnownConnectTimeoutSeconds();
+            } else {
+                actualConnectTimeout = CONNECT_TIMEOUT_SECONDS;
+            }
+
+            int actualReadTimeout;
+            if (readTimeoutSeconds != null) {
+                actualReadTimeout = readTimeoutSeconds;
+            } else if (parserConfig != null) {
+                actualReadTimeout = parserConfig.getWellKnownReadTimeoutSeconds();
+            } else {
+                actualReadTimeout = READ_TIMEOUT_SECONDS;
+            }
+
             // Configure the HttpHandlerBuilder with the timeout
-            httpHandlerBuilder.connectionTimeoutSeconds(connectTimeoutSeconds);
-            httpHandlerBuilder.readTimeoutSeconds(readTimeoutSeconds);
+            httpHandlerBuilder.connectionTimeoutSeconds(actualConnectTimeout);
+            httpHandlerBuilder.readTimeoutSeconds(actualReadTimeout);
 
             // Build the HttpHandler for the well-known URL
             HttpHandler wellKnownHttpHandler;
@@ -365,67 +260,37 @@ public final class WellKnownHandler {
 
             // Get the URL from the HttpHandler
             URL resolvedUrl = wellKnownHttpHandler.getUrl();
-            LOGGER.debug(DEBUG.FETCHING_DISCOVERY_DOCUMENT.format(resolvedUrl));
 
-            JsonObject discoveryDocument;
-            try {
-                // Create a request with Accept header for JSON
-                HttpRequest request = wellKnownHttpHandler.requestBuilder()
-                        .header("Accept", "application/json")
-                        .GET()
-                        .build();
+            // Create composed components
+            WellKnownClient client = new WellKnownClient(wellKnownHttpHandler);
+            WellKnownParser parser = new WellKnownParser(parserConfig);
+            WellKnownEndpointMapper mapper = new WellKnownEndpointMapper(wellKnownHttpHandler);
 
-                // Send the request and get the response
-                // Use the createHttpClient method from HttpHandler which already configures timeout and SSL context
-                HttpClient httpClient = wellKnownHttpHandler.createHttpClient();
-                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-                // Check the response status using HttpStatusFamily
-                HttpStatusFamily statusFamily = HttpStatusFamily.fromStatusCode(response.statusCode());
-                if (statusFamily != HttpStatusFamily.SUCCESS) {
-                    throw new WellKnownDiscoveryException("Failed to fetch discovery document from " + resolvedUrl +
-                            ". HTTP status: " + response.statusCode() + " (" + statusFamily + ")");
-                }
-
-                // Parse the response body
-                discoveryDocument = parseJsonResponse(response.body(), resolvedUrl);
-            } catch (IOException e) {
-                throw new WellKnownDiscoveryException("IOException while fetching or reading from " + resolvedUrl, e);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new WellKnownDiscoveryException("Interrupted while fetching from " + resolvedUrl, e);
-            } catch (Exception e) {
-                throw new WellKnownDiscoveryException("Error while fetching from " + resolvedUrl, e);
-            }
+            // Fetch and parse discovery document
+            String responseBody = client.fetchDiscoveryDocument();
+            JsonObject discoveryDocument = parser.parseJsonResponse(responseBody, resolvedUrl);
 
             LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
 
             Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
 
             // Issuer (Required)
-            String issuerString = getString(discoveryDocument, ISSUER_KEY)
+            String issuerString = parser.getString(discoveryDocument, ISSUER_KEY)
                     .orElseThrow(() -> new WellKnownDiscoveryException("Required field 'issuer' not found in discovery document from " + resolvedUrl));
-            validateIssuer(issuerString, resolvedUrl);
-            addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, resolvedUrl, true, wellKnownHttpHandler);
+            parser.validateIssuer(issuerString, resolvedUrl);
+            mapper.addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, resolvedUrl, true);
 
             // JWKS URI (Required)
-            addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY, getString(discoveryDocument, JWKS_URI_KEY).orElse(null), resolvedUrl, true, wellKnownHttpHandler);
+            mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY, parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), resolvedUrl, true);
 
             // Required endpoints
-            addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY, getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), resolvedUrl, true, wellKnownHttpHandler);
-            addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY, getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), resolvedUrl, true, wellKnownHttpHandler);
+            mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY, parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), resolvedUrl, true);
+            mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY, parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), resolvedUrl, true);
             // Optional endpoints
-            addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY, getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), resolvedUrl, false, wellKnownHttpHandler);
+            mapper.addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY, parser.getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), resolvedUrl, false);
 
             // Accessibility check for jwks_uri (optional but recommended)
-            if (parsedEndpoints.get(JWKS_URI_KEY) != null) {
-                HttpStatusFamily statusFamily = parsedEndpoints.get(JWKS_URI_KEY).pingHead();
-                if (statusFamily != HttpStatusFamily.SUCCESS) {
-                    LOGGER.warn(WARN.ACCESSIBILITY_CHECK_HTTP_ERROR.format(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY).getUrl(), statusFamily));
-                } else {
-                    LOGGER.debug(DEBUG.ACCESSIBILITY_CHECK_SUCCESSFUL.format(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY).getUrl(), statusFamily));
-                }
-            }
+            mapper.performAccessibilityCheck(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY));
 
             return new WellKnownHandler(parsedEndpoints, resolvedUrl, wellKnownHttpHandler);
         }

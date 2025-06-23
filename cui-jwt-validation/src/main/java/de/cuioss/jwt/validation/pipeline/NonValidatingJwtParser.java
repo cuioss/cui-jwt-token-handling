@@ -199,7 +199,7 @@ public class NonValidatingJwtParser {
             }
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.TOKEN_SIZE_EXCEEDED,
-                    "Token size exceeds maximum allowed size of " + config.getMaxTokenSize() + " bytes"
+                    "Token size exceeds maximum allowed size of %d bytes".formatted(config.getMaxTokenSize())
             );
         }
 
@@ -212,7 +212,7 @@ public class NonValidatingJwtParser {
             }
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.INVALID_JWT_FORMAT,
-                    "Invalid JWT format: expected 3 parts but found " + parts.length
+                    "Invalid JWT format: expected 3 parts but found %d".formatted(parts.length)
             );
         }
 
@@ -226,7 +226,7 @@ public class NonValidatingJwtParser {
             }
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.FAILED_TO_DECODE_JWT,
-                    "Failed to decode JWT: " + e.getMessage(),
+                    "Failed to decode JWT: %s".formatted(e.getMessage()),
                     e
             );
         }
@@ -278,7 +278,7 @@ public class NonValidatingJwtParser {
                 }
                 throw new TokenValidationException(
                         SecurityEventCounter.EventType.DECODED_PART_SIZE_EXCEEDED,
-                        "Decoded part size exceeds maximum allowed size of " + config.getMaxPayloadSize() + " bytes"
+                        "Decoded part size exceeds maximum allowed size of %d bytes".formatted(config.getMaxPayloadSize())
                 );
             }
 
@@ -294,7 +294,7 @@ public class NonValidatingJwtParser {
             }
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.FAILED_TO_DECODE_JWT,
-                    "Failed to decode JWT part: " + e.getMessage(),
+                    "Failed to decode JWT part: %s".formatted(e.getMessage()),
                     e
             );
         }

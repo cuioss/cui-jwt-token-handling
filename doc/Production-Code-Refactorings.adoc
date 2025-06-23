@@ -1,0 +1,525 @@
+= Production Code Refactoring Tasks
+:toc:
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
+
+[IMPORTANT]
+====
+This document follows the refactoring process defined in link:/Users/oliver/git/cui-llm-rules/standards/process/refactoring-process.adoc[Refactoring Process Documentation].
+
+Task completion must follow link:/Users/oliver/git/cui-llm-rules/standards/process/task-completion-standards.adoc[Task Completion Standards].
+
+All refactoring tasks must comply with link:/Users/oliver/git/cui-llm-rules/standards/java/java-code-standards.adoc[CUI Java Standards].
+====
+
+== Overview
+
+This document contains production code refactoring tasks for the cui-jwt-validation project. Tasks are categorized and numbered according to the standard refactoring process.
+
+*Analysis Date*: 2024-06-22 +
+*Total Tasks Identified*: 19 +
+*Modules Analyzed*: 4 +
+*Java Standards Compliance*: Included
+
+=== Task Categories
+
+* *C* - Code Structure and Design tasks
+* *P* - Performance Improvements tasks  
+* *S* - Security Enhancements tasks
+* *D* - Dependency Management tasks
+
+== Code Structure and Design Tasks (C)
+
+=== C1. Refactor TokenValidator Pipeline Method
+[x] *Priority:* High
+
+*Description:* The `TokenValidator.processTokenPipeline()` method in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/TokenValidator.java` (lines 261-334) exceeds 50 lines and has high cyclomatic complexity with 8 sequential validation steps.
+
+*Rationale:* Large methods with high complexity are difficult to test, maintain, and debug. Breaking this into smaller, focused methods will improve readability and maintainability while enabling better unit testing of individual validation steps.
+
+*Implementation Approach:*
+
+- Extract validation steps into separate private methods (following CUI Java Standards for method length < 50 lines)
+- Consider implementing Chain of Responsibility or Strategy pattern
+- Maintain existing exception handling behavior
+- Ensure no performance regression through benchmarking
+- Follow CUI Java Standards for meaningful method names and single responsibility
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update JavaDoc for extracted methods and any API changes
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C1. Refactor TokenValidator Pipeline Method"
+. [_] *Task Status*: Mark C1 as completed in this document
+
+=== C2. Split TokenClaimValidator Responsibilities
+[x] *Priority:* Medium
+
+*Description:* The `TokenClaimValidator` class in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidator.java` (415 lines) handles multiple validation responsibilities including audience, authorized party, expiration, not-before, and mandatory claims validation.
+
+*Rationale:* This violates the Single Responsibility Principle and makes the class difficult to maintain and test. Splitting into focused validators will improve code organization and testability.
+
+*Implementation Approach:*
+
+- Create separate validator classes: AudienceValidator, ExpirationValidator, MandatoryClaimsValidator
+- Maintain existing public API through facade or composite pattern
+- Ensure all existing tests continue to pass
+- Document the new architecture in javadoc
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update JavaDoc for new validator classes and architecture
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C2. Split TokenClaimValidator Responsibilities"
+. [_] *Task Status*: Mark C2 as completed in this document
+
+=== C3. Simplify JWKSKeyLoader Constructor
+[_] *Priority:* Medium
+
+*Description:* The main constructor of `JWKSKeyLoader` in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/jwks/key/JWKSKeyLoader.java` (lines 201-229) performs complex parsing logic and exception handling.
+
+*Rationale:* Constructors should be simple and primarily set instance variables. Complex logic in constructors makes testing difficult and violates constructor best practices.
+
+*Implementation Approach:*
+
+- Extract parsing logic to separate factory method or static factory
+- Use builder pattern for complex initialization scenarios
+- Maintain backward compatibility for existing client code
+- Add comprehensive validation in the factory method
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update JavaDoc for factory methods and builder pattern usage
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C3. Simplify JWKSKeyLoader Constructor"
+. [_] *Task Status*: Mark C3 as completed in this document
+
+=== C4. Extract Adaptive Caching Logic
+[_] *Priority:* Medium
+
+*Description:* The `JwksCacheManager` class in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/jwks/http/JwksCacheManager.java` (lines 93-122) contains complex inline anonymous class with adaptive caching logic.
+
+*Rationale:* Anonymous classes with complex logic are difficult to test and maintain. Extracting to a separate class improves testability and code clarity.
+
+*Implementation Approach:*
+
+- Create AdaptiveCacheExpiryPolicy class with clear interface
+- Make the policy configurable and testable
+- Maintain existing caching behavior
+- Add unit tests for the extracted policy
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update JavaDoc for new caching policy classes
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C4. Extract Adaptive Caching Logic"
+. [_] *Task Status*: Mark C4 as completed in this document
+
+=== C5. Decompose WellKnownHandler Class
+[x] *Priority:* Medium
+
+*Description:* The `WellKnownHandler` class in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/well_known/WellKnownHandler.java` (469 lines) handles HTTP client creation, SSL configuration, JSON parsing, and endpoint mapping.
+
+*Rationale:* Large classes with multiple responsibilities are difficult to maintain and violate SRP. Breaking into focused components improves maintainability and testability.
+
+*Implementation Approach:*
+
+- Split into WellKnownClient, WellKnownParser, and WellKnownEndpointMapper
+- Use composition in the main handler class
+- Maintain existing public API
+- Ensure all integration tests continue to pass
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update JavaDoc for decomposed classes and composition pattern
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C5. Decompose WellKnownHandler Class"
+. [_] *Task Status*: Mark C5 as completed in this document
+
+=== C6. Enhance Benchmark Coverage
+[x] *Priority:* Low
+
+*Description:* The benchmark suite in `cui-jwt-benchmarking/src/main/java/de/cuioss/jwt/validation/benchmark/TokenValidatorBenchmark.java` only benchmarks access token validation, missing ID token and refresh token benchmarks.
+
+*Rationale:* Comprehensive benchmarking is important for performance regression testing across all token types and error scenarios.
+
+*Implementation Approach:*
+
+- Add benchmarks for ID token and refresh token validation
+- Include error scenario benchmarks
+- Add concurrent validation benchmarks
+- Document benchmark results and performance expectations
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update benchmark documentation and performance expectations
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C6. Enhance Benchmark Coverage"
+. [_] *Task Status*: Mark C6 as completed in this document
+
+=== C7. Simplify TokenValidatorProducer Initialization
+[x] *Priority:* Medium
+
+*Description:* The `@PostConstruct` method in `cui-jwt-quarkus-parent/cui-jwt-quarkus/src/main/java/de/cuioss/jwt/quarkus/producer/TokenValidatorProducer.java` (lines 72-95) has complex initialization logic with multiple responsibilities.
+
+*Rationale:* Complex initialization methods are difficult to test and debug. Extracting configuration validation and TokenValidator creation improves code clarity.
+
+*Implementation Approach:*
+
+- Extract configuration validation to separate method
+- Extract TokenValidator creation to separate method
+- Improve error handling and logging
+- Add validation for configuration consistency
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update JavaDoc for Quarkus producer initialization changes
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C7. Simplify TokenValidatorProducer Initialization"
+. [_] *Task Status*: Mark C7 as completed in this document
+
+=== C8. Review Deployment Module Structure
+[x] *Priority:* Low
+
+*Description:* The Quarkus deployment module structure could benefit from review for build-time optimizations and configuration validation.
+
+*Rationale:* Build-time configuration validation can prevent runtime errors and improve developer experience.
+
+*Implementation Approach:*
+
+- Review build-time configuration validation
+- Add compile-time checks where possible
+- Improve developer error messages
+- Document deployment-time requirements
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [_] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [_] *Final Verification*: `./mvnw clean install`
+. [_] *Documentation*: Update deployment module documentation
+. [_] *Commit Message*: Follow Git commit standards - "refactor: C8. Review Deployment Module Structure"
+. [_] *Task Status*: Mark C8 as completed in this document
+
+=== C9. Convert Data Classes to Records (Java 17+)
+[x] *Priority:* Medium
+
+*Description:* Several data container classes in `cui-jwt-validation/src/main/java` could be converted to Java 17 records following CUI Java Standards for modern features.
+
+*Rationale:* Records provide immutability, reduce boilerplate, and improve code clarity for data-only classes. CUI Java Standards emphasize using modern Java 17+ features.
+
+*Implementation Approach:*
+
+- Evaluate `KeyInfo` class for record conversion
+- Evaluate `DecodedJwt` class for record conversion
+- Ensure existing APIs remain compatible
+- Verify serialization compatibility if applicable
+- Follow CUI Java Standards for modern feature adoption
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc to reflect record usage and immutability guarantees
+. [x] *Commit Message*: Follow Git commit standards - "refactor: C9. Convert Data Classes to Records (Java 17+)"
+. [x] *Task Status*: Mark C9 as completed in this document
+
+=== C10. Improve Exception Messages
+[x] *Priority:* Medium
+
+*Description:* Several exception messages in the codebase lack sufficient context, violating CUI Java Standards for meaningful error messages.
+
+*Rationale:* CUI Java Standards require meaningful and descriptive error messages to aid debugging and improve developer experience.
+
+*Implementation Approach:*
+
+- Enhance exception messages in `AccessTokenContent.java` (line 108) to include token context
+- Improve exception messages in `IssuerConfig.java` (line 170) to include provided values
+- Add contextual information to all TokenValidationException instances
+- Follow CUI Java Standards for exception handling best practices
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc for exception handling patterns
+. [x] *Commit Message*: Follow Git commit standards - "refactor: C10. Improve Exception Messages"
+. [x] *Task Status*: Mark C10 as completed in this document
+
+=== C11. Optimize Lombok Delegation Usage
+[x] *Priority:* Low
+
+*Description:* The `AccessTokenContent` class in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/domain/token/AccessTokenContent.java` (lines 163-274) contains repetitive delegation methods that could use Lombok's `@Delegate` annotation per CUI Java Standards.
+
+*Rationale:* CUI Java Standards recommend using Lombok's `@Delegate` for delegation over inheritance and to reduce boilerplate code.
+
+*Implementation Approach:*
+
+- Evaluate delegation patterns in AccessTokenContent for `@Delegate` usage
+- Consider using `@Delegate` with `CollectionClaimHandler` for scopes, roles, and groups
+- Maintain existing API compatibility
+- Follow CUI Java Standards for Lombok best practices
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc to reflect delegation patterns
+. [x] *Commit Message*: Follow Git commit standards - "refactor: C11. Optimize Lombok Delegation Usage"
+. [x] *Task Status*: Mark C11 as completed in this document
+
+=== C12. Extract Parameter Objects
+[x] *Priority:* Low
+
+*Description:* Several methods in `AccessTokenContent.java` have 4+ parameters, violating CUI Java Standards for method design and parameter count.
+
+*Rationale:* CUI Java Standards emphasize keeping methods focused and using meaningful parameters. Multiple parameters can be grouped into cohesive parameter objects.
+
+*Implementation Approach:*
+
+- Identify methods with 4+ parameters in AccessTokenContent (lines 175-180, 214-219, 255-260)
+- Create parameter objects to group related parameters
+- Maintain backward compatibility through method overloading if needed
+- Follow CUI Java Standards for method design
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc for parameter object patterns
+. [x] *Commit Message*: Follow Git commit standards - "refactor: C12. Extract Parameter Objects"
+. [x] *Task Status*: Mark C12 as completed in this document
+
+== Performance Improvements Tasks (P)
+
+=== P1. Optimize Audience Validation Collections
+[x] *Priority:* Low
+
+*Description:* The audience validation in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenClaimValidator.java` (lines 324-350) creates unnecessary temporary collections.
+
+*Rationale:* Reducing object allocation in frequently called validation methods can improve performance, especially under high load.
+
+*Implementation Approach:*
+
+- Use streaming operations where appropriate
+- Reuse collections where possible
+- Profile before and after changes to measure impact
+- Ensure no behavioral changes in validation logic
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc if validation logic changes
+. [x] *Commit Message*: Follow Git commit standards - "perf: P1. Optimize Audience Validation Collections"
+. [x] *Task Status*: Mark P1 as completed in this document
+
+=== P2. Improve String Operations
+[x] *Priority:* Low
+
+*Description:* Multiple files contain direct string concatenation in exception messages and logging that could be optimized.
+
+*Rationale:* Efficient string operations reduce memory allocation and improve performance in error handling scenarios.
+
+*Implementation Approach:*
+
+- Replace string concatenation with String.format() or StringBuilder
+- Focus on frequently executed code paths
+- Measure performance impact
+- Maintain existing error message formats
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc if error handling patterns change
+. [x] *Commit Message*: Follow Git commit standards - "perf: P2. Improve String Operations"
+. [x] *Task Status*: Mark P2 as completed in this document
+
+=== P3. Add Claim Mapping Cache
+[x] *Priority:* Low
+
+*Description:* The `ClaimName.fromString()` lookup in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenBuilder.java` (lines 114-133) is repeated for each token without caching.
+
+*Rationale:* Caching frequently used mappings can improve token processing performance.
+
+*Implementation Approach:*
+
+- Implement thread-safe caching for ClaimName mappings
+- Use appropriate cache size limits
+- Measure performance improvement
+- Ensure cache invalidation if needed
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc for caching implementation
+. [x] *Commit Message*: Follow Git commit standards - "perf: P3. Add Claim Mapping Cache"
+. [x] *Task Status*: Mark P3 as completed in this document
+
+=== P4. Optimize Benchmark Exception Handling
+[x] *Priority:* Low
+
+*Description:* Exception wrapping in `cui-jwt-benchmarking/src/main/java/de/cuioss/jwt/validation/benchmark/TokenValidatorBenchmark.java` (lines 68-70) affects performance measurement accuracy.
+
+*Rationale:* Accurate performance measurements require minimal overhead in the measured code path.
+
+*Implementation Approach:*
+
+- Move exception handling outside measured code
+- Use JMH best practices for exception scenarios
+- Ensure benchmark accuracy
+- Document benchmark methodology
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update benchmark documentation and methodology
+. [x] *Commit Message*: Follow Git commit standards - "perf: P4. Optimize Benchmark Exception Handling"
+. [x] *Task Status*: Mark P4 as completed in this document
+
+== Security Enhancements Tasks (S)
+
+=== S1. Make Timeout Values Configurable
+[x] *Priority:* Medium
+
+*Description:* Hard-coded connection and read timeout values (2s, 3s) in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/well_known/WellKnownHandler.java` (lines 79-80) should be configurable.
+
+*Rationale:* Hard-coded security-related timeouts reduce flexibility and may not be appropriate for all deployment environments. Making them configurable improves security posture.
+
+*Implementation Approach:*
+
+- Add timeout configuration to ParserConfig or create WellKnownConfig
+- Provide sensible defaults
+- Document security implications of timeout values
+- Add validation for timeout ranges
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc for configuration classes and security implications
+. [x] *Commit Message*: Follow Git commit standards - "security: S1. Make Timeout Values Configurable"
+. [x] *Task Status*: Mark S1 as completed in this document
+
+=== S2. Enhance JWKS Content Validation
+[x] *Priority:* High
+
+*Description:* Limited validation of JWKS content structure in `cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/jwks/key/JWKSKeyLoader.java` (lines 252-278) before parsing could allow malformed content processing.
+
+*Rationale:* Comprehensive validation of JWKS content prevents potential security vulnerabilities from malformed or malicious key data.
+
+*Implementation Approach:*
+
+- Add comprehensive JSON schema validation for JWKS content
+- Validate key parameters and algorithms
+- Add size limits for JWKS content
+- Improve error messages for validation failures
+- Add security events for validation failures
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update JavaDoc for JWKS validation and security measures
+. [x] *Commit Message*: Follow Git commit standards - "security: S2. Enhance JWKS Content Validation"
+. [x] *Task Status*: Mark S2 as completed in this document
+
+== Dependency Management Tasks (D)
+
+=== D1. Optimize Dependency Scopes
+[x] *Priority:* Low
+
+*Description:* The `jakarta.json-api` dependency in `cui-jwt-validation/pom.xml` (lines 44-46) has compile scope when it could be provided in Quarkus environments.
+
+*Rationale:* Correct dependency scopes reduce artifact size and prevent version conflicts in container environments.
+
+*Implementation Approach:*
+
+- Review all dependency scopes across modules
+- Use provided scope where appropriate for Quarkus dependencies
+- Ensure no runtime ClassNotFoundException issues
+- Document dependency scope decisions
+- Do not add @Deprecated annotations or transitional comments (version 1.x priority)
+
+*Task Completion Steps:*
+. [x] *Quality Verification*: `./mvnw -Ppre-commit clean verify -DskipTests`
+. [x] *Final Verification*: `./mvnw clean install`
+. [x] *Documentation*: Update pom.xml comments and dependency documentation
+. [x] *Commit Message*: Follow Git commit standards - "deps: D1. Optimize Dependency Scopes"
+. [x] *Task Status*: Mark D1 as completed in this document
+
+== Task Completion Tracking
+
+=== Task Completion Standards
+
+All tasks must follow the link:/Users/oliver/git/cui-llm-rules/standards/process/task-completion-standards.adoc[Task Completion Standards] process:
+
+1. **Quality Verification**: `./mvnw -Ppre-commit clean verify -DskipTests` - Must pass without errors
+2. **Final Verification**: `./mvnw clean install` - Must pass with all tests
+3. **Documentation**: Update JavaDoc and relevant documentation
+4. **Commit Message**: Follow Git commit standards with task identifier
+5. **Task Status**: Mark task as completed in this document
+
+Each task above includes the specific completion steps required.
+
+=== Progress Summary
+
+[cols="1,1,3,1", options="header"]
+|===
+|Category |Total |Completed |Remaining
+|Code Structure (C) |12 |12 |0
+|Performance (P) |4 |4 |0  
+|Security (S) |2 |2 |0
+|Dependency (D) |1 |1 |0
+|*Total* |*19* |*19* |*0*
+|===
+
+=== Implementation Order
+
+*Recommended implementation order based on priority and dependencies:*
+
+*High Priority (Java Standards Compliance & Security):*
+
+. *S2* - Enhance JWKS Content Validation (High priority, security critical)
+. *C1* - Refactor TokenValidator Pipeline Method (High priority, CUI Java Standards compliance for method length)
+
+*Medium Priority (Architecture & Standards):*
+
+. *S1* - Make Timeout Values Configurable (Medium priority, security enhancement)
+. *C2* - Split TokenClaimValidator Responsibilities (Medium priority, SRP violation)
+. *C9* - Convert Data Classes to Records (Medium priority, Java 17+ standards)
+. *C10* - Improve Exception Messages (Medium priority, CUI Java Standards compliance)
+. *C3* - Simplify JWKSKeyLoader Constructor (Medium priority, code quality)
+. *C4* - Extract Adaptive Caching Logic (Medium priority, maintainability)
+. *C5* - Decompose WellKnownHandler Class (Medium priority, architectural)
+. *C7* - Simplify TokenValidatorProducer Initialization (Medium priority, Quarkus integration)
+
+*Low Priority (Optimization & Enhancement):*
+
+. *P1-P4* - Performance improvements (Low priority, optimization)
+. *C11* - Optimize Lombok Delegation Usage (Low priority, CUI Java Standards)
+. *C12* - Extract Parameter Objects (Low priority, method design standards)
+. *C6, C8* - Coverage and structure improvements (Low priority, enhancement)
+. *D1* - Dependency optimization (Low priority, cleanup)
+
+== Notes
+
+- All refactoring tasks must maintain backward compatibility
+- All tasks must comply with link:/Users/oliver/git/cui-llm-rules/standards/java/java-code-standards.adoc[CUI Java Standards]
+- Tasks C9-C12 specifically address Java standards compliance for modern features, method design, and code organization
+- Comprehensive testing is required for each task
+- Performance benchmarking should be done before and after changes
+- Security-related changes require additional review
+- Documentation must be updated for architectural changes
+- Follow CUI Java Standards for naming conventions, exception handling, and modern Java feature usage
