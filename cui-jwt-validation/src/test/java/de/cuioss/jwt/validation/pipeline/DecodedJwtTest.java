@@ -162,22 +162,22 @@ class DecodedJwtTest {
     void shouldProperlyCompareArrayFieldsInEquals() {
         JsonObject header = createTestHeader();
         JsonObject body = createTestBody();
-        
+
         // Create two identical arrays with same content but different references
         String[] parts1 = {"header", "payload", "signature"};
         String[] parts2 = {"header", "payload", "signature"};
-        
+
         DecodedJwt jwt1 = new DecodedJwt(header, body, SIGNATURE, parts1, RAW_TOKEN);
         DecodedJwt jwt2 = new DecodedJwt(header, body, SIGNATURE, parts2, RAW_TOKEN);
-        
+
         // Should be equal based on content, not reference
         assertEquals(jwt1, jwt2, "DecodedJwt objects should be equal when arrays have same content");
         assertEquals(jwt1.hashCode(), jwt2.hashCode(), "Hash codes should be equal for equal objects");
-        
+
         // Test with different array content
         String[] differentParts = {"different", "content", "here"};
         DecodedJwt jwt3 = new DecodedJwt(header, body, SIGNATURE, differentParts, RAW_TOKEN);
-        
+
         assertNotEquals(jwt1, jwt3, "DecodedJwt objects should not be equal when arrays have different content");
     }
 
@@ -194,11 +194,11 @@ class DecodedJwtTest {
         assertTrue(toString.contains(KID));
         assertTrue(toString.contains(ALG));
         assertTrue(toString.contains(SIGNATURE));
-        
+
         // Verify array is properly represented in toString
-        assertTrue(toString.contains("[header, payload, signature]"), 
+        assertTrue(toString.contains("[header, payload, signature]"),
                 "toString should include array content representation");
-        assertTrue(toString.contains("DecodedJwt["), 
+        assertTrue(toString.contains("DecodedJwt["),
                 "toString should follow expected format");
     }
 

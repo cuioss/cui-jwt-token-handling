@@ -1,12 +1,12 @@
 /**
  * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,11 +57,11 @@ import java.util.Optional;
  * @since 1.0
  */
 public record DecodedJwt(
-    JsonObject header,
-    JsonObject body,
-    String signature,
-    String[] parts,
-    String rawToken
+JsonObject header,
+JsonObject body,
+String signature,
+String[] parts,
+String rawToken
 ) {
     /**
      * Gets the header of the JWT token.
@@ -97,8 +97,8 @@ public record DecodedJwt(
      */
     public Optional<String> getIssuer() {
         return body != null && body.containsKey(ClaimName.ISSUER.getName())
-            ? Optional.of(body.getString(ClaimName.ISSUER.getName()))
-            : Optional.empty();
+                ? Optional.of(body.getString(ClaimName.ISSUER.getName()))
+                : Optional.empty();
     }
 
     /**
@@ -108,8 +108,8 @@ public record DecodedJwt(
      */
     public Optional<String> getKid() {
         return header != null && header.containsKey("kid")
-            ? Optional.of(header.getString("kid"))
-            : Optional.empty();
+                ? Optional.of(header.getString("kid"))
+                : Optional.empty();
     }
 
     /**
@@ -119,8 +119,8 @@ public record DecodedJwt(
      */
     public Optional<String> getAlg() {
         return header != null && header.containsKey("alg")
-            ? Optional.of(header.getString("alg"))
-            : Optional.empty();
+                ? Optional.of(header.getString("alg"))
+                : Optional.empty();
     }
 
     /**
@@ -136,10 +136,10 @@ public record DecodedJwt(
         if (obj == null || getClass() != obj.getClass()) return false;
         DecodedJwt that = (DecodedJwt) obj;
         return Objects.equals(header, that.header) &&
-            Objects.equals(body, that.body) &&
-            Objects.equals(signature, that.signature) &&
-            Arrays.equals(parts, that.parts) &&
-            Objects.equals(rawToken, that.rawToken);
+                Objects.equals(body, that.body) &&
+                Objects.equals(signature, that.signature) &&
+                Arrays.equals(parts, that.parts) &&
+                Objects.equals(rawToken, that.rawToken);
     }
 
     /**
