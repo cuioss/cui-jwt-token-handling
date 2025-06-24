@@ -196,6 +196,9 @@
                         <exclude>**/*ITCase.java</exclude>
                         <exclude>**/TokenKeycloakIT*.java</exclude>
                     </excludes>
+                    <!-- Fix for class loading issues -->
+                    <useSystemClassLoader>false</useSystemClassLoader>
+                    <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
         </plugins>
@@ -223,6 +226,9 @@
                                 <include>**/*IT.java</include>
                                 <include>**/*ITCase.java</include>
                             </includes>
+                            <!-- Fix for class loading issues -->
+                            <useSystemClassLoader>false</useSystemClassLoader>
+                            <reuseForks>false</reuseForks>
                         </configuration>
                         <executions>
                             <execution>
