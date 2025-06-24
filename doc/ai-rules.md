@@ -28,13 +28,13 @@ These rules govern ALL development activities:
 Execute in sequence before ANY commit:
 
 1. **Quality Verification**: `./mvnw -Ppre-commit clean verify -DskipTests`
-   - Fix ALL errors and warnings (mandatory)
-   - Address code quality, formatting, and linting issues
+    - Fix ALL errors and warnings (mandatory)
+    - Address code quality, formatting, and linting issues
 
 2. **Final Verification**: `./mvnw clean install`
-   - Must complete without errors or warnings
-   - All tests must pass
-   - Tasks are complete ONLY after this succeeds
+    - Must complete without errors or warnings
+    - All tests must pass
+    - Tasks are complete ONLY after this succeeds
 
 3. **Documentation**: Update if changes affect APIs, features, or configuration
 
@@ -170,11 +170,11 @@ Common Maven commands for CUI projects:
 **Reference**: `{STANDARDS_BASE_URL}/standards/testing/quality-standards.adoc#parameterized-tests-best-practices`
 - **Mandatory** for 3+ similar test variants
 - Annotation hierarchy (preferred order):
-  1. `@GeneratorsSource` - Most preferred for complex objects
-  2. `@CompositeTypeGeneratorSource` - For multiple related types
-  3. `@CsvSource` - Standard choice for simple data
-  4. `@ValueSource` - Single parameter variations
-  5. `@MethodSource` - Last resort only
+    1. `@GeneratorsSource` - Most preferred for complex objects
+    2. `@CompositeTypeGeneratorSource` - For multiple related types
+    3. `@CsvSource` - Standard choice for simple data
+    4. `@ValueSource` - Single parameter variations
+    5. `@MethodSource` - Last resort only
 - Use `@ParameterizedTest` with `@DisplayName`
 - Consolidate duplicate test methods
 - Provide clear test data and expected outcomes
