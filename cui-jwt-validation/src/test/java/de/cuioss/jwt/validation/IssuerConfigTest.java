@@ -15,9 +15,26 @@
  */
 package de.cuioss.jwt.validation;
 
+import de.cuioss.jwt.validation.domain.claim.mapper.IdentityMapper;
+import de.cuioss.jwt.validation.jwks.JwksLoader;
+import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
+import de.cuioss.jwt.validation.security.AlgorithmPreferences;
+import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.test.generator.Generators;
 import de.cuioss.test.valueobjects.junit5.contracts.ShouldImplementEqualsAndHashCode;
 import de.cuioss.test.valueobjects.junit5.contracts.ShouldImplementToString;
+import de.cuioss.tools.logging.CuiLogger;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link IssuerConfig} verifying value object contracts.
@@ -27,11 +44,167 @@ import de.cuioss.test.valueobjects.junit5.contracts.ShouldImplementToString;
  * @author Oliver Wolff
  * @see <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/technical-components.adoc#multi-issuer">Multi-Issuer Specification</a>
  */
+@DisplayName("Tests for IssuerConfig")
 class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldImplementEqualsAndHashCode<IssuerConfig> {
+
+    private static final CuiLogger LOGGER = new CuiLogger(IssuerConfigTest.class);
+    private static final String TEST_ISSUER = "https://test-issuer.example.com";
+    private static final String TEST_AUDIENCE = "test-audience";
+    private static final String TEST_CLIENT_ID = "test-client-id";
+    private static final String TEST_JWKS_URL = "https://test-issuer.example.com/.well-known/jwks.json";
+    private static final String TEST_JWKS_CONTENT = "{\"keys\":[{\"kty\":\"RSA\",\"kid\":\"test-key-id\"}]}";
 
     @Override
     public IssuerConfig getUnderTest() {
         return IssuerConfig.builder().issuer(Generators.nonBlankStrings().next()).build();
     }
 
+    @Nested
+    @DisplayName("Tests for builder and configuration")
+    class BuilderTests {
+
+        @Test
+        @DisplayName("Should build with minimal configuration")
+        void shouldBuildWithMinimalConfig() {
+            // Given
+            var issuer = TEST_ISSUER;
+
+            // When
+            var config = IssuerConfig.builder()
+                    .issuer(issuer)
+                    .build();
+
+            // Then
+            assertEquals(issuer, config.getIssuer());
+            assertTrue(config.getExpectedAudience().isEmpty());
+            assertTrue(config.getExpectedClientId().isEmpty());
+            assertNotNull(config.getAlgorithmPreferences());
+        }
+
+        @Test
+        @DisplayName("Should build with complete configuration")
+        void shouldBuildWithCompleteConfig() {
+            // Given
+            var issuer = TEST_ISSUER;
+            var audience = TEST_AUDIENCE;
+            var clientId = TEST_CLIENT_ID;
+            var algorithmPreferences = new AlgorithmPreferences();
+            var claimMapper = new IdentityMapper();
+            var httpConfig = HttpJwksLoaderConfig.builder()
+                    .url(TEST_JWKS_URL)
+                    .refreshIntervalSeconds(60)
+                    .build();
+
+            // When
+            var config = IssuerConfig.builder()
+                    .issuer(issuer)
+                    .expectedAudience(audience)
+                    .expectedClientId(clientId)
+                    .algorithmPreferences(algorithmPreferences)
+                    .claimMapper("test-claim", claimMapper)
+                    .httpJwksLoaderConfig(httpConfig)
+                    .build();
+
+            // Then
+            assertEquals(issuer, config.getIssuer());
+            assertEquals(Set.of(audience), config.getExpectedAudience());
+            assertEquals(Set.of(clientId), config.getExpectedClientId());
+            assertEquals(algorithmPreferences, config.getAlgorithmPreferences());
+            assertEquals(claimMapper, config.getClaimMappers().get("test-claim"));
+            assertEquals(httpConfig, config.getHttpJwksLoaderConfig());
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for initSecurityEventCounter")
+    class InitSecurityEventCounterTests {
+
+        @Test
+        @DisplayName("Should initialize with HTTP JwksLoader")
+        void shouldInitializeWithHttpJwksLoader() {
+            // Given
+            var config = IssuerConfig.builder()
+                    .issuer(TEST_ISSUER)
+                    .httpJwksLoaderConfig(HttpJwksLoaderConfig.builder()
+                            .url(TEST_JWKS_URL)
+                            .refreshIntervalSeconds(60)
+                            .build())
+                    .build();
+            var securityEventCounter = new SecurityEventCounter();
+
+            // When
+            config.initSecurityEventCounter(securityEventCounter);
+
+            // Then
+            assertNotNull(config.getJwksLoader());
+        }
+
+        @Test
+        @DisplayName("Should initialize with file JwksLoader")
+        void shouldInitializeWithFileJwksLoader(@TempDir Path tempDir) throws IOException {
+            // Given
+            var jwksFilePath = tempDir.resolve("jwks.json");
+            Files.writeString(jwksFilePath, TEST_JWKS_CONTENT);
+
+            var config = IssuerConfig.builder()
+                    .issuer(TEST_ISSUER)
+                    .jwksFilePath(jwksFilePath.toString())
+                    .build();
+            var securityEventCounter = new SecurityEventCounter();
+
+            // When
+            config.initSecurityEventCounter(securityEventCounter);
+
+            // Then
+            assertNotNull(config.getJwksLoader());
+        }
+
+        @Test
+        @DisplayName("Should initialize with in-memory JwksLoader")
+        void shouldInitializeWithInMemoryJwksLoader() {
+            // Given
+            var config = IssuerConfig.builder()
+                    .issuer(TEST_ISSUER)
+                    .jwksContent(TEST_JWKS_CONTENT)
+                    .build();
+            var securityEventCounter = new SecurityEventCounter();
+
+            // When
+            config.initSecurityEventCounter(securityEventCounter);
+
+            // Then
+            assertNotNull(config.getJwksLoader());
+            JwksLoader jwksLoader = config.getJwksLoader();
+            LOGGER.debug("JwksLoader initialized: {}", jwksLoader);
+        }
+
+        @Test
+        @DisplayName("Should throw exception when no JwksLoader configuration is present")
+        void shouldThrowExceptionWhenNoJwksLoaderConfigIsPresent() {
+            // Given
+            var config = IssuerConfig.builder()
+                    .issuer(TEST_ISSUER)
+                    .build();
+            var securityEventCounter = new SecurityEventCounter();
+
+            // When/Then
+            var exception = assertThrows(IllegalStateException.class,
+                    () -> config.initSecurityEventCounter(securityEventCounter));
+            assertTrue(exception.getMessage().contains("No JwksLoader configuration is present"));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when securityEventCounter is null")
+        void shouldThrowExceptionWhenSecurityEventCounterIsNull() {
+            // Given
+            var config = IssuerConfig.builder()
+                    .issuer(TEST_ISSUER)
+                    .jwksContent(TEST_JWKS_CONTENT)
+                    .build();
+
+            // When/Then
+            assertThrows(NullPointerException.class,
+                    () -> config.initSecurityEventCounter(null));
+        }
+    }
 }
