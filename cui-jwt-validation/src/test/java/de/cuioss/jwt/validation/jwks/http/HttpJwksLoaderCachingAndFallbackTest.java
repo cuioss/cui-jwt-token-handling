@@ -104,7 +104,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             httpJwksLoader.getKeyInfo(TEST_KID);
 
             // Wait for the cache to expire (refresh interval is 1 second)
-            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1500)); // Wait 1.5 seconds to ensure cache expiration
+            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1100)); // Wait 1.1 seconds to ensure cache expiration
 
             // Configure dispatcher to check for If-None-Match header
             moduleDispatcher.expectIfNoneMatchHeader();
@@ -153,7 +153,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             int initialCallCount = moduleDispatcher.getCallCounter();
 
             // Force a refresh of the cache
-            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1500)); // Wait for cache to expire
+            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1100)); // Wait for cache to expire
 
             // When - make another request for the same key
             Optional<KeyInfo> refreshedKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);

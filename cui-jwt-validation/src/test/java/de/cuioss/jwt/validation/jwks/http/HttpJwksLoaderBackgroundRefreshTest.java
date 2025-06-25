@@ -50,7 +50,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
 
     private static final String TEST_KID = InMemoryJWKSFactory.DEFAULT_KEY_ID;
     private static final int REFRESH_INTERVAL_SECONDS = 3; // Interval for testing (must be > 2 for background refresh to be scheduled)
-    private static final int BACKGROUND_REFRESH_PERCENTAGE = 50; // Refresh at 50% of expiration time
+    private static final int BACKGROUND_REFRESH_PERCENTAGE = 40; // Refresh at 40% of expiration time (reduced for faster tests)
 
     @Getter
     private final JwksResolveDispatcher moduleDispatcher = new JwksResolveDispatcher();
@@ -127,10 +127,10 @@ class HttpJwksLoaderBackgroundRefreshTest {
         // Record the initial call count
         int initialCallCount = moduleDispatcher.getCallCounter();
 
-        // Wait for the background refresh to occur (50% of refresh interval)
+        // Wait for the background refresh to occur (40% of refresh interval)
         // Add a small buffer to ensure the background refresh has time to complete
         ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(
-                (long) (REFRESH_INTERVAL_SECONDS * BACKGROUND_REFRESH_PERCENTAGE / 100.0 * 1000) + 200));
+                (long) (REFRESH_INTERVAL_SECONDS * BACKGROUND_REFRESH_PERCENTAGE / 100.0 * 1000) + 100));
 
         // The server should have been called again by the background refresh
         assertTrue(moduleDispatcher.getCallCounter() > initialCallCount,
@@ -207,7 +207,7 @@ class HttpJwksLoaderBackgroundRefreshTest {
                 cacheManager.refresh();
 
                 // Wait a bit for the refresh to complete
-                ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(200));
+                ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(100));
 
                 // The server should have been called again
                 assertTrue(moduleDispatcher.getCallCounter() > initialCallCount,
