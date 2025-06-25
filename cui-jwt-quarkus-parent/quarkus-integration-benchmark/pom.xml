@@ -29,6 +29,14 @@
         <!-- HTTPS configuration for testing -->
         <test.https.port>11443</test.https.port>
         <test.keycloak.port>11080</test.keycloak.port>
+        
+        <!-- JMH Configuration Properties -->
+        <jmh.result.format>JSON</jmh.result.format>
+        <jmh.result.filePrefix>benchmark-results/integration-benchmark-result</jmh.result.filePrefix>
+        <jmh.iterations>5</jmh.iterations>
+        <jmh.warmupIterations>3</jmh.warmupIterations>
+        <jmh.forks>1</jmh.forks>
+        <jmh.threads>2</jmh.threads>
     </properties>
 
     <dependencyManagement>

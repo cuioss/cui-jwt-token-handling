@@ -1,5 +1,7 @@
 package de.cuioss.jwt.quarkus.integration.benchmark;
 
+import de.cuioss.jwt.quarkus.integration.config.BenchmarkConfiguration;
+import de.cuioss.jwt.quarkus.integration.token.TokenRepositoryManager;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.openjdk.jmh.annotations.*;
@@ -22,8 +24,7 @@ public class PerformanceIndicatorBenchmark {
 
     private static final CuiLogger log = new CuiLogger(PerformanceIndicatorBenchmark.class);
     
-    private String validToken;
-    private String invalidToken;
+    private TokenRepositoryManager tokenManager;
     private String baseUrl;
 
     @Setup(Level.Trial)
@@ -32,14 +33,14 @@ public class PerformanceIndicatorBenchmark {
         
         // Container is already started by Maven exec-maven-plugin
         // Configure REST Assured to use the running application
-        baseUrl = "https://localhost:" + System.getProperty("test.https.port", "11443");
+        baseUrl = BenchmarkConfiguration.getApplicationUrl();
         
         RestAssured.baseURI = baseUrl;
         RestAssured.useRelaxedHTTPSValidation();
         
-        // Generate test tokens - simplified for now
-        validToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.EkN-DOsnsuRjRO6BxXemmJDm3HbxrbRzXglbN2S4sOkopdU4IsDxTI8jO19W_A4K8ZPJijNLis4EZsHeY559a4DFOd50_OqgHs3PH-otkHDhFLXLuOa_w7SqDdZz5W4W5Kjb0mNa7g3l7dhfQYGGwR-v1-jQYj0I8v4p1RVCGZc";
-        invalidToken = "invalid.token.content";
+        // Initialize token repository with real Keycloak tokens
+        tokenManager = TokenRepositoryManager.getInstance();
+        tokenManager.initialize();
         
         log.info("✅ Performance indicator benchmark ready");
     }
@@ -59,8 +60,9 @@ public class PerformanceIndicatorBenchmark {
     @OutputTimeUnit(TimeUnit.SECONDS)
     @Group("throughput")
     public void measureThroughput(Blackhole bh) {
+        String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
         bh.consume(response);
@@ -75,8 +77,9 @@ public class PerformanceIndicatorBenchmark {
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Group("latency")
     public void measureAverageLatency(Blackhole bh) {
+        String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
         bh.consume(response);
@@ -91,8 +94,9 @@ public class PerformanceIndicatorBenchmark {
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Group("percentiles")
     public void measureLatencyPercentiles(Blackhole bh) {
+        String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
         bh.consume(response);
@@ -107,8 +111,8 @@ public class PerformanceIndicatorBenchmark {
     @OutputTimeUnit(TimeUnit.SECONDS)
     @Group("resilience")
     public void measureResilience(Blackhole bh) {
-        // Mix of valid and invalid tokens to test error handling
-        String token = System.nanoTime() % 2 == 0 ? validToken : invalidToken;
+        // Mix of valid and invalid tokens to test error handling (50% error rate)
+        String token = tokenManager.getTokenByErrorRate(50);
         
         Response response = RestAssured.given()
                 .header("Authorization", "Bearer " + token)
@@ -126,8 +130,9 @@ public class PerformanceIndicatorBenchmark {
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Group("single_shot")
     public void measureSingleShot(Blackhole bh) {
+        String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
         bh.consume(response);

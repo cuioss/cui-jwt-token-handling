@@ -1,5 +1,7 @@
 package de.cuioss.jwt.quarkus.integration.benchmark;
 
+import de.cuioss.jwt.quarkus.integration.config.BenchmarkConfiguration;
+import de.cuioss.jwt.quarkus.integration.token.TokenRepositoryManager;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.openjdk.jmh.annotations.*;
@@ -21,8 +23,7 @@ public class IntegrationTokenValidationBenchmark {
 
     private static final CuiLogger log = new CuiLogger(IntegrationTokenValidationBenchmark.class);
     
-    private String validToken;
-    private String invalidToken;
+    private TokenRepositoryManager tokenManager;
     private String baseUrl;
 
     @Setup(Level.Trial)
@@ -31,14 +32,16 @@ public class IntegrationTokenValidationBenchmark {
         
         // Container is already started by Maven exec-maven-plugin
         // Configure REST Assured to use the running application
-        baseUrl = "https://localhost:" + System.getProperty("test.https.port", "11443");
+        baseUrl = BenchmarkConfiguration.getApplicationUrl();
         
         RestAssured.baseURI = baseUrl;
         RestAssured.useRelaxedHTTPSValidation();
         
-        // Generate test tokens - simplified for now
-        validToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.EkN-DOsnsuRjRO6BxXemmJDm3HbxrbRzXglbN2S4sOkopdU4IsDxTI8jO19W_A4K8ZPJijNLis4EZsHeY559a4DFOd50_OqgHs3PH-otkHDhFLXLuOa_w7SqDdZz5W4W5Kjb0mNa7g3l7dhfQYGGwR-v1-jQYj0I8v4p1RVCGZc";
-        invalidToken = "invalid.token.content";
+        // Initialize token repository with real Keycloak tokens
+        tokenManager = TokenRepositoryManager.getInstance();
+        tokenManager.initialize();
+        
+        log.info("📊 {}", tokenManager.getStatistics());
         
         // Warmup - ensure services are responsive
         warmupServices();
@@ -57,7 +60,7 @@ public class IntegrationTokenValidationBenchmark {
         log.info("🔥 Warming up services...");
         
         // Warmup application
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < BenchmarkConfiguration.WARMUP_TOKEN_REQUESTS; i++) {
             try {
                 Response response = RestAssured.given()
                         .when()
@@ -70,15 +73,16 @@ public class IntegrationTokenValidationBenchmark {
             }
         }
         
-        // Warmup benchmark endpoint
+        // Warmup benchmark endpoint with real tokens
         for (int i = 0; i < 3; i++) {
             try {
+                String warmupToken = tokenManager.getValidToken();
                 RestAssured.given()
-                        .header("Authorization", "Bearer " + validToken)
+                        .header("Authorization", "Bearer " + warmupToken)
                         .when()
                         .post("/benchmark/validate");
             } catch (Exception e) {
-                // Ignore warmup failures
+                log.debug("Warmup request failed (expected during startup): {}", e.getMessage());
             }
         }
         
@@ -93,8 +97,9 @@ public class IntegrationTokenValidationBenchmark {
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
     public Response benchmarkValidTokenValidation() {
+        String token = tokenManager.getValidToken();
         return RestAssured.given()
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
     }
@@ -107,8 +112,9 @@ public class IntegrationTokenValidationBenchmark {
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
     public Response benchmarkInvalidTokenValidation() {
+        String token = tokenManager.getInvalidToken();
         return RestAssured.given()
-                .header("Authorization", "Bearer " + invalidToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
     }
@@ -121,8 +127,9 @@ public class IntegrationTokenValidationBenchmark {
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     public Response benchmarkValidTokenLatency() {
+        String token = tokenManager.getValidToken();
         return RestAssured.given()
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
     }

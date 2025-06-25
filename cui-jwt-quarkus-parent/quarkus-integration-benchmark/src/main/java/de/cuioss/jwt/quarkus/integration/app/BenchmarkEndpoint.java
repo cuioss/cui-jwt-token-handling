@@ -26,7 +26,7 @@ public class BenchmarkEndpoint {
 
     /**
      * Validates a JWT token - primary endpoint for benchmarking.
-     * 
+     *
      * @param token JWT token to validate
      * @return Validation result
      */
@@ -40,7 +40,7 @@ public class BenchmarkEndpoint {
         }
 
         String jwtToken = token.substring(7); // Remove "Bearer " prefix
-        
+
         try {
             AccessTokenContent accessToken = tokenValidator.createAccessToken(jwtToken);
             return Response.ok(new ValidationResponse(true, "Token is valid"))
@@ -57,8 +57,6 @@ public class BenchmarkEndpoint {
     public static class ValidationResponse {
         public boolean valid;
         public String message;
-
-        public ValidationResponse() {}
 
         public ValidationResponse(boolean valid, String message) {
             this.valid = valid;

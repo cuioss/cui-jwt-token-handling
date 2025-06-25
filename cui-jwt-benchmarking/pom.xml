@@ -22,6 +22,14 @@
         <version.jmh>1.37</version.jmh>
         <sonar.skip>true</sonar.skip>
         <version.mockwebserver3>5.0.0-alpha.12</version.mockwebserver3>
+        
+        <!-- JMH Configuration Properties -->
+        <jmh.result.format>JSON</jmh.result.format>
+        <jmh.result.filePrefix>benchmark-results/jmh-result</jmh.result.filePrefix>
+        <jmh.iterations>5</jmh.iterations>
+        <jmh.warmupIterations>3</jmh.warmupIterations>
+        <jmh.forks>1</jmh.forks>
+        <jmh.threads>2</jmh.threads>
     </properties>
 
     <dependencyManagement>
@@ -191,6 +199,21 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${version.exec-maven-plugin}</version>
                 <executions>
+                    <execution>
+                        <id>create-benchmark-dir</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skip.benchmark}</skip>
+                            <executable>mkdir</executable>
+                            <arguments>
+                                <argument>-p</argument>
+                                <argument>benchmark-results</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>run-benchmarks</id>
                         <phase>verify</phase>

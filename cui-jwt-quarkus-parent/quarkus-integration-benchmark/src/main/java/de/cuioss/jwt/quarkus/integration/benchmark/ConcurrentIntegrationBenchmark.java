@@ -1,5 +1,7 @@
 package de.cuioss.jwt.quarkus.integration.benchmark;
 
+import de.cuioss.jwt.quarkus.integration.config.BenchmarkConfiguration;
+import de.cuioss.jwt.quarkus.integration.token.TokenRepositoryManager;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.openjdk.jmh.annotations.*;
@@ -22,7 +24,7 @@ public class ConcurrentIntegrationBenchmark {
 
     private static final CuiLogger log = new CuiLogger(ConcurrentIntegrationBenchmark.class);
     
-    private String validToken;
+    private TokenRepositoryManager tokenManager;
     private String baseUrl;
 
     @Setup(Level.Trial)
@@ -31,13 +33,14 @@ public class ConcurrentIntegrationBenchmark {
         
         // Container is already started by Maven exec-maven-plugin
         // Configure REST Assured to use the running application
-        baseUrl = "https://localhost:" + System.getProperty("test.https.port", "11443");
+        baseUrl = BenchmarkConfiguration.getApplicationUrl();
         
         RestAssured.baseURI = baseUrl;
         RestAssured.useRelaxedHTTPSValidation();
         
-        // Generate test tokens - simplified for now
-        validToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.EkN-DOsnsuRjRO6BxXemmJDm3HbxrbRzXglbN2S4sOkopdU4IsDxTI8jO19W_A4K8ZPJijNLis4EZsHeY559a4DFOd50_OqgHs3PH-otkHDhFLXLuOa_w7SqDdZz5W4W5Kjb0mNa7g3l7dhfQYGGwR-v1-jQYj0I8v4p1RVCGZc";
+        // Initialize token repository with real Keycloak tokens
+        tokenManager = TokenRepositoryManager.getInstance();
+        tokenManager.initialize();
         
         log.info("✅ Concurrent integration benchmark ready");
     }
@@ -56,8 +59,9 @@ public class ConcurrentIntegrationBenchmark {
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
     public Response benchmarkConcurrentValidation() {
+        String token = tokenManager.getValidToken();
         return RestAssured.given()
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/benchmark/validate");
     }
