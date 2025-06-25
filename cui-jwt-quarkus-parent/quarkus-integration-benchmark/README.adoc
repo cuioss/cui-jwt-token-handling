@@ -1,10 +1,14 @@
 = JWT Quarkus Integration Benchmarking
+:toc: macro
+:toclevels: 3
 
-This module provides integration-level performance benchmarking for the JWT Quarkus extension using containerized environments.
+This module provides integration-level performance benchmarking for the JWT Quarkus extension using containerized environments with **identical performance scoring** to the micro-benchmark module.
+
+toc::[]
 
 == Overview
 
-While the `cui-jwt-benchmarking` module focuses on micro-benchmark testing of library components, this module provides end-to-end integration performance testing using:
+While the xref:../../cui-jwt-benchmarking/README.adoc[JWT Micro-Benchmarking Module] focuses on in-memory testing of library components, this module provides end-to-end integration performance testing using:
 
 * Native Quarkus application in containers
 * Keycloak integration for realistic token issuing
@@ -43,11 +47,47 @@ The benchmarks run in a containerized environment similar to `cui-jwt-quarkus-in
 * Shared container network
 
 === Performance Metrics
-Same categories as micro-benchmarks:
-* Throughput (requests/second)
-* Latency (P50, P95, P99)
-* Resilience (error rates under load)
-* Performance Score (composite metric)
+
+Uses the **identical weighted scoring formula** as the xref:../../cui-jwt-benchmarking/doc/performance-scoring.adoc[micro-benchmark module]:
+
+**`Performance Score = (Throughput × 0.57) + (Latency_Inverted × 0.40) + (Error_Resilience × 0.03)`**
+
+Metrics measured:
+* **Throughput (57% weight)**: HTTP requests per second under maximum concurrent load
+* **Latency (40% weight)**: Average HTTP response time (converted to ops/sec via inversion)
+* **Error Resilience (3% weight)**: Baseline throughput with 0% error rate
+* **Performance Score**: Weighted composite metric comparable to micro-benchmarks
+
+=== Benchmark Comparison
+
+[cols="1,1,1", options="header"]
+|===
+|Aspect |Integration Benchmarks |Micro-Benchmarks
+
+|**Measurement Scope**
+|End-to-end HTTP validation
+|In-memory library calls
+
+|**Time Scale** 
+|Milliseconds (HTTP overhead)
+|Microseconds (pure library)
+
+|**Infrastructure**
+|Docker containers + Keycloak
+|Direct JVM execution
+
+|**Scoring Formula**
+|**Identical** (same weights)
+|**Identical** (same weights)
+
+|**Results Comparability**
+|Relative trends & ratios
+|Absolute performance values
+
+|**Use Case**
+|System-level performance
+|Library optimization
+|===
 
 == Results
 
@@ -56,3 +96,13 @@ Results are automatically:
 * Uploaded as GitHub artifacts
 * Processed for GitHub Pages visualization
 * Displayed as README badges alongside micro-benchmark results
+
+== Documentation
+
+=== Performance Scoring
+* xref:PERFORMANCE-SCORING.md[Integration Benchmark Performance Scoring] - Complete methodology and scoring implementation
+* xref:../../cui-jwt-benchmarking/doc/performance-scoring.adoc[Micro-Benchmark Performance Scoring] - Original scoring methodology
+
+=== Related Modules
+* xref:../../cui-jwt-benchmarking/README.adoc[JWT Micro-Benchmarking Module] - Library component performance testing
+* xref:../cui-jwt-quarkus-integration-tests/README.adoc[JWT Quarkus Integration Tests] - Integration testing infrastructure

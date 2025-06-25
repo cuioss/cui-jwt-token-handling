@@ -280,13 +280,29 @@ The xref:cui-jwt-quarkus-parent/README.adoc[Quarkus Extension] provides seamless
 
 === Performance Benchmarking
 
-The xref:cui-jwt-benchmarking/README.adoc[Benchmarking Module] provides comprehensive performance measurements using JMH (Java Microbenchmark Harness). It measures:
+The project includes two complementary benchmarking modules that use identical performance scoring for comparable results:
+
+==== Micro-Benchmarks
+
+The xref:cui-jwt-benchmarking/README.adoc[JWT Micro-Benchmarking Module] provides in-memory performance measurements using JMH (Java Microbenchmark Harness). It measures:
 
 * Token validation performance across different scenarios
-* JWKS key retrieval and caching performance
+* JWKS key retrieval and caching performance  
 * Multi-issuer validation performance
 * Concurrent validation capabilities
 * Error handling performance impact
+
+==== Integration Benchmarks
+
+The xref:cui-jwt-quarkus-parent/quarkus-integration-benchmark/README.adoc[JWT Quarkus Integration Benchmarking Module] provides end-to-end performance testing using containerized environments. It measures:
+
+* HTTP-based JWT validation performance
+* Real Keycloak integration performance
+* Container and network overhead impact
+* System-level concurrent validation
+* End-to-end error handling performance
+
+Both modules use the **identical weighted scoring formula**: `Performance Score = (Throughput × 0.57) + (Latency_Inverted × 0.40) + (Error_Resilience × 0.03)`
 
 Benchmark results are automatically published to GitHub Pages and can be used to track performance regressions over time.
 
