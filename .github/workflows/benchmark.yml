@@ -75,11 +75,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v3.7.1
 
+      - name: Build Integration Tests Module
+        run: |
+          # Build integration tests module first to create native image and container infrastructure
+          ./mvnw --no-transfer-progress clean package -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -Pintegration-tests -DskipITs=true -am
+
       - name: Run Integration Benchmarks
         run: |
           # Run integration benchmarks with containerized environment
           # Configure JMH parameters for CI environment: fewer iterations for faster execution
-          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-quarkus-parent/quarkus-integration-benchmark -Dskip.benchmark=false -DskipTests \
+          ./mvnw --no-transfer-progress verify -pl cui-jwt-quarkus-parent/quarkus-integration-benchmark -Dskip.benchmark=false -DskipTests \
             -Pintegration-benchmarks \
             -Djmh.result.format=JSON \
             -Djmh.result.filePrefix=benchmark-results/integration-benchmark-result \
