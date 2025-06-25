@@ -24,6 +24,7 @@ import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.jwt.validation.test.junit.TestTokenSource;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.valueobjects.junit5.contracts.ShouldHandleObjectContracts;
+import de.cuioss.tools.logging.CuiLogger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -286,6 +287,126 @@ class AccessTokenContentTest implements ShouldHandleObjectContracts<AccessTokenC
         assertEquals(2, missingValues.size(), "Should find 2 missing " + description);
         assertTrue(missingValues.contains(missing1), "Should contain first missing value");
         assertTrue(missingValues.contains(missing2), "Should contain second missing value");
+    }
+
+    @Test
+    @DisplayName("Provide scopes with debug logging when all expected are present")
+    void shouldProvideScopesWithDebugWhenAllExpectedArePresent() {
+        List<String> testScopes = List.of("openid", "profile", "email");
+        var accessTokenContent = createTokenWithClaim(
+                ClaimName.SCOPE, ClaimValue.forList(testScopes.toString(), testScopes));
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesScopesAndDebugIfScopesAreMissing(
+                List.of("openid", "profile"), "test-context", logger);
+
+        assertTrue(result, "Should provide all expected scopes");
+    }
+
+    @Test
+    @DisplayName("Not provide scopes with debug logging when some missing")
+    void shouldNotProvideScopesWithDebugWhenSomeMissing() {
+        List<String> testScopes = List.of("openid", "profile");
+        var accessTokenContent = createTokenWithClaim(
+                ClaimName.SCOPE, ClaimValue.forList(testScopes.toString(), testScopes));
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesScopesAndDebugIfScopesAreMissing(
+                List.of("openid", "profile", "email"), "test-context", logger);
+
+        assertFalse(result, "Should not provide scopes when some are missing");
+    }
+
+    @Test
+    @DisplayName("Not provide scopes with debug logging when scope claim not present")
+    void shouldNotProvideScopesWithDebugWhenScopeClaimNotPresent() {
+        var accessTokenContent = createTokenWithClaims(new HashMap<>());
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesScopesAndDebugIfScopesAreMissing(
+                List.of("openid"), "test-context", logger);
+
+        assertFalse(result, "Should not provide scopes when claim absent");
+    }
+
+    @Test
+    @DisplayName("Provide roles with debug logging when all expected are present")
+    void shouldProvideRolesWithDebugWhenAllExpectedArePresent() {
+        List<String> testRoles = List.of("admin", "user", "manager");
+        var accessTokenContent = createTokenWithClaim(
+                ClaimName.ROLES, ClaimValue.forList(testRoles.toString(), testRoles));
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesRolesAndDebugIfRolesMissing(
+                List.of("admin", "user"), "test-context", logger);
+
+        assertTrue(result, "Should provide all expected roles");
+    }
+
+    @Test
+    @DisplayName("Not provide roles with debug logging when some missing")
+    void shouldNotProvideRolesWithDebugWhenSomeMissing() {
+        List<String> testRoles = List.of("admin", "user");
+        var accessTokenContent = createTokenWithClaim(
+                ClaimName.ROLES, ClaimValue.forList(testRoles.toString(), testRoles));
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesRolesAndDebugIfRolesMissing(
+                List.of("admin", "user", "manager"), "test-context", logger);
+
+        assertFalse(result, "Should not provide roles when some are missing");
+    }
+
+    @Test
+    @DisplayName("Not provide roles with debug logging when roles claim not present")
+    void shouldNotProvideRolesWithDebugWhenRolesClaimNotPresent() {
+        var accessTokenContent = createTokenWithClaims(new HashMap<>());
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesRolesAndDebugIfRolesMissing(
+                List.of("admin"), "test-context", logger);
+
+        assertFalse(result, "Should not provide roles when claim absent");
+    }
+
+    @Test
+    @DisplayName("Provide groups with debug logging when all expected are present")
+    void shouldProvideGroupsWithDebugWhenAllExpectedArePresent() {
+        List<String> testGroups = List.of("group1", "group2", "group3");
+        var accessTokenContent = createTokenWithClaim(
+                ClaimName.GROUPS, ClaimValue.forList(testGroups.toString(), testGroups));
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesGroupsAndDebugIfGroupsMissing(
+                List.of("group1", "group2"), "test-context", logger);
+
+        assertTrue(result, "Should provide all expected groups");
+    }
+
+    @Test
+    @DisplayName("Not provide groups with debug logging when some missing")
+    void shouldNotProvideGroupsWithDebugWhenSomeMissing() {
+        List<String> testGroups = List.of("group1", "group2");
+        var accessTokenContent = createTokenWithClaim(
+                ClaimName.GROUPS, ClaimValue.forList(testGroups.toString(), testGroups));
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesGroupsAndDebugIfGroupsMissing(
+                List.of("group1", "group2", "group3"), "test-context", logger);
+
+        assertFalse(result, "Should not provide groups when some are missing");
+    }
+
+    @Test
+    @DisplayName("Not provide groups with debug logging when groups claim not present")
+    void shouldNotProvideGroupsWithDebugWhenGroupsClaimNotPresent() {
+        var accessTokenContent = createTokenWithClaims(new HashMap<>());
+        CuiLogger logger = new CuiLogger(AccessTokenContentTest.class);
+
+        boolean result = accessTokenContent.providesGroupsAndDebugIfGroupsMissing(
+                List.of("group1"), "test-context", logger);
+
+        assertFalse(result, "Should not provide groups when claim absent");
     }
 
     @Override

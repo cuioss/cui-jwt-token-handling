@@ -167,7 +167,7 @@ public class IssuerConfig {
             jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
         } else {
             // Throw exception if no configuration is present
-            throw new IllegalStateException("No JwksLoader configuration is present. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided");
+            throw new IllegalStateException("No JwksLoader configuration is present. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided. " + "Issuer: " + issuer + ", httpJwksLoaderConfig: " + (httpJwksLoaderConfig != null) + ", jwksFilePath: " + (jwksFilePath != null) + ", jwksContent: " + (jwksContent != null));
         }
 
     }

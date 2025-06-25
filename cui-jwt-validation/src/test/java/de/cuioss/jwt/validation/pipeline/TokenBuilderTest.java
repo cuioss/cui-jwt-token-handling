@@ -72,7 +72,7 @@ class TokenBuilderTest {
             AccessTokenContent accessTokenContent = result.get();
 
             assertEquals(TokenType.ACCESS_TOKEN, accessTokenContent.getTokenType(), "Token type should be ACCESS_TOKEN");
-            assertEquals(decodedJwt.getRawToken(), accessTokenContent.getRawToken(), "Raw token should match");
+            assertEquals(decodedJwt.rawToken(), accessTokenContent.getRawToken(), "Raw token should match");
             assertFalse(accessTokenContent.getClaims().isEmpty(), "Claims should not be empty");
             assertTrue(accessTokenContent.getClaims().containsKey(ClaimName.SUBJECT.getName()),
                     "Claims should contain subject");
@@ -107,7 +107,7 @@ class TokenBuilderTest {
             IdTokenContent idTokenContent = result.get();
 
             assertEquals(TokenType.ID_TOKEN, idTokenContent.getTokenType(), "Token type should be ID_TOKEN");
-            assertEquals(decodedJwt.getRawToken(), idTokenContent.getRawToken(), "Raw token should match");
+            assertEquals(decodedJwt.rawToken(), idTokenContent.getRawToken(), "Raw token should match");
             assertFalse(idTokenContent.getClaims().isEmpty(), "Claims should not be empty");
             assertTrue(idTokenContent.getClaims().containsKey(ClaimName.SUBJECT.getName()),
                     "Claims should contain subject");

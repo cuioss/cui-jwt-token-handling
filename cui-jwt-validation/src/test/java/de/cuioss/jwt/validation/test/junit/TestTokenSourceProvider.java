@@ -22,6 +22,7 @@ import de.cuioss.test.generator.TypedGenerator;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.support.ParameterDeclarations;
 
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -39,9 +40,12 @@ import java.util.stream.Stream;
 class TestTokenSourceProvider implements ArgumentsProvider {
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+    public Stream<Arguments> provideArguments(ParameterDeclarations parameters, ExtensionContext context) {
         // Get the TestTokenSource annotation from the test method
-        TestTokenSource annotation = context.getRequiredTestMethod().getAnnotation(TestTokenSource.class);
+        var annotatedElement = context.getElement().orElseThrow(() ->
+                new IllegalStateException("No annotated element found"));
+
+        TestTokenSource annotation = annotatedElement.getAnnotation(TestTokenSource.class);
         if (annotation == null) {
             throw new IllegalStateException("No @TestTokenSource annotation found on test method");
         }

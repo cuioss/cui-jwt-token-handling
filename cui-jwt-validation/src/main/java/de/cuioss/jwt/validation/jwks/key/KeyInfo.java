@@ -15,70 +15,58 @@
  */
 package de.cuioss.jwt.validation.jwks.key;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Value;
-
 import java.security.PublicKey;
 
 /**
- * Class that holds information about a key, including the key itself and its algorithm.
+ * Record that holds information about a key, including the key itself and its algorithm.
  * <p>
- * This class is used to store keys along with their algorithm information to support
- * cryptographic agility.
+ * This record is used to store keys along with their algorithm information to support
+ * cryptographic agility. The record provides immutability guarantees and value-based
+ * equality by default, making it ideal for representing key information.
  * <p>
  * For more details on the security aspects, see the
  * <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/security.adoc">Security Specification</a>
  *
+ * @param key The public key used for JWT signature verification. This is the cryptographic
+ *            key extracted from the JWK that will be used to verify the signature of JWT tokens.
+ *            It's typically an RSA or EC public key.
+ * @param algorithm The algorithm identifier associated with this key. This field contains
+ *                  the algorithm name (e.g., "RS256", "ES384") that should be used with this
+ *                  key for signature verification. The algorithm must match the "alg" header
+ *                  in the JWT Token for successful verification. Common values include:
+ *                  RS256, RS384, RS512, ES256, ES384, ES512.
+ * @param keyId The unique identifier for this key. This is the "kid" (Key ID) value from
+ *              the JWK, which is used to identify the specific key within a JWKS. When
+ *              verifying a JWT Token, the "kid" in the validation header is matched against
+ *              this value to select the correct key for signature verification. Key IDs are
+ *              particularly important in environments with key rotation, where multiple
+ *              valid keys may exist simultaneously.
+ *
  * @author Oliver Wolff
  * @since 1.0
  */
-@Value
-public class KeyInfo {
-
+public record KeyInfo(
+PublicKey key,
+String algorithm,
+String keyId
+) {
     /**
-     * The public key used for JWT signature verification.
-     * <p>
-     * This is the cryptographic key extracted from the JWK that will be used
-     * to verify the signature of JWT tokens. It's typically an RSA or EC public key.
+     * Creates a new KeyInfo record with validation.
+     *
+     * @param key the public key used for JWT signature verification
+     * @param algorithm the algorithm identifier associated with this key
+     * @param keyId the unique identifier for this key
+     * @throws IllegalArgumentException if any parameter is null
      */
-    @Getter
-    @NonNull
-    PublicKey key;
-
-    /**
-     * The algorithm identifier associated with this key.
-     * <p>
-     * This field contains the algorithm name (e.g., "RS256", "ES384") that should be
-     * used with this key for signature verification. The algorithm must match the
-     * "alg" header in the JWT Token for successful verification.
-     * <p>
-     * Common values include:
-     * <ul>
-     *   <li>RS256 - RSA Signature with SHA-256</li>
-     *   <li>RS384 - RSA Signature with SHA-384</li>
-     *   <li>RS512 - RSA Signature with SHA-512</li>
-     *   <li>ES256 - ECDSA Signature with SHA-256</li>
-     *   <li>ES384 - ECDSA Signature with SHA-384</li>
-     *   <li>ES512 - ECDSA Signature with SHA-512</li>
-     * </ul>
-     */
-    @Getter
-    @NonNull
-    String algorithm;
-
-    /**
-     * The unique identifier for this key.
-     * <p>
-     * This is the "kid" (Key ID) value from the JWK, which is used to identify
-     * the specific key within a JWKS. When verifying a JWT Token, the "kid" in the
-     * validation header is matched against this value to select the correct key for
-     * signature verification.
-     * <p>
-     * Key IDs are particularly important in environments with key rotation, where
-     * multiple valid keys may exist simultaneously.
-     */
-    @Getter
-    @NonNull
-    String keyId;
+    public KeyInfo {
+        if (key == null) {
+            throw new IllegalArgumentException("Key cannot be null");
+        }
+        if (algorithm == null) {
+            throw new IllegalArgumentException("Algorithm cannot be null");
+        }
+        if (keyId == null) {
+            throw new IllegalArgumentException("KeyId cannot be null");
+        }
+    }
 }

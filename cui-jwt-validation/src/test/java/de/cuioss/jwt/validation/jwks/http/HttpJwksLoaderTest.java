@@ -81,7 +81,7 @@ class HttpJwksLoaderTest {
 
         Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
         assertTrue(keyInfo.isPresent(), "Key info should be present");
-        assertEquals(TEST_KID, keyInfo.get().getKeyId(), "Key ID should match");
+        assertEquals(TEST_KID, keyInfo.get().keyId(), "Key ID should match");
         assertEquals(1, moduleDispatcher.getCallCounter(), "JWKS endpoint should be called once");
     }
 

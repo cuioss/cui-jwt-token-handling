@@ -172,6 +172,9 @@
                         <!-- Stability configurations -->
                         <forkedProcessTimeoutInSeconds>0</forkedProcessTimeoutInSeconds>
                         <forkedProcessExitTimeoutInSeconds>60</forkedProcessExitTimeoutInSeconds>
+                        <!-- Fix for class loading issues -->
+                        <useSystemClassLoader>false</useSystemClassLoader>
+                        <reuseForks>false</reuseForks>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -187,6 +190,9 @@
                         <trimStackTrace>false</trimStackTrace>
                         <enableAssertions>true</enableAssertions>
                         <argLine>-XX:+IgnoreUnrecognizedVMOptions -Djava.awt.headless=true</argLine>
+                        <!-- Fix for class loading issues -->
+                        <useSystemClassLoader>false</useSystemClassLoader>
+                        <reuseForks>false</reuseForks>
                         <!-- Standardized IT naming patterns -->
                         <includes>
                             <include>**/*IT.java</include>

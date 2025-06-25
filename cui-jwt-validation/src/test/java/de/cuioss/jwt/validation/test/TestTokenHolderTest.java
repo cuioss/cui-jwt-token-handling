@@ -261,11 +261,11 @@ class TestTokenHolderTest {
             assertNotNull(decodedJwt, "DecodedJwt should not be null");
 
             // Verify raw token
-            assertEquals(rawToken, decodedJwt.getRawToken(), "Raw token should match");
+            assertEquals(rawToken, decodedJwt.rawToken(), "Raw token should match");
 
             // Verify parts
             String[] parts = rawToken.split("\\.");
-            assertArrayEquals(parts, decodedJwt.getParts(), "Token parts should match");
+            assertArrayEquals(parts, decodedJwt.parts(), "Token parts should match");
 
             // Verify header
             assertTrue(decodedJwt.getHeader().isPresent(), "Header should be present");
@@ -530,7 +530,7 @@ class TestTokenHolderTest {
 
             // Verify that the key from the JwksLoader can be used to verify the token
             var jwt = Jwts.parser()
-                    .verifyWith(keyInfo.get().getKey())
+                    .verifyWith(keyInfo.get().key())
                     .build()
                     .parseSignedClaims(rawToken);
 

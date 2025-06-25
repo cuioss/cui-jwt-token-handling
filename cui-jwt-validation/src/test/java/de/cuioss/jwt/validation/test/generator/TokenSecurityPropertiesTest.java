@@ -74,7 +74,7 @@ class TokenSecurityPropertiesTest {
 
         // Check each key's algorithm to ensure it's strong
         for (KeyInfo keyInfo : keyInfos) {
-            String algorithm = keyInfo.getAlgorithm();
+            String algorithm = keyInfo.algorithm();
 
             // Verify that the algorithm is not a weak one
             assertNotEquals("none", algorithm, "Algorithm should not be 'none'");
@@ -139,7 +139,7 @@ class TokenSecurityPropertiesTest {
 
         // Check if any key uses the specified algorithm
         boolean algorithmFound = keyInfos.stream()
-                .anyMatch(keyInfo -> keyInfo.getAlgorithm().equals(algorithm));
+                .anyMatch(keyInfo -> keyInfo.algorithm().equals(algorithm));
 
         // If the algorithm is not found, log a warning but don't fail the test
         // as the test environment might not have all algorithms configured

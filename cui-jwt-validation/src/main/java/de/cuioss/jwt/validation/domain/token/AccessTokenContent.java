@@ -105,7 +105,7 @@ public class AccessTokenContent extends BaseTokenContent {
     public List<String> getScopes() {
         return getClaimOption(ClaimName.SCOPE)
                 .map(ClaimValue::getAsList)
-                .orElseThrow(() -> new IllegalStateException("Scope claim not present in token"));
+                .orElseThrow(() -> new IllegalStateException("Scope claim not present in token. Available claims: " + getClaims().keySet()));
     }
 
     /**
@@ -167,8 +167,11 @@ public class AccessTokenContent extends BaseTokenContent {
     }
 
     /**
+     * Checks if the token provides all expected scopes and logs debug information if any are missing.
+     *
      * @param expectedScopes to be checked
-     * @param logContext     Usually
+     * @param logContext     additional context information for logging
+     * @param logger         the logger to use for logging
      * @return boolean indicating whether the token provides all given Scopes. In contrast to
      * {@link #providesScopes(Collection)} it log on debug the corresponding scopes
      */

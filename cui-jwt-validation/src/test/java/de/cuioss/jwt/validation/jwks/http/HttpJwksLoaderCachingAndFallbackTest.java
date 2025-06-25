@@ -93,7 +93,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(keyInfo.isPresent(), "Key info should be present even with 304 response");
             // The key should still be available even though the server returned 304
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -104,7 +104,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             httpJwksLoader.getKeyInfo(TEST_KID);
 
             // Wait for the cache to expire (refresh interval is 1 second)
-            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1500)); // Wait 1.5 seconds to ensure cache expiration
+            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1100)); // Wait 1.1 seconds to ensure cache expiration
 
             // Configure dispatcher to check for If-None-Match header
             moduleDispatcher.expectIfNoneMatchHeader();
@@ -138,7 +138,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
             assertTrue(keyInfo.isPresent(), "Key info should be present");
             // The key should still be available and be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -153,7 +153,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             int initialCallCount = moduleDispatcher.getCallCounter();
 
             // Force a refresh of the cache
-            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1500)); // Wait for cache to expire
+            ConcurrentTools.sleepUninterruptedly(Duration.ofMillis(1100)); // Wait for cache to expire
 
             // When - make another request for the same key
             Optional<KeyInfo> refreshedKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
@@ -189,7 +189,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             // The key should still be available even though the server returned an error
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -208,7 +208,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             // The key should still be available even though the server returned an empty JWKS
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
 
         @Test
@@ -227,7 +227,7 @@ class HttpJwksLoaderCachingAndFallbackTest {
             // The key should still be available even though the connection failed
             assertTrue(keyInfo.isPresent(), "Key info should still be present due to fallback");
             // The key should be the same as the initial key
-            assertEquals(initialKeyInfo.get().getKey(), keyInfo.get().getKey(), "Key should be the same as the initial key");
+            assertEquals(initialKeyInfo.get().key(), keyInfo.get().key(), "Key should be the same as the initial key");
         }
     }
 }

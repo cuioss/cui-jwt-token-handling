@@ -43,7 +43,7 @@
         <dependency>
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <!-- Caffeine cache -->
         <dependency>
@@ -147,20 +147,18 @@
 
     <build>
         <plugins>
-            <!-- Create generators artifact with test utilities -->
+            <!-- Create test-jar artifact with test utilities -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>create-generators-jar</id>
-                        <phase>prepare-package</phase>
+                        <id>test-jar</id>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>test-jar</goal>
                         </goals>
                         <configuration>
                             <classifier>generators</classifier>
-                            <classesDirectory>${project.build.testOutputDirectory}</classesDirectory>
                             <includes>
                                 <include>de/cuioss/jwt/validation/test/**</include>
                             </includes>
@@ -198,6 +196,9 @@
                         <exclude>**/*ITCase.java</exclude>
                         <exclude>**/TokenKeycloakIT*.java</exclude>
                     </excludes>
+                    <!-- Fix for class loading issues -->
+                    <useSystemClassLoader>false</useSystemClassLoader>
+                    <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
         </plugins>
@@ -225,6 +226,9 @@
                                 <include>**/*IT.java</include>
                                 <include>**/*ITCase.java</include>
                             </includes>
+                            <!-- Fix for class loading issues -->
+                            <useSystemClassLoader>false</useSystemClassLoader>
+                            <reuseForks>false</reuseForks>
                         </configuration>
                         <executions>
                             <execution>

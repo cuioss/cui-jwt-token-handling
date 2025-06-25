@@ -262,7 +262,23 @@ public class TokenValidator {
             String tokenString,
             TokenBuilderFunction<T> tokenBuilder) {
 
-        // 1. Basic token format validation - fail fast for empty tokens
+        validateTokenFormat(tokenString);
+        DecodedJwt decodedJwt = decodeToken(tokenString);
+        String issuer = validateAndExtractIssuer(decodedJwt);
+        IssuerConfig issuerConfig = resolveIssuerConfig(issuer);
+
+        issuerConfig.initSecurityEventCounter(securityEventCounter);
+
+        validateTokenHeader(decodedJwt, issuerConfig);
+        validateTokenSignature(decodedJwt, issuerConfig);
+        Optional<T> token = buildToken(decodedJwt, issuerConfig, tokenBuilder);
+        T validatedToken = validateTokenClaims(token.get(), issuerConfig);
+
+        LOGGER.debug("Token successfully validated");
+        return validatedToken;
+    }
+
+    private void validateTokenFormat(String tokenString) {
         if (MoreStrings.isBlank(tokenString)) {
             LOGGER.warn(JWTValidationLogMessages.WARN.TOKEN_IS_EMPTY::format);
             securityEventCounter.increment(SecurityEventCounter.EventType.TOKEN_EMPTY);
@@ -271,11 +287,13 @@ public class TokenValidator {
                     "Token is empty or null"
             );
         }
+    }
 
-        // 2. Decode the token - fail fast for malformed tokens
-        DecodedJwt decodedJwt = jwtParser.decode(tokenString);
+    private DecodedJwt decodeToken(String tokenString) {
+        return jwtParser.decode(tokenString);
+    }
 
-        // 3. Get the issuer - fail fast for missing issuer
+    private String validateAndExtractIssuer(DecodedJwt decodedJwt) {
         Optional<String> issuer = decodedJwt.getIssuer();
         if (issuer.isEmpty()) {
             LOGGER.warn(JWTValidationLogMessages.WARN.MISSING_CLAIM.format("iss"));
@@ -285,33 +303,37 @@ public class TokenValidator {
                     "Missing required issuer (iss) claim in token"
             );
         }
+        return issuer.get();
+    }
 
-        // 4. Look up the issuer config - fail fast for unknown issuer
-        IssuerConfig issuerConfig = issuerConfigMap.get(issuer.get());
+    private IssuerConfig resolveIssuerConfig(String issuer) {
+        IssuerConfig issuerConfig = issuerConfigMap.get(issuer);
         if (issuerConfig == null) {
-            LOGGER.warn(JWTValidationLogMessages.WARN.NO_ISSUER_CONFIG.format(issuer.get()));
+            LOGGER.warn(JWTValidationLogMessages.WARN.NO_ISSUER_CONFIG.format(issuer));
             securityEventCounter.increment(SecurityEventCounter.EventType.NO_ISSUER_CONFIG);
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.NO_ISSUER_CONFIG,
-                    "No issuer configuration found for issuer: " + issuer.get()
+                    "No issuer configuration found for issuer: " + issuer
             );
         }
+        return issuerConfig;
+    }
 
-        // Initialize the security event counter in the issuer config
-        issuerConfig.initSecurityEventCounter(securityEventCounter);
-
-        // 5. Validate header - create validator only if needed
+    private void validateTokenHeader(DecodedJwt decodedJwt, IssuerConfig issuerConfig) {
         TokenHeaderValidator headerValidator = new TokenHeaderValidator(issuerConfig, securityEventCounter);
         headerValidator.validate(decodedJwt);
+    }
 
-        // 6. Validate signature - create validator only if needed
-        // JwksLoader is already initialized by initSecurityEventCounter
+    private void validateTokenSignature(DecodedJwt decodedJwt, IssuerConfig issuerConfig) {
         JwksLoader jwksLoader = issuerConfig.getJwksLoader();
-
         TokenSignatureValidator signatureValidator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
         signatureValidator.validateSignature(decodedJwt);
+    }
 
-        // 7. Build token - only if header and signature are valid
+    private <T extends TokenContent> Optional<T> buildToken(
+            DecodedJwt decodedJwt,
+            IssuerConfig issuerConfig,
+            TokenBuilderFunction<T> tokenBuilder) {
         Optional<T> token = tokenBuilder.apply(decodedJwt, issuerConfig);
         if (token.isEmpty()) {
             LOGGER.debug("Token building failed");
@@ -320,17 +342,14 @@ public class TokenValidator {
                     "Failed to build token from decoded JWT"
             );
         }
+        return token;
+    }
 
-        // 8. Validate claims - create validator only if token is built successfully
+    @SuppressWarnings("unchecked")
+    private <T extends TokenContent> T validateTokenClaims(TokenContent token, IssuerConfig issuerConfig) {
         TokenClaimValidator claimValidator = new TokenClaimValidator(issuerConfig, securityEventCounter);
-        TokenContent validatedContent = claimValidator.validate(token.get());
-
-        // Safe cast because the token builder creates the correct type
-        @SuppressWarnings("unchecked")
-        T validatedToken = (T) validatedContent;
-
-        LOGGER.debug("Token successfully validated");
-        return validatedToken;
+        TokenContent validatedContent = claimValidator.validate(token);
+        return (T) validatedContent;
     }
 
     /**
