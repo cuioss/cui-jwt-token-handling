@@ -3,6 +3,7 @@ package de.cuioss.jwt.quarkus.integration.app;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
+import de.cuioss.tools.logging.CuiLogger;
 
 /**
  * Main application class for JWT integration benchmarks.
@@ -12,9 +13,11 @@ import io.quarkus.runtime.annotations.QuarkusMain;
 @QuarkusMain
 public class BenchmarkApplication implements QuarkusApplication {
 
+    private static final CuiLogger log = new CuiLogger(BenchmarkApplication.class);
+
     @Override
     public int run(String... args) throws Exception {
-        System.out.println("🚀 JWT Integration Benchmark Application Starting");
+        log.info("🚀 JWT Integration Benchmark Application Starting");
         Quarkus.waitForExit();
         return 0;
     }

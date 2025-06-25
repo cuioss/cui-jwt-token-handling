@@ -1,49 +1,37 @@
 package de.cuioss.jwt.quarkus.integration.benchmark;
 
-// import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.openjdk.jmh.annotations.*;
-import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import de.cuioss.tools.logging.CuiLogger;
 
-import java.io.File;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Integration benchmark for JWT token validation using containerized Quarkus application.
  * This benchmark measures end-to-end performance including HTTP communication,
  * container networking, and real JWT validation scenarios.
+ * 
+ * Containers are managed by Maven lifecycle via exec-maven-plugin, similar to integration tests.
  */
 @BenchmarkMode(Mode.All)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
 public class IntegrationTokenValidationBenchmark {
 
-    private ComposeContainer environment;
+    private static final CuiLogger log = new CuiLogger(IntegrationTokenValidationBenchmark.class);
+    
     private String validToken;
     private String invalidToken;
     private String baseUrl;
 
     @Setup(Level.Trial)
     public void setupEnvironment() throws Exception {
-        System.out.println("🚀 Setting up integration benchmark environment...");
+        log.info("🚀 Setting up integration benchmark environment...");
         
-        // Start Docker Compose environment
-        environment = new ComposeContainer(new File("docker-compose.yml"))
-                .withExposedService("quarkus-integration-benchmark", 8443,
-                        Wait.forHttps("/q/health/live")
-                                .withStartupTimeout(Duration.ofMinutes(3)))
-                .withExposedService("keycloak", 8080,
-                        Wait.forHttp("/auth/health/ready")
-                                .withStartupTimeout(Duration.ofMinutes(2)));
-
-        environment.start();
-
-        // Configure REST Assured
-        Integer mappedPort = environment.getServicePort("quarkus-integration-benchmark", 8443);
-        baseUrl = "https://localhost:" + mappedPort;
+        // Container is already started by Maven exec-maven-plugin
+        // Configure REST Assured to use the running application
+        baseUrl = "https://localhost:" + System.getProperty("test.https.port", "11443");
         
         RestAssured.baseURI = baseUrl;
         RestAssured.useRelaxedHTTPSValidation();
@@ -55,20 +43,18 @@ public class IntegrationTokenValidationBenchmark {
         // Warmup - ensure services are responsive
         warmupServices();
         
-        System.out.println("✅ Integration benchmark environment ready");
-        System.out.println("📱 Application URL: " + baseUrl);
+        log.info("✅ Integration benchmark environment ready");
+        log.info("📱 Application URL: " + baseUrl);
     }
 
     @TearDown(Level.Trial)
     public void teardownEnvironment() {
-        if (environment != null) {
-            System.out.println("🛑 Stopping integration benchmark environment...");
-            environment.stop();
-        }
+        // Container will be stopped by Maven exec-maven-plugin
+        log.info("🛑 Integration benchmark completed");
     }
 
     private void warmupServices() throws Exception {
-        System.out.println("🔥 Warming up services...");
+        log.info("🔥 Warming up services...");
         
         // Warmup application
         for (int i = 0; i < 5; i++) {
@@ -96,7 +82,7 @@ public class IntegrationTokenValidationBenchmark {
             }
         }
         
-        System.out.println("✅ Services warmed up");
+        log.info("✅ Services warmed up");
     }
 
     /**

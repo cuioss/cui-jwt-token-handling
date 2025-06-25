@@ -21,7 +21,6 @@
         <version.exec-maven-plugin>3.2.0</version.exec-maven-plugin>
         <version.jmh>1.37</version.jmh>
         <sonar.skip>true</sonar.skip>
-        <version.testcontainers>1.19.3</version.testcontainers>
         
         <!-- Native image build for benchmarks -->
         <quarkus.native.container-build>false</quarkus.native.container-build>
@@ -44,13 +43,6 @@
                 <artifactId>jmh-generator-annprocess</artifactId>
                 <scope>provided</scope>
                 <version>${version.jmh}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>${version.testcontainers}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -100,17 +92,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Test containers for integration scenarios -->
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>compile</scope>
-        </dependency>
 
         <!-- HTTP client for benchmarking -->
         <dependency>
@@ -151,15 +132,29 @@
                 </configuration>
             </plugin>
 
-            <!-- Execute benchmark tests when skip.benchmark is false -->
+            <!-- Container management and benchmark execution -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${version.exec-maven-plugin}</version>
                 <executions>
+                    <!-- Start containers before benchmarks -->
+                    <execution>
+                        <id>start-integration-containers</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skip.benchmark}</skip>
+                            <executable>./scripts/start-integration-container.sh</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
+                    <!-- Run benchmarks -->
                     <execution>
                         <id>run-integration-benchmarks</id>
-                        <phase>verify</phase>
+                        <phase>integration-test</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -175,8 +170,23 @@
                                 <argument>-Djmh.warmupIterations=${jmh.warmupIterations}</argument>
                                 <argument>-Djmh.forks=${jmh.forks}</argument>
                                 <argument>-Djmh.threads=${jmh.threads}</argument>
+                                <argument>-Dtest.https.port=${test.https.port}</argument>
+                                <argument>-Dtest.keycloak.port=${test.keycloak.port}</argument>
                                 <argument>de.cuioss.jwt.quarkus.integration.benchmark.IntegrationBenchmarkRunner</argument>
                             </arguments>
+                        </configuration>
+                    </execution>
+                    <!-- Stop containers after benchmarks -->
+                    <execution>
+                        <id>stop-integration-containers</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skip.benchmark}</skip>
+                            <executable>./scripts/stop-integration-container.sh</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -238,6 +248,28 @@
                                 <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
                             </properties>
                         </configuration>
+                    </plugin>
+
+                    <!-- Maven Failsafe Plugin for integration test phases -->
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <systemPropertyVariables>
+                                        <test.https.port>${test.https.port}</test.https.port>
+                                        <test.keycloak.port>${test.keycloak.port}</test.keycloak.port>
+                                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                        <quarkus.native.enabled>${quarkus.native.enabled}</quarkus.native.enabled>
+                                    </systemPropertyVariables>
+                                    <skip>${skip.benchmark}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

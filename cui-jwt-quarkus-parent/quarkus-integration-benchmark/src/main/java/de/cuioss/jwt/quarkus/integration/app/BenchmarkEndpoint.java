@@ -2,13 +2,12 @@ package de.cuioss.jwt.quarkus.integration.app;
 
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.AccessTokenContent;
+import de.cuioss.tools.logging.CuiLogger;
 
-import java.util.Optional;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import lombok.extern.java.Log;
 
 /**
  * REST endpoint for JWT validation benchmarking.
@@ -18,8 +17,9 @@ import lombok.extern.java.Log;
 @Path("/benchmark")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Log
 public class BenchmarkEndpoint {
+
+    private static final CuiLogger log = new CuiLogger(BenchmarkEndpoint.class);
 
     @Inject
     TokenValidator tokenValidator;
@@ -46,43 +46,13 @@ public class BenchmarkEndpoint {
             return Response.ok(new ValidationResponse(true, "Token is valid"))
                     .build();
         } catch (Exception e) {
-            log.warning("Token validation error: " + e.getMessage());
+            log.warn("Token validation error: {}", e.getMessage());
             return Response.status(Response.Status.UNAUTHORIZED)
                     .entity(new ValidationResponse(false, "Token validation failed: " + e.getMessage()))
                     .build();
         }
     }
 
-    /**
-     * Validates multiple tokens in batch - for throughput testing.
-     * 
-     * @param request Batch validation request
-     * @return Batch validation results
-     */
-    @POST
-    @Path("/validate-batch")
-    public Response validateTokens(BatchValidationRequest request) {
-        if (request == null || request.getTokens() == null || request.getTokens().isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new BatchValidationResponse(0, 0, "No tokens provided"))
-                    .build();
-        }
-
-        int totalTokens = request.getTokens().size();
-        int validTokens = 0;
-
-        for (String token : request.getTokens()) {
-            try {
-                AccessTokenContent accessToken = tokenValidator.createAccessToken(token);
-                validTokens++;
-            } catch (Exception e) {
-                log.warning("Batch validation error for token: " + e.getMessage());
-            }
-        }
-
-        return Response.ok(new BatchValidationResponse(totalTokens, validTokens, "Batch validation completed"))
-                .build();
-    }
 
     /**
      * Health check endpoint for container readiness.
@@ -107,29 +77,4 @@ public class BenchmarkEndpoint {
         }
     }
 
-    public static class BatchValidationRequest {
-        private java.util.List<String> tokens;
-
-        public java.util.List<String> getTokens() {
-            return tokens;
-        }
-
-        public void setTokens(java.util.List<String> tokens) {
-            this.tokens = tokens;
-        }
-    }
-
-    public static class BatchValidationResponse {
-        public int totalTokens;
-        public int validTokens;
-        public String message;
-
-        public BatchValidationResponse() {}
-
-        public BatchValidationResponse(int totalTokens, int validTokens, String message) {
-            this.totalTokens = totalTokens;
-            this.validTokens = validTokens;
-            this.message = message;
-        }
-    }
 }

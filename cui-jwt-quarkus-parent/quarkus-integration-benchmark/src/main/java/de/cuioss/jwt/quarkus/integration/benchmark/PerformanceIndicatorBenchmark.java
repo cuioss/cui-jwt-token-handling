@@ -1,50 +1,38 @@
 package de.cuioss.jwt.quarkus.integration.benchmark;
 
-// import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
-import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import de.cuioss.tools.logging.CuiLogger;
 
-import java.io.File;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Performance indicator benchmark for integration testing.
  * This benchmark provides the same performance categories as micro-benchmarks
  * but measures them in an end-to-end integration context.
+ * 
+ * Containers are managed by Maven lifecycle via exec-maven-plugin.
  */
 @BenchmarkMode(Mode.All)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
 public class PerformanceIndicatorBenchmark {
 
-    private ComposeContainer environment;
+    private static final CuiLogger log = new CuiLogger(PerformanceIndicatorBenchmark.class);
+    
     private String validToken;
     private String invalidToken;
     private String baseUrl;
 
     @Setup(Level.Trial)
     public void setupEnvironment() throws Exception {
-        System.out.println("🚀 Setting up performance indicator benchmark...");
+        log.info("🚀 Setting up performance indicator benchmark...");
         
-        // Start Docker Compose environment
-        environment = new ComposeContainer(new File("docker-compose.yml"))
-                .withExposedService("quarkus-integration-benchmark", 8443,
-                        Wait.forHttps("/q/health/live")
-                                .withStartupTimeout(Duration.ofMinutes(3)))
-                .withExposedService("keycloak", 8080,
-                        Wait.forHttp("/auth/health/ready")
-                                .withStartupTimeout(Duration.ofMinutes(2)));
-
-        environment.start();
-
-        // Configure REST Assured
-        Integer mappedPort = environment.getServicePort("quarkus-integration-benchmark", 8443);
-        baseUrl = "https://localhost:" + mappedPort;
+        // Container is already started by Maven exec-maven-plugin
+        // Configure REST Assured to use the running application
+        baseUrl = "https://localhost:" + System.getProperty("test.https.port", "11443");
         
         RestAssured.baseURI = baseUrl;
         RestAssured.useRelaxedHTTPSValidation();
@@ -53,14 +41,13 @@ public class PerformanceIndicatorBenchmark {
         validToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.EkN-DOsnsuRjRO6BxXemmJDm3HbxrbRzXglbN2S4sOkopdU4IsDxTI8jO19W_A4K8ZPJijNLis4EZsHeY559a4DFOd50_OqgHs3PH-otkHDhFLXLuOa_w7SqDdZz5W4W5Kjb0mNa7g3l7dhfQYGGwR-v1-jQYj0I8v4p1RVCGZc";
         invalidToken = "invalid.token.content";
         
-        System.out.println("✅ Performance indicator benchmark ready");
+        log.info("✅ Performance indicator benchmark ready");
     }
 
     @TearDown(Level.Trial)
     public void teardownEnvironment() {
-        if (environment != null) {
-            environment.stop();
-        }
+        // Container will be stopped by Maven exec-maven-plugin
+        log.info("🛑 Performance indicator benchmark completed");
     }
 
     /**

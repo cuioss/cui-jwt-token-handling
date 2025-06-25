@@ -2,6 +2,7 @@ package de.cuioss.jwt.quarkus.integration.benchmark;
 
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.runner.RunnerException;
+import de.cuioss.tools.logging.CuiLogger;
 
 import java.io.IOException;
 
@@ -12,6 +13,8 @@ import java.io.IOException;
  */
 public class IntegrationBenchmarkRunner {
 
+    private static final CuiLogger log = new CuiLogger(IntegrationBenchmarkRunner.class);
+
     /**
      * Main method to run all integration benchmarks.
      * 
@@ -20,12 +23,12 @@ public class IntegrationBenchmarkRunner {
      * @throws RunnerException if benchmark runner fails
      */
     public static void main(String[] args) throws IOException, RunnerException {
-        System.out.println("🚀 Starting JWT Quarkus Integration Benchmarks");
-        System.out.println("📊 Running in containerized environment with native Quarkus");
+        log.info("🚀 Starting JWT Quarkus Integration Benchmarks");
+        log.info("📊 Running in containerized environment with native Quarkus");
         
         // Run all benchmarks in the package
         Main.main(args);
         
-        System.out.println("✅ Integration benchmarks completed");
+        log.info("✅ Integration benchmarks completed");
     }
 }
