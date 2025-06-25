@@ -96,10 +96,12 @@ public class TokenValidatorProducer {
      */
     private void validateConfiguration() {
         if (jwtValidationConfig == null) {
+            LOGGER.error("JWT validation configuration is required");
             throw new IllegalStateException("JWT validation configuration is required");
         }
 
         if (jwtValidationConfig.issuers().isEmpty()) {
+            LOGGER.error("At least one issuer configuration is required");
             throw new IllegalStateException("At least one issuer configuration is required");
         }
 
@@ -107,13 +109,20 @@ public class TokenValidatorProducer {
         issuerConfigs = IssuerConfigFactory.createIssuerConfigs(jwtValidationConfig.issuers());
 
         if (issuerConfigs.isEmpty()) {
+            LOGGER.error("No enabled issuers found in configuration");
             throw new IllegalStateException("No enabled issuers found in configuration");
         }
 
         // Validate parser configuration consistency
-        int maxTokenSize = jwtValidationConfig.parser().maxTokenSizeBytes();
-        if (maxTokenSize <= 0) {
-            throw new IllegalStateException("maxTokenSizeBytes must be positive, but was: " + maxTokenSize);
+        try {
+            int maxTokenSize = jwtValidationConfig.parser().maxTokenSizeBytes();
+            if (maxTokenSize <= 0) {
+                LOGGER.error("maxTokenSizeBytes must be positive, but was: " + maxTokenSize);
+                throw new IllegalStateException("maxTokenSizeBytes must be positive, but was: " + maxTokenSize);
+            }
+        } catch (RuntimeException e) {
+            LOGGER.error("Failed to create TokenValidator: " + e.getMessage(), e);
+            throw new IllegalStateException("Failed to create TokenValidator: " + e.getMessage(), e);
         }
 
         LOGGER.debug("Configuration validation successful - found %d enabled issuers", issuerConfigs.size());

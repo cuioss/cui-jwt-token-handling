@@ -50,70 +50,50 @@ class TokenSignatureValidatorEdgeCasesTest {
 
     @BeforeEach
     void setUp() {
-        // Create a security event counter
         securityEventCounter = new SecurityEventCounter();
 
-        // Create a real JWT parser using the builder
         jwtParser = NonValidatingJwtParser.builder().securityEventCounter(securityEventCounter).build();
 
-        // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
 
-        // Create the validator with the in-memory JwksLoader and security event counter
         validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
     }
 
     @Test
     @DisplayName("Should reject token with missing signature")
     void shouldRejectTokenWithMissingSignature() {
-        // Get initial count
-        long initialCount = securityEventCounter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM);
+        long initialCount = securityEventCounter.getCount(SecurityEventCounter.EventType.INVALID_JWT_FORMAT);
 
-        // Create a token without a signature
         String token = createTokenWithoutSignature();
 
-        // Parse the token
-        DecodedJwt decodedJwt = jwtParser.decode(token);
-        assertNotNull(decodedJwt, "Decoded JWT should not be null");
-
-        // Validate the signature - should throw an exception
+        // The parser should throw an exception when the token has an empty signature part
         TokenValidationException exception = assertThrows(TokenValidationException.class,
-                () -> validator.validateSignature(decodedJwt),
+                () -> jwtParser.decode(token),
                 "Should throw exception when signature is missing");
 
-        // Verify the exception has the correct event type
-        assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType(),
-                "Exception should have MISSING_CLAIM event type");
+        assertEquals(SecurityEventCounter.EventType.INVALID_JWT_FORMAT, exception.getEventType(),
+                "Exception should have INVALID_JWT_FORMAT event type");
 
-        // Verify security event was recorded
-        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM),
-                "MISSING_CLAIM event should be incremented");
+        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.INVALID_JWT_FORMAT),
+                "INVALID_JWT_FORMAT event should be incremented");
     }
 
     @Test
     @DisplayName("Should reject token with invalid format (not 3 parts)")
     void shouldRejectTokenWithInvalidFormat() {
-        // Get initial count
         long initialCount = securityEventCounter.getCount(SecurityEventCounter.EventType.INVALID_JWT_FORMAT);
 
-        // Create a token with invalid format (only 2 parts)
         String token = createTokenWithInvalidFormat();
 
-        // Parse the token
-        DecodedJwt decodedJwt = jwtParser.decode(token);
-        assertNotNull(decodedJwt, "Decoded JWT should not be null");
-
-        // Validate the signature - should throw an exception
+        // The parser should throw an exception when the token doesn't have exactly 3 parts
         TokenValidationException exception = assertThrows(TokenValidationException.class,
-                () -> validator.validateSignature(decodedJwt),
+                () -> jwtParser.decode(token),
                 "Should throw exception when token format is invalid");
 
-        // Verify the exception has the correct event type
         assertEquals(SecurityEventCounter.EventType.INVALID_JWT_FORMAT, exception.getEventType(),
                 "Exception should have INVALID_JWT_FORMAT event type");
 
-        // Verify security event was recorded
         assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.INVALID_JWT_FORMAT),
                 "INVALID_JWT_FORMAT event should be incremented");
     }
@@ -121,26 +101,20 @@ class TokenSignatureValidatorEdgeCasesTest {
     @Test
     @DisplayName("Should reject token with missing algorithm (alg) claim")
     void shouldRejectTokenWithMissingAlgorithm() {
-        // Get initial count
         long initialCount = securityEventCounter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM);
 
-        // Create a token without an algorithm
         String token = createTokenWithoutAlgorithm();
 
-        // Parse the token
         DecodedJwt decodedJwt = jwtParser.decode(token);
         assertNotNull(decodedJwt, "Decoded JWT should not be null");
 
-        // Validate the signature - should throw an exception
         TokenValidationException exception = assertThrows(TokenValidationException.class,
                 () -> validator.validateSignature(decodedJwt),
                 "Should throw exception when algorithm is missing");
 
-        // Verify the exception has the correct event type
         assertEquals(SecurityEventCounter.EventType.MISSING_CLAIM, exception.getEventType(),
                 "Exception should have MISSING_CLAIM event type");
 
-        // Verify security event was recorded
         assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.MISSING_CLAIM),
                 "MISSING_CLAIM event should be incremented");
     }

@@ -72,7 +72,6 @@ class CuiJwtProcessorValidationTest {
     @Test
     @DisplayName("Should throw exception when issuers are null or empty")
     void shouldThrowExceptionWhenIssuersAreNullOrEmpty() {
-        // Test with null issuers
         JwtValidationConfig configWithNullIssuers = new TestJwtValidationConfig() {
             @Override
             public Map<String, IssuerConfig> issuers() {
@@ -112,7 +111,7 @@ class CuiJwtProcessorValidationTest {
                 return new TestParserConfig() {
                     @Override
                     public int maxTokenSizeBytes() {
-                        return 0; // Invalid value
+                        return 0;
                     }
                 };
             }
@@ -135,7 +134,7 @@ class CuiJwtProcessorValidationTest {
                 return new TestParserConfig() {
                     @Override
                     public int leewaySeconds() {
-                        return -1; // Invalid value
+                        return -1;
                     }
                 };
             }
@@ -158,7 +157,7 @@ class CuiJwtProcessorValidationTest {
                 return new TestParserConfig() {
                     @Override
                     public String allowedAlgorithms() {
-                        return ""; // Invalid value
+                        return "";
                     }
                 };
             }
@@ -181,7 +180,7 @@ class CuiJwtProcessorValidationTest {
                 return new TestParserConfig() {
                     @Override
                     public String allowedAlgorithms() {
-                        return "RS256,none,RS512"; // Invalid value
+                        return "RS256,none,RS512";
                     }
                 };
             }

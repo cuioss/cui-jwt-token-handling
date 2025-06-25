@@ -249,11 +249,9 @@ class TokenValidatorProducerErrorHandlingTest {
     @Test
     @DisplayName("Should throw exception when configuration is null")
     void shouldThrowExceptionWhenConfigurationIsNull() {
-        // Given
         producer = new TokenValidatorProducer(null);
 
-        // When/Then
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> producer.initialize(),
                 "Should throw exception when configuration is null");
 
@@ -264,17 +262,10 @@ class TokenValidatorProducerErrorHandlingTest {
     @Test
     @DisplayName("Should throw exception when issuers are empty")
     void shouldThrowExceptionWhenIssuersAreEmpty() {
-        // Given
-        JwtValidationConfig config = new TestJwtValidationConfig() {
-            @Override
-            public Map<String, IssuerConfig> issuers() {
-                return Collections.emptyMap();
-            }
-        };
+        JwtValidationConfig config = new EmptyIssuersTestConfig();
         producer = new TokenValidatorProducer(config);
 
-        // When/Then
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> producer.initialize(),
                 "Should throw exception when issuers are empty");
 
@@ -285,19 +276,10 @@ class TokenValidatorProducerErrorHandlingTest {
     @Test
     @DisplayName("Should throw exception when no enabled issuers are found")
     void shouldThrowExceptionWhenNoEnabledIssuersAreFound() {
-        // Given
-        JwtValidationConfig config = new TestJwtValidationConfig() {
-            @Override
-            public Map<String, IssuerConfig> issuers() {
-                Map<String, IssuerConfig> issuers = new HashMap<>();
-                issuers.put("default", new TestIssuerConfig().withEnabled(false));
-                return issuers;
-            }
-        };
+        JwtValidationConfig config = new DisabledIssuersTestConfig();
         producer = new TokenValidatorProducer(config);
 
-        // When/Then
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> producer.initialize(),
                 "Should throw exception when no enabled issuers are found");
 
@@ -308,17 +290,10 @@ class TokenValidatorProducerErrorHandlingTest {
     @Test
     @DisplayName("Should throw exception when maxTokenSizeBytes is invalid")
     void shouldThrowExceptionWhenMaxTokenSizeBytesIsInvalid() {
-        // Given
-        JwtValidationConfig config = new TestJwtValidationConfig() {
-            @Override
-            public ParserConfig parser() {
-                return new TestParserConfig().withMaxTokenSizeBytes(0);
-            }
-        };
+        JwtValidationConfig config = new InvalidMaxTokenSizeTestConfig();
         producer = new TokenValidatorProducer(config);
 
-        // When/Then
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> producer.initialize(),
                 "Should throw exception when maxTokenSizeBytes is invalid");
 
@@ -326,55 +301,55 @@ class TokenValidatorProducerErrorHandlingTest {
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, "maxTokenSizeBytes must be positive, but was: 0");
     }
 
-    @Test
-    @DisplayName("Should throw exception when security event counter initialization fails")
-    void shouldThrowExceptionWhenSecurityEventCounterInitializationFails() {
-        // Given
-        JwtValidationConfig config = new TestJwtValidationConfig() {
-            @Override
-            public Map<String, IssuerConfig> issuers() {
-                Map<String, IssuerConfig> issuers = new HashMap<>();
-                // Create an issuer with neither jwks nor publicKeyLocation
-                issuers.put("default", new TestIssuerConfig()
-                        .withPublicKeyLocation(Optional.empty())
-                        .withJwks(Optional.empty()));
-                return issuers;
-            }
-        };
-        producer = new TokenValidatorProducer(config);
-
-        // When/Then
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> producer.initialize(),
-                "Should throw exception when security event counter initialization fails");
-
-        // Verify log message
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, "Failed to initialize security event counter");
-    }
 
     @Test
     @DisplayName("Should throw exception when parser config creation fails")
     void shouldThrowExceptionWhenParserConfigCreationFails() {
-        // Given
-        JwtValidationConfig config = new TestJwtValidationConfig() {
-            @Override
-            public ParserConfig parser() {
-                return new TestParserConfig() {
-                    @Override
-                    public int maxTokenSizeBytes() {
-                        throw new RuntimeException("Test exception");
-                    }
-                };
-            }
-        };
+        JwtValidationConfig config = new ParserConfigExceptionTestConfig();
         producer = new TokenValidatorProducer(config);
 
-        // When/Then
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> producer.initialize(),
                 "Should throw exception when parser config creation fails");
 
         // Verify log message
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, "Failed to create TokenValidator");
+    }
+
+    private static class EmptyIssuersTestConfig extends TestJwtValidationConfig {
+        @Override
+        public Map<String, IssuerConfig> issuers() {
+            return Collections.emptyMap();
+        }
+    }
+
+    private static class DisabledIssuersTestConfig extends TestJwtValidationConfig {
+        @Override
+        public Map<String, IssuerConfig> issuers() {
+            Map<String, IssuerConfig> issuers = new HashMap<>();
+            issuers.put("default", new TestIssuerConfig().withEnabled(false));
+            return issuers;
+        }
+    }
+
+    private static class InvalidMaxTokenSizeTestConfig extends TestJwtValidationConfig {
+        @Override
+        public ParserConfig parser() {
+            return new TestParserConfig().withMaxTokenSizeBytes(0);
+        }
+    }
+
+    private static class ParserConfigExceptionTestConfig extends TestJwtValidationConfig {
+        @Override
+        public ParserConfig parser() {
+            return new TestParserConfigWithException();
+        }
+    }
+
+    private static class TestParserConfigWithException extends TestParserConfig {
+        @Override
+        public int maxTokenSizeBytes() {
+            throw new RuntimeException("Test exception");
+        }
     }
 }

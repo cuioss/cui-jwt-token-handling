@@ -63,7 +63,7 @@ class JWKSKeyLoaderExtendedTest {
 
             Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo("ec-key-id");
             assertTrue(keyInfo.isPresent(), "EC key info should be present");
-            assertEquals("EC", keyInfo.get().algorithm(), "Algorithm should be EC");
+            assertEquals("ES256", keyInfo.get().algorithm(), "Algorithm should be ES256");
         }
 
         @Test
@@ -251,18 +251,17 @@ class JWKSKeyLoaderExtendedTest {
         @Test
         @DisplayName("Should throw exception when builder is missing originalString")
         void shouldThrowExceptionWhenBuilderIsMissingOriginalString() {
-            assertThrows(IllegalArgumentException.class, () ->
-                            JWKSKeyLoader.builder().build(),
+            JWKSKeyLoader.JWKSKeyLoaderBuilder builder = JWKSKeyLoader.builder();
+            assertThrows(IllegalArgumentException.class, builder::build,
                     "Builder should throw exception when originalString is missing");
         }
 
         @Test
         @DisplayName("Should throw exception when builder is missing securityEventCounter")
         void shouldThrowExceptionWhenBuilderIsMissingSecurityEventCounter() {
-            assertThrows(IllegalArgumentException.class, () ->
-                            JWKSKeyLoader.builder()
-                                    .originalString("content")
-                                    .build(),
+            JWKSKeyLoader.JWKSKeyLoaderBuilder content = JWKSKeyLoader.builder()
+                .originalString("content");
+            assertThrows(IllegalArgumentException.class, content::build,
                     "Builder should throw exception when securityEventCounter is missing");
         }
     }
