@@ -100,8 +100,8 @@ Results are automatically:
 == Documentation
 
 === Performance Scoring
-* xref:PERFORMANCE-SCORING.md[Integration Benchmark Performance Scoring] - Complete methodology and scoring implementation
-* xref:../../cui-jwt-benchmarking/doc/performance-scoring.adoc[Micro-Benchmark Performance Scoring] - Original scoring methodology
+* xref:performance-scoring.adoc[Integration Benchmark Performance Scoring] - Integration-specific implementation details
+* xref:../../cui-jwt-benchmarking/doc/performance-scoring.adoc[JWT Performance Scoring System] - Complete methodology and scoring calculations
 
 === Related Modules
 * xref:../../cui-jwt-benchmarking/README.adoc[JWT Micro-Benchmarking Module] - Library component performance testing
