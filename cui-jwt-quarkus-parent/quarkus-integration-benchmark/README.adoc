@@ -1,0 +1,58 @@
+= JWT Quarkus Integration Benchmarking
+
+This module provides integration-level performance benchmarking for the JWT Quarkus extension using containerized environments.
+
+== Overview
+
+While the `cui-jwt-benchmarking` module focuses on micro-benchmark testing of library components, this module provides end-to-end integration performance testing using:
+
+* Native Quarkus application in containers
+* Keycloak integration for realistic token issuing
+* Memory-based token issuers for testing
+* Real HTTP/HTTPS communication patterns
+
+== Configuration
+
+The module is configured to:
+
+* Skip compilation during normal builds (`skip.benchmark=true`)
+* Exclude from Sonar analysis (`sonar.skip=true`)
+* Build only when explicitly enabled
+* Use the same performance metrics as micro-benchmarks
+
+== Usage
+
+=== Local Testing
+[source,bash]
+----
+# Run integration benchmarks locally
+mvn clean verify -pl quarkus-integration-benchmark -Dskip.benchmark=false
+----
+
+=== CI/CD Execution
+Integration benchmarks are executed automatically via GitHub Actions workflow alongside micro-benchmarks.
+
+== Architecture
+
+The benchmarks run in a containerized environment similar to `cui-jwt-quarkus-integration-tests` but with JMH performance measurement capabilities.
+
+=== Container Setup
+* Quarkus native application
+* Keycloak container (issuer1)
+* Memory-based issuer
+* Shared container network
+
+=== Performance Metrics
+Same categories as micro-benchmarks:
+* Throughput (requests/second)
+* Latency (P50, P95, P99)
+* Resilience (error rates under load)
+* Performance Score (composite metric)
+
+== Results
+
+Results are automatically:
+* Collected in JSON format
+* Uploaded as GitHub artifacts
+* Processed for GitHub Pages visualization
+* Displayed as README badges alongside micro-benchmark results

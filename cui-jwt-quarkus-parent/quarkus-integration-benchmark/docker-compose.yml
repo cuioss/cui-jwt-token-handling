@@ -1,0 +1,104 @@
+# JWT Integration Benchmarks - Container Setup
+# Purpose: Containerized environment for integration performance testing
+
+services:
+  quarkus-integration-benchmark:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native
+      cache_from:
+        - quay.io/quarkus/quarkus-distroless-image:2.0
+      platforms:
+        - linux/amd64
+        - linux/arm64
+
+    ports:
+      - "11443:8443"  # External test port for benchmarks
+
+    volumes:
+      - ./src/main/docker/certificates:/app/certificates:ro
+
+    environment:
+      - QUARKUS_LOG_LEVEL=INFO
+      - BENCHMARK_MODE=true
+
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+      - /app/tmp:rw,noexec,nosuid,size=50m
+
+    # Resource limits for consistent benchmarking
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '2.0'
+        reservations:
+          memory: 256M
+          cpus: '1.0'
+
+    healthcheck:
+      test: ["CMD", "/app/health-check.sh"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+    networks:
+      - jwt-benchmark
+    
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    ports:
+      - "11080:8080"
+    
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+      - KC_HTTP_RELATIVE_PATH=/auth
+    
+    command:
+      - start-dev
+      - --import-realm
+    
+    volumes:
+      - ./src/main/docker/keycloak:/opt/keycloak/data/import:ro
+    
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/auth/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    
+    networks:
+      - jwt-benchmark
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+networks:
+  jwt-benchmark:
+    driver: bridge
+    internal: false

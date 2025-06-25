@@ -1,0 +1,52 @@
+{
+  "realm": "benchmark",
+  "enabled": true,
+  "displayName": "JWT Benchmark Realm",
+  "displayNameHtml": "<strong>JWT Benchmark</strong>",
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "clients": [
+    {
+      "clientId": "benchmark-client",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "benchmark-secret",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "benchmark-user",
+      "enabled": true,
+      "firstName": "Benchmark",
+      "lastName": "User",
+      "email": "benchmark@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "benchmark-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "user",
+        "description": "Standard user role for benchmarking"
+      }
+    ]
+  }
+}
