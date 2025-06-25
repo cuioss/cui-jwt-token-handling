@@ -30,6 +30,7 @@ import org.jboss.logging.Logger;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 /**
  * Processor for the CUI JWT Quarkus extension.
@@ -70,7 +71,7 @@ public class CuiJwtProcessor {
     public FeatureBuildItem feature(JwtValidationConfig config) {
         validateBuildTimeConfiguration(config);
         LOGGER.infof("CUI JWT feature registered with %d configured issuers",
-                config.issuers() != null ? config.issuers().size() : 0);
+            config.issuers().size());
         return new FeatureBuildItem(FEATURE);
     }
 
@@ -202,25 +203,19 @@ public class CuiJwtProcessor {
      * for developers to quickly identify and fix configuration issues.
      *
      * @param config the JWT validation configuration to validate
-     * @throws RuntimeException if configuration is invalid with detailed error message
+     * @throws JwtConfigurationException if configuration is invalid with detailed error message
      */
     private void validateBuildTimeConfiguration(JwtValidationConfig config) {
         if (config == null) {
-            throw new RuntimeException("JWT validation configuration is missing. " +
+            throw new JwtConfigurationException("JWT validation configuration is missing. " +
                     "Please ensure que.cui.jwt.* properties are properly configured in application.properties");
-        }
-
-        // Validate parser configuration
-        if (config.parser() == null) {
-            throw new RuntimeException("JWT parser configuration is missing. " +
-                    "Please configure que.cui.jwt.parser.* properties in application.properties");
         }
 
         validateParserConfig(config.parser());
 
         // Validate issuer configurations
-        if (config.issuers() == null || config.issuers().isEmpty()) {
-            throw new RuntimeException("No JWT issuers configured. " +
+        if (config.issuers().isEmpty()) {
+            throw new JwtConfigurationException("No JWT issuers configured. " +
                     "Please configure at least one issuer using que.cui.jwt.issuers.* properties in application.properties");
         }
 
@@ -234,11 +229,17 @@ public class CuiJwtProcessor {
      * Validates parser configuration parameters at build time.
      *
      * @param parser the parser configuration to validate
-     * @throws RuntimeException if parser configuration is invalid
+     * @throws JwtConfigurationException if parser configuration is invalid
      */
     private void validateParserConfig(JwtValidationConfig.ParserConfig parser) {
+        validateTokenSize(parser);
+        validateLeewaySeconds(parser);
+        validateAllowedAlgorithms(parser);
+    }
+
+    private void validateTokenSize(JwtValidationConfig.ParserConfig parser) {
         if (parser.maxTokenSizeBytes() <= 0) {
-            throw new RuntimeException("JWT parser maxTokenSizeBytes must be positive, but was: " +
+            throw new JwtConfigurationException("JWT parser maxTokenSizeBytes must be positive, but was: " +
                     parser.maxTokenSizeBytes() +
                     ". Please set que.cui.jwt.parser.max-token-size-bytes to a positive value");
         }
@@ -248,9 +249,11 @@ public class CuiJwtProcessor {
                     "Consider increasing que.cui.jwt.parser.max-token-size-bytes for production use",
                     parser.maxTokenSizeBytes());
         }
+    }
 
+    private void validateLeewaySeconds(JwtValidationConfig.ParserConfig parser) {
         if (parser.leewaySeconds() < 0) {
-            throw new RuntimeException("JWT parser leewaySeconds must be non-negative, but was: " +
+            throw new JwtConfigurationException("JWT parser leewaySeconds must be non-negative, but was: " +
                     parser.leewaySeconds() +
                     ". Please set que.cui.jwt.parser.leeway-seconds to a non-negative value");
         }
@@ -260,15 +263,17 @@ public class CuiJwtProcessor {
                     "Consider reducing que.cui.jwt.parser.leeway-seconds for better security",
                     parser.leewaySeconds());
         }
+    }
 
+    private void validateAllowedAlgorithms(JwtValidationConfig.ParserConfig parser) {
         if (parser.allowedAlgorithms() == null || parser.allowedAlgorithms().trim().isEmpty()) {
-            throw new RuntimeException("JWT parser allowedAlgorithms cannot be empty. " +
+            throw new JwtConfigurationException("JWT parser allowedAlgorithms cannot be empty. " +
                     "Please configure que.cui.jwt.parser.allowed-algorithms with at least one algorithm");
         }
 
         // Check for insecure algorithms
         if (parser.allowedAlgorithms().contains("none")) {
-            throw new RuntimeException("JWT parser allowedAlgorithms contains 'none' algorithm which is insecure. " +
+            throw new JwtConfigurationException("JWT parser allowedAlgorithms contains 'none' algorithm which is insecure. " +
                     "Please remove 'none' from que.cui.jwt.parser.allowed-algorithms");
         }
     }
@@ -277,73 +282,84 @@ public class CuiJwtProcessor {
      * Validates issuer configurations at build time.
      *
      * @param config the JWT validation configuration containing issuer configs
-     * @throws RuntimeException if any issuer configuration is invalid
+     * @throws JwtConfigurationException if any issuer configuration is invalid
      */
     private void validateIssuerConfigs(JwtValidationConfig config) {
         for (var issuerEntry : config.issuers().entrySet()) {
             String issuerName = issuerEntry.getKey();
             var issuerConfig = issuerEntry.getValue();
+            validateSingleIssuerConfig(issuerName, issuerConfig);
+        }
+    }
 
-            if (issuerConfig.url() == null || issuerConfig.url().trim().isEmpty()) {
-                throw new RuntimeException("Issuer '%s' has empty issuer URL. " +
-                        "Please configure que.cui.jwt.issuers.%s.url with a valid URL"
-                                .formatted(issuerName, issuerName));
+    private void validateSingleIssuerConfig(String issuerName, JwtValidationConfig.IssuerConfig issuerConfig) {
+        if (issuerConfig.url().trim().isEmpty()) {
+            throw new JwtConfigurationException(("Issuer '%s' has empty issuer URL. " +
+                    "Please configure que.cui.jwt.issuers.%s.url with a valid URL")
+                            .formatted(issuerName, issuerName));
+        }
+
+        Optional<JwtValidationConfig.HttpJwksLoaderConfig> jwksConfig = issuerConfig.jwks();
+        if (jwksConfig.isPresent()) {
+            validateJwksConfig(issuerName, jwksConfig.get());
+        } else if (issuerConfig.publicKeyLocation().isEmpty()) {
+            throw new JwtConfigurationException(("Issuer '%s' has neither JWKS configuration nor public key location. " +
+                    "Please configure either que.cui.jwt.issuers.%s.jwks.* or " +
+                    "que.cui.jwt.issuers.%s.public-key-location")
+                            .formatted(issuerName, issuerName, issuerName));
+        }
+    }
+
+    private void validateJwksConfig(String issuerName, JwtValidationConfig.HttpJwksLoaderConfig jwksConfig) {
+        // Check if either JWKS URL or well-known URL is configured
+        if (jwksConfig.url().isEmpty() && jwksConfig.wellKnownUrl().isEmpty()) {
+            throw new JwtConfigurationException(("Issuer '%s' has JWKS config but no URL specified. " +
+                    "Please configure either que.cui.jwt.issuers.%s.jwks.url or " +
+                    "que.cui.jwt.issuers.%s.jwks.well-known-url")
+                            .formatted(issuerName, issuerName, issuerName));
+        }
+
+        validateJwksUrl(issuerName, jwksConfig.url());
+        validateWellKnownUrl(issuerName, jwksConfig.wellKnownUrl());
+        validateHttpJwksLoaderConfig(issuerName, jwksConfig);
+    }
+
+    private void validateJwksUrl(String issuerName, Optional<String> url) {
+        if (url.isPresent()) {
+            String urlValue = url.get();
+            try {
+                new URI(urlValue);
+            } catch (URISyntaxException e) {
+                throw new JwtConfigurationException(("Issuer '%s' has invalid JWKS URL format: %s. " +
+                        "Please check que.cui.jwt.issuers.%s.jwks.url configuration")
+                                .formatted(issuerName, urlValue, issuerName), e);
             }
 
-            // Validate JWKS configuration if present
-            if (issuerConfig.jwks().isPresent()) {
-                var jwksConfig = issuerConfig.jwks().get();
+            // Warn about HTTP URLs in production
+            if (urlValue.startsWith("http://")) {
+                LOGGER.warnf("Issuer '%s' uses HTTP for JWKS URL which is insecure for production. " +
+                        "Consider using HTTPS for que.cui.jwt.issuers.%s.jwks.url",
+                        issuerName, issuerName);
+            }
+        }
+    }
 
-                // Check if either JWKS URL or well-known URL is configured
-                if (jwksConfig.url().isEmpty() && jwksConfig.wellKnownUrl().isEmpty()) {
-                    throw new RuntimeException("Issuer '%s' has JWKS config but no URL specified. " +
-                            "Please configure either que.cui.jwt.issuers.%s.jwks.url or " +
-                            "que.cui.jwt.issuers.%s.jwks.well-known-url"
-                                    .formatted(issuerName, issuerName, issuerName));
-                }
+    private void validateWellKnownUrl(String issuerName, Optional<String> wellKnownUrl) {
+        if (wellKnownUrl.isPresent()) {
+            String urlValue = wellKnownUrl.get();
+            try {
+                new URI(urlValue);
+            } catch (URISyntaxException e) {
+                throw new JwtConfigurationException(("Issuer '%s' has invalid well-known URL format: %s. " +
+                        "Please check que.cui.jwt.issuers.%s.jwks.well-known-url configuration")
+                                .formatted(issuerName, urlValue, issuerName), e);
+            }
 
-                // Validate JWKS URL format if present
-                if (jwksConfig.url().isPresent()) {
-                    try {
-                        new URI(jwksConfig.url().get());
-                    } catch (URISyntaxException e) {
-                        throw new RuntimeException("Issuer '%s' has invalid JWKS URL format: %s. " +
-                                "Please check que.cui.jwt.issuers.%s.jwks.url configuration"
-                                        .formatted(issuerName, jwksConfig.url().get(), issuerName), e);
-                    }
-
-                    // Warn about HTTP URLs in production
-                    if (jwksConfig.url().get().startsWith("http://")) {
-                        LOGGER.warnf("Issuer '%s' uses HTTP for JWKS URL which is insecure for production. " +
-                                "Consider using HTTPS for que.cui.jwt.issuers.%s.jwks.url",
-                                issuerName, issuerName);
-                    }
-                }
-
-                // Validate well-known URL format if present
-                if (jwksConfig.wellKnownUrl().isPresent()) {
-                    try {
-                        new URI(jwksConfig.wellKnownUrl().get());
-                    } catch (URISyntaxException e) {
-                        throw new RuntimeException("Issuer '%s' has invalid well-known URL format: %s. " +
-                                "Please check que.cui.jwt.issuers.%s.jwks.well-known-url configuration"
-                                        .formatted(issuerName, jwksConfig.wellKnownUrl().get(), issuerName), e);
-                    }
-
-                    // Warn about HTTP URLs in production
-                    if (jwksConfig.wellKnownUrl().get().startsWith("http://")) {
-                        LOGGER.warnf("Issuer '%s' uses HTTP for well-known URL which is insecure for production. " +
-                                "Consider using HTTPS for que.cui.jwt.issuers.%s.jwks.well-known-url",
-                                issuerName, issuerName);
-                    }
-                }
-
-                validateHttpJwksLoaderConfig(issuerName, jwksConfig);
-            } else if (issuerConfig.publicKeyLocation().isEmpty()) {
-                throw new RuntimeException("Issuer '%s' has neither JWKS configuration nor public key location. " +
-                        "Please configure either que.cui.jwt.issuers.%s.jwks.* or " +
-                        "que.cui.jwt.issuers.%s.public-key-location"
-                                .formatted(issuerName, issuerName, issuerName));
+            // Warn about HTTP URLs in production
+            if (urlValue.startsWith("http://")) {
+                LOGGER.warnf("Issuer '%s' uses HTTP for well-known URL which is insecure for production. " +
+                        "Consider using HTTPS for que.cui.jwt.issuers.%s.jwks.well-known-url",
+                        issuerName, issuerName);
             }
         }
     }
@@ -353,30 +369,53 @@ public class CuiJwtProcessor {
      *
      * @param issuerName the name of the issuer
      * @param httpConfig the HTTP JWKS loader configuration
-     * @throws RuntimeException if HTTP JWKS loader configuration is invalid
+     * @throws JwtConfigurationException if HTTP JWKS loader configuration is invalid
      */
     private void validateHttpJwksLoaderConfig(String issuerName, JwtValidationConfig.HttpJwksLoaderConfig httpConfig) {
+        validateTimeouts(issuerName, httpConfig);
+        validateCacheSettings(issuerName, httpConfig);
+        validateRetrySettings(issuerName, httpConfig);
+    }
+
+    private void validateTimeouts(String issuerName, JwtValidationConfig.HttpJwksLoaderConfig httpConfig) {
         if (httpConfig.connectionTimeoutSeconds() <= 0) {
-            throw new RuntimeException("Issuer '%s' has invalid connectionTimeoutSeconds: %d. " +
-                    "Please set que.cui.jwt.issuers.%s.jwks.connection-timeout-seconds to a positive value"
+            throw new JwtConfigurationException(("Issuer '%s' has invalid connectionTimeoutSeconds: %d. " +
+                    "Please set que.cui.jwt.issuers.%s.jwks.connection-timeout-seconds to a positive value")
                             .formatted(issuerName, httpConfig.connectionTimeoutSeconds(), issuerName));
         }
 
         if (httpConfig.readTimeoutSeconds() <= 0) {
-            throw new RuntimeException("Issuer '%s' has invalid readTimeoutSeconds: %d. " +
-                    "Please set que.cui.jwt.issuers.%s.jwks.read-timeout-seconds to a positive value"
+            throw new JwtConfigurationException(("Issuer '%s' has invalid readTimeoutSeconds: %d. " +
+                    "Please set que.cui.jwt.issuers.%s.jwks.read-timeout-seconds to a positive value")
                             .formatted(issuerName, httpConfig.readTimeoutSeconds(), issuerName));
         }
 
+        // Warn about very short timeouts
+        if (httpConfig.connectionTimeoutSeconds() < 2) {
+            LOGGER.warnf("Issuer '%s' has very short connection timeout (%d seconds). " +
+                    "Consider increasing que.cui.jwt.issuers.%s.jwks.connection-timeout-seconds " +
+                    "for better reliability",
+                    issuerName, httpConfig.connectionTimeoutSeconds(), issuerName);
+        }
+
+        if (httpConfig.readTimeoutSeconds() < 2) {
+            LOGGER.warnf("Issuer '%s' has very short read timeout (%d seconds). " +
+                    "Consider increasing que.cui.jwt.issuers.%s.jwks.read-timeout-seconds " +
+                    "for better reliability",
+                    issuerName, httpConfig.readTimeoutSeconds(), issuerName);
+        }
+    }
+
+    private void validateCacheSettings(String issuerName, JwtValidationConfig.HttpJwksLoaderConfig httpConfig) {
         if (httpConfig.cacheTtlSeconds() <= 0) {
-            throw new RuntimeException("Issuer '%s' has invalid cacheTtlSeconds: %d. " +
-                    "Please set que.cui.jwt.issuers.%s.jwks.cache-ttl-seconds to a positive value"
+            throw new JwtConfigurationException(("Issuer '%s' has invalid cacheTtlSeconds: %d. " +
+                    "Please set que.cui.jwt.issuers.%s.jwks.cache-ttl-seconds to a positive value")
                             .formatted(issuerName, httpConfig.cacheTtlSeconds(), issuerName));
         }
 
         if (httpConfig.refreshIntervalSeconds() <= 0) {
-            throw new RuntimeException("Issuer '%s' has invalid refreshIntervalSeconds: %d. " +
-                    "Please set que.cui.jwt.issuers.%s.jwks.refresh-interval-seconds to a positive value"
+            throw new JwtConfigurationException(("Issuer '%s' has invalid refreshIntervalSeconds: %d. " +
+                    "Please set que.cui.jwt.issuers.%s.jwks.refresh-interval-seconds to a positive value")
                             .formatted(issuerName, httpConfig.refreshIntervalSeconds(), issuerName));
         }
 
@@ -395,28 +434,15 @@ public class CuiJwtProcessor {
                     "to reduce JWKS endpoint load",
                     issuerName, httpConfig.refreshIntervalSeconds(), issuerName);
         }
+    }
 
+    private void validateRetrySettings(String issuerName, JwtValidationConfig.HttpJwksLoaderConfig httpConfig) {
         // Warn about large number of retries
         if (httpConfig.maxRetries() > 5) {
             LOGGER.warnf("Issuer '%s' has very high max retries (%d). " +
                     "Consider reducing que.cui.jwt.issuers.%s.jwks.max-retries " +
                     "to prevent long delays on failures",
                     issuerName, httpConfig.maxRetries(), issuerName);
-        }
-
-        // Warn about very short timeouts
-        if (httpConfig.connectionTimeoutSeconds() < 2) {
-            LOGGER.warnf("Issuer '%s' has very short connection timeout (%d seconds). " +
-                    "Consider increasing que.cui.jwt.issuers.%s.jwks.connection-timeout-seconds " +
-                    "for better reliability",
-                    issuerName, httpConfig.connectionTimeoutSeconds(), issuerName);
-        }
-
-        if (httpConfig.readTimeoutSeconds() < 2) {
-            LOGGER.warnf("Issuer '%s' has very short read timeout (%d seconds). " +
-                    "Consider increasing que.cui.jwt.issuers.%s.jwks.read-timeout-seconds " +
-                    "for better reliability",
-                    issuerName, httpConfig.readTimeoutSeconds(), issuerName);
         }
     }
 

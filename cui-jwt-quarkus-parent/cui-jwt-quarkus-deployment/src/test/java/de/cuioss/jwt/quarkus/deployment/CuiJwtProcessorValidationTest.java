@@ -52,41 +52,9 @@ class CuiJwtProcessorValidationTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when parser config is null")
-    void shouldThrowExceptionWhenParserConfigIsNull() {
-        JwtValidationConfig config = new TestJwtValidationConfig() {
-            @Override
-            public ParserConfig parser() {
-                return null;
-            }
-        };
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> processor.feature(config),
-                "Should throw exception when parser config is null");
-
-        assertTrue(exception.getMessage().contains("JWT parser configuration is missing"),
-                "Exception message should mention missing parser configuration");
-    }
-
-    @Test
-    @DisplayName("Should throw exception when issuers are null or empty")
-    void shouldThrowExceptionWhenIssuersAreNullOrEmpty() {
-        JwtValidationConfig configWithNullIssuers = new TestJwtValidationConfig() {
-            @Override
-            public Map<String, IssuerConfig> issuers() {
-                return null;
-            }
-        };
-
-        RuntimeException exceptionForNull = assertThrows(RuntimeException.class,
-                () -> processor.feature(configWithNullIssuers),
-                "Should throw exception when issuers are null");
-
-        assertTrue(exceptionForNull.getMessage().contains("No JWT issuers configured"),
-                "Exception message should mention no issuers configured");
-
-        // Test with empty issuers
+    @DisplayName("Should throw exception when issuers are empty")
+    void shouldThrowExceptionWhenIssuersAreEmpty() {
+        // Test with empty issuers (null issuers are no longer possible by design)
         JwtValidationConfig configWithEmptyIssuers = new TestJwtValidationConfig() {
             @Override
             public Map<String, IssuerConfig> issuers() {
