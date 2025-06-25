@@ -53,17 +53,6 @@ public class BenchmarkEndpoint {
         }
     }
 
-
-    /**
-     * Health check endpoint for container readiness.
-     */
-    @GET
-    @Path("/health")
-    public Response health() {
-        return Response.ok(new ValidationResponse(true, "Benchmark endpoint is ready"))
-                .build();
-    }
-
     // Response DTOs
     public static class ValidationResponse {
         public boolean valid;
