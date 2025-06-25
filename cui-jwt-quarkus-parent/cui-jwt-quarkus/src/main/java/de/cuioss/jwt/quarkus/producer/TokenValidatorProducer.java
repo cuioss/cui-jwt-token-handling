@@ -16,6 +16,7 @@
 package de.cuioss.jwt.quarkus.producer;
 
 import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
+import org.eclipse.microprofile.config.Config;
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.TokenValidator;
@@ -59,20 +60,11 @@ public class TokenValidatorProducer {
 
     private final SecurityEventCounter securityEventCounter = new SecurityEventCounter();
 
-    private final JwtValidationConfig jwtValidationConfig;
+    @Inject
+    Config config;
 
     @Getter
     private List<IssuerConfig> issuerConfigs;
-
-    /**
-     * Constructor for TokenValidatorProducer.
-     *
-     * @param jwtValidationConfig the JWT validation configuration
-     */
-    @Inject
-    public TokenValidatorProducer(JwtValidationConfig jwtValidationConfig) {
-        this.jwtValidationConfig = jwtValidationConfig;
-    }
 
     /**
      * Initializes the TokenValidator at startup.
@@ -90,11 +82,26 @@ public class TokenValidatorProducer {
 
     /**
      * Validates the JWT validation configuration.
+     * <p>
+     * Uses direct Config.getConfigMapping() call instead of CDI injection to avoid
+     * known issues with @ConfigMapping CDI injection in Quarkus extensions.
+     * </p>
+     * <p>
+     * This approach is recommended for Quarkus extensions as documented in:
+     * <ul>
+     *   <li><a href="https://quarkus.io/guides/writing-extensions#configuration-mapping">Quarkus Extension Configuration Guide</a></li>
+     *   <li><a href="https://github.com/quarkusio/quarkus/issues/29583">Quarkus Issue #29583: ConfigMapping CDI injection in extensions</a></li>
+     * </ul>
+     * </p>
      * Performs comprehensive validation and fails fast if configuration is invalid.
      *
      * @throws IllegalStateException if configuration is invalid
      */
     private void validateConfiguration() {
+        // Direct ConfigMapping retrieval - recommended approach for Quarkus extensions
+        // This avoids CDI injection issues with @ConfigMapping interfaces in extension contexts
+        JwtValidationConfig jwtValidationConfig = getJwtValidationConfig();
+        
         if (jwtValidationConfig == null) {
             LOGGER.error("JWT validation configuration is required");
             throw new IllegalStateException("JWT validation configuration is required");
@@ -129,6 +136,36 @@ public class TokenValidatorProducer {
     }
 
     /**
+     * Retrieves the JWT validation configuration using direct ConfigMapping approach.
+     * <p>
+     * This method uses the recommended pattern for accessing @ConfigMapping interfaces
+     * in Quarkus extensions, avoiding CDI injection issues that can occur in extension contexts.
+     * </p>
+     * <p>
+     * The approach follows the pattern documented in:
+     * <ul>
+     *   <li><a href="https://quarkus.io/guides/config-mappings#accessing-configmapping-from-application">Quarkus ConfigMapping Access Guide</a></li>
+     *   <li><a href="https://smallrye.io/smallrye-config/Latest/config/mappings/">SmallRye Config Mappings Documentation</a></li>
+     * </ul>
+     * </p>
+     * 
+     * @return the JWT validation configuration instance
+     * @throws IllegalStateException if configuration mapping cannot be created
+     */
+    private JwtValidationConfig getJwtValidationConfig() {
+        try {
+            // Use SmallRyeConfig.getConfigMapping() for direct access to @ConfigMapping interfaces
+            // This is the recommended approach in Quarkus extensions to avoid CDI injection issues
+            return config.unwrap(io.smallrye.config.SmallRyeConfig.class)
+                    .getConfigMapping(JwtValidationConfig.class);
+        } catch (Exception e) {
+            String errorMessage = "Failed to retrieve JWT validation configuration: " + e.getMessage();
+            LOGGER.error(errorMessage, e);
+            throw new IllegalStateException(errorMessage, e);
+        }
+    }
+
+    /**
      * Creates and configures the TokenValidator instance.
      *
      * @return the configured TokenValidator
@@ -136,6 +173,9 @@ public class TokenValidatorProducer {
      */
     private TokenValidator createTokenValidator() {
         try {
+            // Get configuration using direct ConfigMapping retrieval
+            JwtValidationConfig jwtValidationConfig = getJwtValidationConfig();
+            
             // Create parser config
             ParserConfig parserConfig = createParserConfig(jwtValidationConfig.parser());
 
@@ -173,12 +213,25 @@ public class TokenValidatorProducer {
 
     /**
      * Produces a {@link TokenValidator} instance.
+     * This method is called by CDI and handles initialization directly to ensure proper error handling.
      *
      * @return the configured TokenValidator
      */
     @Produces
     @ApplicationScoped
     public TokenValidator produceTokenValidator() {
+        if (tokenValidator == null) {
+            // Initialize on-demand if @PostConstruct failed or wasn't called
+            LOGGER.info("TokenValidator not initialized, initializing on-demand");
+            try {
+                validateConfiguration();
+                tokenValidator = createTokenValidator();
+                LOGGER.info("TokenValidator initialized with %s issuers", issuerConfigs.size());
+            } catch (Exception e) {
+                LOGGER.error("Failed to initialize TokenValidator: %s", e.getMessage(), e);
+                throw new IllegalStateException("Cannot produce TokenValidator: " + e.getMessage(), e);
+            }
+        }
         return tokenValidator;
     }
 

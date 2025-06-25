@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.quarkus.config;
 
+import io.quarkus.arc.Unremovable;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import jakarta.validation.Valid;
@@ -37,6 +38,7 @@ import java.util.Optional;
  * @since 1.0
  */
 @ConfigMapping(prefix = "cui.jwt")
+@Unremovable
 public interface JwtValidationConfig {
 
     /**

@@ -36,6 +36,14 @@
             <groupId>de.cuioss.jwt</groupId>
             <artifactId>cui-jwt-quarkus</artifactId>
         </dependency>
+        
+        <!-- JWT Deployment Module for Quarkus Extension -->
+        <dependency>
+            <groupId>de.cuioss.jwt</groupId>
+            <artifactId>cui-jwt-quarkus-deployment</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Quarkus Extensions for REST and Health -->
         <dependency>

@@ -45,21 +45,10 @@ class CuiJwtProcessorBuildStepTest {
     @Test
     @DisplayName("Should create feature build item")
     void shouldCreateFeatureBuildItem() {
-        JwtValidationConfig mockConfig = createMockConfig();
-        FeatureBuildItem featureItem = processor.feature(mockConfig);
+        FeatureBuildItem featureItem = processor.feature();
 
         assertNotNull(featureItem, "Feature build item should not be null");
         assertEquals("cui-jwt", featureItem.getName(), "Feature name should be 'cui-jwt'");
-    }
-
-    @Test
-    @DisplayName("Should create feature build item with valid configuration and validation")
-    void shouldCreateFeatureBuildItemWithValidation() {
-        JwtValidationConfig mockConfig = createMockConfig();
-
-        // This should not throw any exceptions due to validation
-        assertDoesNotThrow(() -> processor.feature(mockConfig),
-                "Feature creation with valid config should not throw exceptions");
     }
 
     @Test
@@ -140,8 +129,7 @@ class CuiJwtProcessorBuildStepTest {
     @DisplayName("Should execute all build steps without exceptions")
     void shouldExecuteAllBuildStepsWithoutExceptions() {
         // Test that all build step methods can be called without throwing exceptions
-        JwtValidationConfig mockConfig = createMockConfig();
-        assertDoesNotThrow(() -> processor.feature(mockConfig), "feature() should not throw exceptions");
+        assertDoesNotThrow(() -> processor.feature(), "feature() should not throw exceptions");
         assertDoesNotThrow(processor::registerConfigForReflection,
                 "registerConfigForReflection() should not throw exceptions");
         assertDoesNotThrow(processor::registerNestedConfigForReflection,

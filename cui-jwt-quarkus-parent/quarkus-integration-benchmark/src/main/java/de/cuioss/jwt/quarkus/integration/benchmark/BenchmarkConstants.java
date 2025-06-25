@@ -27,7 +27,7 @@ public class BenchmarkConstants {
     // REST endpoint paths
     public static final String JWT_VALIDATE_PATH = "/jwt/validate";
     public static final String HEALTH_CHECK_PATH = "/q/health/live";
-    
+
     // HTTP headers
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String BEARER_PREFIX = "Bearer ";

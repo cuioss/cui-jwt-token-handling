@@ -17,6 +17,7 @@ package de.cuioss.jwt.integration.endpoint;
 
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.tools.logging.CuiLogger;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -35,10 +36,10 @@ public class JwtValidationEndpoint {
 
     private final TokenValidator tokenValidator;
 
+    @Inject
     public JwtValidationEndpoint(TokenValidator tokenValidator) {
         this.tokenValidator = tokenValidator;
     }
-
 
     /**
      * Validates a JWT token - primary endpoint for integration testing and benchmarking.
@@ -71,5 +72,6 @@ public class JwtValidationEndpoint {
 
 
     // Response DTOs
-    public record ValidationResponse(boolean valid, String message) {}
+    public record ValidationResponse(boolean valid, String message) {
+    }
 }

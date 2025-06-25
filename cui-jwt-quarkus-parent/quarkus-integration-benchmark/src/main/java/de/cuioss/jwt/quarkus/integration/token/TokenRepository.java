@@ -18,8 +18,8 @@ package de.cuioss.jwt.quarkus.integration.token;
 import de.cuioss.jwt.quarkus.integration.config.BenchmarkConfiguration;
 import de.cuioss.tools.logging.CuiLogger;
 import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import io.restassured.path.json.exception.JsonPathException;
+import io.restassured.response.Response;
 
 import java.util.ArrayList;
 import java.util.List;

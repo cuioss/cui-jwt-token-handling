@@ -16,6 +16,7 @@
 package de.cuioss.jwt.quarkus.runtime;
 
 import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
+import org.eclipse.microprofile.config.Config;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.MinimalTokenContent;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
@@ -49,15 +50,19 @@ public class CuiJwtDevUIRuntimeService {
     private static final String HEALTH_STATUS = "healthStatus";
 
     private final Instance<TokenValidator> tokenValidatorInstance;
-    private final JwtValidationConfig config;
+    private final Config config;
 
     /**
      * Constructor for dependency injection.
+     * <p>
+     * Uses direct Config injection instead of JwtValidationConfig CDI injection to avoid
+     * known issues with @ConfigMapping CDI injection in Quarkus extensions.
+     * </p>
      *
      * @param tokenValidatorInstance the token validator instance
-     * @param config the JWT validation configuration
+     * @param config the MicroProfile config instance
      */
-    public CuiJwtDevUIRuntimeService(Instance<TokenValidator> tokenValidatorInstance, JwtValidationConfig config) {
+    public CuiJwtDevUIRuntimeService(Instance<TokenValidator> tokenValidatorInstance, Config config) {
         this.tokenValidatorInstance = tokenValidatorInstance;
         this.config = config;
     }
@@ -97,7 +102,7 @@ public class CuiJwtDevUIRuntimeService {
         boolean isEnabled = isJwtEnabled();
         if (isEnabled) {
             jwksInfo.put(MESSAGE, "JWKS endpoints are configured and active");
-            jwksInfo.put("issuersConfigured", config.issuers().size());
+            jwksInfo.put("issuersConfigured", getJwtValidationConfig().issuers().size());
         } else {
             jwksInfo.put(MESSAGE, "JWKS endpoints are disabled");
             jwksInfo.put("issuersConfigured", 0);
@@ -122,7 +127,7 @@ public class CuiJwtDevUIRuntimeService {
 
         if (isEnabled) {
             configMap.put(MESSAGE, "JWT validation is properly configured");
-            configMap.put("issuersCount", config.issuers().size());
+            configMap.put("issuersCount", getJwtValidationConfig().issuers().size());
         } else {
             configMap.put(MESSAGE, JWT_VALIDATION_DISABLED);
             configMap.put("issuersCount", 0);
@@ -236,13 +241,39 @@ public class CuiJwtDevUIRuntimeService {
     }
 
     /**
+     * Retrieves the JWT validation configuration using direct ConfigMapping approach.
+     * <p>
+     * This method uses the same pattern as TokenValidatorProducer for accessing @ConfigMapping interfaces
+     * in Quarkus extensions, avoiding CDI injection issues that can occur in extension contexts.
+     * </p>
+     * 
+     * @return the JWT validation configuration instance
+     * @throws RuntimeException if configuration mapping cannot be created
+     */
+    private JwtValidationConfig getJwtValidationConfig() {
+        try {
+            // Use SmallRyeConfig.getConfigMapping() for direct access to @ConfigMapping interfaces
+            // This is the recommended approach in Quarkus extensions to avoid CDI injection issues
+            return config.unwrap(io.smallrye.config.SmallRyeConfig.class)
+                    .getConfigMapping(JwtValidationConfig.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve JWT validation configuration: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Helper method to determine if JWT validation is enabled.
      * JWT is considered enabled if there are any enabled issuers configured.
      *
      * @return true if JWT validation is enabled, false otherwise
      */
     private boolean isJwtEnabled() {
-        return config.issuers().values().stream()
-                .anyMatch(JwtValidationConfig.IssuerConfig::enabled);
+        try {
+            return getJwtValidationConfig().issuers().values().stream()
+                    .anyMatch(JwtValidationConfig.IssuerConfig::enabled);
+        } catch (Exception e) {
+            // If configuration cannot be loaded, consider JWT disabled
+            return false;
+        }
     }
 }

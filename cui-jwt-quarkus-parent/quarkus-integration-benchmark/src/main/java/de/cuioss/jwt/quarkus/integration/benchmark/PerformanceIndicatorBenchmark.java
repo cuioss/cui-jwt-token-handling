@@ -173,7 +173,7 @@ public class PerformanceIndicatorBenchmark {
         // Convert average time to operations per second (inverted metric)
         // Note: Integration benchmarks use milliseconds vs microseconds in micro-benchmarks
         double latencyOpsPerSec = 1_000.0 / avgTimeInMillis;
-        
+
         // Weighted score: 57% throughput, 40% latency, 3% error resilience
         return (throughputOpsPerSec * 0.57) + (latencyOpsPerSec * 0.40) + (errorResilienceOpsPerSec * 0.03);
     }

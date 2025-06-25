@@ -15,7 +15,6 @@
  */
 package de.cuioss.jwt.integration;
 
-import io.quarkus.test.junit.QuarkusIntegrationTest;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
@@ -32,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * This test validates the complete integration between the application,
  * Keycloak authentication, and JWT token validation.
  */
-@QuarkusIntegrationTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
@@ -80,6 +78,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
                 .baseUri(KEYCLOAK_BASE_URL)
                 .contentType("application/x-www-form-urlencoded")
                 .formParam("client_id", "benchmark-client")
+                .formParam("client_secret", "benchmark-secret")
                 .formParam("username", "benchmark-user")
                 .formParam("password", "benchmark-password")
                 .formParam("grant_type", "password")
@@ -105,7 +104,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
             obtainValidTokenFromKeycloak();
         }
 
-        // Test JWT validation with real Keycloak token
+        // Test JWT validation with real Keycloak token against the configured Keycloak issuer
         given()
                 .header("Authorization", "Bearer " + validJwtToken)
                 .when()
@@ -118,6 +117,34 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
     @Test
     @Order(5)
+    void validateKeycloakTokenWithJwksEndpoint() {
+        // First get a token if we don't have one
+        if (validJwtToken == null) {
+            obtainValidTokenFromKeycloak();
+        }
+
+        // Verify that the application can fetch JWKS from Keycloak
+        // This test ensures the keycloak issuer configuration with JWKS works correctly
+        Response jwksResponse = given()
+                .baseUri(KEYCLOAK_BASE_URL)
+                .when()
+                .get("/realms/benchmark/.well-known/openid_configuration");
+        
+        assertEquals(200, jwksResponse.statusCode(), "JWKS well-known endpoint should be accessible");
+        
+        // Test JWT validation - this should work via JWKS resolution
+        given()
+                .header("Authorization", "Bearer " + validJwtToken)
+                .when()
+                .post("/jwt/validate")
+                .then()
+                .statusCode(200)
+                .body("valid", equalTo(true))
+                .body("message", equalTo("Token is valid"));
+    }
+
+    @Test
+    @Order(6)
     void validateRealKeycloakTokenMultipleTimes() {
         // First get a token if we don't have one
         if (validJwtToken == null) {
@@ -138,7 +165,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     void invalidTokenValidation() {
         // Test with invalid token
         given()
@@ -152,7 +179,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     void missingAuthorizationHeader() {
         // Test without Authorization header
         given()
@@ -165,7 +192,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     void malformedAuthorizationHeader() {
         // Test with malformed Authorization header
         given()
