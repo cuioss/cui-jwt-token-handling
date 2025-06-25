@@ -22,13 +22,10 @@
         <version.jmh>1.37</version.jmh>
         <sonar.skip>true</sonar.skip>
         
-        <!-- Native image build for benchmarks -->
-        <quarkus.native.container-build>false</quarkus.native.container-build>
-        <quarkus.native.enabled>false</quarkus.native.enabled>
         
-        <!-- HTTPS configuration for testing -->
-        <test.https.port>11443</test.https.port>
-        <test.keycloak.port>11080</test.keycloak.port>
+        <!-- HTTPS configuration for testing (reuse integration tests ports) -->
+        <test.https.port>10443</test.https.port>
+        <test.keycloak.port>10080</test.keycloak.port>
         
         <!-- JMH Configuration Properties -->
         <jmh.result.format>JSON</jmh.result.format>
@@ -56,31 +53,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- JWT Extension Under Test -->
-        <dependency>
-            <groupId>de.cuioss.jwt</groupId>
-            <artifactId>cui-jwt-quarkus</artifactId>
-        </dependency>
-
-        <!-- Quarkus Extensions for REST and Health -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-jackson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-health</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
-        </dependency>
-
-        <!-- JWT Validation Test Utilities -->
+        <!-- JWT Validation Test Utilities for token generation -->
         <dependency>
             <groupId>de.cuioss.jwt</groupId>
             <artifactId>cui-jwt-validation</artifactId>
@@ -100,18 +73,11 @@
             <scope>provided</scope>
         </dependency>
 
-
         <!-- HTTP client for benchmarking -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>compile</scope>
-        </dependency>
-
-        <!-- Other dependencies -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
 
@@ -146,7 +112,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${version.exec-maven-plugin}</version>
                 <executions>
-                    <!-- Start containers before benchmarks -->
+                    <!-- Start integration tests containers before benchmarks -->
                     <execution>
                         <id>start-integration-containers</id>
                         <phase>pre-integration-test</phase>
@@ -155,8 +121,8 @@
                         </goals>
                         <configuration>
                             <skip>${skip.benchmark}</skip>
-                            <executable>./scripts/start-integration-container.sh</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <executable>../cui-jwt-quarkus-integration-tests/scripts/start-integration-container.sh</executable>
+                            <workingDirectory>${project.basedir}/../cui-jwt-quarkus-integration-tests</workingDirectory>
                         </configuration>
                     </execution>
                     <!-- Run benchmarks -->
@@ -184,7 +150,7 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    <!-- Stop containers after benchmarks -->
+                    <!-- Stop integration tests containers after benchmarks -->
                     <execution>
                         <id>stop-integration-containers</id>
                         <phase>post-integration-test</phase>
@@ -193,8 +159,8 @@
                         </goals>
                         <configuration>
                             <skip>${skip.benchmark}</skip>
-                            <executable>./scripts/stop-integration-container.sh</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <executable>../cui-jwt-quarkus-integration-tests/scripts/stop-integration-container.sh</executable>
+                            <workingDirectory>${project.basedir}/../cui-jwt-quarkus-integration-tests</workingDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -223,64 +189,13 @@
     </build>
 
     <profiles>
-        <!-- Profile for running integration benchmarks with native image -->
+        <!-- Profile for running integration benchmarks -->
         <profile>
             <id>integration-benchmarks</id>
             <properties>
                 <!-- Enable integration benchmarks -->
                 <skip.benchmark>false</skip.benchmark>
-
-                <!-- Enable native image building -->
-                <quarkus.native.container-build>true</quarkus.native.container-build>
-                <quarkus.native.enabled>true</quarkus.native.enabled>
-                <quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
             </properties>
-            <build>
-                <plugins>
-                    <!-- Quarkus Maven Plugin for native build -->
-                    <plugin>
-                        <groupId>io.quarkus</groupId>
-                        <artifactId>quarkus-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>generate-code</goal>
-                                    <goal>generate-code-tests</goal>
-                                    <goal>build</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <properties>
-                                <quarkus.native.enabled>true</quarkus.native.enabled>
-                                <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
-                            </properties>
-                        </configuration>
-                    </plugin>
-
-                    <!-- Maven Failsafe Plugin for integration test phases -->
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                                <configuration>
-                                    <systemPropertyVariables>
-                                        <test.https.port>${test.https.port}</test.https.port>
-                                        <test.keycloak.port>${test.keycloak.port}</test.keycloak.port>
-                                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                                        <quarkus.native.enabled>${quarkus.native.enabled}</quarkus.native.enabled>
-                                    </systemPropertyVariables>
-                                    <skip>${skip.benchmark}</skip>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 </project>

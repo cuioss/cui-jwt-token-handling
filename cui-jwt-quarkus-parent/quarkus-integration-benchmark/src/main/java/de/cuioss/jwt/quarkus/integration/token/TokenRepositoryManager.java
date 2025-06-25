@@ -1,7 +1,23 @@
+/**
+ * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.cuioss.jwt.quarkus.integration.token;
 
 import de.cuioss.jwt.quarkus.integration.config.BenchmarkConfiguration;
 import de.cuioss.tools.logging.CuiLogger;
+import lombok.Getter;
 
 /**
  * Singleton manager for the token repository.
@@ -10,12 +26,10 @@ import de.cuioss.tools.logging.CuiLogger;
  */
 public class TokenRepositoryManager {
 
-    private static final CuiLogger log = new CuiLogger(TokenRepositoryManager.class);
-    
-    private static volatile TokenRepositoryManager instance;
-    private static final Object lock = new Object();
-    
+    private static final CuiLogger LOGGER = new CuiLogger(TokenRepositoryManager.class);
+
     private TokenRepository tokenRepository;
+    @Getter
     private boolean initialized = false;
 
     private TokenRepositoryManager() {
@@ -24,45 +38,42 @@ public class TokenRepositoryManager {
 
     /**
      * Gets the singleton instance of the token repository manager.
+     * Uses the initialization-on-demand holder pattern for thread safety.
      *
      * @return The token repository manager instance
      */
     public static TokenRepositoryManager getInstance() {
-        if (instance == null) {
-            synchronized (lock) {
-                if (instance == null) {
-                    instance = new TokenRepositoryManager();
-                }
-            }
-        }
-        return instance;
+        return InstanceHolder.INSTANCE;
+    }
+
+    /**
+     * Thread-safe singleton holder using initialization-on-demand pattern.
+     */
+    private static final class InstanceHolder {
+        private static final TokenRepositoryManager INSTANCE = new TokenRepositoryManager();
     }
 
     /**
      * Initializes the token repository if not already initialized.
      * This method is thread-safe and will only initialize once.
      *
-     * @throws Exception if initialization fails
+     * @throws TokenFetchException if initialization fails
      */
-    public void initialize() throws Exception {
+    public synchronized void initialize() throws TokenFetchException {
         if (!initialized) {
-            synchronized (lock) {
-                if (!initialized) {
-                    log.info("🚀 Initializing token repository manager...");
-                    BenchmarkConfiguration.logConfiguration();
-                    
-                    String keycloakUrl = BenchmarkConfiguration.getKeycloakUrl();
-                    int tokenPoolSize = BenchmarkConfiguration.getTokenPoolSize();
-                    
-                    tokenRepository = new TokenRepository(keycloakUrl, tokenPoolSize);
-                    tokenRepository.initialize();
-                    
-                    initialized = true;
-                    log.info("✅ Token repository manager initialized successfully");
-                }
-            }
+            LOGGER.info("🚀 Initializing token repository manager...");
+            BenchmarkConfiguration.logConfiguration();
+
+            String keycloakUrl = BenchmarkConfiguration.getKeycloakUrl();
+            int tokenPoolSize = BenchmarkConfiguration.getTokenPoolSize();
+
+            tokenRepository = new TokenRepository(keycloakUrl, tokenPoolSize);
+            tokenRepository.initialize();
+
+            initialized = true;
+            LOGGER.info("✅ Token repository manager initialized successfully");
         } else {
-            log.debug("Token repository already initialized, skipping...");
+            LOGGER.debug("Token repository already initialized, skipping...");
         }
     }
 
@@ -78,15 +89,6 @@ public class TokenRepositoryManager {
             throw new IllegalStateException("Token repository not initialized. Call initialize() first.");
         }
         return tokenRepository;
-    }
-
-    /**
-     * Checks if the token repository is initialized.
-     *
-     * @return true if initialized, false otherwise
-     */
-    public boolean isInitialized() {
-        return initialized;
     }
 
     /**
@@ -135,20 +137,11 @@ public class TokenRepositoryManager {
         if (!initialized) {
             return "Token repository not initialized";
         }
-        
-        return String.format("Token Repository Stats - Valid: %d, Expired: %d, Invalid: %d",
+
+        return "Token Repository Stats - Valid: %s, Expired: %s, Invalid: %s".formatted(
                 tokenRepository.getValidTokenCount(),
                 tokenRepository.getExpiredTokenCount(),
                 tokenRepository.getInvalidTokenCount());
     }
 
-    /**
-     * Resets the token repository manager (for testing purposes).
-     * This method should not be used in production.
-     */
-    protected static void reset() {
-        synchronized (lock) {
-            instance = null;
-        }
-    }
 }

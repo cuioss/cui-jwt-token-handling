@@ -1,19 +1,35 @@
+/**
+ * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.cuioss.jwt.quarkus.integration.config;
 
 import de.cuioss.tools.logging.CuiLogger;
+import lombok.experimental.UtilityClass;
 
 /**
  * Configuration class for integration benchmark settings.
  * Provides centralized configuration for token repository and benchmark parameters.
  */
+@UtilityClass
 public class BenchmarkConfiguration {
 
-    private static final CuiLogger log = new CuiLogger(BenchmarkConfiguration.class);
+    private static final CuiLogger LOGGER = new CuiLogger(BenchmarkConfiguration.class);
 
     // Token Repository Configuration
     public static final int DEFAULT_TOKEN_POOL_SIZE = 100;
-    public static final String DEFAULT_KEYCLOAK_URL = "http://localhost:8080";
-    public static final String DEFAULT_APPLICATION_URL = "https://localhost:11443";
+    public static final String DEFAULT_KEYCLOAK_URL = "http://localhost:10080";
 
     // Keycloak Configuration
     public static final String KEYCLOAK_REALM = "benchmark";
@@ -23,13 +39,9 @@ public class BenchmarkConfiguration {
 
     // Benchmark Runtime Configuration
     public static final int WARMUP_TOKEN_REQUESTS = 5;
-    public static final int TOKEN_REFRESH_THRESHOLD_MINUTES = 5;
     public static final int MAX_TOKEN_FETCH_RETRIES = 3;
     public static final int TOKEN_FETCH_RETRY_DELAY_MS = 1000;
 
-    private BenchmarkConfiguration() {
-        // Utility class
-    }
 
     /**
      * Gets the token pool size from system properties or default value.
@@ -41,12 +53,12 @@ public class BenchmarkConfiguration {
         try {
             int poolSize = Integer.parseInt(size);
             if (poolSize <= 0) {
-                log.warn("Invalid token pool size: {}. Using default: {}", poolSize, DEFAULT_TOKEN_POOL_SIZE);
+                LOGGER.warn("Invalid token pool size: %s. Using default: %s", poolSize, DEFAULT_TOKEN_POOL_SIZE);
                 return DEFAULT_TOKEN_POOL_SIZE;
             }
             return poolSize;
         } catch (NumberFormatException e) {
-            log.warn("Invalid token pool size format: {}. Using default: {}", size, DEFAULT_TOKEN_POOL_SIZE);
+            LOGGER.warn("Invalid token pool size format: %s. Using default: %s", size, DEFAULT_TOKEN_POOL_SIZE);
             return DEFAULT_TOKEN_POOL_SIZE;
         }
     }
@@ -138,13 +150,13 @@ public class BenchmarkConfiguration {
      * Logs the current configuration settings.
      */
     public static void logConfiguration() {
-        log.info("📋 Benchmark Configuration:");
-        log.info("  Token Pool Size: {}", getTokenPoolSize());
-        log.info("  Keycloak URL: {}", getKeycloakUrl());
-        log.info("  Application URL: {}", getApplicationUrl());
-        log.info("  Keycloak Realm: {}", getKeycloakRealm());
-        log.info("  Keycloak Client: {}", getKeycloakClientId());
-        log.info("  Max Retries: {}", getMaxTokenFetchRetries());
-        log.info("  Retry Delay: {}ms", getTokenFetchRetryDelay());
+        LOGGER.info("📋 Benchmark Configuration:");
+        LOGGER.info("  Token Pool Size: %s", getTokenPoolSize());
+        LOGGER.info("  Keycloak URL: %s", getKeycloakUrl());
+        LOGGER.info("  Application URL: %s", getApplicationUrl());
+        LOGGER.info("  Keycloak Realm: %s", getKeycloakRealm());
+        LOGGER.info("  Keycloak Client: %s", getKeycloakClientId());
+        LOGGER.info("  Max Retries: %s", getMaxTokenFetchRetries());
+        LOGGER.info("  Retry Delay: %s ms", getTokenFetchRetryDelay());
     }
 }

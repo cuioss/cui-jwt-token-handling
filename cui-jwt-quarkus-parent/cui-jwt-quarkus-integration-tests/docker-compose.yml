@@ -2,6 +2,30 @@
 # Purpose: Test with production-equivalent settings to catch issues early
 
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.1
+    command:
+      - start-dev
+      - --import-realm
+    ports:
+      - "10080:8080"  # External port for Keycloak admin
+    volumes:
+      - ./src/main/docker/keycloak:/opt/keycloak/data/import:ro
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+      - KC_LOG_LEVEL=INFO
+    networks:
+      - jwt-integration
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   cui-jwt-integration-tests:
     build:
       context: .
@@ -15,6 +39,10 @@ services:
 
     ports:
       - "10443:8443"  # External test port for integration tests
+
+    depends_on:
+      keycloak:
+        condition: service_healthy
 
     volumes:
       # Read-only certificate mount (production pattern)
