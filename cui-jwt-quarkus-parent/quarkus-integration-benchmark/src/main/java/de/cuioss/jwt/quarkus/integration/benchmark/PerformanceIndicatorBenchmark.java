@@ -30,13 +30,14 @@ import static de.cuioss.jwt.quarkus.integration.benchmark.BenchmarkConstants.*;
 
 /**
  * Performance indicator benchmark for integration testing.
- * This benchmark provides the same performance categories as micro-benchmarks
+ * This benchmark provides the same performance categories and scoring as micro-benchmarks
  * but measures them in an end-to-end integration context.
+ *
+ * Uses the same weighted scoring formula:
+ * Performance Score = (Throughput × 0.57) + (Latency_Inverted × 0.40) + (Error_Resilience × 0.03)
  *
  * Containers are managed by Maven lifecycle via exec-maven-plugin.
  */
-@BenchmarkMode(Mode.All)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
 public class PerformanceIndicatorBenchmark {
 
@@ -72,13 +73,14 @@ public class PerformanceIndicatorBenchmark {
     }
 
     /**
-     * Throughput measurement - requests per second.
-     * Primary performance indicator for integration scenarios.
+     * Throughput measurement - requests per second under maximum concurrent load.
+     * Primary performance indicator (57% weight in scoring formula).
+     * Must match: de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureThroughput
      */
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
-    @Group("throughput")
+    @Threads(Threads.MAX)
     public void measureThroughput(Blackhole bh) {
         String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
@@ -89,14 +91,15 @@ public class PerformanceIndicatorBenchmark {
     }
 
     /**
-     * Average latency measurement - response time.
-     * Critical for user experience in integration scenarios.
+     * Average time measurement - single-threaded latency.
+     * Latency performance indicator (40% weight in scoring formula).
+     * Must match: de.cuioss.jwt.validation.benchmark.PerformanceIndicatorBenchmark.measureAverageTime
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    @Group("latency")
-    public void measureAverageLatency(Blackhole bh) {
+    @Threads(1)
+    public void measureAverageTime(Blackhole bh) {
         String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
                 .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
@@ -106,14 +109,13 @@ public class PerformanceIndicatorBenchmark {
     }
 
     /**
-     * Sample latency measurement - percentile analysis.
-     * Provides detailed latency distribution data.
+     * Sample time measurement - percentile analysis.
+     * Provides detailed latency distribution for performance analysis.
      */
     @Benchmark
     @BenchmarkMode(Mode.SampleTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    @Group("percentiles")
-    public void measureLatencyPercentiles(Blackhole bh) {
+    public void measureSampleTime(Blackhole bh) {
         String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
                 .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
@@ -123,16 +125,16 @@ public class PerformanceIndicatorBenchmark {
     }
 
     /**
-     * Resilience measurement - error handling performance.
-     * Measures how efficiently the system handles validation failures.
+     * Error resilience measurement - 0% error rate for baseline.
+     * Error resilience performance indicator (3% weight in scoring formula).
+     * This measures performance under ideal conditions (0% errors) as baseline.
      */
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
-    @Group("resilience")
-    public void measureResilience(Blackhole bh) {
-        // Mix of valid and invalid tokens to test error handling (50% error rate)
-        String token = tokenManager.getTokenByErrorRate(50);
+    public void measureErrorResilience(Blackhole bh) {
+        // Use 0% error rate for baseline resilience measurement (all valid tokens)
+        String token = tokenManager.getTokenByErrorRate(0);
 
         Response response = RestAssured.given()
                 .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
@@ -142,19 +144,37 @@ public class PerformanceIndicatorBenchmark {
     }
 
     /**
-     * Single operation timing - baseline measurement.
-     * Provides the most accurate single-request timing.
+     * Single shot time measurement - cold start performance.
+     * Provides single execution timing without warmup effects.
      */
     @Benchmark
     @BenchmarkMode(Mode.SingleShotTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    @Group("single_shot")
-    public void measureSingleShot(Blackhole bh) {
+    public void measureSingleShotTime(Blackhole bh) {
         String token = tokenManager.getValidToken();
         Response response = RestAssured.given()
                 .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
                 .when()
                 .post(JWT_VALIDATE_PATH);
         bh.consume(response);
+    }
+
+    /**
+     * Calculates the weighted performance score using the same formula as the micro-benchmark module.
+     * 
+     * Formula: Performance Score = (Throughput × 0.57) + (Latency_Inverted × 0.40) + (Error_Resilience × 0.03)
+     * 
+     * @param throughputOpsPerSec Throughput in operations per second
+     * @param avgTimeInMillis Average time in milliseconds (will be converted to ops/sec)
+     * @param errorResilienceOpsPerSec Error resilience throughput in operations per second
+     * @return Weighted performance score
+     */
+    public static double calculatePerformanceScore(double throughputOpsPerSec, double avgTimeInMillis, double errorResilienceOpsPerSec) {
+        // Convert average time to operations per second (inverted metric)
+        // Note: Integration benchmarks use milliseconds vs microseconds in micro-benchmarks
+        double latencyOpsPerSec = 1_000.0 / avgTimeInMillis;
+        
+        // Weighted score: 57% throughput, 40% latency, 3% error resilience
+        return (throughputOpsPerSec * 0.57) + (latencyOpsPerSec * 0.40) + (errorResilienceOpsPerSec * 0.03);
     }
 }
