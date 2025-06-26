@@ -29,8 +29,12 @@ The module is configured to:
 === Local Testing
 [source,bash]
 ----
+# The benchmark build requires the integration-tests profile to build the native executable first.
+
+./mvnw clean package -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests
+
 # Run integration benchmarks locally
-mvn clean verify -pl quarkus-integration-benchmark -Dskip.benchmark=false
+./mvnw clean verify -pl /cui-jwt-quarkus-parent/quarkus-integration-benchmark -Dskip.benchmark=false
 ----
 
 === CI/CD Execution

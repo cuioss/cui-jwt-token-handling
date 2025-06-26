@@ -77,15 +77,19 @@ jobs:
 
       - name: Run Integration Benchmarks
         run: |
-          # Skip integration benchmarks temporarily due to integration tests module configuration issues
-          # TODO: Re-enable once integration tests module TokenValidator injection is fixed
-          echo "⚠️  Integration benchmarks temporarily disabled due to integration tests native build issues"
-          echo "🔧 Issue: TokenValidator injection in JwtValidationEndpoint requires configuration fixes"
-          echo "📋 See: cui-jwt-quarkus-integration-tests application.properties JWT configuration"
+          # Build native image first for integration tests
+          echo "🔨 Building native image for integration tests..."
+          ./mvnw --no-transfer-progress clean package -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -DskipTests
           
-          # Create placeholder results for workflow continuity
-          mkdir -p benchmark-results
-          echo '[]' > benchmark-results/integration-benchmark-result.json
+          # Run integration benchmarks with native image
+          echo "🚀 Running integration benchmarks with native Quarkus..."
+          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-quarkus-parent/quarkus-integration-benchmark -Dskip.benchmark=false -DskipTests \
+            -Djmh.result.format=JSON \
+            -Djmh.result.filePrefix=benchmark-results/integration-benchmark-result \
+            -Djmh.iterations=3 \
+            -Djmh.warmupIterations=2 \
+            -Djmh.forks=1 \
+            -Djmh.threads=2
 
           # Move integration benchmark results to expected location for upload
           if [ -d "cui-jwt-quarkus-parent/quarkus-integration-benchmark/benchmark-results" ]; then

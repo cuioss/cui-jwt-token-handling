@@ -14,8 +14,9 @@ echo "Root directory: ${ROOT_DIR}"
 cd "${PROJECT_DIR}"
 
 # Check for native executable
-if [[ -f target/*-runner ]]; then
-    echo "📦 Using native image from target directory..."
+RUNNER_FILE=$(find target/ -name "*-runner" -type f | head -n 1)
+if [[ -n "$RUNNER_FILE" ]]; then
+    echo "📦 Using native image from target directory: $RUNNER_FILE"
     COMPOSE_FILE="docker-compose.yml"
     MODE="native"
 else

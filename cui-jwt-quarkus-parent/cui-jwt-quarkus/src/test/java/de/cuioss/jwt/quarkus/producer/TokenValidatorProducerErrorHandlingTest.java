@@ -16,9 +16,6 @@
 package de.cuioss.jwt.quarkus.producer;
 
 import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
-import org.eclipse.microprofile.config.Config;
-import de.cuioss.test.juli.LogAsserts;
-import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,8 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for error handling in {@link TokenValidatorProducer}.

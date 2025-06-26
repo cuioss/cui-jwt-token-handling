@@ -15,7 +15,6 @@
  */
 package de.cuioss.jwt.integration;
 
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -86,7 +85,6 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
         assertEquals(200, response.statusCode(), "Keycloak should be available");
     }
-
 
 
     @Test
@@ -174,7 +172,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         // Test JWT validation multiple times to ensure consistency
         for (int i = 0; i < 3; i++) {
             given()
-                        .contentType("application/json")
+                    .contentType("application/json")
                     .header("Authorization", "Bearer " + validJwtToken)
                     .when()
                     .post("/jwt/validate")

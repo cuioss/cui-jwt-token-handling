@@ -16,13 +16,14 @@
 package de.cuioss.jwt.quarkus.runtime;
 
 import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
-import org.eclipse.microprofile.config.Config;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.MinimalTokenContent;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
+import io.smallrye.config.SmallRyeConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
+import org.eclipse.microprofile.config.Config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -254,7 +255,7 @@ public class CuiJwtDevUIRuntimeService {
         try {
             // Use SmallRyeConfig.getConfigMapping() for direct access to @ConfigMapping interfaces
             // This is the recommended approach in Quarkus extensions to avoid CDI injection issues
-            return config.unwrap(io.smallrye.config.SmallRyeConfig.class)
+            return config.unwrap(SmallRyeConfig.class)
                     .getConfigMapping(JwtValidationConfig.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve JWT validation configuration: " + e.getMessage(), e);

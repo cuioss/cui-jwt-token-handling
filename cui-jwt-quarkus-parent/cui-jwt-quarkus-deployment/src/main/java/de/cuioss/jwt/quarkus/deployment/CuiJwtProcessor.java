@@ -16,6 +16,7 @@
 package de.cuioss.jwt.quarkus.deployment;
 
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -23,9 +24,9 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
-import org.jboss.jandex.DotName;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
+import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
 /**
@@ -58,7 +59,7 @@ public class CuiJwtProcessor {
         LOGGER.infof("CUI JWT feature registered");
         return new FeatureBuildItem(FEATURE);
     }
-    
+
 
     /**
      * Register JWT validation classes for reflection.
@@ -79,8 +80,6 @@ public class CuiJwtProcessor {
                 .constructors(true)
                 .build();
     }
-
-
 
 
     /**
@@ -113,17 +112,17 @@ public class CuiJwtProcessor {
      * @param unremovableBeans producer for unremovable bean build items
      */
     @BuildStep
-    public void registerUnremovableBeans(BuildProducer<io.quarkus.arc.deployment.UnremovableBeanBuildItem> unremovableBeans) {
+    public void registerUnremovableBeans(BuildProducer<UnremovableBeanBuildItem> unremovableBeans) {
         // Ensure TokenValidator is never removed from the CDI container
-        unremovableBeans.produce(io.quarkus.arc.deployment.UnremovableBeanBuildItem.beanTypes(
+        unremovableBeans.produce(UnremovableBeanBuildItem.beanTypes(
                 DotName.createSimple("de.cuioss.jwt.validation.TokenValidator")
         ));
-        
+
         // Ensure the producer is never removed
-        unremovableBeans.produce(io.quarkus.arc.deployment.UnremovableBeanBuildItem.beanTypes(
+        unremovableBeans.produce(UnremovableBeanBuildItem.beanTypes(
                 DotName.createSimple("de.cuioss.jwt.quarkus.producer.TokenValidatorProducer")
         ));
-        
+
     }
 
 
@@ -176,7 +175,6 @@ public class CuiJwtProcessor {
     public JsonRPCProvidersBuildItem createJwtDevUIJsonRPCService() {
         return new JsonRPCProvidersBuildItem("CuiJwtDevUI", CuiJwtDevUIJsonRPCService.class);
     }
-
 
 
     // Health checks are automatically discovered by Quarkus through their annotations

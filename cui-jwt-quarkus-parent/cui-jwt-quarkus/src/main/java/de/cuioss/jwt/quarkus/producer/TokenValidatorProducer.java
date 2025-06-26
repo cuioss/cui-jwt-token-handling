@@ -18,16 +18,17 @@ package de.cuioss.jwt.quarkus.producer;
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.TokenValidator;
+import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.tools.logging.CuiLogger;
-import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.runtime.Startup;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import io.quarkus.runtime.Startup;
-import org.eclipse.microprofile.config.Config;
 import lombok.Getter;
+import org.eclipse.microprofile.config.Config;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -89,7 +90,7 @@ public class TokenValidatorProducer {
      */
     private void validateConfiguration() {
         LOGGER.info("Validating JWT configuration");
-        
+
         // Create issuer configs from properties
         issuerConfigs = createIssuerConfigsFromProperties();
 
@@ -112,13 +113,13 @@ public class TokenValidatorProducer {
 
         LOGGER.debug("Configuration validation successful - found %d enabled issuers", issuerConfigs.size());
     }
-    
+
     /**
      * Creates issuer configurations from direct property access.
      */
     private List<IssuerConfig> createIssuerConfigsFromProperties() {
-        List<IssuerConfig> issuers = new java.util.ArrayList<>();
-        
+        List<IssuerConfig> issuers = new ArrayList<>();
+
         // Check for default issuer
         if (config.getOptionalValue("cui.jwt.issuers.default.enabled", Boolean.class).orElse(false)) {
             String url = config.getOptionalValue("cui.jwt.issuers.default.url", String.class).orElse(null);
@@ -130,7 +131,7 @@ public class TokenValidatorProducer {
                 }
             }
         }
-        
+
         // Check for keycloak issuer
         if (config.getOptionalValue("cui.jwt.issuers.keycloak.enabled", Boolean.class).orElse(false)) {
             String url = config.getOptionalValue("cui.jwt.issuers.keycloak.url", String.class).orElse(null);
@@ -142,7 +143,7 @@ public class TokenValidatorProducer {
                 }
             }
         }
-        
+
         // Check for wellknown issuer
         if (config.getOptionalValue("cui.jwt.issuers.wellknown.enabled", Boolean.class).orElse(false)) {
             String url = config.getOptionalValue("cui.jwt.issuers.wellknown.url", String.class).orElse(null);
@@ -154,39 +155,39 @@ public class TokenValidatorProducer {
                 }
             }
         }
-        
+
         return issuers;
     }
-    
+
     /**
      * Creates a single IssuerConfig from properties for a given issuer name.
      */
     private IssuerConfig createIssuerConfig(String issuerName, String issuerUrl) {
         try {
             IssuerConfig.IssuerConfigBuilder builder = IssuerConfig.builder().issuer(issuerUrl);
-            
+
             // Check for public key location
             String publicKeyLocation = config.getOptionalValue("cui.jwt.issuers." + issuerName + ".public-key-location", String.class).orElse(null);
             if (publicKeyLocation != null) {
                 builder.jwksFilePath(publicKeyLocation);
                 LOGGER.debug("Set public key location for " + issuerName + ": " + publicKeyLocation);
             }
-            
+
             // Check for JWKS URL
             String jwksUrl = config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.url", String.class).orElse(null);
             if (jwksUrl != null) {
                 // Create simple JWKS config
-                de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig jwksConfig = 
-                    de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig.builder()
-                        .url(jwksUrl)
-                        .refreshIntervalSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.refresh-interval-seconds", Integer.class).orElse(300))
-                        .connectTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
-                        .readTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
-                        .build();
+                HttpJwksLoaderConfig jwksConfig =
+                        HttpJwksLoaderConfig.builder()
+                                .url(jwksUrl)
+                                .refreshIntervalSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.refresh-interval-seconds", Integer.class).orElse(300))
+                                .connectTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
+                                .readTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
+                                .build();
                 builder.httpJwksLoaderConfig(jwksConfig);
                 LOGGER.debug("Set JWKS URL for " + issuerName + ": " + jwksUrl);
             }
-            
+
             return builder.build();
         } catch (Exception e) {
             LOGGER.error("Failed to create issuer config for " + issuerName + ": " + e.getMessage(), e);

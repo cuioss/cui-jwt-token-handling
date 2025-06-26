@@ -21,17 +21,17 @@
         <version.exec-maven-plugin>3.2.0</version.exec-maven-plugin>
         <version.jmh>1.37</version.jmh>
         <sonar.skip>true</sonar.skip>
-        
-        
+
+
         <!-- HTTPS configuration for testing (reuse integration tests ports) -->
         <test.https.port>10443</test.https.port>
         <test.keycloak.port>10080</test.keycloak.port>
-        
+
         <!-- JMH Configuration Properties -->
         <jmh.result.format>JSON</jmh.result.format>
         <jmh.result.filePrefix>benchmark-results/integration-benchmark-result</jmh.result.filePrefix>
-        <jmh.iterations>5</jmh.iterations>
-        <jmh.warmupIterations>3</jmh.warmupIterations>
+        <jmh.iterations>1</jmh.iterations>
+        <jmh.warmupIterations>0</jmh.warmupIterations>
         <jmh.forks>1</jmh.forks>
         <jmh.threads>2</jmh.threads>
     </properties>
