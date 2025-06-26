@@ -22,18 +22,17 @@ image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-jwt-va
 **Performance Benchmarks**
 
 image:https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml/badge.svg[JMH Benchmarks,link=https://github.com/cuioss/cui-jwt/actions/workflows/benchmark.yml]
+image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/last-run-badge.json[Last Benchmark Run,link=https://cuioss.github.io/cui-jwt/benchmarks/]
 
 *Micro Benchmarks*
 
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/performance-badge.json[JWT Performance Score,link=https://cuioss.github.io/cui-jwt/benchmarks/]
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/trend-badge.json[Performance Trend,link=https://cuioss.github.io/cui-jwt/benchmarks/trends.html]
-image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/badges/last-run-badge.json[Last Benchmark Run,link=https://cuioss.github.io/cui-jwt/benchmarks/]
 
 *Integration Benchmarks*
 
 image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/integration/badges/performance-badge.json[Integration Performance Score,link=https://cuioss.github.io/cui-jwt/benchmarks/integration/]
-image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/integration/badges/throughput-badge.json[Integration Throughput,link=https://cuioss.github.io/cui-jwt/benchmarks/integration/]
-image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/integration/badges/latency-badge.json[Integration Latency,link=https://cuioss.github.io/cui-jwt/benchmarks/integration/]
+image:https://img.shields.io/endpoint?url=https://cuioss.github.io/cui-jwt/benchmarks/integration/badges/trend-badge.json[Integration Performance Trend,link=https://cuioss.github.io/cui-jwt/benchmarks/integration/trends.html]
 
 xref:cui-jwt-benchmarking/doc/performance-scoring.adoc[Understand Performance Metrics]
 

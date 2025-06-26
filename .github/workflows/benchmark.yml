@@ -188,12 +188,49 @@ jobs:
             echo "  Throughput: $INTEGRATION_THROUGHPUT ops/s"
             echo "  Latency: $INTEGRATION_LATENCY ms"
             
+            # Create integration trend tracking (similar to micro benchmarks)
+            if [ -n "$INTEGRATION_SCORE" ] && [ "$INTEGRATION_SCORE" != "0" ]; then
+              echo "Setting up integration benchmark performance tracking..."
+              
+              # Create integration-specific tracking file
+              INTEGRATION_TRACKING_FILE="gh-pages/integration/performance-tracking.json"
+              curl -f -s "https://cuioss.github.io/cui-jwt/benchmarks/integration/performance-tracking.json" -o "$INTEGRATION_TRACKING_FILE" 2>/dev/null || echo '{"runs":[]}' > "$INTEGRATION_TRACKING_FILE"
+              
+              # Add current integration run to tracking
+              INTEGRATION_RUN=$(cat <<EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "commit": "$COMMIT_HASH",
+            "performance": {
+              "score": $INTEGRATION_SCORE,
+              "throughput": {"value": $INTEGRATION_THROUGHPUT, "unit": "ops/s"},
+              "averageTime": {"value": $INTEGRATION_LATENCY, "unit": "ms"},
+              "errorResilience": {"value": 100, "unit": "ops/s"}
+            }
+          }
+          EOF
+              )
+              
+              # Update integration tracking file
+              jq --argjson newrun "$INTEGRATION_RUN" '.runs += [$newrun] | .runs = (.runs | sort_by(.timestamp) | .[-10:])' "$INTEGRATION_TRACKING_FILE" > "$INTEGRATION_TRACKING_FILE.tmp" && mv "$INTEGRATION_TRACKING_FILE.tmp" "$INTEGRATION_TRACKING_FILE"
+              
+              # Create integration trend badge
+              bash cui-jwt-benchmarking/doc/templates/scripts/calculate-trend-badge.sh "$INTEGRATION_TRACKING_FILE" "gh-pages/integration/badges"
+              
+              # Copy performance trends template for integration
+              cp cui-jwt-benchmarking/doc/templates/performance-trends.html gh-pages/integration/trends.html
+            else
+              echo "Warning: Could not extract valid integration performance metrics for trend tracking"
+              echo "{\"schemaVersion\":1,\"label\":\"Integration Performance Trend\",\"message\":\"→ No Data\",\"color\":\"lightgrey\"}" > "gh-pages/integration/badges/trend-badge.json"
+            fi
+            
             # Add integration benchmark link to main page
             echo "- [Integration Benchmark Results](integration/index.html)" >> gh-pages/badge-markdown.txt
           else
             echo "Warning: integration-benchmark-result.json not found"
             mkdir -p gh-pages/integration/badges
-            echo "{\"schemaVersion\":1,\"label\":\"Integration Performance\",\"message\":\"No Data\",\"color\":\"red\"}" > "gh-pages/integration/badges/integration-badge.json"
+            echo "{\"schemaVersion\":1,\"label\":\"Integration Performance\",\"message\":\"No Data\",\"color\":\"red\"}" > "gh-pages/integration/badges/performance-badge.json"
+            echo "{\"schemaVersion\":1,\"label\":\"Integration Performance Trend\",\"message\":\"→ No Data\",\"color\":\"lightgrey\"}" > "gh-pages/integration/badges/trend-badge.json"
           fi
 
       - name: Deploy to cuioss.github.io
