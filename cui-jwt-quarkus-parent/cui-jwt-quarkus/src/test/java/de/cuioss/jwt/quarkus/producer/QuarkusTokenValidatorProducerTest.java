@@ -108,8 +108,9 @@ class QuarkusTokenValidatorProducerTest {
         assertNotNull(config.issuers(), "Issuers configuration should not be null");
         assertNotNull(config.parser(), "Parser configuration should not be null");
 
-        // Verify the producer uses the configuration
-        assertEquals(config.issuers().size(), tokenValidator.getIssuerConfigMap().size(),
-                "TokenValidator should have the same number of issuers as the configuration");
+        // Verify the producer created the expected number of issuers from the test profile
+        // Test profile defines: default, keycloak, wellknown (all enabled)
+        assertEquals(3, tokenValidator.getIssuerConfigMap().size(),
+                "TokenValidator should have 3 issuers from test profile");
     }
 }

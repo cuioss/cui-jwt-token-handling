@@ -143,6 +143,18 @@ public class TokenValidatorProducer {
             }
         }
         
+        // Check for wellknown issuer
+        if (config.getOptionalValue("cui.jwt.issuers.wellknown.enabled", Boolean.class).orElse(false)) {
+            String url = config.getOptionalValue("cui.jwt.issuers.wellknown.url", String.class).orElse(null);
+            if (url != null) {
+                IssuerConfig issuer = createIssuerConfig("wellknown", url);
+                if (issuer != null) {
+                    issuers.add(issuer);
+                    LOGGER.info("Added wellknown issuer: " + url);
+                }
+            }
+        }
+        
         return issuers;
     }
     
