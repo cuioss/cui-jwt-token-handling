@@ -47,6 +47,20 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
     @Test
     @Order(1)
+    void jwtEndpointHealth() {
+        // Test the simple health endpoint first
+        given()
+                .baseUri(APPLICATION_BASE_URL)
+                .when()
+                .get("/jwt/health")
+                .then()
+                .statusCode(200)
+                .body("valid", equalTo(true))
+                .body("message", equalTo("JWT validation endpoint is healthy"));
+    }
+
+    @Test
+    @Order(2)
     void keycloakAvailability() {
         // Verify Keycloak is running and accessible
         Response response = given()
@@ -71,7 +85,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
 
     @Test
-    @Order(3)
+    @Order(4)
     void obtainValidTokenFromKeycloak() {
         // Get a real JWT token from Keycloak
         Response tokenResponse = given()
@@ -97,7 +111,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     void validateRealKeycloakToken() {
         // First get a token if we don't have one
         if (validJwtToken == null) {
@@ -106,6 +120,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
         // Test JWT validation with real Keycloak token against the configured Keycloak issuer
         given()
+                .baseUri(APPLICATION_BASE_URL)
                 .header("Authorization", "Bearer " + validJwtToken)
                 .when()
                 .post("/jwt/validate")
@@ -116,7 +131,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     void validateKeycloakTokenWithJwksEndpoint() {
         // First get a token if we don't have one
         if (validJwtToken == null) {
@@ -134,6 +149,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         
         // Test JWT validation - this should work via JWKS resolution
         given()
+                .baseUri(APPLICATION_BASE_URL)
                 .header("Authorization", "Bearer " + validJwtToken)
                 .when()
                 .post("/jwt/validate")
@@ -144,7 +160,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     void validateRealKeycloakTokenMultipleTimes() {
         // First get a token if we don't have one
         if (validJwtToken == null) {
@@ -154,6 +170,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         // Test JWT validation multiple times to ensure consistency
         for (int i = 0; i < 3; i++) {
             given()
+                    .baseUri(APPLICATION_BASE_URL)
                     .header("Authorization", "Bearer " + validJwtToken)
                     .when()
                     .post("/jwt/validate")
@@ -165,10 +182,11 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     void invalidTokenValidation() {
         // Test with invalid token
         given()
+                .baseUri(APPLICATION_BASE_URL)
                 .header("Authorization", "Bearer invalid.token.here")
                 .when()
                 .post("/jwt/validate")
@@ -179,10 +197,11 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     void missingAuthorizationHeader() {
         // Test without Authorization header
         given()
+                .baseUri(APPLICATION_BASE_URL)
                 .when()
                 .post("/jwt/validate")
                 .then()
@@ -192,10 +211,11 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     void malformedAuthorizationHeader() {
         // Test with malformed Authorization header
         given()
+                .baseUri(APPLICATION_BASE_URL)
                 .header("Authorization", "NotBearer token")
                 .when()
                 .post("/jwt/validate")

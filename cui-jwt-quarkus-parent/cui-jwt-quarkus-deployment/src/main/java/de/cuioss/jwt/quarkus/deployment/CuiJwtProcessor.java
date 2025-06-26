@@ -228,7 +228,6 @@ public class CuiJwtProcessor {
     public AdditionalBeanBuildItem additionalBeans() {
         return AdditionalBeanBuildItem.builder()
                 .addBeanClass("de.cuioss.jwt.quarkus.producer.TokenValidatorProducer")
-                .addBeanClass("de.cuioss.jwt.integration.endpoint.JwtValidationEndpoint")
                 .setUnremovable()
                 .build();
     }

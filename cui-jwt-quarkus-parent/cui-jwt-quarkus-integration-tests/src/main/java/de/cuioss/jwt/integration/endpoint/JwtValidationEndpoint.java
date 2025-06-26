@@ -17,6 +17,9 @@ package de.cuioss.jwt.integration.endpoint;
 
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.tools.logging.CuiLogger;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -30,6 +33,7 @@ import jakarta.ws.rs.core.Response;
 @Path("/jwt")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ApplicationScoped
 public class JwtValidationEndpoint {
 
     private static final CuiLogger LOGGER = new CuiLogger(JwtValidationEndpoint.class);
@@ -39,6 +43,23 @@ public class JwtValidationEndpoint {
     @Inject
     public JwtValidationEndpoint(TokenValidator tokenValidator) {
         this.tokenValidator = tokenValidator;
+        LOGGER.info("JwtValidationEndpoint created with TokenValidator");
+    }
+    
+    void onStart(@Observes StartupEvent ev) {
+        LOGGER.info("JwtValidationEndpoint started and ready at /jwt/validate");
+    }
+
+    /**
+     * Health check endpoint to verify the service is running.
+     *
+     * @return Simple OK response
+     */
+    @GET
+    @Path("/health")
+    public Response health() {
+        return Response.ok(new ValidationResponse(true, "JWT validation endpoint is healthy"))
+                .build();
     }
 
     /**
