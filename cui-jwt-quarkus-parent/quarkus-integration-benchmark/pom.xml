@@ -18,8 +18,6 @@
     <properties>
         <maven.jar.plugin.automatic.module.name>de.cuioss.jwt.quarkus.integration.benchmark</maven.jar.plugin.automatic.module.name>
         <skip.benchmark>true</skip.benchmark>
-        <version.exec-maven-plugin>3.2.0</version.exec-maven-plugin>
-        <version.jmh>1.37</version.jmh>
         <sonar.skip>true</sonar.skip>
 
 
@@ -110,7 +108,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>${version.exec-maven-plugin}</version>
                 <executions>
                     <!-- Start integration tests containers before benchmarks -->
                     <execution>

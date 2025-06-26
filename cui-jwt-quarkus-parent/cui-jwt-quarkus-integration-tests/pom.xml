@@ -171,7 +171,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>${version.exec-maven-plugin}</version>
                         <executions>
                             <!-- Start application before integration tests -->
                             <execution>
