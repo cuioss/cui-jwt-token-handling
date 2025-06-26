@@ -51,29 +51,6 @@ class CuiJwtProcessorBuildStepTest {
         assertEquals("cui-jwt", featureItem.getName(), "Feature name should be 'cui-jwt'");
     }
 
-    @Test
-    @DisplayName("Should register config classes for reflection")
-    void shouldRegisterConfigForReflection() {
-        ReflectiveClassBuildItem reflectiveItem = processor.registerConfigForReflection();
-
-        assertNotNull(reflectiveItem, "Reflective class build item should not be null");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig"),
-                "Should register JwtValidationConfig for reflection");
-    }
-
-    @Test
-    @DisplayName("Should register nested config classes for reflection")
-    void shouldRegisterNestedConfigForReflection() {
-        ReflectiveClassBuildItem reflectiveItem = processor.registerNestedConfigForReflection();
-
-        assertNotNull(reflectiveItem, "Reflective class build item should not be null");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig"),
-                "Should register IssuerConfig for reflection");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig"),
-                "Should register ParserConfig for reflection");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$HttpJwksLoaderConfig"),
-                "Should register HttpJwksLoaderConfig for reflection");
-    }
 
     @Test
     @DisplayName("Should register JWT validation classes for reflection")
@@ -130,10 +107,6 @@ class CuiJwtProcessorBuildStepTest {
     void shouldExecuteAllBuildStepsWithoutExceptions() {
         // Test that all build step methods can be called without throwing exceptions
         assertDoesNotThrow(() -> processor.feature(), "feature() should not throw exceptions");
-        assertDoesNotThrow(processor::registerConfigForReflection,
-                "registerConfigForReflection() should not throw exceptions");
-        assertDoesNotThrow(processor::registerNestedConfigForReflection,
-                "registerNestedConfigForReflection() should not throw exceptions");
         assertDoesNotThrow(processor::registerJwtValidationClassesForReflection,
                 "registerJwtValidationClassesForReflection() should not throw exceptions");
         assertDoesNotThrow(processor::runtimeInitializedClasses,

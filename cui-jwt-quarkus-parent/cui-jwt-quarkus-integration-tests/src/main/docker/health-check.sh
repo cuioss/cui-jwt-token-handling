@@ -16,9 +16,9 @@ if [ ! -f "/app/certificates/localhost.crt" ] || [ ! -f "/app/certificates/local
     exit 1
 fi
 
-# Check if application executable exists and is executable
-if [ ! -x "/app/application" ]; then
-    echo "Application executable missing or not executable"
+# Check if application executable exists (native) or JAR file exists (JVM)
+if [ ! -x "/app/application" ] && [ ! -f "/app/quarkus-run.jar" ]; then
+    echo "Application executable or JAR file missing"
     exit 1
 fi
 

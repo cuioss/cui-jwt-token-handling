@@ -18,6 +18,8 @@ package de.cuioss.jwt.integration.endpoint;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.tools.logging.CuiLogger;
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -34,20 +36,22 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
+@RegisterForReflection
 public class JwtValidationEndpoint {
 
     private static final CuiLogger LOGGER = new CuiLogger(JwtValidationEndpoint.class);
 
-    private final TokenValidator tokenValidator;
-
     @Inject
-    public JwtValidationEndpoint(TokenValidator tokenValidator) {
-        this.tokenValidator = tokenValidator;
-        LOGGER.info("JwtValidationEndpoint created with TokenValidator");
+    TokenValidator tokenValidator;
+
+    @PostConstruct
+    void init() {
+        LOGGER.info("JwtValidationEndpoint initialized with TokenValidator: " + (tokenValidator != null));
     }
-    
+
     void onStart(@Observes StartupEvent ev) {
         LOGGER.info("JwtValidationEndpoint started and ready at /jwt/validate");
+        LOGGER.info("TokenValidator injected: " + (tokenValidator != null));
     }
 
     /**
@@ -93,6 +97,7 @@ public class JwtValidationEndpoint {
 
 
     // Response DTOs
+    @RegisterForReflection
     public record ValidationResponse(boolean valid, String message) {
     }
 }

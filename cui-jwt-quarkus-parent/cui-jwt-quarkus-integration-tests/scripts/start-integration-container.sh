@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start JWT Integration Tests using Docker Compose with native container
+# Start JWT Integration Tests using Docker Compose
 
 set -e
 
@@ -13,13 +13,20 @@ echo "Root directory: ${ROOT_DIR}"
 
 cd "${PROJECT_DIR}"
 
-# Native image should already be built by the Maven lifecycle
-echo "📦 Using native image from target directory..."
-cd "${PROJECT_DIR}"
+# Check for native executable
+if [[ -f target/*-runner ]]; then
+    echo "📦 Using native image from target directory..."
+    COMPOSE_FILE="docker-compose.yml"
+    MODE="native"
+else
+    echo "❌ Native executable not found in target directory"
+    echo "Make sure to run Maven build with integration-tests profile: ./mvnw clean package -Pintegration-tests"
+    exit 1
+fi
 
 # Start with Docker Compose (includes Keycloak)
-echo "🐳 Starting Docker containers (Quarkus + Keycloak)..."
-docker compose up -d
+echo "🐳 Starting Docker containers (Quarkus $MODE + Keycloak)..."
+docker compose -f "$COMPOSE_FILE" up -d
 
 # Wait for Keycloak to be ready first
 echo "⏳ Waiting for Keycloak to be ready..."

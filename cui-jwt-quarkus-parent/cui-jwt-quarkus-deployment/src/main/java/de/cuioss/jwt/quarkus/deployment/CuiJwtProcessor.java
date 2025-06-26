@@ -16,19 +16,12 @@
 package de.cuioss.jwt.quarkus.deployment;
 
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
-import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
-import io.smallrye.config.SmallRyeConfig;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.annotations.ExecutionTime;
-import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.SystemPropertyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import org.jboss.jandex.DotName;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
@@ -40,17 +33,8 @@ import org.jboss.logging.Logger;
  * <p>
  * This class handles the build-time processing for the extension, including
  * registering the feature, setting up reflection configuration, and providing
- * build-time configuration validation with enhanced error reporting.
+ * DevUI integration.
  * </p>
- * <p>
- * Enhanced features include:
- * </p>
- * <ul>
- *   <li>Build-time configuration validation with detailed error messages</li>
- *   <li>Compile-time security checks for configuration consistency</li>
- *   <li>Enhanced reflection registration for native image support</li>
- *   <li>Development-time DevUI integration with runtime status monitoring</li>
- * </ul>
  */
 public class CuiJwtProcessor {
 
@@ -60,12 +44,12 @@ public class CuiJwtProcessor {
     private static final String FEATURE = "cui-jwt";
 
     /**
-     * Logger for build-time configuration validation and error reporting.
+     * Logger for build-time processing.
      */
     private static final Logger LOGGER = Logger.getLogger(CuiJwtProcessor.class);
 
     /**
-     * Register the CUI JWT feature with build-time configuration validation.
+     * Register the CUI JWT feature.
      *
      * @return A {@link FeatureBuildItem} for the CUI JWT feature
      */
@@ -74,36 +58,7 @@ public class CuiJwtProcessor {
         LOGGER.infof("CUI JWT feature registered");
         return new FeatureBuildItem(FEATURE);
     }
-
-
-    /**
-     * Register the JWT validation configuration for reflection.
-     *
-     * @return A {@link ReflectiveClassBuildItem} for the JWT validation configuration
-     */
-    @BuildStep
-    public ReflectiveClassBuildItem registerConfigForReflection() {
-        return ReflectiveClassBuildItem.builder("de.cuioss.jwt.quarkus.config.JwtValidationConfig")
-                .methods(true)
-                .fields(true)
-                .build();
-    }
-
-    /**
-     * Register nested configuration classes for reflection.
-     *
-     * @return A {@link ReflectiveClassBuildItem} for the nested configuration classes
-     */
-    @BuildStep
-    public ReflectiveClassBuildItem registerNestedConfigForReflection() {
-        return ReflectiveClassBuildItem.builder(
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$HttpJwksLoaderConfig")
-                .methods(true)
-                .fields(true)
-                .build();
-    }
+    
 
     /**
      * Register JWT validation classes for reflection.
@@ -118,96 +73,15 @@ public class CuiJwtProcessor {
                 "de.cuioss.jwt.validation.ParserConfig",
                 "de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig",
                 "de.cuioss.jwt.validation.security.SecurityEventCounter",
-                "de.cuioss.jwt.quarkus.producer.TokenValidatorProducer",
-                "de.cuioss.jwt.quarkus.producer.IssuerConfigFactory")
+                "de.cuioss.jwt.quarkus.producer.TokenValidatorProducer")
                 .methods(true)
                 .fields(true)
                 .constructors(true)
                 .build();
     }
 
-    /**
-     * Register SmallRye Config classes for reflection to support getConfigMapping() in native image.
-     * This is critical for TokenValidatorProducer's config access pattern.
-     *
-     * @return A {@link ReflectiveClassBuildItem} for SmallRye Config classes
-     */
-    @BuildStep
-    public ReflectiveClassBuildItem registerSmallRyeConfigForReflection() {
-        return ReflectiveClassBuildItem.builder(
-                "io.smallrye.config.SmallRyeConfig",
-                "io.smallrye.config.ConfigMappingLoader",
-                "io.smallrye.config.ConfigMappingInterface",
-                "io.smallrye.config.ConfigMappingObject",
-                "io.smallrye.config.ConfigMappingContext",
-                "io.smallrye.config.ConfigMappingMetadata",
-                "io.smallrye.config.ConfigMappings",
-                "io.smallrye.config.ConfigMappingProvider")
-                .methods(true)
-                .fields(true)
-                .constructors(true)
-                .build();
-    }
 
-    /**
-     * Register core Java classes needed for proxy and reflection operations in native image.
-     *
-     * @return A {@link ReflectiveClassBuildItem} for core Java classes
-     */
-    @BuildStep
-    public ReflectiveClassBuildItem registerCoreJavaClassesForReflection() {
-        return ReflectiveClassBuildItem.builder(
-                "java.lang.reflect.Proxy",
-                "java.lang.reflect.InvocationHandler",
-                "java.util.Map",
-                "java.util.HashMap",
-                "java.util.Optional",
-                "java.lang.String",
-                "java.lang.Integer",
-                "java.lang.Boolean")
-                .methods(true)
-                .fields(true)
-                .constructors(true)
-                .build();
-    }
 
-    /**
-     * Register Bean Validation classes for configuration validation in native image.
-     *
-     * @return A {@link ReflectiveClassBuildItem} for Bean Validation classes
-     */
-    @BuildStep
-    public ReflectiveClassBuildItem registerValidationClassesForReflection() {
-        return ReflectiveClassBuildItem.builder(
-                "jakarta.validation.constraints.NotNull",
-                "jakarta.validation.constraints.NotEmpty",
-                "jakarta.validation.Valid",
-                "io.smallrye.config.WithDefault")
-                .methods(true)
-                .fields(true)
-                .constructors(true)
-                .build();
-    }
-
-    /**
-     * Register ConfigMapping proxy classes for reflection to support dynamic proxy creation in native image.
-     *
-     * @return A {@link ReflectiveClassBuildItem} for ConfigMapping proxy classes
-     */
-    @BuildStep
-    public ReflectiveClassBuildItem registerConfigMappingProxiesForReflection() {
-        return ReflectiveClassBuildItem.builder(
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig", 
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$HttpJwksLoaderConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$HealthConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$JwksHealthConfig")
-                .methods(true)
-                .fields(true)
-                .constructors(true)
-                .build();
-    }
 
     /**
      * Register classes that need to be initialized at runtime.
@@ -250,29 +124,8 @@ public class CuiJwtProcessor {
                 DotName.createSimple("de.cuioss.jwt.quarkus.producer.TokenValidatorProducer")
         ));
         
-        // Ensure Config is available for injection
-        unremovableBeans.produce(io.quarkus.arc.deployment.UnremovableBeanBuildItem.beanTypes(
-                DotName.createSimple("org.eclipse.microprofile.config.Config")
-        ));
     }
 
-    /**
-     * Register native image proxy definitions for ConfigMapping interfaces.
-     * This enables dynamic proxy creation in native image for configuration access.
-     *
-     * @return A {@link NativeImageProxyDefinitionBuildItem} for ConfigMapping proxy definitions
-     */
-    @BuildStep
-    public NativeImageProxyDefinitionBuildItem registerConfigMappingProxies() {
-        return new NativeImageProxyDefinitionBuildItem(
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$HttpJwksLoaderConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$HealthConfig",
-                "de.cuioss.jwt.quarkus.config.JwtValidationConfig$JwksHealthConfig"
-        );
-    }
 
     /**
      * Create DevUI card page for JWT validation monitoring and debugging.
@@ -324,19 +177,6 @@ public class CuiJwtProcessor {
         return new JsonRPCProvidersBuildItem("CuiJwtDevUI", CuiJwtDevUIJsonRPCService.class);
     }
 
-    /**
-     * Add build-time system properties for JWT validation optimization.
-     *
-     * @param systemProperties producer for system property build items
-     */
-    @BuildStep
-    public void addSystemProperties(BuildProducer<SystemPropertyBuildItem> systemProperties) {
-        // Optimize JWT parsing for build-time configuration
-        systemProperties.produce(new SystemPropertyBuildItem("de.cuioss.jwt.validation.build.optimize", "true"));
-
-        // Set reasonable defaults for build-time validation
-        systemProperties.produce(new SystemPropertyBuildItem("de.cuioss.jwt.validation.build.timeout", "30000"));
-    }
 
 
     // Health checks are automatically discovered by Quarkus through their annotations

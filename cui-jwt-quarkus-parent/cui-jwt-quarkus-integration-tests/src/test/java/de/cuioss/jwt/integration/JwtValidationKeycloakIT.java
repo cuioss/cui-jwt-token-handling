@@ -17,7 +17,11 @@ package de.cuioss.jwt.integration;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.Map;
 
@@ -121,6 +125,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         // Test JWT validation with real Keycloak token against the configured Keycloak issuer
         given()
                 .baseUri(APPLICATION_BASE_URL)
+                .contentType("application/json")
                 .header("Authorization", "Bearer " + validJwtToken)
                 .when()
                 .post("/jwt/validate")
@@ -143,10 +148,10 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         Response jwksResponse = given()
                 .baseUri(KEYCLOAK_BASE_URL)
                 .when()
-                .get("/realms/benchmark/.well-known/openid_configuration");
-        
-        assertEquals(200, jwksResponse.statusCode(), "JWKS well-known endpoint should be accessible");
-        
+                .get("/realms/benchmark/protocol/openid-connect/certs");
+
+        assertEquals(200, jwksResponse.statusCode(), "JWKS endpoint should be accessible");
+
         // Test JWT validation - this should work via JWKS resolution
         given()
                 .baseUri(APPLICATION_BASE_URL)
@@ -171,6 +176,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         for (int i = 0; i < 3; i++) {
             given()
                     .baseUri(APPLICATION_BASE_URL)
+                    .contentType("application/json")
                     .header("Authorization", "Bearer " + validJwtToken)
                     .when()
                     .post("/jwt/validate")
@@ -187,6 +193,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         // Test with invalid token
         given()
                 .baseUri(APPLICATION_BASE_URL)
+                .contentType("application/json")
                 .header("Authorization", "Bearer invalid.token.here")
                 .when()
                 .post("/jwt/validate")
@@ -202,6 +209,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         // Test without Authorization header
         given()
                 .baseUri(APPLICATION_BASE_URL)
+                .contentType("application/json")
                 .when()
                 .post("/jwt/validate")
                 .then()
@@ -216,6 +224,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         // Test with malformed Authorization header
         given()
                 .baseUri(APPLICATION_BASE_URL)
+                .contentType("application/json")
                 .header("Authorization", "NotBearer token")
                 .when()
                 .post("/jwt/validate")

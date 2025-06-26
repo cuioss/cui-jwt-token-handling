@@ -15,17 +15,17 @@
  */
 package de.cuioss.jwt.quarkus.producer;
 
-import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
-import org.eclipse.microprofile.config.Config;
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.tools.logging.CuiLogger;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import io.quarkus.runtime.Startup;
+import org.eclipse.microprofile.config.Config;
 import lombok.Getter;
 
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.List;
  * CDI producer for {@link TokenValidator} instances.
  * <p>
  * This producer creates a properly configured TokenValidator based on the
- * configuration provided by {@link JwtValidationConfig}.
+ * configuration properties.
  * </p>
  * <p>
  * The producer performs comprehensive validation at startup to fail fast if the configuration
@@ -50,7 +50,8 @@ import java.util.List;
  * configuration issues during application startup.
  * </p>
  */
-@ApplicationScoped
+@Singleton
+@Startup
 public class TokenValidatorProducer {
 
     private static final CuiLogger LOGGER = new CuiLogger(TokenValidatorProducer.class);
@@ -66,104 +67,121 @@ public class TokenValidatorProducer {
     @Getter
     private List<IssuerConfig> issuerConfigs;
 
+
     /**
-     * Initializes the TokenValidator at startup.
+     * Initializes the TokenValidator lazily when first accessed.
      * This method validates the configuration and fails fast if it's invalid.
      */
-    @PostConstruct
-    void initialize() {
-        LOGGER.info("Initializing TokenValidator");
-
-        validateConfiguration();
-        tokenValidator = createTokenValidator();
-
-        LOGGER.info("TokenValidator initialized with %s issuers", issuerConfigs.size());
+    private synchronized void initializeIfNeeded() {
+        if (tokenValidator == null) {
+            LOGGER.info("Initializing TokenValidator");
+            validateConfiguration();
+            tokenValidator = createTokenValidator();
+            LOGGER.info("TokenValidator initialized with %s issuers", issuerConfigs.size());
+        }
     }
 
     /**
      * Validates the JWT validation configuration.
-     * <p>
-     * Uses direct Config.getConfigMapping() call instead of CDI injection to avoid
-     * known issues with @ConfigMapping CDI injection in Quarkus extensions.
-     * </p>
-     * <p>
-     * This approach is recommended for Quarkus extensions as documented in:
-     * <ul>
-     *   <li><a href="https://quarkus.io/guides/writing-extensions#configuration-mapping">Quarkus Extension Configuration Guide</a></li>
-     *   <li><a href="https://github.com/quarkusio/quarkus/issues/29583">Quarkus Issue #29583: ConfigMapping CDI injection in extensions</a></li>
-     * </ul>
-     * </p>
      * Performs comprehensive validation and fails fast if configuration is invalid.
      *
      * @throws IllegalStateException if configuration is invalid
      */
     private void validateConfiguration() {
-        // Direct ConfigMapping retrieval - recommended approach for Quarkus extensions
-        // This avoids CDI injection issues with @ConfigMapping interfaces in extension contexts
-        JwtValidationConfig jwtValidationConfig = getJwtValidationConfig();
+        LOGGER.info("Validating JWT configuration");
         
-        if (jwtValidationConfig == null) {
-            LOGGER.error("JWT validation configuration is required");
-            throw new IllegalStateException("JWT validation configuration is required");
-        }
-
-        if (jwtValidationConfig.issuers().isEmpty()) {
-            LOGGER.error("At least one issuer configuration is required");
-            throw new IllegalStateException("At least one issuer configuration is required");
-        }
-
-        // Create issuer configs using the factory and validate
-        issuerConfigs = IssuerConfigFactory.createIssuerConfigs(jwtValidationConfig.issuers());
+        // Create issuer configs from properties
+        issuerConfigs = createIssuerConfigsFromProperties();
 
         if (issuerConfigs.isEmpty()) {
             LOGGER.error("No enabled issuers found in configuration");
             throw new IllegalStateException("No enabled issuers found in configuration");
         }
 
-        // Validate parser configuration consistency
+        // Validate parser configuration using direct property access
         try {
-            int maxTokenSize = jwtValidationConfig.parser().maxTokenSizeBytes();
+            int maxTokenSize = config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(8192);
             if (maxTokenSize <= 0) {
                 LOGGER.error("maxTokenSizeBytes must be positive, but was: " + maxTokenSize);
                 throw new IllegalStateException("maxTokenSizeBytes must be positive, but was: " + maxTokenSize);
             }
         } catch (RuntimeException e) {
-            LOGGER.error("Failed to create TokenValidator: " + e.getMessage(), e);
-            throw new IllegalStateException("Failed to create TokenValidator: " + e.getMessage(), e);
+            LOGGER.error("Failed to validate parser configuration: " + e.getMessage(), e);
+            throw new IllegalStateException("Failed to validate parser configuration: " + e.getMessage(), e);
         }
 
         LOGGER.debug("Configuration validation successful - found %d enabled issuers", issuerConfigs.size());
     }
-
+    
     /**
-     * Retrieves the JWT validation configuration using direct ConfigMapping approach.
-     * <p>
-     * This method uses the recommended pattern for accessing @ConfigMapping interfaces
-     * in Quarkus extensions, avoiding CDI injection issues that can occur in extension contexts.
-     * </p>
-     * <p>
-     * The approach follows the pattern documented in:
-     * <ul>
-     *   <li><a href="https://quarkus.io/guides/config-mappings#accessing-configmapping-from-application">Quarkus ConfigMapping Access Guide</a></li>
-     *   <li><a href="https://smallrye.io/smallrye-config/Latest/config/mappings/">SmallRye Config Mappings Documentation</a></li>
-     * </ul>
-     * </p>
-     * 
-     * @return the JWT validation configuration instance
-     * @throws IllegalStateException if configuration mapping cannot be created
+     * Creates issuer configurations from direct property access.
      */
-    private JwtValidationConfig getJwtValidationConfig() {
+    private List<IssuerConfig> createIssuerConfigsFromProperties() {
+        List<IssuerConfig> issuers = new java.util.ArrayList<>();
+        
+        // Check for default issuer
+        if (config.getOptionalValue("cui.jwt.issuers.default.enabled", Boolean.class).orElse(false)) {
+            String url = config.getOptionalValue("cui.jwt.issuers.default.url", String.class).orElse(null);
+            if (url != null) {
+                IssuerConfig issuer = createIssuerConfig("default", url);
+                if (issuer != null) {
+                    issuers.add(issuer);
+                    LOGGER.info("Added default issuer: " + url);
+                }
+            }
+        }
+        
+        // Check for keycloak issuer
+        if (config.getOptionalValue("cui.jwt.issuers.keycloak.enabled", Boolean.class).orElse(false)) {
+            String url = config.getOptionalValue("cui.jwt.issuers.keycloak.url", String.class).orElse(null);
+            if (url != null) {
+                IssuerConfig issuer = createIssuerConfig("keycloak", url);
+                if (issuer != null) {
+                    issuers.add(issuer);
+                    LOGGER.info("Added keycloak issuer: " + url);
+                }
+            }
+        }
+        
+        return issuers;
+    }
+    
+    /**
+     * Creates a single IssuerConfig from properties for a given issuer name.
+     */
+    private IssuerConfig createIssuerConfig(String issuerName, String issuerUrl) {
         try {
-            // Use SmallRyeConfig.getConfigMapping() for direct access to @ConfigMapping interfaces
-            // This is the recommended approach in Quarkus extensions to avoid CDI injection issues
-            return config.unwrap(io.smallrye.config.SmallRyeConfig.class)
-                    .getConfigMapping(JwtValidationConfig.class);
+            IssuerConfig.IssuerConfigBuilder builder = IssuerConfig.builder().issuer(issuerUrl);
+            
+            // Check for public key location
+            String publicKeyLocation = config.getOptionalValue("cui.jwt.issuers." + issuerName + ".public-key-location", String.class).orElse(null);
+            if (publicKeyLocation != null) {
+                builder.jwksFilePath(publicKeyLocation);
+                LOGGER.debug("Set public key location for " + issuerName + ": " + publicKeyLocation);
+            }
+            
+            // Check for JWKS URL
+            String jwksUrl = config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.url", String.class).orElse(null);
+            if (jwksUrl != null) {
+                // Create simple JWKS config
+                de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig jwksConfig = 
+                    de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig.builder()
+                        .url(jwksUrl)
+                        .refreshIntervalSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.refresh-interval-seconds", Integer.class).orElse(300))
+                        .connectTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
+                        .readTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
+                        .build();
+                builder.httpJwksLoaderConfig(jwksConfig);
+                LOGGER.debug("Set JWKS URL for " + issuerName + ": " + jwksUrl);
+            }
+            
+            return builder.build();
         } catch (Exception e) {
-            String errorMessage = "Failed to retrieve JWT validation configuration: " + e.getMessage();
-            LOGGER.error(errorMessage, e);
-            throw new IllegalStateException(errorMessage, e);
+            LOGGER.error("Failed to create issuer config for " + issuerName + ": " + e.getMessage(), e);
+            return null;
         }
     }
+
 
     /**
      * Creates and configures the TokenValidator instance.
@@ -173,11 +191,8 @@ public class TokenValidatorProducer {
      */
     private TokenValidator createTokenValidator() {
         try {
-            // Get configuration using direct ConfigMapping retrieval
-            JwtValidationConfig jwtValidationConfig = getJwtValidationConfig();
-            
             // Create parser config
-            ParserConfig parserConfig = createParserConfig(jwtValidationConfig.parser());
+            ParserConfig parserConfig = createParserConfigFromProperties();
 
             // Initialize security event counter for each issuer config
             initializeSecurityEventCounters();
@@ -213,53 +228,51 @@ public class TokenValidatorProducer {
 
     /**
      * Produces a {@link TokenValidator} instance.
-     * This method is called by CDI and handles initialization directly to ensure proper error handling.
+     * This method initializes the TokenValidator lazily when first accessed.
      *
      * @return the configured TokenValidator
      */
     @Produces
-    @ApplicationScoped
+    @Singleton
     public TokenValidator produceTokenValidator() {
-        if (tokenValidator == null) {
-            // Initialize on-demand if @PostConstruct failed or wasn't called
-            LOGGER.info("TokenValidator not initialized, initializing on-demand");
-            try {
-                validateConfiguration();
-                tokenValidator = createTokenValidator();
-                LOGGER.info("TokenValidator initialized with %s issuers", issuerConfigs.size());
-            } catch (Exception e) {
-                LOGGER.error("Failed to initialize TokenValidator: %s", e.getMessage(), e);
-                throw new IllegalStateException("Cannot produce TokenValidator: " + e.getMessage(), e);
-            }
-        }
+        initializeIfNeeded();
         return tokenValidator;
     }
 
     /**
-     * Creates a ParserConfig from the configuration.
+     * Creates a ParserConfig from direct property access.
      * Validates parser configuration parameters and provides comprehensive logging.
      *
-     * @param parserConfig the parser configuration
      * @return a ParserConfig instance
      * @throws IllegalArgumentException if parser configuration is invalid
      */
-    private ParserConfig createParserConfig(JwtValidationConfig.ParserConfig parserConfig) {
+    private ParserConfig createParserConfigFromProperties() {
         try {
+            // Read parser configuration with defaults
+            int maxTokenSizeBytes = config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(8192);
+            boolean validateExpiration = config.getOptionalValue("cui.jwt.parser.validate-expiration", Boolean.class).orElse(true);
+            boolean validateIssuedAt = config.getOptionalValue("cui.jwt.parser.validate-issued-at", Boolean.class).orElse(false);
+            boolean validateNotBefore = config.getOptionalValue("cui.jwt.parser.validate-not-before", Boolean.class).orElse(true);
+            int leewaySeconds = config.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).orElse(30);
+            String audience = config.getOptionalValue("cui.jwt.parser.audience", String.class).orElse(null);
+            String allowedAlgorithms = config.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse("RS256,RS384,RS512,ES256,ES384,ES512");
+
             // Note: The ParserConfig class only supports maxTokenSize configuration
             // Other validation settings like expiration, issuedAt, notBefore, leeway, audience, and algorithms
             // are handled by the TokenValidator internally
             ParserConfig.ParserConfigBuilder builder = ParserConfig.builder()
-                    .maxTokenSize(parserConfig.maxTokenSizeBytes());
+                    .maxTokenSize(maxTokenSizeBytes);
 
             // Log the configuration that will be applied by the TokenValidator
-            LOGGER.info("Creating ParserConfig with maxTokenSize=%d bytes", parserConfig.maxTokenSizeBytes());
-            LOGGER.info("TokenValidator will use validateExpiration=%s", parserConfig.validateExpiration());
-            LOGGER.info("TokenValidator will use validateIssuedAt=%s", parserConfig.validateIssuedAt());
-            LOGGER.info("TokenValidator will use validateNotBefore=%s", parserConfig.validateNotBefore());
-            LOGGER.info("TokenValidator will use leeway=%d seconds", parserConfig.leewaySeconds());
-            parserConfig.audience().ifPresent(audience ->
-                    LOGGER.info("TokenValidator will use expected audience=%s", audience));
-            LOGGER.info("TokenValidator will use allowedAlgorithms=%s", parserConfig.allowedAlgorithms());
+            LOGGER.info("Creating ParserConfig with maxTokenSize=%d bytes", maxTokenSizeBytes);
+            LOGGER.info("TokenValidator will use validateExpiration=%s", validateExpiration);
+            LOGGER.info("TokenValidator will use validateIssuedAt=%s", validateIssuedAt);
+            LOGGER.info("TokenValidator will use validateNotBefore=%s", validateNotBefore);
+            LOGGER.info("TokenValidator will use leeway=%d seconds", leewaySeconds);
+            if (audience != null) {
+                LOGGER.info("TokenValidator will use expected audience=%s", audience);
+            }
+            LOGGER.info("TokenValidator will use allowedAlgorithms=%s", allowedAlgorithms);
 
             ParserConfig result = builder.build();
             LOGGER.debug("ParserConfig created successfully");
