@@ -48,13 +48,20 @@ Tasks are organized into categories, each with its own prefix for task numbering
 
 *Rationale:* Resilience4j is a mature, lightweight library that provides circuit breakers, retry mechanisms, and bulkhead patterns. A minimal integration would enhance system stability without introducing significant complexity.
 
+*CRITICAL REQUIREMENT:* This research must determine if Resilience4j has any conflicts with Quarkus native image compilation. If Resilience4j does not work with Quarkus native, this is a complete stop for using this library.
+
+*Scope Limitation:* Only evaluate the following Resilience4j modules:
+- **retry** - For implementing retry mechanisms with exponential backoff
+- **cache** - Only if it can fully replace the existing Caffeine cache implementation, otherwise exclude
+
 *Research Areas:*
 
-- Dependency analysis (including transitive dependencies)
-- Performance impact assessment
+- **Native Image Compatibility (CRITICAL)**: Deep analysis of Resilience4j retry and cache modules with GraalVM/Quarkus native compilation
+- Dependency analysis for retry and cache modules only (including transitive dependencies)
+- Performance impact assessment for retry and cache features
 - Integration patterns with existing HttpHandler
-- Configuration options and customization
-- Native image compatibility (GraalVM/Quarkus)
+- Configuration options and customization for retry and cache
+- Cache module evaluation: Can it completely replace Caffeine cache? If not, exclude from consideration
 
 === R2. Implement Resilient HttpHandler Composition
 [ ] *Priority:* High
