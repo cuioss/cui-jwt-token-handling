@@ -10,14 +10,9 @@ echo "🛑 Stopping JWT Integration Tests Docker containers"
 
 cd "${PROJECT_DIR}"
 
-# Detect which compose file to use
-if [[ -f "target/quarkus-app/quarkus-run.jar" ]] && [[ ! -f "target/*-runner" ]]; then
-    COMPOSE_FILE="docker-compose-jvm.yml"
-    MODE="jvm"
-else
-    COMPOSE_FILE="docker-compose.yml"
-    MODE="native"
-fi
+# Use the docker-compose.yml file (only file available)
+COMPOSE_FILE="docker-compose.yml"
+MODE="native"
 
 # Stop and remove containers
 echo "📦 Stopping Docker containers ($MODE mode)..."

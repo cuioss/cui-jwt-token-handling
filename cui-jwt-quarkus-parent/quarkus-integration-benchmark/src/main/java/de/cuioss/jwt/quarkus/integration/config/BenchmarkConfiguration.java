@@ -78,7 +78,7 @@ public class BenchmarkConfiguration {
      * @return Application server URL
      */
     public static String getApplicationUrl() {
-        String port = System.getProperty("test.https.port", "11443");
+        String port = System.getProperty("test.https.port", "10443");
         return System.getProperty("benchmark.application.url", "https://localhost:" + port);
     }
 

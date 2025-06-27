@@ -58,7 +58,7 @@ for i in {1..30}; do
     fi
     if [ $i -eq 30 ]; then
         echo "❌ Quarkus service failed to start within 30 seconds"
-        echo "Check logs with: docker compose logs quarkus-integration-benchmark"
+        echo "Check logs with: docker compose logs cui-jwt-integration-tests"
         exit 1
     fi
     echo "⏳ Waiting for Quarkus... (attempt $i/30)"
@@ -66,7 +66,7 @@ for i in {1..30}; do
 done
 
 # Extract native startup time from logs
-NATIVE_STARTUP=$(docker compose logs quarkus-integration-benchmark 2>/dev/null | grep "started in" | sed -n 's/.*started in \([0-9.]*\)s.*/\1/p' | tail -1)
+NATIVE_STARTUP=$(docker compose logs cui-jwt-integration-tests 2>/dev/null | grep "started in" | sed -n 's/.*started in \([0-9.]*\)s.*/\1/p' | tail -1)
 if [ ! -z "$NATIVE_STARTUP" ]; then
     echo "⚡ Native app startup: ${NATIVE_STARTUP}s (application only)"
 fi
@@ -81,12 +81,12 @@ echo ""
 echo "🎉 JWT Integration Benchmark Environment is running!"
 echo ""
 echo "📱 Application URLs:"
-echo "  🔍 Health Check:   https://localhost:11443/q/health"
-echo "  📊 Metrics:        https://localhost:11443/q/metrics"
+echo "  🔍 Health Check:   https://localhost:10443/q/health"
+echo "  📊 Metrics:        https://localhost:10443/q/metrics"
 echo "  🔑 Keycloak:       http://localhost:11080/auth"
 echo ""
 echo "🧪 Quick test commands:"
-echo "  curl -k https://localhost:11443/q/health/live"
+echo "  curl -k https://localhost:10443/q/health/live"
 echo "  curl http://localhost:11080/auth/health/ready"
 echo ""
 echo "🛑 To stop: ./scripts/stop-integration-container.sh"

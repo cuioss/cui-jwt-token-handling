@@ -50,11 +50,15 @@ INTEGRATION_SCORE=$(echo "$AVG_INTEGRATION_THROUGHPUT $AVG_INTEGRATION_LATENCY" 
   throughput = $1
   latency = $2
   if (throughput > 0 && latency > 0) {
-    # Score = (throughput * 0.7) + ((100/latency) * 0.3) - weighted for throughput priority
-    score = (throughput * 0.7) + ((100/latency) * 0.3)
+    # Score = (throughput * 0.57) + (latency_inverted * 0.40) + (error_resilience * 0.03)
+    # Using latency in milliseconds, convert to operations per second equivalent
+    latency_inverted = 1000 / latency
+    # Error resilience assumed as 0 for integration tests (no error injection)
+    error_resilience = 0
+    score = (throughput * 0.57) + (latency_inverted * 0.40) + (error_resilience * 0.03)
     printf "%.2f", score
   } else if (throughput > 0) {
-    printf "%.2f", throughput * 0.7
+    printf "%.2f", throughput * 0.57
   } else {
     print "0.00"
   }
