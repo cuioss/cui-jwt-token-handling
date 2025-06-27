@@ -81,6 +81,19 @@ import java.util.Set;
 public class IssuerConfig {
 
     /**
+     * Whether this issuer configuration is enabled.
+     * <p>
+     * When set to {@code false}, this issuer configuration will be ignored during
+     * token validation and will not attempt to use the underlying {@link JwksLoader}.
+     * This allows for easy enabling/disabling of specific issuers without removing
+     * their configuration.
+     * <p>
+     * Default value is {@code true}.
+     */
+    @Builder.Default
+    boolean enabled = true;
+
+    /**
      * The issuer URL that identifies the token issuer.
      * This value is matched against the "iss" claim in the token.
      */
@@ -140,7 +153,7 @@ public class IssuerConfig {
     JwksLoader jwksLoader;
 
     /**
-     * Initializes the JwksLoader if it's not already initialized.
+     * Initializes the JwksLoader if it's not already initialized and the issuer is enabled.
      * This method should be called by TokenValidator before using the JwksLoader.
      * It will initialize the JwksLoader based on the first available configuration in the following order:
      * <ol>
@@ -149,14 +162,20 @@ public class IssuerConfig {
      *   <li>In-memory JwksLoader (jwksContent)</li>
      * </ol>
      * <p>
+     * If the issuer is disabled ({@link #enabled} is {@code false}), this method will not
+     * initialize the JwksLoader and will leave it as {@code null}.
+     * <p>
      * This method is not thread-safe and should be called before the object is shared between threads.
      *
      * @param securityEventCounter the counter for security events, must not be null
-     * @throws IllegalStateException if no JwksLoader configuration is present
+     * @throws IllegalStateException if no JwksLoader configuration is present for an enabled issuer
      * @throws NullPointerException if securityEventCounter is null
      */
     public void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter) {
-
+        // Skip initialization if the issuer is disabled
+        if (!enabled) {
+            return;
+        }
 
         // Initialize JwksLoader based on the first available configuration
         if (httpJwksLoaderConfig != null) {
@@ -166,10 +185,48 @@ public class IssuerConfig {
         } else if (jwksContent != null) {
             jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
         } else {
-            // Throw exception if no configuration is present
-            throw new IllegalStateException("No JwksLoader configuration is present. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided. " + "Issuer: " + issuer + ", httpJwksLoaderConfig: " + (httpJwksLoaderConfig != null) + ", jwksFilePath: " + (jwksFilePath != null) + ", jwksContent: " + (jwksContent != null));
+            // Throw exception if no configuration is present for an enabled issuer
+            throw new IllegalStateException("No JwksLoader configuration is present for enabled issuer. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided. " + "Issuer: " + issuer + ", httpJwksLoaderConfig: " + (httpJwksLoaderConfig != null) + ", jwksFilePath: " + (jwksFilePath != null) + ", jwksContent: " + (jwksContent != null));
         }
 
+    }
+
+    /**
+     * Checks if this issuer configuration is healthy and can provide cryptographic keys.
+     * <p>
+     * This method provides a unified view of both configuration state (enabled) and runtime state (healthy).
+     * The health check process:
+     * <ol>
+     *   <li>Returns {@code false} immediately if the issuer is disabled</li>
+     *   <li>Returns {@code false} if the JwksLoader is not initialized</li>
+     *   <li>Delegates to the underlying {@link JwksLoader#isHealthy()} method</li>
+     * </ol>
+     * <p>
+     * For HTTP-based loaders, this may trigger lazy loading of JWKS content if not already loaded.
+     * The method is designed to be fail-fast and thread-safe.
+     *
+     * @return {@code true} if the issuer is enabled and the underlying JwksLoader is healthy,
+     *         {@code false} otherwise
+     * @since 1.0
+     */
+    public boolean isHealthy() {
+        // Return false if the issuer is disabled
+        if (!enabled) {
+            return false;
+        }
+
+        // Return false if the JwksLoader is not initialized
+        if (jwksLoader == null) {
+            return false;
+        }
+
+        // Delegate to the underlying JwksLoader
+        try {
+            return jwksLoader.isHealthy();
+        } catch (Exception e) {
+            // Return false for any exception during health check
+            return false;
+        }
     }
 
 }

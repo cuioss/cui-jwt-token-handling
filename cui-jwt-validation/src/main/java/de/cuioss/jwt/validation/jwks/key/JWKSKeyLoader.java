@@ -479,6 +479,19 @@ public class JWKSKeyLoader implements JwksLoader {
     }
 
     /**
+     * Checks if the JWKS loader is healthy and can access at least one cryptographic key.
+     * <p>
+     * For in-memory and file-based loaders, this checks if keys were successfully parsed
+     * during construction and are currently available.
+     *
+     * @return {@code true} if the loader can access at least one key, {@code false} otherwise
+     */
+    @Override
+    public boolean isHealthy() {
+        return status == LoaderStatus.OK && !keyInfoMap.isEmpty();
+    }
+
+    /**
      * Validates the structure and content of a JWKS object.
      * This method performs comprehensive validation to prevent malformed
      * or malicious JWKS content from being processed.

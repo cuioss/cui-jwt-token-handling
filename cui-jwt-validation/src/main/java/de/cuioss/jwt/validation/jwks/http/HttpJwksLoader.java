@@ -250,6 +250,37 @@ public class HttpJwksLoader implements JwksLoader, AutoCloseable {
     }
 
     /**
+     * Checks if the JWKS loader is healthy and can access at least one cryptographic key.
+     * <p>
+     * For HTTP-based loaders, this method implements lazy loading by triggering the initial
+     * JWKS loading and key verification if it hasn't been done yet. This method is fail-fast
+     * and will not block indefinitely on HTTP operations.
+     * <p>
+     * The health check process:
+     * <ol>
+     *   <li>Triggers lazy loading by resolving the cache if no keys are loaded yet</li>
+     *   <li>Verifies that at least one cryptographic key is accessible</li>
+     *   <li>Returns false immediately if HTTP operations fail or timeout</li>
+     * </ol>
+     *
+     * @return {@code true} if the loader can access at least one key, {@code false} otherwise
+     */
+    @Override
+    public boolean isHealthy() {
+        try {
+            // This will trigger lazy loading if keys haven't been loaded yet
+            JWKSKeyLoader currentLoader = cacheManager.resolve();
+            
+            // Check if the loader is healthy
+            return currentLoader != null && currentLoader.isHealthy();
+        } catch (Exception e) {
+            // Log the error but return false for any exception during health check
+            LOGGER.debug("Health check failed for HTTP JWKS loader: %s", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Closes resources used by this loader.
      * This method should be called when the loader is no longer needed.
      */
