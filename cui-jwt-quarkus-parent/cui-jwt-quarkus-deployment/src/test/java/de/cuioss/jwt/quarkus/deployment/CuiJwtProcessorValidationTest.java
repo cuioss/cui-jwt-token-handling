@@ -37,7 +37,7 @@ class CuiJwtProcessorValidationTest {
     @DisplayName("Should create feature without configuration validation")
     void shouldCreateFeatureWithoutConfigValidation() {
         // The simplified processor no longer validates configuration at build time
-        assertDoesNotThrow(() -> processor.feature(),
+        assertDoesNotThrow(processor::feature,
                 "Feature creation should not throw exceptions");
     }
 }

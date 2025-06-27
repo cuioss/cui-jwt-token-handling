@@ -278,14 +278,16 @@ class ConfigurationValidationTest {
         // Assert & Log all validation errors
         LOGGER.error("Multiple configuration validation errors found:");
         LOGGER.error("- Invalid issuer identifier: '" + identifier + "'");
+        LOGGER.error("- Invalid well-known URL: '" + wellKnownUrl + "'");
         LOGGER.error("- Conflicting configuration: both identifier and well-known URL specified");
         LOGGER.error("- Invalid max token size: " + maxTokenSize + " (must be positive)");
-        LOGGER.error("- Empty allowed algorithms list");
+        LOGGER.error("- Empty allowed algorithms list: '" + algorithms + "'");
         LOGGER.error("- Invalid JWKS refresh interval: " + refreshInterval + " (must be non-negative)");
 
         // Verify all errors were logged
         assertLogMessagePresentContaining(TestLogLevel.ERROR, "Multiple configuration validation errors");
         assertLogMessagePresentContaining(TestLogLevel.ERROR, "Invalid issuer identifier");
+        assertLogMessagePresentContaining(TestLogLevel.ERROR, "Invalid well-known URL");
         assertLogMessagePresentContaining(TestLogLevel.ERROR, "Conflicting configuration");
         assertLogMessagePresentContaining(TestLogLevel.ERROR, "Invalid max token size");
         assertLogMessagePresentContaining(TestLogLevel.ERROR, "Empty allowed algorithms");

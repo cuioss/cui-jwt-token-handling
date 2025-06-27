@@ -129,50 +129,50 @@ class JwtValidationConfigTest {
         @DisplayName("Should handle missing properties gracefully")
         void shouldHandleMissingPropertiesGracefully() {
             // Arrange
-            Config config = TestConfigurations.empty();
+            Config testConfig = TestConfigurations.empty();
 
             // Act & Assert
-            assertFalse(config.getOptionalValue("cui.jwt.issuers.nonexistent.enabled", Boolean.class).isPresent());
-            assertFalse(config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent());
+            assertFalse(testConfig.getOptionalValue("cui.jwt.issuers.nonexistent.enabled", Boolean.class).isPresent());
+            assertFalse(testConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent());
 
             // Should throw for required properties
             assertThrows(NoSuchElementException.class,
-                    () -> config.getValue("cui.jwt.issuers.nonexistent.enabled", Boolean.class));
+                    () -> testConfig.getValue("cui.jwt.issuers.nonexistent.enabled", Boolean.class));
         }
 
         @Test
         @DisplayName("Should handle invalid property values for numeric types")
         void shouldHandleInvalidPropertyValuesForNumericTypes() {
             // Arrange
-            Config config = new TestConfig(Map.of(
+            Config testConfig = new TestConfig(Map.of(
                     "cui.jwt.parser.max-token-size-bytes", "not-a-number",
                     "cui.jwt.parser.leeway-seconds", "invalid-integer"
             ));
 
             // Act & Assert - Should return empty Optional for invalid values
-            assertFalse(config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent());
-            assertFalse(config.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).isPresent());
+            assertFalse(testConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent());
+            assertFalse(testConfig.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).isPresent());
         }
 
         @Test
         @DisplayName("Should handle invalid boolean values")
         void shouldHandleInvalidBooleanValues() {
             // Arrange
-            Config config = new TestConfig(Map.of(
+            Config testConfig = new TestConfig(Map.of(
                     "cui.jwt.issuers.test.enabled", "not-a-boolean",
                     "cui.jwt.parser.validate-expiration", "invalid-bool"
             ));
 
             // Act & Assert - Boolean.valueOf returns false for non-'true' values (not empty Optional)
-            assertEquals(false, config.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(true));
-            assertEquals(false, config.getOptionalValue("cui.jwt.parser.validate-expiration", Boolean.class).orElse(true));
+            assertEquals(false, testConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(true));
+            assertEquals(false, testConfig.getOptionalValue("cui.jwt.parser.validate-expiration", Boolean.class).orElse(true));
         }
 
         @Test
         @DisplayName("Should validate configuration using builder pattern")
         void shouldValidateConfigurationUsingBuilderPattern() {
             // Arrange & Act
-            Config config = TestConfigurations.builder()
+            Config testConfig = TestConfigurations.builder()
                     .withIssuer("test")
                     .enabled(true)
                     .identifier("https://test.example.com")
@@ -187,30 +187,30 @@ class JwtValidationConfigTest {
                     .build();
 
             // Assert
-            assertTrue(config.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(false));
-            assertEquals("https://test.example.com", config.getOptionalValue("cui.jwt.issuers.test.identifier", String.class).orElse(null));
-            assertEquals("classpath:test.key", config.getOptionalValue("cui.jwt.issuers.test.public-key-location", String.class).orElse(null));
-            assertEquals(600, config.getOptionalValue("cui.jwt.issuers.test.jwks.refresh-interval-seconds", Integer.class).orElse(0));
-            assertEquals(4096, config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0));
-            assertEquals(30, config.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).orElse(0));
-            assertTrue(config.getOptionalValue("cui.jwt.parser.validate-expiration", Boolean.class).orElse(false));
-            assertEquals("RS256,ES256", config.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse(null));
+            assertTrue(testConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(false));
+            assertEquals("https://test.example.com", testConfig.getOptionalValue("cui.jwt.issuers.test.identifier", String.class).orElse(null));
+            assertEquals("classpath:test.key", testConfig.getOptionalValue("cui.jwt.issuers.test.public-key-location", String.class).orElse(null));
+            assertEquals(600, testConfig.getOptionalValue("cui.jwt.issuers.test.jwks.refresh-interval-seconds", Integer.class).orElse(0));
+            assertEquals(4096, testConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0));
+            assertEquals(30, testConfig.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).orElse(0));
+            assertTrue(testConfig.getOptionalValue("cui.jwt.parser.validate-expiration", Boolean.class).orElse(false));
+            assertEquals("RS256,ES256", testConfig.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse(null));
         }
 
         @Test
         @DisplayName("Should handle zero and negative values for timeouts")
         void shouldHandleZeroAndNegativeValuesForTimeouts() {
             // Arrange
-            Config config = new TestConfig(Map.of(
+            Config testConfig = new TestConfig(Map.of(
                     "cui.jwt.issuers.test.jwks.connection-timeout-seconds", "0",
                     "cui.jwt.issuers.test.jwks.read-timeout-seconds", "-1",
                     "cui.jwt.issuers.test.jwks.refresh-interval-seconds", "-5"
             ));
 
             // Act & Assert
-            assertEquals(0, config.getOptionalValue("cui.jwt.issuers.test.jwks.connection-timeout-seconds", Integer.class).orElse(-1));
-            assertEquals(-1, config.getOptionalValue("cui.jwt.issuers.test.jwks.read-timeout-seconds", Integer.class).orElse(-1));
-            assertEquals(-5, config.getOptionalValue("cui.jwt.issuers.test.jwks.refresh-interval-seconds", Integer.class).orElse(-1));
+            assertEquals(0, testConfig.getOptionalValue("cui.jwt.issuers.test.jwks.connection-timeout-seconds", Integer.class).orElse(-1));
+            assertEquals(-1, testConfig.getOptionalValue("cui.jwt.issuers.test.jwks.read-timeout-seconds", Integer.class).orElse(-1));
+            assertEquals(-5, testConfig.getOptionalValue("cui.jwt.issuers.test.jwks.refresh-interval-seconds", Integer.class).orElse(-1));
         }
 
         @Test
@@ -240,7 +240,7 @@ class JwtValidationConfigTest {
         @DisplayName("Should validate property type conversions")
         void shouldValidatePropertyTypeConversions() {
             // Arrange
-            Config config = new TestConfig(Map.of(
+            Config testConfig = new TestConfig(Map.of(
                     "string.property", "test-value",
                     "integer.property", "42",
                     "boolean.property", "true",
@@ -248,17 +248,17 @@ class JwtValidationConfigTest {
             ));
 
             // Act & Assert
-            assertEquals("test-value", config.getOptionalValue("string.property", String.class).orElse(null));
-            assertEquals(42, config.getOptionalValue("integer.property", Integer.class).orElse(0));
-            assertTrue(config.getOptionalValue("boolean.property", Boolean.class).orElse(false));
-            assertEquals(9876543210L, config.getOptionalValue("long.property", Long.class).orElse(0L));
+            assertEquals("test-value", testConfig.getOptionalValue("string.property", String.class).orElse(null));
+            assertEquals(42, testConfig.getOptionalValue("integer.property", Integer.class).orElse(0));
+            assertTrue(testConfig.getOptionalValue("boolean.property", Boolean.class).orElse(false));
+            assertEquals(9876543210L, testConfig.getOptionalValue("long.property", Long.class).orElse(0L));
         }
 
         @Test
         @DisplayName("Should handle empty and whitespace values")
         void shouldHandleEmptyAndWhitespaceValues() {
             // Arrange
-            Config config = new TestConfig(Map.of(
+            Config testConfig = new TestConfig(Map.of(
                     "empty.string", "",
                     "whitespace.string", "   ",
                     "empty.number", "",
@@ -266,13 +266,13 @@ class JwtValidationConfigTest {
             ));
 
             // Act & Assert
-            assertEquals("", config.getOptionalValue("empty.string", String.class).orElse(null));
-            assertEquals("   ", config.getOptionalValue("whitespace.string", String.class).orElse(null));
+            assertEquals("", testConfig.getOptionalValue("empty.string", String.class).orElse(null));
+            assertEquals("   ", testConfig.getOptionalValue("whitespace.string", String.class).orElse(null));
 
             // Empty values should fail conversion to numeric types
-            assertFalse(config.getOptionalValue("empty.number", Integer.class).isPresent());
+            assertFalse(testConfig.getOptionalValue("empty.number", Integer.class).isPresent());
             // Whitespace boolean returns false (Boolean.valueOf behavior)
-            assertEquals(false, config.getOptionalValue("whitespace.boolean", Boolean.class).orElse(true));
+            assertEquals(false, testConfig.getOptionalValue("whitespace.boolean", Boolean.class).orElse(true));
         }
     }
 }
