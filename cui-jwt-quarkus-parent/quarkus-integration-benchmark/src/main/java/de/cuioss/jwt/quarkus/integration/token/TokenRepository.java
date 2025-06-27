@@ -236,50 +236,84 @@ public class TokenRepository {
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                // Authenticate with Keycloak and get a token
-                Response response = RestAssured
-                        .given()
-                        .contentType("application/x-www-form-urlencoded")
-                        .formParam("client_id", BenchmarkConfiguration.getKeycloakClientId())
-                        .formParam("username", BenchmarkConfiguration.getKeycloakUsername())
-                        .formParam("password", BenchmarkConfiguration.getKeycloakPassword())
-                        .formParam("grant_type", "password")
-                        .when()
-                        .post(keycloakUrl + "/realms/" + BenchmarkConfiguration.getKeycloakRealm() + "/protocol/openid-connect/token");
-
-                if (response.statusCode() == 200) {
-                    Map<String, Object> tokenResponse = response.jsonPath().getMap("");
-                    String token = (String) tokenResponse.get("access_token");
-                    if (token != null && !token.isEmpty()) {
-                        return token;
-                    }
-                } else {
-                    LOGGER.warn("Failed to fetch token from Keycloak (attempt %s/%s). Status: %s, Response: %s",
-                            attempt, maxRetries, response.statusCode(), response.body().asString());
+                String token = attemptTokenFetch();
+                if (isValidToken(token)) {
+                    return token;
                 }
+                logTokenFetchFailure(attempt, maxRetries, "Empty or null token received");
             } catch (JsonPathException e) {
-                LOGGER.warn("JSON parsing error during token fetch (attempt %s/%s): %s", attempt, maxRetries, e.getMessage());
-                if (attempt == maxRetries) {
-                    throw new TokenFetchException("Failed to parse Keycloak response after " + maxRetries + " attempts", e);
-                }
+                handleJsonParsingError(attempt, maxRetries, e);
             } catch (RuntimeException e) {
-                LOGGER.warn("Network/HTTP error during token fetch (attempt %s/%s): %s", attempt, maxRetries, e.getMessage());
-                if (attempt == maxRetries) {
-                    throw new TokenFetchException("Failed to fetch token from Keycloak after " + maxRetries + " attempts", e);
-                }
+                handleNetworkError(attempt, maxRetries, e);
             }
 
-            if (attempt < maxRetries) {
-                try {
-                    LOGGER.debug("Retrying token fetch in %sms...", retryDelay);
-                    Thread.sleep(retryDelay);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new TokenFetchException("Token fetch interrupted during retry delay", e);
-                }
-            }
+            waitBeforeRetry(attempt, maxRetries, retryDelay);
         }
 
         throw new TokenFetchException("Failed to fetch token from Keycloak after " + maxRetries + " attempts - no successful response");
+    }
+
+    private String attemptTokenFetch() {
+        Response response = createTokenRequest();
+        return extractTokenFromResponse(response);
+    }
+
+    private Response createTokenRequest() {
+        String tokenUrl = keycloakUrl + "/realms/" + BenchmarkConfiguration.getKeycloakRealm() + "/protocol/openid-connect/token";
+        
+        return RestAssured
+                .given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("client_id", BenchmarkConfiguration.getKeycloakClientId())
+                .formParam("username", BenchmarkConfiguration.getKeycloakUsername())
+                .formParam("password", BenchmarkConfiguration.getKeycloakPassword())
+                .formParam("grant_type", "password")
+                .when()
+                .post(tokenUrl);
+    }
+
+    private String extractTokenFromResponse(Response response) {
+        if (response.statusCode() != 200) {
+            LOGGER.debug("Non-200 response from Keycloak. Status: %s, Response: %s",
+                    response.statusCode(), response.body().asString());
+            return null;
+        }
+
+        Map<String, Object> tokenResponse = response.jsonPath().getMap("");
+        return (String) tokenResponse.get("access_token");
+    }
+
+    private boolean isValidToken(String token) {
+        return token != null && !token.isEmpty();
+    }
+
+    private void logTokenFetchFailure(int attempt, int maxRetries, String reason) {
+        LOGGER.warn("Failed to fetch token from Keycloak (attempt %s/%s). Reason: %s", attempt, maxRetries, reason);
+    }
+
+    private void handleJsonParsingError(int attempt, int maxRetries, JsonPathException e) throws TokenFetchException {
+        LOGGER.warn("JSON parsing error during token fetch (attempt %s/%s): %s", attempt, maxRetries, e.getMessage());
+        if (attempt == maxRetries) {
+            throw new TokenFetchException("Failed to parse Keycloak response after " + maxRetries + " attempts", e);
+        }
+    }
+
+    private void handleNetworkError(int attempt, int maxRetries, RuntimeException e) throws TokenFetchException {
+        LOGGER.warn("Network/HTTP error during token fetch (attempt %s/%s): %s", attempt, maxRetries, e.getMessage());
+        if (attempt == maxRetries) {
+            throw new TokenFetchException("Failed to fetch token from Keycloak after " + maxRetries + " attempts", e);
+        }
+    }
+
+    private void waitBeforeRetry(int attempt, int maxRetries, int retryDelay) throws TokenFetchException {
+        if (attempt < maxRetries) {
+            try {
+                LOGGER.debug("Retrying token fetch in %sms...", retryDelay);
+                Thread.sleep(retryDelay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new TokenFetchException("Token fetch interrupted during retry delay", e);
+            }
+        }
     }
 }
