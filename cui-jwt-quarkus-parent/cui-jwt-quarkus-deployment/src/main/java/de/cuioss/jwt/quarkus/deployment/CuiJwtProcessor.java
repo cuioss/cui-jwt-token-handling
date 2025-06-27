@@ -89,7 +89,6 @@ public class CuiJwtProcessor {
     }
 
 
-
     /**
      * Register classes that need to be initialized at runtime.
      *

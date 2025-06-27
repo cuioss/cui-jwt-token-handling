@@ -14,3 +14,13 @@ updates:
     directory: /
     schedule:
       interval: daily
+
+  - package-ecosystem: docker
+    directory: "/cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: npm
+    directory: "/cui-jwt-quarkus-parent/cui-jwt-quarkus-deployment"
+    schedule:
+      interval: "weekly"
