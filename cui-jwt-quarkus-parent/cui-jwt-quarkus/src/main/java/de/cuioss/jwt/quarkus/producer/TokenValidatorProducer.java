@@ -15,21 +15,24 @@
  */
 package de.cuioss.jwt.quarkus.producer;
 
+import de.cuioss.jwt.quarkus.config.JwtPropertyKeys;
 import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
+import de.cuioss.jwt.validation.well_known.WellKnownHandler;
 import de.cuioss.tools.logging.CuiLogger;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.inject.Produces;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.Getter;
 import org.eclipse.microprofile.config.Config;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * CDI producer for {@link TokenValidator} instances.
@@ -62,11 +65,15 @@ public class TokenValidatorProducer {
 
     private final SecurityEventCounter securityEventCounter = new SecurityEventCounter();
 
-    @Inject
-    Config config;
+    private final Config config;
 
     @Getter
     private List<IssuerConfig> issuerConfigs;
+
+    public TokenValidatorProducer(Config config) {
+        this.config = config;
+        this.issuerConfigs = new ArrayList<>();
+    }
 
 
     /**
@@ -101,7 +108,7 @@ public class TokenValidatorProducer {
 
         // Validate parser configuration using direct property access
         try {
-            int maxTokenSize = config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(8192);
+            int maxTokenSize = config.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE_BYTES, Integer.class).orElse(8192);
             if (maxTokenSize <= 0) {
                 LOGGER.error("maxTokenSizeBytes must be positive, but was: " + maxTokenSize);
                 throw new IllegalStateException("maxTokenSizeBytes must be positive, but was: " + maxTokenSize);
@@ -116,42 +123,24 @@ public class TokenValidatorProducer {
 
     /**
      * Creates issuer configurations from direct property access.
+     * Dynamically discovers all configured issuers by scanning properties starting with cui.jwt.issuers.*
      */
     private List<IssuerConfig> createIssuerConfigsFromProperties() {
         List<IssuerConfig> issuers = new ArrayList<>();
+        Set<String> issuerNames = discoverIssuerNames();
 
-        // Check for default issuer
-        if (config.getOptionalValue("cui.jwt.issuers.default.enabled", Boolean.class).orElse(false)) {
-            String url = config.getOptionalValue("cui.jwt.issuers.default.url", String.class).orElse(null);
-            if (url != null) {
-                IssuerConfig issuer = createIssuerConfig("default", url);
-                if (issuer != null) {
-                    issuers.add(issuer);
-                    LOGGER.info("Added default issuer: " + url);
-                }
-            }
-        }
-
-        // Check for keycloak issuer
-        if (config.getOptionalValue("cui.jwt.issuers.keycloak.enabled", Boolean.class).orElse(false)) {
-            String url = config.getOptionalValue("cui.jwt.issuers.keycloak.url", String.class).orElse(null);
-            if (url != null) {
-                IssuerConfig issuer = createIssuerConfig("keycloak", url);
-                if (issuer != null) {
-                    issuers.add(issuer);
-                    LOGGER.info("Added keycloak issuer: " + url);
-                }
-            }
-        }
-
-        // Check for wellknown issuer
-        if (config.getOptionalValue("cui.jwt.issuers.wellknown.enabled", Boolean.class).orElse(false)) {
-            String url = config.getOptionalValue("cui.jwt.issuers.wellknown.url", String.class).orElse(null);
-            if (url != null) {
-                IssuerConfig issuer = createIssuerConfig("wellknown", url);
-                if (issuer != null) {
-                    issuers.add(issuer);
-                    LOGGER.info("Added wellknown issuer: " + url);
+        for (String issuerName : issuerNames) {
+            boolean enabled = config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".enabled", Boolean.class).orElse(false);
+            if (enabled) {
+                String issuerIdentifier = resolveIssuerIdentifier(issuerName);
+                if (issuerIdentifier != null) {
+                    IssuerConfig issuer = createIssuerConfig(issuerName, issuerIdentifier);
+                    if (issuer != null) {
+                        issuers.add(issuer);
+                        LOGGER.info("Added issuer '%s': %s", issuerName, issuerIdentifier);
+                    }
+                } else {
+                    LOGGER.warn("Issuer '%s' is enabled but missing issuer identifier configuration", issuerName);
                 }
             }
         }
@@ -160,32 +149,121 @@ public class TokenValidatorProducer {
     }
 
     /**
+     * Discovers all configured issuer names by scanning properties starting with cui.jwt.issuers.*
+     */
+    private Set<String> discoverIssuerNames() {
+        Set<String> issuerNames = new HashSet<>();
+        String prefix = JwtPropertyKeys.ISSUERS.BASE + ".";
+
+        for (String propertyName : config.getPropertyNames()) {
+            if (propertyName.startsWith(prefix)) {
+                String remainder = propertyName.substring(prefix.length());
+                int firstDot = remainder.indexOf('.');
+                if (firstDot > 0) {
+                    String issuerName = remainder.substring(0, firstDot);
+                    issuerNames.add(issuerName);
+                }
+            }
+        }
+
+        LOGGER.debug("Discovered issuer names: %s", issuerNames);
+        return issuerNames;
+    }
+
+    /**
+     * Resolves the issuer identifier for a given issuer name.
+     * Validates that only one source of issuer identifier is configured:
+     * either explicit identifier or well-known discovery.
+     */
+    private String resolveIssuerIdentifier(String issuerName) {
+        String explicitIdentifier = config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".identifier", String.class).orElse(null);
+        String wellKnownUrl = config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".well-known-url", String.class).orElse(null);
+
+        if (explicitIdentifier != null && wellKnownUrl != null) {
+            String errorMessage = "Issuer '%s' has both explicit identifier and well-known-url configured. Only one can be specified.".formatted(issuerName);
+            LOGGER.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+
+        if (explicitIdentifier != null) {
+            LOGGER.debug("Using explicit identifier for issuer '%s': %s", issuerName, explicitIdentifier);
+            return explicitIdentifier;
+        }
+
+        if (wellKnownUrl != null) {
+            try {
+                WellKnownHandler wellKnownHandler = WellKnownHandler.builder()
+                        .url(wellKnownUrl)
+                        .connectTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
+                        .readTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
+                        .build();
+
+                String discoveredIssuer = wellKnownHandler.getIssuer().getUri().toString();
+                LOGGER.debug("Discovered issuer identifier from well-known URL for issuer '%s': %s", issuerName, discoveredIssuer);
+                return discoveredIssuer;
+            } catch (Exception e) {
+                LOGGER.error("Failed to discover issuer identifier from well-known URL for issuer '%s': %s", issuerName, e.getMessage());
+                throw new IllegalStateException("Failed to discover issuer identifier from well-known URL for issuer '%s': %s".formatted(issuerName, e.getMessage()), e);
+            }
+        }
+
+        LOGGER.warn("No issuer identifier configuration found for issuer '%s'", issuerName);
+        return null;
+    }
+
+    /**
      * Creates a single IssuerConfig from properties for a given issuer name.
      */
-    private IssuerConfig createIssuerConfig(String issuerName, String issuerUrl) {
+    private IssuerConfig createIssuerConfig(String issuerName, String issuerIdentifier) {
         try {
-            IssuerConfig.IssuerConfigBuilder builder = IssuerConfig.builder().issuer(issuerUrl);
+            IssuerConfig.IssuerConfigBuilder builder = IssuerConfig.builder().issuer(issuerIdentifier);
 
             // Check for public key location
-            String publicKeyLocation = config.getOptionalValue("cui.jwt.issuers." + issuerName + ".public-key-location", String.class).orElse(null);
+            String publicKeyLocation = config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".public-key-location", String.class).orElse(null);
             if (publicKeyLocation != null) {
                 builder.jwksFilePath(publicKeyLocation);
                 LOGGER.debug("Set public key location for " + issuerName + ": " + publicKeyLocation);
             }
 
-            // Check for JWKS URL
-            String jwksUrl = config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.url", String.class).orElse(null);
+            // Check for JWKS URL and well-known URL - validate they're not both configured
+            String jwksUrl = config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.url", String.class).orElse(null);
+            String wellKnownUrl = config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".well-known-url", String.class).orElse(null);
+
+            if (jwksUrl != null && wellKnownUrl != null) {
+                String errorMessage = "Issuer '%s' has both jwks.url and well-known-url configured. Only one can be specified.".formatted(issuerName);
+                LOGGER.error(errorMessage);
+                throw new IllegalStateException(errorMessage);
+            }
+
             if (jwksUrl != null) {
-                // Create simple JWKS config
+                // Create JWKS config with direct URL
                 HttpJwksLoaderConfig jwksConfig =
                         HttpJwksLoaderConfig.builder()
                                 .url(jwksUrl)
-                                .refreshIntervalSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.refresh-interval-seconds", Integer.class).orElse(300))
-                                .connectTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
-                                .readTimeoutSeconds(config.getOptionalValue("cui.jwt.issuers." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
+                                .refreshIntervalSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.REFRESH_INTERVAL_SECONDS_PARTIAL, Integer.class).orElse(300))
+                                .connectTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.CONNECTION_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
+                                .readTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.READ_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
                                 .build();
                 builder.httpJwksLoaderConfig(jwksConfig);
                 LOGGER.debug("Set JWKS URL for " + issuerName + ": " + jwksUrl);
+            } else if (wellKnownUrl != null) {
+                // Create WellKnownHandler first
+                WellKnownHandler wellKnownHandler = WellKnownHandler.builder()
+                        .url(wellKnownUrl)
+                        .connectTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.CONNECTION_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
+                        .readTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.READ_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
+                        .build();
+
+                // Create JWKS config with well-known discovery
+                HttpJwksLoaderConfig jwksConfig =
+                        HttpJwksLoaderConfig.builder()
+                                .wellKnown(wellKnownHandler)
+                                .refreshIntervalSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.REFRESH_INTERVAL_SECONDS_PARTIAL, Integer.class).orElse(300))
+                                .connectTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.CONNECTION_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
+                                .readTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.READ_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
+                                .build();
+                builder.httpJwksLoaderConfig(jwksConfig);
+                LOGGER.debug("Set well-known URL for " + issuerName + ": " + wellKnownUrl);
             }
 
             return builder.build();
@@ -262,13 +340,13 @@ public class TokenValidatorProducer {
     private ParserConfig createParserConfigFromProperties() {
         try {
             // Read parser configuration with defaults
-            int maxTokenSizeBytes = config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(8192);
-            boolean validateExpiration = config.getOptionalValue("cui.jwt.parser.validate-expiration", Boolean.class).orElse(true);
-            boolean validateIssuedAt = config.getOptionalValue("cui.jwt.parser.validate-issued-at", Boolean.class).orElse(false);
-            boolean validateNotBefore = config.getOptionalValue("cui.jwt.parser.validate-not-before", Boolean.class).orElse(true);
-            int leewaySeconds = config.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).orElse(30);
-            String audience = config.getOptionalValue("cui.jwt.parser.audience", String.class).orElse(null);
-            String allowedAlgorithms = config.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse("RS256,RS384,RS512,ES256,ES384,ES512");
+            int maxTokenSizeBytes = config.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE_BYTES, Integer.class).orElse(8192);
+            boolean validateExpiration = config.getOptionalValue(JwtPropertyKeys.PARSER.VALIDATE_EXPIRATION, Boolean.class).orElse(true);
+            boolean validateIssuedAt = config.getOptionalValue(JwtPropertyKeys.PARSER.VALIDATE_ISSUED_AT, Boolean.class).orElse(false);
+            boolean validateNotBefore = config.getOptionalValue(JwtPropertyKeys.PARSER.VALIDATE_NOT_BEFORE, Boolean.class).orElse(true);
+            int leewaySeconds = config.getOptionalValue(JwtPropertyKeys.PARSER.LEEWAY_SECONDS, Integer.class).orElse(30);
+            String audience = config.getOptionalValue(JwtPropertyKeys.PARSER.AUDIENCE, String.class).orElse(null);
+            String allowedAlgorithms = config.getOptionalValue(JwtPropertyKeys.PARSER.ALLOWED_ALGORITHMS, String.class).orElse("RS256,RS384,RS512,ES256,ES384,ES512");
 
             // Note: The ParserConfig class only supports maxTokenSize configuration
             // Other validation settings like expiration, issuedAt, notBefore, leeway, audience, and algorithms

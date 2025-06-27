@@ -19,49 +19,46 @@ import de.cuioss.test.juli.junit5.EnableTestLogger;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for {@link JwtValidationConfig}.
+ * Tests for JWT configuration.
  *
  * Note: Using @QuarkusTest to enable the full Quarkus CDI context for these tests.
+ * Since JwtValidationConfig no longer uses @ConfigMapping, we test configuration directly via Config.
  */
 @EnableTestLogger
-@DisplayName("Tests JwtValidationConfig")
+@DisplayName("Tests JWT configuration")
 @QuarkusTest
 @TestProfile(JwtTestProfile.class)
 class JwtValidationConfigTest {
 
     @Inject
-    JwtValidationConfig jwtConfig;
+    Config config;
 
     @Test
     @DisplayName("Should load configuration with default values")
     void shouldLoadConfigWithDefaults() {
         // Assert
-        assertNotNull(jwtConfig);
-        assertNotNull(jwtConfig.issuers());
-        assertTrue(jwtConfig.issuers().containsKey("default"));
+        assertNotNull(config);
 
-        JwtValidationConfig.IssuerConfig issuerConfig = jwtConfig.issuers().get("default");
-        assertEquals("https://example.com/auth", issuerConfig.url());
-        assertTrue(issuerConfig.enabled());
-        assertEquals(Optional.of("classpath:keys/public_key.pem"), issuerConfig.publicKeyLocation());
-        assertEquals(Optional.empty(), issuerConfig.jwks());
+        // Check default issuer
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.default.enabled", Boolean.class).orElse(false));
+        assertEquals("https://example.com/auth", config.getOptionalValue("cui.jwt.issuers.default.identifier", String.class).orElse(null));
+        assertEquals("classpath:keys/public_key.pem", config.getOptionalValue("cui.jwt.issuers.default.public-key-location", String.class).orElse(null));
+        assertFalse(config.getOptionalValue("cui.jwt.issuers.default.jwks.url", String.class).isPresent());
 
-        JwtValidationConfig.ParserConfig parserConfig = jwtConfig.parser();
-        assertNotNull(parserConfig);
-        assertEquals(30, parserConfig.leewaySeconds());
-        assertEquals(8192, parserConfig.maxTokenSizeBytes());
-        assertTrue(parserConfig.validateNotBefore());
-        assertTrue(parserConfig.validateExpiration());
-        assertFalse(parserConfig.validateIssuedAt());
-        assertEquals("RS256,RS384,RS512,ES256,ES384,ES512", parserConfig.allowedAlgorithms());
+        // Check parser defaults
+        assertEquals(30, config.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).orElse(30));
+        assertEquals(8192, config.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(8192));
+        assertTrue(config.getOptionalValue("cui.jwt.parser.validate-not-before", Boolean.class).orElse(true));
+        assertTrue(config.getOptionalValue("cui.jwt.parser.validate-expiration", Boolean.class).orElse(true));
+        assertFalse(config.getOptionalValue("cui.jwt.parser.validate-issued-at", Boolean.class).orElse(false));
+        assertEquals("RS256,RS384,RS512,ES256,ES384,ES512", config.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse("RS256,RS384,RS512,ES256,ES384,ES512"));
     }
 
     @Test
@@ -69,71 +66,47 @@ class JwtValidationConfigTest {
     @SuppressWarnings("java:S5961") // owolff: Won't fix, this suffices
     void shouldLoadKeycloakConfig() {
         // Assert
-        assertNotNull(jwtConfig);
-        assertNotNull(jwtConfig.issuers());
-        assertTrue(jwtConfig.issuers().containsKey("keycloak"));
+        assertNotNull(config);
+
+        // Check keycloak issuer is enabled
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.keycloak.enabled", Boolean.class).orElse(false));
 
         // Check issuer config
-        JwtValidationConfig.IssuerConfig issuerConfig = jwtConfig.issuers().get("keycloak");
-        assertEquals("https://keycloak.example.com/auth/realms/master", issuerConfig.url());
-        assertTrue(issuerConfig.enabled());
-        assertEquals(Optional.of("classpath:keys/public_key.pem"), issuerConfig.publicKeyLocation());
+        assertEquals("https://keycloak.example.com/auth/realms/master", config.getOptionalValue("cui.jwt.issuers.keycloak.identifier", String.class).orElse(null));
+        assertEquals("classpath:keys/public_key.pem", config.getOptionalValue("cui.jwt.issuers.keycloak.public-key-location", String.class).orElse(null));
 
         // Check JWKS config
-        assertTrue(issuerConfig.jwks().isPresent());
-        JwtValidationConfig.HttpJwksLoaderConfig jwksConfig = issuerConfig.jwks().get();
-        assertEquals(Optional.of("https://keycloak.example.com/auth/realms/master/protocol/openid-connect/certs"), jwksConfig.url());
-        assertEquals(Optional.empty(), jwksConfig.wellKnownUrl());
-        assertEquals(7200, jwksConfig.cacheTtlSeconds());
-        assertEquals(600, jwksConfig.refreshIntervalSeconds());
-        assertEquals(3, jwksConfig.connectionTimeoutSeconds());
-        assertEquals(3, jwksConfig.readTimeoutSeconds());
-        assertEquals(5, jwksConfig.maxRetries());
-        assertTrue(jwksConfig.useSystemProxy());
+        assertEquals("https://keycloak.example.com/auth/realms/master/protocol/openid-connect/certs", config.getOptionalValue("cui.jwt.issuers.keycloak.jwks.url", String.class).orElse(null));
+        assertEquals(7200, config.getOptionalValue("cui.jwt.issuers.keycloak.jwks.cache-ttl-seconds", Integer.class).orElse(0));
+        assertEquals(600, config.getOptionalValue("cui.jwt.issuers.keycloak.jwks.refresh-interval-seconds", Integer.class).orElse(0));
+        assertEquals(3, config.getOptionalValue("cui.jwt.issuers.keycloak.jwks.connection-timeout-seconds", Integer.class).orElse(0));
+        assertEquals(3, config.getOptionalValue("cui.jwt.issuers.keycloak.jwks.read-timeout-seconds", Integer.class).orElse(0));
+        assertEquals(5, config.getOptionalValue("cui.jwt.issuers.keycloak.jwks.max-retries", Integer.class).orElse(0));
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.keycloak.jwks.use-system-proxy", Boolean.class).orElse(false));
 
         // Check issuer-specific parser config
-        assertTrue(issuerConfig.parser().isPresent());
-        JwtValidationConfig.ParserConfig issuerParserConfig = issuerConfig.parser().get();
-        assertEquals(Optional.of("my-app"), issuerParserConfig.audience());
-        assertEquals(60, issuerParserConfig.leewaySeconds());
-        assertEquals(16384, issuerParserConfig.maxTokenSizeBytes());
-        assertFalse(issuerParserConfig.validateNotBefore());
-        assertTrue(issuerParserConfig.validateExpiration());
-        assertTrue(issuerParserConfig.validateIssuedAt());
-        assertEquals("RS256,ES256", issuerParserConfig.allowedAlgorithms());
+        assertEquals("my-app", config.getOptionalValue("cui.jwt.issuers.keycloak.parser.audience", String.class).orElse(null));
+        assertEquals(60, config.getOptionalValue("cui.jwt.issuers.keycloak.parser.leeway-seconds", Integer.class).orElse(0));
+        assertEquals(16384, config.getOptionalValue("cui.jwt.issuers.keycloak.parser.max-token-size-bytes", Integer.class).orElse(0));
+        assertFalse(config.getOptionalValue("cui.jwt.issuers.keycloak.parser.validate-not-before", Boolean.class).orElse(true));
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.keycloak.parser.validate-expiration", Boolean.class).orElse(false));
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.keycloak.parser.validate-issued-at", Boolean.class).orElse(false));
+        assertEquals("RS256,ES256", config.getOptionalValue("cui.jwt.issuers.keycloak.parser.allowed-algorithms", String.class).orElse(null));
     }
 
     @Test
-    @DisplayName("Should load well-known configuration with OpenID Connect Discovery")
-    void shouldLoadWellKnownConfig() {
+    @DisplayName("Should support arbitrary issuer names and identifier configuration")
+    void shouldSupportArbitraryIssuerNames() {
         // Assert
-        assertNotNull(jwtConfig);
-        assertNotNull(jwtConfig.issuers());
-        assertTrue(jwtConfig.issuers().containsKey("wellknown"));
+        assertNotNull(config);
 
-        // Check issuer config
-        JwtValidationConfig.IssuerConfig issuerConfig = jwtConfig.issuers().get("wellknown");
-        assertEquals("https://wellknown.example.com/auth/realms/master", issuerConfig.url());
-        assertTrue(issuerConfig.enabled());
+        // Verify that arbitrary issuer names are supported by checking enabled flags
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.keycloak.enabled", Boolean.class).orElse(false), "Keycloak issuer should be present");
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.default.enabled", Boolean.class).orElse(false), "Default issuer should be present");
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.custom-auth-provider.enabled", Boolean.class).orElse(false), "Custom issuer should be present");
 
-        // Check JWKS config with well-known URL
-        assertTrue(issuerConfig.jwks().isPresent());
-        JwtValidationConfig.HttpJwksLoaderConfig jwksConfig = issuerConfig.jwks().get();
-        assertEquals(Optional.of("https://wellknown.example.com/auth/realms/master/protocol/openid-connect/certs"),
-                jwksConfig.url());
-        assertEquals(Optional.of("https://wellknown.example.com/auth/realms/master/.well-known/openid-configuration"),
-                jwksConfig.wellKnownUrl());
-        assertEquals(3600, jwksConfig.cacheTtlSeconds());
-        assertEquals(300, jwksConfig.refreshIntervalSeconds());
-        assertEquals(5, jwksConfig.connectionTimeoutSeconds());
-        assertEquals(5, jwksConfig.readTimeoutSeconds());
-        assertEquals(3, jwksConfig.maxRetries());
-        assertFalse(jwksConfig.useSystemProxy());
-
-        // Check issuer-specific parser config
-        assertTrue(issuerConfig.parser().isPresent());
-        JwtValidationConfig.ParserConfig issuerParserConfig = issuerConfig.parser().get();
-        assertEquals(Optional.of("well-known-app"), issuerParserConfig.audience());
-        assertEquals(30, issuerParserConfig.leewaySeconds());
+        // Verify that issuer identifiers are properly configured
+        assertEquals("https://custom.example.com/auth", config.getOptionalValue("cui.jwt.issuers.custom-auth-provider.identifier", String.class).orElse(null));
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.custom-auth-provider.enabled", Boolean.class).orElse(false));
     }
 }

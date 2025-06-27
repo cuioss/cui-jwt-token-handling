@@ -19,6 +19,7 @@ import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.Config;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>
  * This test checks:
  * <ul>
- * <li>The configuration bean is properly registered and available</li>
+ * <li>The configuration is properly available</li>
  * <li>The extension can be deployed and used</li>
  * </ul>
  */
@@ -48,32 +49,25 @@ class CuiJwtProcessorTest {
                     .addClass(JwtValidationConfig.class))
             .withConfigurationResource("application-test.properties");
 
-    private final JwtValidationConfig jwtConfig;
-
-    /**
-     * Constructor for CuiJwtProcessorTest.
-     *
-     * @param jwtConfig the JWT validation configuration
-     */
     @Inject
-    CuiJwtProcessorTest(JwtValidationConfig jwtConfig) {
-        this.jwtConfig = jwtConfig;
-    }
+    Config config;
 
     /**
-     * Test that verifies the CDI bean is properly registered and available.
-     * This indirectly tests that the feature() and registerConfigMapping() build steps
-     * work correctly, as they are needed for the configuration to be available.
+     * Test that verifies the configuration is properly available.
+     * This tests that the extension is properly set up and configuration can be accessed.
      */
     @Test
     @DisplayName("Should have JWT configuration available and properly configured")
     void jwtConfigAvailable() {
-        assertNotNull(jwtConfig, "JwtValidationConfig should be injected");
-        assertNotNull(jwtConfig.issuers(), "Issuers should not be null");
-        assertNotNull(jwtConfig.parser(), "Parser config should not be null");
+        assertNotNull(config, "Config should be injected");
 
         // Verify the default issuer is configured
-        assertTrue(jwtConfig.issuers().containsKey("default"), "Should contain default issuer");
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.default.enabled", Boolean.class).orElse(false),
+                "Default issuer should be enabled");
+        assertTrue(config.getOptionalValue("cui.jwt.issuers.default.identifier", String.class).isPresent(),
+                "Default issuer should have identifier");
+        assertTrue(config.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).isPresent(),
+                "Parser config should be present");
     }
 
     @Test

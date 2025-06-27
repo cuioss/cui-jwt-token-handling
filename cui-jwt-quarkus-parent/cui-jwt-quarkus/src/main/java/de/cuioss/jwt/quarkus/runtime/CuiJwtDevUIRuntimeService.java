@@ -15,12 +15,11 @@
  */
 package de.cuioss.jwt.quarkus.runtime;
 
-import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.MinimalTokenContent;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
-import io.smallrye.config.SmallRyeConfig;
+import de.cuioss.tools.logging.CuiLogger;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import org.eclipse.microprofile.config.Config;
@@ -38,6 +37,8 @@ import java.util.Map;
  */
 @ApplicationScoped
 public class CuiJwtDevUIRuntimeService {
+
+    private static final CuiLogger LOGGER = new CuiLogger(CuiJwtDevUIRuntimeService.class);
 
     // String constants for commonly used literals
     private static final String RUNTIME = "RUNTIME";
@@ -103,7 +104,7 @@ public class CuiJwtDevUIRuntimeService {
         boolean isEnabled = isJwtEnabled();
         if (isEnabled) {
             jwksInfo.put(MESSAGE, "JWKS endpoints are configured and active");
-            jwksInfo.put("issuersConfigured", getJwtValidationConfig().issuers().size());
+            jwksInfo.put("issuersConfigured", countEnabledIssuers());
         } else {
             jwksInfo.put(MESSAGE, "JWKS endpoints are disabled");
             jwksInfo.put("issuersConfigured", 0);
@@ -128,7 +129,7 @@ public class CuiJwtDevUIRuntimeService {
 
         if (isEnabled) {
             configMap.put(MESSAGE, "JWT validation is properly configured");
-            configMap.put("issuersCount", getJwtValidationConfig().issuers().size());
+            configMap.put("issuersCount", countEnabledIssuers());
         } else {
             configMap.put(MESSAGE, JWT_VALIDATION_DISABLED);
             configMap.put("issuersCount", 0);
@@ -242,39 +243,44 @@ public class CuiJwtDevUIRuntimeService {
     }
 
     /**
-     * Retrieves the JWT validation configuration using direct ConfigMapping approach.
-     * <p>
-     * This method uses the same pattern as TokenValidatorProducer for accessing @ConfigMapping interfaces
-     * in Quarkus extensions, avoiding CDI injection issues that can occur in extension contexts.
-     * </p>
-     * 
-     * @return the JWT validation configuration instance
-     * @throws RuntimeException if configuration mapping cannot be created
-     */
-    private JwtValidationConfig getJwtValidationConfig() {
-        try {
-            // Use SmallRyeConfig.getConfigMapping() for direct access to @ConfigMapping interfaces
-            // This is the recommended approach in Quarkus extensions to avoid CDI injection issues
-            return config.unwrap(SmallRyeConfig.class)
-                    .getConfigMapping(JwtValidationConfig.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to retrieve JWT validation configuration: " + e.getMessage(), e);
-        }
-    }
-
-    /**
      * Helper method to determine if JWT validation is enabled.
      * JWT is considered enabled if there are any enabled issuers configured.
+     * Uses direct config access instead of ConfigMapping to avoid issues.
      *
      * @return true if JWT validation is enabled, false otherwise
      */
     private boolean isJwtEnabled() {
         try {
-            return getJwtValidationConfig().issuers().values().stream()
-                    .anyMatch(JwtValidationConfig.IssuerConfig::enabled);
+            return countEnabledIssuers() > 0;
         } catch (Exception e) {
             // If configuration cannot be loaded, consider JWT disabled
             return false;
+        }
+    }
+
+    /**
+     * Counts the number of enabled issuers using direct config access.
+     * This avoids ConfigMapping issues in native images and extensions.
+     *
+     * @return number of enabled issuers
+     */
+    private int countEnabledIssuers() {
+        try {
+            int count = 0;
+            String prefix = "cui.jwt.issuers.";
+
+            for (String propertyName : config.getPropertyNames()) {
+                if (propertyName.startsWith(prefix) && propertyName.endsWith(".enabled")) {
+                    boolean enabled = config.getOptionalValue(propertyName, Boolean.class).orElse(false);
+                    if (enabled) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        } catch (Exception e) {
+            LOGGER.debug("Error counting enabled issuers: " + e.getMessage());
+            return 0;
         }
     }
 }

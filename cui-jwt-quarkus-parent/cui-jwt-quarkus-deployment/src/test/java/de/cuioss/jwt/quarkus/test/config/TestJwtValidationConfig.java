@@ -67,8 +67,13 @@ public class TestJwtValidationConfig {
     private IssuerConfig createDefaultIssuerConfig() {
         return new IssuerConfig() {
             @Override
-            public String url() {
-                return "https://example.com/auth";
+            public Optional<String> identifier() {
+                return Optional.of("https://example.com/auth");
+            }
+
+            @Override
+            public Optional<String> wellKnownUrl() {
+                return Optional.empty();
             }
 
             @Override
@@ -96,8 +101,13 @@ public class TestJwtValidationConfig {
     private IssuerConfig createTestIssuerConfig() {
         return new IssuerConfig() {
             @Override
-            public String url() {
-                return "https://test-idp.example.com/auth/realms/test";
+            public Optional<String> identifier() {
+                return Optional.of("https://test-idp.example.com/auth/realms/test");
+            }
+
+            @Override
+            public Optional<String> wellKnownUrl() {
+                return Optional.empty();
             }
 
             @Override
@@ -127,11 +137,6 @@ public class TestJwtValidationConfig {
             @Override
             public Optional<String> url() {
                 return Optional.of("https://test-idp.example.com/auth/realms/test/protocol/openid-connect/certs");
-            }
-
-            @Override
-            public Optional<String> wellKnownUrl() {
-                return Optional.empty();
             }
 
             @Override

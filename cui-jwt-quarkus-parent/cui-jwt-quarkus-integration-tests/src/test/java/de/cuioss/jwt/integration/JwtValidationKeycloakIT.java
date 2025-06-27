@@ -56,6 +56,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
         // Test JWT validation endpoint returns proper error for missing token (proves HTTPS works)
         given()
+                .contentType("application/json")
                 .when()
                 .post("/jwt/validate")
                 .then()
@@ -64,6 +65,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
         // Test multiple concurrent HTTPS requests
         for (int i = 0; i < 3; i++) {
             int statusCode = given()
+                    .contentType("application/json")
                     .when()
                     .post("/jwt/validate")
                     .then()
@@ -152,6 +154,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
         // Test JWT validation - this should work via JWKS resolution
         given()
+                .contentType("application/json")
                 .header("Authorization", "Bearer " + validJwtToken)
                 .when()
                 .post("/jwt/validate")

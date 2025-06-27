@@ -16,13 +16,13 @@
 package de.cuioss.jwt.quarkus.runtime;
 
 import de.cuioss.jwt.quarkus.config.JwtTestProfile;
-import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class CuiJwtDevUIRuntimeServiceTest {
     Instance<TokenValidator> tokenValidatorInstance;
 
     @Inject
-    JwtValidationConfig config;
+    Config config;
 
     @Test
     @DisplayName("Should inject service successfully")

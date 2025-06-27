@@ -15,6 +15,13 @@
  */
 package de.cuioss.jwt.quarkus.deployment;
 
+import de.cuioss.jwt.quarkus.producer.TokenValidatorProducer;
+import de.cuioss.jwt.validation.IssuerConfig;
+import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.TokenValidator;
+import de.cuioss.jwt.validation.jwks.http.HttpJwksLoader;
+import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
+import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.IsDevelopment;
@@ -69,17 +76,18 @@ public class CuiJwtProcessor {
     @BuildStep
     public ReflectiveClassBuildItem registerJwtValidationClassesForReflection() {
         return ReflectiveClassBuildItem.builder(
-                "de.cuioss.jwt.validation.TokenValidator",
-                "de.cuioss.jwt.validation.IssuerConfig",
-                "de.cuioss.jwt.validation.ParserConfig",
-                "de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig",
-                "de.cuioss.jwt.validation.security.SecurityEventCounter",
-                "de.cuioss.jwt.quarkus.producer.TokenValidatorProducer")
+                TokenValidator.class,
+                IssuerConfig.class,
+                ParserConfig.class,
+                HttpJwksLoaderConfig.class,
+                SecurityEventCounter.class,
+                TokenValidatorProducer.class)
                 .methods(true)
                 .fields(true)
                 .constructors(true)
                 .build();
     }
+
 
 
     /**
@@ -89,8 +97,9 @@ public class CuiJwtProcessor {
      */
     @BuildStep
     public RuntimeInitializedClassBuildItem runtimeInitializedClasses() {
-        return new RuntimeInitializedClassBuildItem("de.cuioss.jwt.validation.jwks.http.HttpJwksLoader");
+        return new RuntimeInitializedClassBuildItem(HttpJwksLoader.class.getName());
     }
+
 
     /**
      * Register additional CDI beans for JWT validation.
@@ -100,7 +109,7 @@ public class CuiJwtProcessor {
     @BuildStep
     public AdditionalBeanBuildItem additionalBeans() {
         return AdditionalBeanBuildItem.builder()
-                .addBeanClass("de.cuioss.jwt.quarkus.producer.TokenValidatorProducer")
+                .addBeanClass(TokenValidatorProducer.class)
                 .setUnremovable()
                 .build();
     }
@@ -115,12 +124,12 @@ public class CuiJwtProcessor {
     public void registerUnremovableBeans(BuildProducer<UnremovableBeanBuildItem> unremovableBeans) {
         // Ensure TokenValidator is never removed from the CDI container
         unremovableBeans.produce(UnremovableBeanBuildItem.beanTypes(
-                DotName.createSimple("de.cuioss.jwt.validation.TokenValidator")
+                DotName.createSimple(TokenValidator.class.getName())
         ));
 
         // Ensure the producer is never removed
         unremovableBeans.produce(UnremovableBeanBuildItem.beanTypes(
-                DotName.createSimple("de.cuioss.jwt.quarkus.producer.TokenValidatorProducer")
+                DotName.createSimple(TokenValidatorProducer.class.getName())
         ));
 
     }
@@ -176,7 +185,4 @@ public class CuiJwtProcessor {
         return new JsonRPCProvidersBuildItem("CuiJwtDevUI", CuiJwtDevUIJsonRPCService.class);
     }
 
-
-    // Health checks are automatically discovered by Quarkus through their annotations
-    // (@ApplicationScoped, @Readiness, @Liveness), so no explicit registration is needed
 }

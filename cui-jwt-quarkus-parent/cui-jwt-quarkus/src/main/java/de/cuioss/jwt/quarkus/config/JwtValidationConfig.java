@@ -15,12 +15,8 @@
  */
 package de.cuioss.jwt.quarkus.config;
 
-import io.quarkus.arc.Unremovable;
-import io.smallrye.config.ConfigMapping;
-import io.smallrye.config.WithDefault;
+
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.Map;
 import java.util.Optional;
@@ -34,31 +30,36 @@ import java.util.Optional;
  * <p>
  * All properties are prefixed with "cui.jwt".
  * </p>
+ * <p>
+ * NOTE: This interface is kept for documentation purposes only.
+ * The actual configuration is accessed directly through MicroProfile Config
+ * to avoid ConfigMapping fragility issues in native images and extensions.
+ * </p>
  *
  * @since 1.0
  */
-@ConfigMapping(prefix = "cui.jwt")
-@Unremovable
 public interface JwtValidationConfig {
 
     /**
      * Map of issuer configurations, where the key is the issuer identifier
      * and the value is the issuer-specific configuration.
+     * <p>
+     * Configuration pattern: cui.jwt.issuers.{issuerName}.*
+     * </p>
      *
      * @return Map of issuer configurations
      */
-    @NotNull
-    @Valid
     Map<String, IssuerConfig> issuers();
 
     /**
      * Global parser configuration that applies to all issuers unless
      * overridden at the issuer level.
+     * <p>
+     * Configuration pattern: cui.jwt.parser.*
+     * </p>
      *
      * @return Global parser configuration
      */
-    @NotNull
-    @Valid
     ParserConfig parser();
 
     /**
@@ -67,14 +68,37 @@ public interface JwtValidationConfig {
     interface IssuerConfig {
 
         /**
-         * The issuer URL/identifier that will be matched against the "iss" claim
+         * The issuer identifier that will be matched against the "iss" claim
          * in the JWT.
+         * <p>
+         * This property is mutually exclusive with {@link #wellKnownUrl()}.
+         * When a well-known URL is configured, the issuer identifier will be
+         * automatically discovered from the OpenID Connect discovery document.
+         * If both are provided, the application will fail to start.
+         * </p>
          *
-         * @return The issuer URL/identifier
+         * @return The issuer identifier
          */
-        @NotNull
-        @NotEmpty
-        String url();
+        Optional<String> identifier();
+
+        /**
+         * The URL of the OpenID Connect discovery document (well-known endpoint).
+         * <p>
+         * When provided, the issuer identifier will be automatically discovered from this endpoint.
+         * This is the recommended approach for configuring issuers as it follows the OpenID Connect
+         * discovery standard.
+         * </p>
+         * <p>
+         * This property is mutually exclusive with {@link #identifier()}. If both are provided,
+         * the application will fail to start.
+         * </p>
+         * <p>
+         * Example: https://your-idp.com/realms/my-realm/.well-known/openid-configuration
+         * </p>
+         *
+         * @return The URL of the OpenID Connect discovery document
+         */
+        Optional<String> wellKnownUrl();
 
         /**
          * Location of the public key or certificate used to verify tokens from
@@ -103,10 +127,12 @@ public interface JwtValidationConfig {
 
         /**
          * Whether this issuer configuration is enabled.
+         * <p>
+         * Configuration pattern: cui.jwt.issuers.{issuerName}.enabled
+         * </p>
          *
          * @return true if this issuer configuration is enabled, false otherwise
          */
-        @WithDefault("true")
         boolean enabled();
     }
 
@@ -129,7 +155,6 @@ public interface JwtValidationConfig {
          *
          * @return The leeway in seconds
          */
-        @WithDefault("30")
         int leewaySeconds();
 
         /**
@@ -138,7 +163,6 @@ public interface JwtValidationConfig {
          *
          * @return The maximum token size in bytes
          */
-        @WithDefault("8192")
         int maxTokenSizeBytes();
 
         /**
@@ -146,7 +170,6 @@ public interface JwtValidationConfig {
          *
          * @return true if the "nbf" claim should be validated, false otherwise
          */
-        @WithDefault("true")
         boolean validateNotBefore();
 
         /**
@@ -154,7 +177,6 @@ public interface JwtValidationConfig {
          *
          * @return true if the "exp" claim should be validated, false otherwise
          */
-        @WithDefault("true")
         boolean validateExpiration();
 
         /**
@@ -162,7 +184,6 @@ public interface JwtValidationConfig {
          *
          * @return true if the "iat" claim should be validated, false otherwise
          */
-        @WithDefault("false")
         boolean validateIssuedAt();
 
         /**
@@ -170,7 +191,6 @@ public interface JwtValidationConfig {
          *
          * @return Comma-separated list of allowed signing algorithms
          */
-        @WithDefault("RS256,RS384,RS512,ES256,ES384,ES512")
         String allowedAlgorithms();
     }
 
@@ -182,7 +202,7 @@ public interface JwtValidationConfig {
         /**
          * The URL of the JWKS endpoint.
          * <p>
-         * This property is mutually exclusive with {@link #wellKnownUrl()}.
+         * This property is mutually exclusive with the well-known URL configuration.
          * If both are provided, the well-known approach takes precedence.
          * </p>
          *
@@ -190,31 +210,12 @@ public interface JwtValidationConfig {
          */
         Optional<String> url();
 
-        /**
-         * The URL of the OpenID Connect discovery document (well-known endpoint).
-         * <p>
-         * When provided, the JWKS URL will be automatically discovered from this endpoint.
-         * This is the recommended approach for configuring JWKS as it follows the OpenID Connect
-         * discovery standard.
-         * </p>
-         * <p>
-         * This property is mutually exclusive with {@link #url()}. If both are provided,
-         * the well-known approach takes precedence.
-         * </p>
-         * <p>
-         * Example: https://your-idp.com/realms/my-realm/.well-known/openid-configuration
-         * </p>
-         *
-         * @return The URL of the OpenID Connect discovery document
-         */
-        Optional<String> wellKnownUrl();
 
         /**
          * The cache time-to-live in seconds for the JWKS response.
          *
          * @return The cache time-to-live in seconds
          */
-        @WithDefault("3600")
         int cacheTtlSeconds();
 
         /**
@@ -222,7 +223,6 @@ public interface JwtValidationConfig {
          *
          * @return The refresh interval in seconds
          */
-        @WithDefault("300")
         int refreshIntervalSeconds();
 
         /**
@@ -230,7 +230,6 @@ public interface JwtValidationConfig {
          *
          * @return The connection timeout in seconds
          */
-        @WithDefault("5")
         int connectionTimeoutSeconds();
 
         /**
@@ -238,7 +237,6 @@ public interface JwtValidationConfig {
          *
          * @return The read timeout in seconds
          */
-        @WithDefault("5")
         int readTimeoutSeconds();
 
         /**
@@ -246,7 +244,6 @@ public interface JwtValidationConfig {
          *
          * @return The maximum number of retries
          */
-        @WithDefault("3")
         int maxRetries();
 
         /**
@@ -254,7 +251,6 @@ public interface JwtValidationConfig {
          *
          * @return true if system proxy settings should be used, false otherwise
          */
-        @WithDefault("false")
         boolean useSystemProxy();
     }
 
@@ -263,8 +259,6 @@ public interface JwtValidationConfig {
      *
      * @return Health check configuration
      */
-    @NotNull
-    @Valid
     HealthConfig health();
 
     /**
@@ -276,7 +270,6 @@ public interface JwtValidationConfig {
          *
          * @return true if health checks are enabled, false otherwise
          */
-        @WithDefault("true")
         boolean enabled();
 
         /**
@@ -284,7 +277,6 @@ public interface JwtValidationConfig {
          *
          * @return JWKS endpoint health check configuration
          */
-        @Valid
         JwksHealthConfig jwks();
     }
 
@@ -298,7 +290,6 @@ public interface JwtValidationConfig {
          *
          * @return The cache time-to-live in seconds
          */
-        @WithDefault("30")
         int cacheSeconds();
 
         /**
@@ -306,7 +297,6 @@ public interface JwtValidationConfig {
          *
          * @return The timeout in seconds
          */
-        @WithDefault("5")
         int timeoutSeconds();
     }
 }

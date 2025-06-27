@@ -309,8 +309,86 @@ If Resilience4j proves unsuitable, evaluate:
 - All JWT validation tests using the well-known discovered configuration must succeed
 - The test must verify that tokens issued by Keycloak are properly validated using the discovered JWKS endpoint
 
+== Caffeine Cache Native Image Compatibility Issue
+
+=== Issue Analysis
+
+During integration testing, a critical compatibility issue was discovered between the Caffeine cache library and GraalVM native image compilation. The issue manifests as `ClassNotFoundException` for dynamically generated Caffeine cache implementation classes at runtime.
+
+**Error Pattern:**
+```
+java.lang.ClassNotFoundException: com.github.benmanes.caffeine.cache.SSMSA
+	at com.github.benmanes.caffeine.cache.LocalCacheFactory.newFactory(LocalCacheFactory.java:116)
+```
+
+**Root Cause:**
+Caffeine generates cache implementation classes dynamically based on cache configuration features:
+- S = Size-based eviction (maximumSize)
+- M = Statistics tracking
+- A = Access/Custom expiry policy
+- W = Weak references
+
+The specific class `SSMSA` indicates: Size + Statistics + Maximum + Access policy configuration.
+
+=== Attempted Solutions
+
+**1. BuildStep Reflection Registration:**
+- Used `ReflectiveClassBuildItem.builder()` in Quarkus extension processor
+- Registered multiple cache implementation class combinations
+- **Result:** Failed - Classes still not found at runtime
+
+**2. @RegisterForReflection Annotation:**
+- Following Quarkus documentation recommendations
+- Created dedicated configuration classes with `@RegisterForReflection(classNames = {...})`
+- Placed in both deployment and runtime modules
+- **Result:** Failed - Annotation processing did not resolve the issue
+
+**3. Native Image Reflection Configuration:**
+- Created `reflect-config.json` with comprehensive Caffeine class listings
+- Used `NativeImageResourceBuildItem` to include configuration
+- **Result:** Failed - JSON configuration not effective for dynamic classes
+
+=== Technical Analysis
+
+The fundamental issue is that Caffeine's `LocalCacheFactory` generates cache implementation classes at build time based on the specific combination of features used. These classes have names that follow a pattern but cannot be predicted statically, making it impossible to register them for reflection in advance.
+
+**Cache Configuration in JwksCacheManager:**
+```java
+Caffeine<Object, Object> builder = Caffeine.newBuilder()
+        .maximumSize(config.getMaxCacheSize());
+
+if (config.getRefreshIntervalSeconds() > 0) {
+    AdaptiveCacheExpiryPolicy expiryPolicy = new AdaptiveCacheExpiryPolicy(config, accessCount, hitCount);
+    builder.expireAfter(expiryPolicy);
+}
+
+this.jwksCache = builder.build(cacheLoader::apply);
+```
+
+This configuration results in the `SSMSA` class generation, which is not available in the native image.
+
+=== Required Solution
+
+The Caffeine cache implementation must be replaced with a native-image compatible alternative as part of the resilience enhancement tasks. This aligns with the architectural changes outlined in tasks R1-R3 and H1-H2.
+
+**Recommended Approaches:**
+1. **Replace with Quarkus Cache Extension**: Use `@CacheResult` annotations with native-compatible implementations
+2. **Custom Cache Implementation**: Implement a lightweight cache using `ConcurrentHashMap` with manual expiry
+3. **Alternative Cache Library**: Evaluate native-compatible alternatives like Eclipse Collections or custom implementations
+
+**Integration with Resilience Tasks:**
+- Task R2 (Resilient HttpHandler Composition) should include cache replacement
+- Task H1 (Health Check Implementation) must work with the new cache implementation
+- Task H2 (Health Check Optimization) benefits from simpler, predictable cache behavior
+
+=== Decision
+
+The Caffeine cache library will be removed and replaced as part of the resilience enhancement implementation. This change is necessary for native image compatibility and aligns with the broader architectural improvements planned for the JWT validation system.
+
 == Conclusion
 
 These enhancements will significantly improve the robustness and operational characteristics of the CUI JWT validation system. By implementing proper resilience patterns, health checks, and configuration management, the system will be better suited for production environments where service availability cannot be guaranteed.
+
+The replacement of the Caffeine cache library addresses a critical native image compatibility issue while providing an opportunity to implement a more resilient and maintainable caching strategy.
 
 The phased approach allows for incremental implementation and testing, reducing the risk of introducing regressions while providing immediate value from each completed task.

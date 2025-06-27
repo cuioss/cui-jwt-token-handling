@@ -106,7 +106,7 @@ class CuiJwtProcessorBuildStepTest {
     @DisplayName("Should execute all build steps without exceptions")
     void shouldExecuteAllBuildStepsWithoutExceptions() {
         // Test that all build step methods can be called without throwing exceptions
-        assertDoesNotThrow(() -> processor.feature(), "feature() should not throw exceptions");
+        assertDoesNotThrow(processor::feature, "feature() should not throw exceptions");
         assertDoesNotThrow(processor::registerJwtValidationClassesForReflection,
                 "registerJwtValidationClassesForReflection() should not throw exceptions");
         assertDoesNotThrow(processor::runtimeInitializedClasses,
@@ -115,15 +115,6 @@ class CuiJwtProcessorBuildStepTest {
                 "createJwtDevUICard() should not throw exceptions");
         assertDoesNotThrow(processor::createJwtDevUIJsonRPCService,
                 "createJwtDevUIJsonRPCService() should not throw exceptions");
-    }
-
-    /**
-     * Creates a test JWT validation configuration for testing.
-     *
-     * @return A test configuration with valid test data
-     */
-    private JwtValidationConfig createMockConfig() {
-        return new TestJwtValidationConfig();
     }
 
     /**
@@ -148,8 +139,13 @@ class CuiJwtProcessorBuildStepTest {
 
     private static class TestIssuerConfig implements JwtValidationConfig.IssuerConfig {
         @Override
-        public String url() {
-            return "https://example.com/issuer";
+        public Optional<String> identifier() {
+            return Optional.of("https://example.com/issuer");
+        }
+
+        @Override
+        public Optional<String> wellKnownUrl() {
+            return Optional.empty();
         }
 
         @Override
@@ -214,11 +210,6 @@ class CuiJwtProcessorBuildStepTest {
         @Override
         public Optional<String> url() {
             return Optional.of("https://example.com/jwks");
-        }
-
-        @Override
-        public Optional<String> wellKnownUrl() {
-            return Optional.empty();
         }
 
         @Override
