@@ -95,9 +95,14 @@ public final class JwtPropertyKeys {
         public static final String BASE = PREFIX + ".issuers";
 
         /**
-         * The issuer URL/identifier.
+         * The issuer identifier that will be matched against the "iss" claim in JWT tokens.
          */
-        public static final String URL = BASE + ".url";
+        public static final String IDENTIFIER = BASE + ".identifier";
+
+        /**
+         * The URL of the OpenID Connect discovery document (well-known endpoint).
+         */
+        public static final String WELL_KNOWN_URL = BASE + ".well-known-url";
 
         /**
          * Location of the public key or certificate.
@@ -145,9 +150,19 @@ public final class JwtPropertyKeys {
             public static final String CONNECTION_TIMEOUT_MS = BASE + ".connection-timeout-ms";
 
             /**
+             * The connection timeout in seconds.
+             */
+            public static final String CONNECTION_TIMEOUT_SECONDS = BASE + ".connection-timeout-seconds";
+
+            /**
              * The read timeout in milliseconds.
              */
             public static final String READ_TIMEOUT_MS = BASE + ".read-timeout-ms";
+
+            /**
+             * The read timeout in seconds.
+             */
+            public static final String READ_TIMEOUT_SECONDS = BASE + ".read-timeout-seconds";
 
             /**
              * The maximum number of retries.
@@ -158,6 +173,22 @@ public final class JwtPropertyKeys {
              * Whether to use HTTP proxy settings from the system properties.
              */
             public static final String USE_SYSTEM_PROXY = BASE + ".use-system-proxy";
+
+            // String partials for dynamic property construction
+            /**
+             * Partial string for refresh interval seconds property.
+             */
+            public static final String REFRESH_INTERVAL_SECONDS_PARTIAL = DOT_JWKS + ".refresh-interval-seconds";
+
+            /**
+             * Partial string for connection timeout seconds property.
+             */
+            public static final String CONNECTION_TIMEOUT_SECONDS_PARTIAL = DOT_JWKS + ".connection-timeout-seconds";
+
+            /**
+             * Partial string for read timeout seconds property.
+             */
+            public static final String READ_TIMEOUT_SECONDS_PARTIAL = DOT_JWKS + ".read-timeout-seconds";
         }
     }
 

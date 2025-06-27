@@ -45,46 +45,12 @@ class CuiJwtProcessorBuildStepTest {
     @Test
     @DisplayName("Should create feature build item")
     void shouldCreateFeatureBuildItem() {
-        JwtValidationConfig mockConfig = createMockConfig();
-        FeatureBuildItem featureItem = processor.feature(mockConfig);
+        FeatureBuildItem featureItem = processor.feature();
 
         assertNotNull(featureItem, "Feature build item should not be null");
         assertEquals("cui-jwt", featureItem.getName(), "Feature name should be 'cui-jwt'");
     }
 
-    @Test
-    @DisplayName("Should create feature build item with valid configuration and validation")
-    void shouldCreateFeatureBuildItemWithValidation() {
-        JwtValidationConfig mockConfig = createMockConfig();
-
-        // This should not throw any exceptions due to validation
-        assertDoesNotThrow(() -> processor.feature(mockConfig),
-                "Feature creation with valid config should not throw exceptions");
-    }
-
-    @Test
-    @DisplayName("Should register config classes for reflection")
-    void shouldRegisterConfigForReflection() {
-        ReflectiveClassBuildItem reflectiveItem = processor.registerConfigForReflection();
-
-        assertNotNull(reflectiveItem, "Reflective class build item should not be null");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig"),
-                "Should register JwtValidationConfig for reflection");
-    }
-
-    @Test
-    @DisplayName("Should register nested config classes for reflection")
-    void shouldRegisterNestedConfigForReflection() {
-        ReflectiveClassBuildItem reflectiveItem = processor.registerNestedConfigForReflection();
-
-        assertNotNull(reflectiveItem, "Reflective class build item should not be null");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$IssuerConfig"),
-                "Should register IssuerConfig for reflection");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$ParserConfig"),
-                "Should register ParserConfig for reflection");
-        assertTrue(reflectiveItem.getClassNames().contains("de.cuioss.jwt.quarkus.config.JwtValidationConfig$HttpJwksLoaderConfig"),
-                "Should register HttpJwksLoaderConfig for reflection");
-    }
 
     @Test
     @DisplayName("Should register JWT validation classes for reflection")
@@ -140,12 +106,7 @@ class CuiJwtProcessorBuildStepTest {
     @DisplayName("Should execute all build steps without exceptions")
     void shouldExecuteAllBuildStepsWithoutExceptions() {
         // Test that all build step methods can be called without throwing exceptions
-        JwtValidationConfig mockConfig = createMockConfig();
-        assertDoesNotThrow(() -> processor.feature(mockConfig), "feature() should not throw exceptions");
-        assertDoesNotThrow(processor::registerConfigForReflection,
-                "registerConfigForReflection() should not throw exceptions");
-        assertDoesNotThrow(processor::registerNestedConfigForReflection,
-                "registerNestedConfigForReflection() should not throw exceptions");
+        assertDoesNotThrow(processor::feature, "feature() should not throw exceptions");
         assertDoesNotThrow(processor::registerJwtValidationClassesForReflection,
                 "registerJwtValidationClassesForReflection() should not throw exceptions");
         assertDoesNotThrow(processor::runtimeInitializedClasses,
@@ -154,15 +115,6 @@ class CuiJwtProcessorBuildStepTest {
                 "createJwtDevUICard() should not throw exceptions");
         assertDoesNotThrow(processor::createJwtDevUIJsonRPCService,
                 "createJwtDevUIJsonRPCService() should not throw exceptions");
-    }
-
-    /**
-     * Creates a test JWT validation configuration for testing.
-     *
-     * @return A test configuration with valid test data
-     */
-    private JwtValidationConfig createMockConfig() {
-        return new TestJwtValidationConfig();
     }
 
     /**
@@ -187,8 +139,13 @@ class CuiJwtProcessorBuildStepTest {
 
     private static class TestIssuerConfig implements JwtValidationConfig.IssuerConfig {
         @Override
-        public String url() {
-            return "https://example.com/issuer";
+        public Optional<String> identifier() {
+            return Optional.of("https://example.com/issuer");
+        }
+
+        @Override
+        public Optional<String> wellKnownUrl() {
+            return Optional.empty();
         }
 
         @Override
@@ -253,11 +210,6 @@ class CuiJwtProcessorBuildStepTest {
         @Override
         public Optional<String> url() {
             return Optional.of("https://example.com/jwks");
-        }
-
-        @Override
-        public Optional<String> wellKnownUrl() {
-            return Optional.empty();
         }
 
         @Override

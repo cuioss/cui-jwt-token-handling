@@ -14,3 +14,17 @@ updates:
     directory: /
     schedule:
       interval: daily
+
+  - package-ecosystem: docker
+    directory: "/cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests"
+    schedule:
+      interval: "weekly"
+    # Note: This tracks Dockerfiles only. For docker-compose.yml images,
+    # manual updates are required as dependabot's Docker ecosystem
+    # doesn't scan compose files. Current manual update needed:
+    # - quay.io/keycloak/keycloak:26.2.5 in docker-compose.yml
+
+  - package-ecosystem: npm
+    directory: "/cui-jwt-quarkus-parent/cui-jwt-quarkus-deployment"
+    schedule:
+      interval: "weekly"

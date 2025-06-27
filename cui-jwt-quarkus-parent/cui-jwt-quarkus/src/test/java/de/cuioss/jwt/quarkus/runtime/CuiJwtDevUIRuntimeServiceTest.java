@@ -16,18 +16,21 @@
 package de.cuioss.jwt.quarkus.runtime;
 
 import de.cuioss.jwt.quarkus.config.JwtTestProfile;
-import de.cuioss.jwt.quarkus.config.JwtValidationConfig;
+import de.cuioss.jwt.quarkus.test.TestConfig;
+import de.cuioss.jwt.quarkus.test.TestConfigurations;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,7 +55,7 @@ class CuiJwtDevUIRuntimeServiceTest {
     Instance<TokenValidator> tokenValidatorInstance;
 
     @Inject
-    JwtValidationConfig config;
+    Config config;
 
     @Test
     @DisplayName("Should inject service successfully")
@@ -365,6 +368,153 @@ class CuiJwtDevUIRuntimeServiceTest {
             Object issuersConfigured = result.get("issuersConfigured");
             assertInstanceOf(Integer.class, issuersConfigured, "Issuers configured should be Integer");
             assertTrue((Integer) issuersConfigured >= 0, "Issuers configured should be non-negative");
+        }
+    }
+
+    @Nested
+    @DisplayName("TestConfig Integration Tests")
+    @EnableTestLogger
+    class TestConfigIntegrationTests {
+
+        @Test
+        @DisplayName("Should demonstrate TestConfig utility usage for empty configurations")
+        void shouldDemonstrateTestConfigUsageForEmptyConfigurations() {
+            // Arrange
+            Config emptyConfig = TestConfigurations.empty();
+
+            // Act & Assert - Test that TestConfig works properly for missing properties
+            assertFalse(emptyConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).isPresent(),
+                    "Empty config should not have any issuer properties");
+            assertFalse(emptyConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent(),
+                    "Empty config should not have any parser properties");
+
+            // Test that getValue throws for missing properties
+            assertThrows(NoSuchElementException.class,
+                    () -> emptyConfig.getValue("cui.jwt.issuers.test.enabled", Boolean.class),
+                    "getValue should throw for missing properties");
+        }
+
+        @Test
+        @DisplayName("Should demonstrate TestConfig utility usage for disabled issuers")
+        void shouldDemonstrateTestConfigUsageForDisabledIssuers() {
+            // Arrange
+            Config configWithDisabledIssuers = TestConfigurations.noEnabledIssuers();
+
+            // Act & Assert - Test that TestConfig provides disabled issuer config
+            assertEquals(false, configWithDisabledIssuers.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(true),
+                    "Should have disabled issuer configuration");
+            assertTrue(configWithDisabledIssuers.getOptionalValue("cui.jwt.issuers.test.identifier", String.class).isPresent(),
+                    "Should have issuer identifier even when disabled");
+        }
+
+        @Test
+        @DisplayName("Should demonstrate TestConfig utility usage for minimal valid setup")
+        void shouldDemonstrateTestConfigUsageForMinimalValidSetup() {
+            // Arrange
+            Config minimalConfig = TestConfigurations.minimalValid();
+
+            // Act & Assert - Test that TestConfig provides minimal valid configuration
+            assertEquals(true, minimalConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(false),
+                    "Should have enabled issuer");
+            assertEquals("https://test.example.com", minimalConfig.getOptionalValue("cui.jwt.issuers.test.identifier", String.class).orElse(null),
+                    "Should have correct issuer identifier");
+            assertEquals("classpath:jwt-test.key", minimalConfig.getOptionalValue("cui.jwt.issuers.test.public-key-location", String.class).orElse(null),
+                    "Should have public key location");
+        }
+
+        @Test
+        @DisplayName("Should demonstrate TestConfig utility usage for multiple issuers")
+        void shouldDemonstrateTestConfigUsageForMultipleIssuers() {
+            // Arrange
+            Config multipleIssuersConfig = TestConfigurations.multipleIssuers();
+
+            // Act & Assert - Test that TestConfig provides multiple issuer configuration
+            assertEquals(true, multipleIssuersConfig.getOptionalValue("cui.jwt.issuers.primary.enabled", Boolean.class).orElse(false),
+                    "Primary issuer should be enabled");
+            assertEquals(true, multipleIssuersConfig.getOptionalValue("cui.jwt.issuers.secondary.enabled", Boolean.class).orElse(false),
+                    "Secondary issuer should be enabled");
+            assertEquals(false, multipleIssuersConfig.getOptionalValue("cui.jwt.issuers.disabled.enabled", Boolean.class).orElse(true),
+                    "Disabled issuer should be disabled");
+        }
+
+        @Test
+        @DisplayName("Should demonstrate TestConfig utility usage with builder pattern")
+        void shouldDemonstrateTestConfigUsageWithBuilderPattern() {
+            // Arrange & Act
+            Config customConfig = TestConfigurations.builder()
+                    .withIssuer("custom")
+                    .enabled(true)
+                    .identifier("https://custom.example.com")
+                    .publicKeyLocation("classpath:custom.key")
+                    .jwksRefreshInterval(300)
+                    .and()
+                    .withParser()
+                    .maxTokenSizeBytes(4096)
+                    .leewaySeconds(60)
+                    .validateExpiration(true)
+                    .allowedAlgorithms("RS256,ES256")
+                    .build();
+
+            // Assert - Test that builder pattern creates proper configuration
+            assertEquals(true, customConfig.getOptionalValue("cui.jwt.issuers.custom.enabled", Boolean.class).orElse(false),
+                    "Custom issuer should be enabled");
+            assertEquals("https://custom.example.com", customConfig.getOptionalValue("cui.jwt.issuers.custom.identifier", String.class).orElse(null),
+                    "Should have custom issuer identifier");
+            assertEquals(300, customConfig.getOptionalValue("cui.jwt.issuers.custom.jwks.refresh-interval-seconds", Integer.class).orElse(0),
+                    "Should have custom JWKS refresh interval");
+            assertEquals(4096, customConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0),
+                    "Should have custom parser max token size");
+            assertEquals("RS256,ES256", customConfig.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse(null),
+                    "Should have custom allowed algorithms");
+        }
+
+        @Test
+        @DisplayName("Should demonstrate TestConfig utility usage for malformed properties")
+        void shouldDemonstrateTestConfigUsageForMalformedProperties() {
+            // Arrange - Create config with malformed properties
+            Config malformedConfig = new TestConfig(Map.of(
+                    "cui.jwt.issuers.test.enabled", "not-a-boolean",
+                    "cui.jwt.parser.max-token-size-bytes", "invalid-number",
+                    "cui.jwt.parser.leeway-seconds", "",
+                    "valid.property", "test-value"
+            ));
+
+            // Act & Assert - Test that TestConfig handles malformed values gracefully
+            assertEquals(false, malformedConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(true),
+                    "Should return false for non-'true' boolean strings (Boolean.valueOf behavior)");
+            assertFalse(malformedConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent(),
+                    "Should return empty Optional for invalid integer");
+            assertFalse(malformedConfig.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).isPresent(),
+                    "Should return empty Optional for empty integer");
+            assertEquals("test-value", malformedConfig.getOptionalValue("valid.property", String.class).orElse(null),
+                    "Should handle valid string properties correctly");
+        }
+
+        @Test
+        @DisplayName("Should demonstrate TestConfig predefined configurations")
+        void shouldDemonstrateTestConfigPredefinedConfigurations() {
+            // Test invalid parser configuration
+            Config invalidParserConfig = TestConfigurations.invalidParser();
+            assertEquals(-1, invalidParserConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0),
+                    "Invalid parser config should have negative max token size");
+
+            // Test JWKS URL configuration
+            Config jwksConfig = TestConfigurations.withJwksUrl();
+            assertEquals("https://test.example.com/jwks", jwksConfig.getOptionalValue("cui.jwt.issuers.test.jwks.url", String.class).orElse(null),
+                    "JWKS config should have JWKS URL");
+
+            // Test well-known URL configuration
+            Config wellKnownConfig = TestConfigurations.withWellKnownUrl();
+            assertEquals("https://test.example.com/.well-known/openid_configuration",
+                    wellKnownConfig.getOptionalValue("cui.jwt.issuers.test.well-known-url", String.class).orElse(null),
+                    "Well-known config should have well-known URL");
+
+            // Test custom parser configuration
+            Config customParserConfig = TestConfigurations.customParser();
+            assertEquals(16384, customParserConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0),
+                    "Custom parser config should have custom max token size");
+            assertEquals("RS256,ES256", customParserConfig.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse(null),
+                    "Custom parser config should have custom allowed algorithms");
         }
     }
 }

@@ -18,11 +18,11 @@ cui:
   jwt:
     issuers:
       default:
-        url: https://test-auth.example.com
+        identifier: https://test-auth.example.com
         enabled: true
         public-key-location: classpath:keys/test_public_key.pem
       test-issuer:
-        url: https://test-issuer.example.com
+        identifier: https://test-issuer.example.com
         enabled: true
         jwks:
           url: https://test-issuer.example.com/.well-known/jwks.json

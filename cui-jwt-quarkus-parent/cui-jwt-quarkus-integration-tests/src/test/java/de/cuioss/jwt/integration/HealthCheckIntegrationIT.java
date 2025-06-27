@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * REST API tests for health check endpoints against external application.
@@ -75,18 +74,4 @@ class HealthCheckIntegrationIT extends BaseIntegrationTest {
                 .body("status", equalTo("UP"));
     }
 
-    @Test
-    void shouldHandleHealthCheckErrors() {
-        // Test that health checks are resilient and don't cause application failure
-        int healthStatusCode = given()
-                .when()
-                .get("/q/health")
-                .then()
-                .extract()
-                .statusCode();
-
-        // Health check should return either 200 (UP) or 503 (DOWN), but not an error code
-        assertTrue(healthStatusCode == 200 || healthStatusCode == 503,
-                "Health endpoint should return either 200 (UP) or 503 (DOWN), but got: " + healthStatusCode);
-    }
 }

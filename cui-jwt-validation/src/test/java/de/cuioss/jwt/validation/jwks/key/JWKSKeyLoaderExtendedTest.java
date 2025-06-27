@@ -260,7 +260,7 @@ class JWKSKeyLoaderExtendedTest {
         @DisplayName("Should throw exception when builder is missing securityEventCounter")
         void shouldThrowExceptionWhenBuilderIsMissingSecurityEventCounter() {
             JWKSKeyLoader.JWKSKeyLoaderBuilder content = JWKSKeyLoader.builder()
-                .originalString("content");
+                    .originalString("content");
             assertThrows(IllegalArgumentException.class, content::build,
                     "Builder should throw exception when securityEventCounter is missing");
         }

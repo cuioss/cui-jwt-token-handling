@@ -151,6 +151,39 @@ Clicking the badge opens the detailed trends visualization.
 
 For comprehensive performance metrics methodology, scoring calculations, and interpretation guidelines, see xref:doc/performance-scoring.adoc[Performance Scoring System Documentation].
 
+== Related Modules
+
+=== Integration Benchmarking
+
+The xref:../cui-jwt-quarkus-parent/quarkus-integration-benchmark/README.adoc[JWT Quarkus Integration Benchmarking Module] provides end-to-end performance testing using the **identical scoring formula** as this micro-benchmark module:
+
+[cols="1,1,1", options="header"]
+|===
+|Aspect |Micro-Benchmarks (this module) |Integration Benchmarks
+
+|**Measurement Scope**
+|In-memory library calls
+|End-to-end HTTP validation
+
+|**Time Scale** 
+|Microseconds (pure library)
+|Milliseconds (HTTP overhead)
+
+|**Infrastructure**
+|Direct JVM execution
+|Docker containers + Keycloak
+
+|**Scoring Formula**
+|**Performance Score = (Throughput × 0.57) + (Latency_Inverted × 0.40) + (Error_Resilience × 0.03)**
+|**Identical** (same weights and formula)
+
+|**Use Case**
+|Library optimization & regression detection
+|System-level performance validation
+|===
+
+Both modules produce comparable performance scores for tracking performance trends across different testing approaches.
+
 == Documentation
 
 For detailed information about the benchmarking system:

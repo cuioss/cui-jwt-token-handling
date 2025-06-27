@@ -184,3 +184,16 @@ curl -k https://localhost:10443/validate/health
 == Standards Compliance
 
 Follows link:https://github.com/cuioss/cui-llm-rules/tree/main/standards/cdi-quarkus/[CDI Quarkus Standards]
+
+== Related Modules
+
+=== Integration Benchmarking
+
+The xref:../quarkus-integration-benchmark/README.adoc[JWT Quarkus Integration Benchmarking Module] builds upon this module's containerized infrastructure to provide performance benchmarking capabilities. It reuses:
+
+* Container setup and Docker Compose configuration
+* Keycloak integration patterns
+* HTTPS and certificate management
+* Application startup scripts
+
+While this module focuses on functional integration testing, the benchmarking module measures end-to-end performance using the same containerized environment.

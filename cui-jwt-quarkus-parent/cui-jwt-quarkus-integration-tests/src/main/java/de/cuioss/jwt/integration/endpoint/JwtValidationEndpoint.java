@@ -15,42 +15,89 @@
  */
 package de.cuioss.jwt.integration.endpoint;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import de.cuioss.jwt.validation.TokenValidator;
+import de.cuioss.tools.logging.CuiLogger;
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
- * REST endpoint for JWT validation operations and status checking.
- * This endpoint is used to test the integration test infrastructure.
+ * REST endpoint for JWT validation operations.
+ * This endpoint provides the real application functionality that is used by
+ * both integration tests and performance benchmarks.
  */
 @Path("/jwt")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@ApplicationScoped
+@RegisterForReflection
 public class JwtValidationEndpoint {
 
+    private static final CuiLogger LOGGER = new CuiLogger(JwtValidationEndpoint.class);
+
+    @Inject
+    TokenValidator tokenValidator;
+
+    @PostConstruct
+    void init() {
+        LOGGER.info("JwtValidationEndpoint initialized with TokenValidator: " + (tokenValidator != null));
+    }
+
+    void onStart(@Observes StartupEvent ev) {
+        LOGGER.info("JwtValidationEndpoint started and ready at /jwt/validate");
+        LOGGER.info("TokenValidator injected: " + (tokenValidator != null));
+    }
+
     /**
-     * Returns the status of the JWT validation system.
+     * Health check endpoint to verify the service is running.
      *
-     * @return Response indicating system status
+     * @return Simple OK response
      */
     @GET
-    @Path("/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getStatus() {
-        return Response.ok()
-                .entity("{\"status\": \"JWT integration test endpoint available\", \"available\": true}")
+    @Path("/health")
+    public Response health() {
+        return Response.ok(new ValidationResponse(true, "JWT validation endpoint is healthy"))
                 .build();
     }
 
     /**
-     * Simple ping endpoint for basic connectivity testing.
+     * Validates a JWT token - primary endpoint for integration testing and benchmarking.
      *
-     * @return Ping response
+     * @param token JWT token from Authorization header
+     * @return Validation result
      */
-    @GET
-    @Path("/ping")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String ping() {
-        return "JWT Integration Test Module - PONG";
+    @POST
+    @Path("/validate")
+    public Response validateToken(@HeaderParam("Authorization") String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ValidationResponse(false, "Missing or invalid Authorization header"))
+                    .build();
+        }
+
+        String jwtToken = token.substring(7); // Remove "Bearer " prefix
+
+        try {
+            tokenValidator.createAccessToken(jwtToken);
+            return Response.ok(new ValidationResponse(true, "Token is valid"))
+                    .build();
+        } catch (Exception e) {
+            LOGGER.warn("Token validation error: %s", e.getMessage());
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ValidationResponse(false, "Token validation failed: " + e.getMessage()))
+                    .build();
+        }
+    }
+
+
+    // Response DTOs
+    @RegisterForReflection
+    public record ValidationResponse(boolean valid, String message) {
     }
 }

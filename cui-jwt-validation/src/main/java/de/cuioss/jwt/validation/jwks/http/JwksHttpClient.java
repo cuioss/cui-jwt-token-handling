@@ -63,8 +63,11 @@ public class JwksHttpClient implements AutoCloseable {
      * Response from a JWKS HTTP request.
      */
     public static class JwksHttpResponse {
+
+        @Getter
         private final String content;
         private final String etag;
+        @Getter
         private final boolean notModified;
 
         private JwksHttpResponse(String content, String etag, boolean notModified) {
@@ -103,15 +106,6 @@ public class JwksHttpClient implements AutoCloseable {
         }
 
         /**
-         * Gets the JWKS content.
-         *
-         * @return the content, or null if not modified
-         */
-        public String getContent() {
-            return content;
-        }
-
-        /**
          * Gets the ETag header value.
          *
          * @return the ETag, or null if not present
@@ -120,14 +114,6 @@ public class JwksHttpClient implements AutoCloseable {
             return Optional.ofNullable(etag);
         }
 
-        /**
-         * Checks if the response indicates not modified (HTTP 304).
-         *
-         * @return true if not modified, false otherwise
-         */
-        public boolean isNotModified() {
-            return notModified;
-        }
     }
 
     /**

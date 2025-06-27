@@ -38,7 +38,27 @@
         <!-- Frontend Maven Plugin -->
         <frontend.node.version>v20.19.2</frontend.node.version>
         <frontend.npm.version>10.5.0</frontend.npm.version>
+        <version.frontend-maven-plugin>1.15.1</version.frontend-maven-plugin>
+        <!-- Version for exec-maven-plugin (standardized across modules) -->
+        <version.exec-maven-plugin>3.2.0</version.exec-maven-plugin>
+        <!-- JMH version (used in benchmarking modules) -->
+        <version.jmh>1.37</version.jmh>
+        <!-- Quarkus version (used in Quarkus modules) -->
+        <quarkus.version>3.23.3</quarkus.version>
     </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Exec Maven Plugin -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${version.exec-maven-plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <modules>
         <module>bom</module>
