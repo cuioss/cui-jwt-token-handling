@@ -72,7 +72,7 @@ if [ ! -z "$NATIVE_STARTUP" ]; then
 fi
 
 # Show actual image size
-IMAGE_SIZE=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep quarkus-integration-benchmark | awk '{print $2}' | head -1)
+IMAGE_SIZE=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep cui-jwt-integration-tests | awk '{print $2}' | head -1)
 if [ ! -z "$IMAGE_SIZE" ]; then
     echo "📦 Image size: ${IMAGE_SIZE} (distroless native)"
 fi

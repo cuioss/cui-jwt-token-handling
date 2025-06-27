@@ -20,7 +20,7 @@ services:
     networks:
       - jwt-integration
     healthcheck:
-      test: ["CMD", "/bin/sh", "-c", "timeout 5 sh -c '</dev/tcp/localhost/8080' 2>/dev/null && echo 'Keycloak is up'"]
+      test: ["CMD", "/bin/sh", "-c", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
       interval: 30s
       timeout: 10s
       retries: 5
