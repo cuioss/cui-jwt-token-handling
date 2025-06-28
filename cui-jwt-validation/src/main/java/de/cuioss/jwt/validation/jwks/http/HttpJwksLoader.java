@@ -47,7 +47,7 @@ public class HttpJwksLoader implements JwksLoader {
     
     public HttpJwksLoader(@NonNull HttpHandler httpHandler, 
                           @NonNull SecurityEventCounter securityEventCounter) {
-        this.httpCache = new JwksHttpCache(httpHandler, 0); // No caching by default
+        this.httpCache = new JwksHttpCache(httpHandler);
         this.securityEventCounter = securityEventCounter;
     }
     
@@ -57,7 +57,7 @@ public class HttpJwksLoader implements JwksLoader {
      */
     public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config, 
                           @NonNull SecurityEventCounter securityEventCounter) {
-        this.httpCache = new JwksHttpCache(config.getHttpHandler(), config.getRefreshIntervalSeconds());
+        this.httpCache = new JwksHttpCache(config.getHttpHandler());
         this.securityEventCounter = securityEventCounter;
     }
     

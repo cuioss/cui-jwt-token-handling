@@ -27,11 +27,11 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 
 /**
- * Simple stateful HTTP cache for JWKS content.
+ * Simple stateful HTTP cache for JWKS content using ETags.
  * <p>
- * This component handles HTTP calls and provides simple time-based caching
- * without scheduling. It tracks whether content was loaded from cache or
- * freshly fetched.
+ * This component handles HTTP calls and provides HTTP-based caching using
+ * ETags and "If-None-Match" headers. It tracks whether content was loaded 
+ * from cache (304 Not Modified) or freshly fetched (200 OK).
  * <p>
  * Thread-safe implementation using volatile fields and synchronized methods.
  * 
@@ -46,56 +46,70 @@ public class JwksHttpCache {
      * Result of a load operation containing the payload and cache status.
      * 
      * @param content the JWKS content as string
-     * @param wasFromCache true if content was loaded from cache, false if freshly fetched
+     * @param wasFromCache true if content was loaded from cache (304), false if freshly fetched (200)
      * @param loadedAt the instant when content was loaded/cached
      */
     public record LoadResult(String content, boolean wasFromCache, Instant loadedAt) {}
     
     private final HttpHandler httpHandler;
-    private final int cacheValiditySeconds;
     
     private volatile String cachedContent;
+    private volatile String cachedETag;
     private volatile Instant cachedAt;
     
     /**
-     * Creates a new HTTP cache with the specified validity period.
+     * Creates a new HTTP cache using ETags for cache validation.
      * 
      * @param httpHandler the HTTP handler for making requests
-     * @param cacheValiditySeconds how long cached content remains valid (0 = no caching)
      */
-    public JwksHttpCache(@NonNull HttpHandler httpHandler, int cacheValiditySeconds) {
+    public JwksHttpCache(@NonNull HttpHandler httpHandler) {
         this.httpHandler = httpHandler;
-        this.cacheValiditySeconds = Math.max(0, cacheValiditySeconds);
     }
     
     /**
-     * Loads JWKS content, using cache if valid or fetching fresh content.
+     * Loads JWKS content, using ETag-based HTTP caching when supported.
      * 
      * @return LoadResult containing content and cache status
      * @throws RuntimeException if loading fails after retries
      */
     public synchronized LoadResult load() {
-        Instant now = Instant.now();
-        
-        // Check if we have valid cached content
-        if (isCacheValid(now)) {
-            LOGGER.debug("Returning cached JWKS content from %s", cachedAt);
-            return new LoadResult(cachedContent, true, cachedAt);
-        }
-        
-        // Fetch fresh content
         try {
-            String freshContent = RetryUtil.executeWithRetry(
-                this::fetchJwksContent,
-                "fetch JWKS from " + httpHandler.getUrl()
-            );
-            
-            // Update cache
-            this.cachedContent = freshContent;
-            this.cachedAt = now;
-            
-            LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
-            return new LoadResult(freshContent, false, now);
+            // If we have cached content and ETag, try conditional request
+            if (cachedContent != null && cachedETag != null) {
+                HttpCacheResult result = RetryUtil.executeWithRetry(
+                    this::fetchJwksContentWithCache,
+                    "fetch JWKS from " + httpHandler.getUrl()
+                );
+                
+                if (result.notModified) {
+                    // 304 Not Modified - use cached content
+                    LOGGER.debug("JWKS content not modified (304), using cached version");
+                    return new LoadResult(cachedContent, true, cachedAt);
+                } else {
+                    // 200 OK - fresh content received
+                    Instant now = Instant.now();
+                    this.cachedContent = result.content;
+                    this.cachedETag = result.etag;
+                    this.cachedAt = now;
+                    
+                    LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
+                    return new LoadResult(result.content, false, now);
+                }
+            } else {
+                // No cache or no ETag - fetch fresh content
+                HttpCacheResult result = RetryUtil.executeWithRetry(
+                    this::fetchJwksContentWithCache,
+                    "fetch JWKS from " + httpHandler.getUrl()
+                );
+                
+                Instant now = Instant.now();
+                this.cachedContent = result.content;
+                this.cachedETag = result.etag; // May be null if server doesn't support ETags
+                this.cachedAt = now;
+                
+                LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
+                return new LoadResult(result.content, false, now);
+            }
             
         } catch (Exception e) {
             LOGGER.error(e, "Failed to load JWKS from %s", httpHandler.getUrl());
@@ -112,20 +126,19 @@ public class JwksHttpCache {
     public synchronized LoadResult reload() {
         LOGGER.debug("Forcing reload of JWKS content from %s", httpHandler.getUrl());
         
-        // Clear cache to force fresh load
-        this.cachedContent = null;
-        this.cachedAt = null;
+        // Clear ETag to force fresh load
+        this.cachedETag = null;
         
         return load();
     }
     
     /**
-     * Checks if cache contains valid content.
+     * Checks if cache contains content.
      * 
-     * @return true if cache is valid and contains content
+     * @return true if cache contains content and ETag
      */
-    public boolean isCacheValid() {
-        return isCacheValid(Instant.now());
+    public boolean hasCache() {
+        return cachedContent != null && cachedETag != null;
     }
     
     /**
@@ -134,6 +147,7 @@ public class JwksHttpCache {
     public synchronized void clearCache() {
         LOGGER.debug("Clearing JWKS cache for %s", httpHandler.getUrl());
         this.cachedContent = null;
+        this.cachedETag = null;
         this.cachedAt = null;
     }
     
@@ -147,35 +161,51 @@ public class JwksHttpCache {
     }
     
     /**
-     * Checks if cached content is still valid at the given time.
+     * Gets the current cached ETag.
+     * 
+     * @return cached ETag or null if no content is cached
      */
-    private boolean isCacheValid(Instant now) {
-        if (cacheValiditySeconds == 0) {
-            return false; // No caching
-        }
-        
-        if (cachedContent == null || cachedAt == null) {
-            return false; // No cached content
-        }
-        
-        return cachedAt.plusSeconds(cacheValiditySeconds).isAfter(now);
+    public String getCachedETag() {
+        return cachedETag;
     }
     
     /**
-     * Fetches JWKS content from the HTTP endpoint.
+     * Internal result for HTTP cache operations.
      */
-    private String fetchJwksContent() {
+    private record HttpCacheResult(String content, String etag, boolean notModified) {}
+    
+    /**
+     * Fetches JWKS content from the HTTP endpoint with ETag support.
+     */
+    private HttpCacheResult fetchJwksContentWithCache() {
         try {
             HttpClient client = httpHandler.createHttpClient();
-            HttpRequest request = httpHandler.requestBuilder().build();
             
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            // Build request with conditional headers
+            HttpRequest.Builder requestBuilder = httpHandler.requestBuilder();
             
-            if (response.statusCode() != 200) {
-                throw new IOException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
+            // Add If-None-Match header if we have a cached ETag
+            if (cachedETag != null) {
+                requestBuilder.header("If-None-Match", cachedETag);
             }
             
-            return response.body();
+            HttpRequest request = requestBuilder.build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 304) {
+                // Not Modified - content hasn't changed
+                LOGGER.debug("Received 304 Not Modified from %s", httpHandler.getUrl());
+                return new HttpCacheResult(null, null, true);
+            } else if (response.statusCode() == 200) {
+                // OK - fresh content
+                String content = response.body();
+                String etag = response.headers().firstValue("ETag").orElse(null);
+                
+                LOGGER.debug("Received 200 OK from %s with ETag: %s", httpHandler.getUrl(), etag);
+                return new HttpCacheResult(content, etag, false);
+            } else {
+                throw new IOException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
+            }
             
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {

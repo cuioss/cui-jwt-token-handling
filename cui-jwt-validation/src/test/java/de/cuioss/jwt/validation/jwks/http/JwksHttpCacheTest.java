@@ -44,14 +44,15 @@ class JwksHttpCacheTest {
                 .url(jwksEndpoint)
                 .build();
 
-        cache = new JwksHttpCache(httpHandler, 60); // 60 seconds cache validity
+        cache = new JwksHttpCache(httpHandler);
     }
 
     @Test
     void testBasicLoad() {
         // Initially no cache
-        assertFalse(cache.isCacheValid());
+        assertFalse(cache.hasCache());
         assertNull(cache.getCachedAt());
+        assertNull(cache.getCachedETag());
 
         // First load should fetch from HTTP
         JwksHttpCache.LoadResult result = cache.load();
@@ -62,26 +63,25 @@ class JwksHttpCacheTest {
         // Should have called endpoint once
         assertEquals(1, moduleDispatcher.getCallCounter());
 
-        // Cache should now be valid
-        assertTrue(cache.isCacheValid());
+        // Cache should now contain content (but ETag may be null if server doesn't support it)
         assertEquals(result.loadedAt(), cache.getCachedAt());
+        // Note: getCachedETag() may be null if server doesn't provide ETag header
     }
 
     @Test
-    void testCaching() {
+    void testCachingBehaviorWithoutETag() {
         // First load
         JwksHttpCache.LoadResult result1 = cache.load();
         assertFalse(result1.wasFromCache());
         assertEquals(1, moduleDispatcher.getCallCounter());
 
-        // Second load should use cache
+        // Second load - without ETag support from server, it will fetch again
         JwksHttpCache.LoadResult result2 = cache.load();
-        assertTrue(result2.wasFromCache());
         assertEquals(result1.content(), result2.content());
-        assertEquals(result1.loadedAt(), result2.loadedAt());
+        assertFalse(result2.wasFromCache()); // No cache because no ETag
         
-        // Should still have called endpoint only once
-        assertEquals(1, moduleDispatcher.getCallCounter());
+        // Without ETag from server, each call fetches fresh content
+        assertEquals(2, moduleDispatcher.getCallCounter());
     }
 
     @Test
@@ -100,12 +100,12 @@ class JwksHttpCacheTest {
     void testClearCache() {
         // Load and verify cache
         cache.load();
-        assertTrue(cache.isCacheValid());
+        assertNotNull(cache.getCachedAt());
 
         // Clear cache
         cache.clearCache();
-        assertFalse(cache.isCacheValid());
         assertNull(cache.getCachedAt());
+        assertNull(cache.getCachedETag());
 
         // Next load should fetch fresh
         JwksHttpCache.LoadResult result = cache.load();
@@ -114,14 +114,20 @@ class JwksHttpCacheTest {
     }
 
     @Test
-    void testNoCaching() {
-        // Create cache with 0 validity (no caching)
-        HttpHandler httpHandler = HttpHandler.builder()
-                .url("https://example.com/.well-known/jwks.json")
-                .build();
-        JwksHttpCache noCacheInstance = new JwksHttpCache(httpHandler, 0);
-
-        assertFalse(noCacheInstance.isCacheValid());
+    void testETagBasedCaching() {
+        // This test demonstrates ETag-based caching behavior
+        // Since the test dispatcher doesn't provide ETags, 
+        // the cache will always fetch fresh content
+        
+        JwksHttpCache.LoadResult result1 = cache.load();
+        assertFalse(result1.wasFromCache());
+        
+        // Without ETag support, subsequent calls fetch fresh content
+        JwksHttpCache.LoadResult result2 = cache.load();
+        assertFalse(result2.wasFromCache());
+        
+        // Content should be the same
+        assertEquals(result1.content(), result2.content());
     }
 
     @Test
