@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.jwks.http;
 
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
+import de.cuioss.tools.net.http.HttpStatusFamily;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -216,19 +217,21 @@ public class ETagAwareHttpHandler {
             HttpClient client = httpHandler.createHttpClient();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+            HttpStatusFamily statusFamily = HttpStatusFamily.fromStatusCode(response.statusCode());
+            
             if (response.statusCode() == 304) {
                 // Not Modified - content hasn't changed
                 LOGGER.debug("Received 304 Not Modified from %s", httpHandler.getUrl());
                 return new HttpCacheResult(null, null, true, false);
-            } else if (response.statusCode() == 200) {
-                // OK - fresh content
+            } else if (statusFamily == HttpStatusFamily.SUCCESS) {
+                // 2xx Success - fresh content
                 String content = response.body();
                 String etag = response.headers().firstValue("ETag").orElse(null);
 
-                LOGGER.debug("Received 200 OK from %s with ETag: %s", httpHandler.getUrl(), etag);
+                LOGGER.debug("Received {} {} from %s with ETag: %s", response.statusCode(), statusFamily, httpHandler.getUrl(), etag);
                 return new HttpCacheResult(content, etag, false, false);
             } else {
-                LOGGER.warn("HTTP {} from {}", response.statusCode(), httpHandler.getUrl());
+                LOGGER.warn("HTTP {} ({}) from {}", response.statusCode(), statusFamily, httpHandler.getUrl());
                 return new HttpCacheResult(null, null, false, true);
             }
 
