@@ -125,7 +125,7 @@ public class ETagAwareHttpHandler {
     public synchronized LoadResult load() {
         // If we have cached content and ETag, try conditional request
         if (cachedContent != null && cachedETag != null) {
-            HttpCacheResult result = fetchJwksContentWithCache();
+            HttpFetchResult result = fetchJwksContentWithCache();
 
             if (result.error) {
                 // HTTP error occurred - return appropriate error state
@@ -154,7 +154,7 @@ public class ETagAwareHttpHandler {
             }
         } else {
             // No cache or no ETag - fetch fresh content
-            HttpCacheResult result = fetchJwksContentWithCache();
+            HttpFetchResult result = fetchJwksContentWithCache();
 
             if (result.error) {
                 // HTTP error occurred - return appropriate error state
@@ -193,16 +193,16 @@ public class ETagAwareHttpHandler {
     }
 
     /**
-     * Internal result for HTTP cache operations.
+     * Internal result for HTTP fetch operations.
      */
-    private record HttpCacheResult(String content, String etag, boolean notModified, boolean error) {}
+    private record HttpFetchResult(String content, String etag, boolean notModified, boolean error) {}
 
     /**
      * Fetches HTTP content from the endpoint with ETag support.
      *
-     * @return HttpCacheResult with error flag set if request fails
+     * @return HttpFetchResult with error flag set if request fails
      */
-    private HttpCacheResult fetchJwksContentWithCache() {
+    private HttpFetchResult fetchJwksContentWithCache() {
         // Build request with conditional headers
         HttpRequest.Builder requestBuilder = httpHandler.requestBuilder();
 
@@ -222,26 +222,26 @@ public class ETagAwareHttpHandler {
             if (response.statusCode() == 304) {
                 // Not Modified - content hasn't changed
                 LOGGER.debug("Received 304 Not Modified from %s", httpHandler.getUrl());
-                return new HttpCacheResult(null, null, true, false);
+                return new HttpFetchResult(null, null, true, false);
             } else if (statusFamily == HttpStatusFamily.SUCCESS) {
                 // 2xx Success - fresh content
                 String content = response.body();
                 String etag = response.headers().firstValue("ETag").orElse(null);
 
                 LOGGER.debug("Received {} {} from %s with ETag: %s", response.statusCode(), statusFamily, httpHandler.getUrl(), etag);
-                return new HttpCacheResult(content, etag, false, false);
+                return new HttpFetchResult(content, etag, false, false);
             } else {
                 LOGGER.warn("HTTP {} ({}) from {}", response.statusCode(), statusFamily, httpHandler.getUrl());
-                return new HttpCacheResult(null, null, false, true);
+                return new HttpFetchResult(null, null, false, true);
             }
 
         } catch (IOException e) {
             LOGGER.warn(e, "Failed to fetch HTTP content from {}", httpHandler.getUrl());
-            return new HttpCacheResult(null, null, false, true);
+            return new HttpFetchResult(null, null, false, true);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.warn("Interrupted while fetching HTTP content from {}", httpHandler.getUrl());
-            return new HttpCacheResult(null, null, false, true);
+            return new HttpFetchResult(null, null, false, true);
         }
     }
 }
