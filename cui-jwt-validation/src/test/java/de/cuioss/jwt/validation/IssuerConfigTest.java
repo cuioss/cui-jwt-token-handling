@@ -92,7 +92,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
             var claimMapper = new IdentityMapper();
             var httpConfig = HttpJwksLoaderConfig.builder()
                     .url(TEST_JWKS_URL)
-                    .refreshIntervalSeconds(60)
                     .build();
 
             // When
@@ -127,7 +126,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
                     .issuer(TEST_ISSUER)
                     .httpJwksLoaderConfig(HttpJwksLoaderConfig.builder()
                             .url(TEST_JWKS_URL)
-                            .refreshIntervalSeconds(60)
                             .build())
                     .build();
             var securityEventCounter = new SecurityEventCounter();

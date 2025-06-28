@@ -290,7 +290,8 @@ class TokenValidatorTest {
                     .issuer(TestTokenHolder.TEST_ISSUER)
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
-                    .jwksContent(InMemoryJWKSFactory.createEmptyJwks())
+                    // Use JWKS with a different key ID so the issuer is healthy but key is not found
+                    .jwksContent(InMemoryJWKSFactory.createValidJwksWithKeyId("different-key-id"))
                     .build();
 
             TokenValidator newTokenValidator = new TokenValidator(newIssuerConfig);

@@ -19,7 +19,6 @@ import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoader;
-import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.well_known.LazyWellKnownHandler;
@@ -82,7 +81,6 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
     private static final CuiLogger LOGGER = new CuiLogger(WellKnownHandlerJWKSKeyloader.class);
 
     private final LazyWellKnownHandler wellKnownHandler;
-    private final HttpJwksLoaderConfig baseConfig;
     private final SecurityEventCounter securityEventCounter;
 
     // Lazy-initialized delegate loader
@@ -96,14 +94,11 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
      * Creates a new WellKnownHandlerJWKSKeyloader.
      *
      * @param wellKnownHandler the well-known handler for discovery
-     * @param baseConfig base configuration for the HTTP JWKS loader (URL will be overridden)
      * @param securityEventCounter the security event counter
      */
     public WellKnownHandlerJWKSKeyloader(@NonNull LazyWellKnownHandler wellKnownHandler,
-                                        @NonNull HttpJwksLoaderConfig baseConfig,
                                         @NonNull SecurityEventCounter securityEventCounter) {
         this.wellKnownHandler = wellKnownHandler;
-        this.baseConfig = baseConfig;
         this.securityEventCounter = securityEventCounter;
         
         LOGGER.debug("Created WellKnownHandlerJWKSKeyloader for well-known URL: %s", 
@@ -153,19 +148,9 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
                 }
 
                 // Phase 2: Create HttpJwksLoader with discovered URI
-                String jwksUri = jwksUriHandler.getUri().toString();
-                LOGGER.debug("Discovered JWKS URI: %s", jwksUri);
+                LOGGER.debug("Discovered JWKS URI: %s", jwksUriHandler.getUri());
 
-                // Create new config with discovered URL
-                HttpJwksLoaderConfig delegateConfig = HttpJwksLoaderConfig.builder()
-                        .httpHandler(jwksUriHandler)
-                        .refreshIntervalSeconds(baseConfig.getRefreshIntervalSeconds())
-                        .maxCacheSize(baseConfig.getMaxCacheSize())
-                        .backgroundRefreshPercentage(baseConfig.getBackgroundRefreshPercentage())
-                        .backgroundRefreshExecutor(baseConfig.getBackgroundRefreshExecutor())
-                        .build();
-
-                delegateLoader = new HttpJwksLoader(delegateConfig, securityEventCounter);
+                delegateLoader = new HttpJwksLoader(jwksUriHandler, securityEventCounter);
                 
                 // Check if the delegate is healthy
                 if (delegateLoader.isHealthy()) {

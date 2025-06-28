@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.well_known;
 
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.util.RetryUtil;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import de.cuioss.tools.net.http.SecureSSLContextProvider;
@@ -313,8 +314,11 @@ public final class LazyWellKnownHandler {
             try {
                 LOGGER.debug("Performing lazy initialization of well-known endpoints for: %s", wellKnownUrl);
                 
-                // Fetch and parse discovery document
-                String responseBody = client.fetchDiscoveryDocument();
+                // Fetch and parse discovery document with retry
+                String responseBody = RetryUtil.executeWithRetry(
+                    () -> client.fetchDiscoveryDocument(),
+                    "fetch well-known discovery document from " + wellKnownUrl
+                );
                 JsonObject discoveryDocument = parser.parseJsonResponse(responseBody, wellKnownUrl);
                 
                 LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));

@@ -64,13 +64,12 @@ class JwksLoaderFactoryTest {
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url("https://example.com/.well-known/jwks.json")
-                .refreshIntervalSeconds(60)
                 .build();
         JwksLoader loader = JwksLoaderFactory.createHttpLoader(config, securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(HttpJwksLoader.class, loader, "Loader should be an instance of HttpJwksLoader");
         assertEquals(JwksType.HTTP, loader.getJwksType(), "Loader should have HTTP type");
-        assertEquals(LoaderStatus.ERROR, loader.getStatus(), "HTTP loader should have ERROR status when URL is unreachable");
+        assertEquals(LoaderStatus.UNDEFINED, loader.getStatus(), "HTTP loader should have UNDEFINED status until first access (lazy loading)");
     }
 
     @Test
