@@ -28,12 +28,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger
 @EnableMockWebServer
-class JwksHttpCacheTest {
+class ETagAwareHttpHandlerTest {
 
     @Getter
     private final JwksResolveDispatcher moduleDispatcher = new JwksResolveDispatcher();
 
-    private JwksHttpCache cache;
+    private ETagAwareHttpHandler cache;
 
     @BeforeEach
     void setUp(URIBuilder uriBuilder) {
@@ -44,7 +44,7 @@ class JwksHttpCacheTest {
                 .url(jwksEndpoint)
                 .build();
 
-        cache = new JwksHttpCache(httpHandler);
+        cache = new ETagAwareHttpHandler(httpHandler);
     }
 
     @Test
@@ -52,9 +52,9 @@ class JwksHttpCacheTest {
         // Initially no cache - no way to verify directly (internal state hidden)
 
         // First load should fetch from HTTP
-        JwksHttpCache.LoadResult result = cache.load();
+        ETagAwareHttpHandler.LoadResult result = cache.load();
         assertNotNull(result.content());
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result.loadState());
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result.loadState());
         assertTrue(result.loadState().isDataChanged());
         assertNotNull(result.loadedAt());
 
@@ -65,15 +65,15 @@ class JwksHttpCacheTest {
     @Test
     void testCachingBehaviorWithoutETag() {
         // First load
-        JwksHttpCache.LoadResult result1 = cache.load();
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result1.loadState());
+        ETagAwareHttpHandler.LoadResult result1 = cache.load();
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result1.loadState());
         assertTrue(result1.loadState().isDataChanged());
         assertEquals(1, moduleDispatcher.getCallCounter());
 
         // Second load - without ETag support from server, it will fetch again
-        JwksHttpCache.LoadResult result2 = cache.load();
+        ETagAwareHttpHandler.LoadResult result2 = cache.load();
         assertEquals(result1.content(), result2.content());
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result2.loadState());
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result2.loadState());
         assertTrue(result2.loadState().isDataChanged());
         
         // Without ETag from server, each call fetches fresh content
@@ -81,33 +81,34 @@ class JwksHttpCacheTest {
     }
 
     @Test
-    void testReload() {
+    void testReloadBypassETag() {
         // Initial load
         cache.load();
         assertEquals(1, moduleDispatcher.getCallCounter());
 
-        // Reload should bypass cache
-        JwksHttpCache.LoadResult reloadResult = cache.reload();
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, reloadResult.loadState());
+        // Reload with false should bypass ETag validation only
+        ETagAwareHttpHandler.LoadResult reloadResult = cache.reload(false);
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, reloadResult.loadState());
         assertTrue(reloadResult.loadState().isDataChanged());
         assertEquals(2, moduleDispatcher.getCallCounter());
     }
 
     @Test
-    void testClearCache() {
-        // Load content first
-        cache.load();
+    void testReloadWithClearCache() {
+        // Initial load
+        ETagAwareHttpHandler.LoadResult result1 = cache.load();
         assertEquals(1, moduleDispatcher.getCallCounter());
 
-        // Clear cache
-        cache.clearCache();
-
-        // Next load should fetch fresh
-        JwksHttpCache.LoadResult result = cache.load();
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result.loadState());
-        assertTrue(result.loadState().isDataChanged());
+        // Reload with clear cache should completely clear all cached data
+        ETagAwareHttpHandler.LoadResult reloadResult = cache.reload(true);
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, reloadResult.loadState());
+        assertTrue(reloadResult.loadState().isDataChanged());
         assertEquals(2, moduleDispatcher.getCallCounter());
+
+        // Content should be the same but completely fresh
+        assertEquals(result1.content(), reloadResult.content());
     }
+
 
     @Test
     void testETagBasedCaching() {
@@ -115,13 +116,13 @@ class JwksHttpCacheTest {
         // Since the test dispatcher doesn't provide ETags, 
         // the cache will always fetch fresh content
         
-        JwksHttpCache.LoadResult result1 = cache.load();
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result1.loadState());
+        ETagAwareHttpHandler.LoadResult result1 = cache.load();
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result1.loadState());
         assertTrue(result1.loadState().isDataChanged());
         
         // Without ETag support, subsequent calls fetch fresh content
-        JwksHttpCache.LoadResult result2 = cache.load();
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result2.loadState());
+        ETagAwareHttpHandler.LoadResult result2 = cache.load();
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result2.loadState());
         assertTrue(result2.loadState().isDataChanged());
         
         // Content should be the same
@@ -130,16 +131,16 @@ class JwksHttpCacheTest {
 
     @Test
     void testLoadResultRecord() {
-        JwksHttpCache.LoadResult result = cache.load();
+        ETagAwareHttpHandler.LoadResult result = cache.load();
         
         // Test record properties
         assertNotNull(result.content());
         assertNotNull(result.loadedAt());
-        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result.loadState());
+        assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result.loadState());
         assertTrue(result.loadState().isDataChanged());
 
         // Test record equality
-        JwksHttpCache.LoadResult sameResult = new JwksHttpCache.LoadResult(
+        ETagAwareHttpHandler.LoadResult sameResult = new ETagAwareHttpHandler.LoadResult(
                 result.content(), result.loadState(), result.loadedAt());
         assertEquals(result, sameResult);
         assertEquals(result.hashCode(), sameResult.hashCode());
@@ -148,23 +149,23 @@ class JwksHttpCacheTest {
     @Test
     void testLoadStateEnum() {
         // Test enum properties
-        assertTrue(JwksHttpCache.LoadState.LOADED_FROM_SERVER.isDataChanged());
-        assertFalse(JwksHttpCache.LoadState.CACHE_ETAG.isDataChanged());
-        assertFalse(JwksHttpCache.LoadState.CACHE_CONTENT.isDataChanged());
-        assertFalse(JwksHttpCache.LoadState.ERROR_WITH_CACHE.isDataChanged());
-        assertTrue(JwksHttpCache.LoadState.ERROR_NO_CACHE.isDataChanged());
+        assertTrue(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER.isDataChanged());
+        assertFalse(ETagAwareHttpHandler.LoadState.CACHE_ETAG.isDataChanged());
+        assertFalse(ETagAwareHttpHandler.LoadState.CACHE_CONTENT.isDataChanged());
+        assertFalse(ETagAwareHttpHandler.LoadState.ERROR_WITH_CACHE.isDataChanged());
+        assertTrue(ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE.isDataChanged());
         
         // Test LoadResult with different states
-        JwksHttpCache.LoadResult serverResult = new JwksHttpCache.LoadResult("content", 
-                JwksHttpCache.LoadState.LOADED_FROM_SERVER, java.time.Instant.now());
+        ETagAwareHttpHandler.LoadResult serverResult = new ETagAwareHttpHandler.LoadResult("content", 
+                ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, java.time.Instant.now());
         assertTrue(serverResult.loadState().isDataChanged());
         
-        JwksHttpCache.LoadResult etagResult = new JwksHttpCache.LoadResult("content", 
-                JwksHttpCache.LoadState.CACHE_ETAG, java.time.Instant.now());
+        ETagAwareHttpHandler.LoadResult etagResult = new ETagAwareHttpHandler.LoadResult("content", 
+                ETagAwareHttpHandler.LoadState.CACHE_ETAG, java.time.Instant.now());
         assertFalse(etagResult.loadState().isDataChanged());
         
-        JwksHttpCache.LoadResult contentResult = new JwksHttpCache.LoadResult("content", 
-                JwksHttpCache.LoadState.CACHE_CONTENT, java.time.Instant.now());
+        ETagAwareHttpHandler.LoadResult contentResult = new ETagAwareHttpHandler.LoadResult("content", 
+                ETagAwareHttpHandler.LoadState.CACHE_CONTENT, java.time.Instant.now());
         assertFalse(contentResult.loadState().isDataChanged());
     }
 }

@@ -31,7 +31,7 @@ import java.util.Set;
 
 /**
  * JWKS loader that loads from HTTP endpoint with caching support.
- * Uses JwksHttpCache for stateful HTTP caching without scheduling.
+ * Uses ETagAwareHttpHandler for stateful HTTP caching without scheduling.
  * 
  * @author Oliver Wolff
  * @since 1.0
@@ -40,14 +40,14 @@ public class HttpJwksLoader implements JwksLoader {
     
     private static final CuiLogger LOGGER = new CuiLogger(HttpJwksLoader.class);
     
-    private final JwksHttpCache httpCache;
+    private final ETagAwareHttpHandler httpCache;
     private final SecurityEventCounter securityEventCounter;
     private volatile JWKSKeyLoader keyLoader;
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
     
     public HttpJwksLoader(@NonNull HttpHandler httpHandler, 
                           @NonNull SecurityEventCounter securityEventCounter) {
-        this.httpCache = new JwksHttpCache(httpHandler);
+        this.httpCache = new ETagAwareHttpHandler(httpHandler);
         this.securityEventCounter = securityEventCounter;
     }
     
@@ -57,7 +57,7 @@ public class HttpJwksLoader implements JwksLoader {
      */
     public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config, 
                           @NonNull SecurityEventCounter securityEventCounter) {
-        this.httpCache = new JwksHttpCache(config.getHttpHandler());
+        this.httpCache = new ETagAwareHttpHandler(config.getHttpHandler());
         this.securityEventCounter = securityEventCounter;
     }
     
@@ -111,16 +111,16 @@ public class HttpJwksLoader implements JwksLoader {
     }
     
     /**
-     * Forces a reload of JWKS content, bypassing any cache.
-     * Useful for refreshing keys when needed.
+     * Forces a reload of JWKS content, optionally clearing cache completely.
      * 
+     * @param clearCache if true, clears all cached content; if false, only bypasses ETag validation
      * @throws JwksLoadException if reloading fails
      */
-    public void reload() {
+    public void reload(boolean clearCache) {
         try {
-            JwksHttpCache.LoadResult result = httpCache.reload();
+            ETagAwareHttpHandler.LoadResult result = httpCache.reload(clearCache);
             updateKeyLoader(result);
-            LOGGER.info("Forced reload of JWKS completed");
+            LOGGER.info("Forced reload of JWKS completed with clearCache=%s", clearCache);
         } catch (JwksLoadException e) {
             this.status = LoaderStatus.ERROR;
             LOGGER.error(e, "Failed to reload JWKS");
@@ -136,10 +136,10 @@ public class HttpJwksLoader implements JwksLoader {
     
     private void loadKeys() {
         try {
-            JwksHttpCache.LoadResult result = httpCache.load();
+            ETagAwareHttpHandler.LoadResult result = httpCache.load();
             
             // Handle error states appropriately
-            if (result.loadState() == JwksHttpCache.LoadState.ERROR_NO_CACHE) {
+            if (result.loadState() == ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE) {
                 this.status = LoaderStatus.ERROR;
                 throw new JwksLoadException("Failed to load JWKS and no cached content available");
             }
@@ -176,7 +176,7 @@ public class HttpJwksLoader implements JwksLoader {
         }
     }
     
-    private void updateKeyLoader(JwksHttpCache.LoadResult result) {
+    private void updateKeyLoader(ETagAwareHttpHandler.LoadResult result) {
         this.keyLoader = JWKSKeyLoader.builder()
             .originalString(result.content())
             .securityEventCounter(securityEventCounter)

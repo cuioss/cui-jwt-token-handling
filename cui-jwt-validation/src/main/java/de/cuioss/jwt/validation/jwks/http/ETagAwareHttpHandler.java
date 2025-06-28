@@ -26,20 +26,20 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 
 /**
- * Simple stateful HTTP cache for JWKS content using ETags.
+ * ETag-aware HTTP handler with stateful caching capabilities.
  * <p>
- * This component handles HTTP calls and provides HTTP-based caching using
- * ETags and "If-None-Match" headers. It tracks whether content was loaded
- * from cache (304 Not Modified) or freshly fetched (200 OK).
+ * This component provides HTTP-based caching using ETags and "If-None-Match" headers.
+ * It tracks whether content was loaded from cache (304 Not Modified) or freshly fetched (200 OK).
+ * While originally designed for JWKS content, it can handle any HTTP content that supports ETags.
  * <p>
  * Thread-safe implementation using volatile fields and synchronized methods.
  *
  * @author Oliver Wolff
  * @since 1.0
  */
-public class JwksHttpCache {
+public class ETagAwareHttpHandler {
 
-    private static final CuiLogger LOGGER = new CuiLogger(JwksHttpCache.class);
+    private static final CuiLogger LOGGER = new CuiLogger(ETagAwareHttpHandler.class);
 
     /**
      * Enum representing the state of a load operation.
@@ -110,16 +110,16 @@ public class JwksHttpCache {
     private volatile Instant cachedAt;
 
     /**
-     * Creates a new HTTP cache using ETags for cache validation.
+     * Creates a new ETag-aware HTTP handler for cache validation.
      *
      * @param httpHandler the HTTP handler for making requests
      */
-    public JwksHttpCache(@NonNull HttpHandler httpHandler) {
+    public ETagAwareHttpHandler(@NonNull HttpHandler httpHandler) {
         this.httpHandler = httpHandler;
     }
 
     /**
-     * Loads JWKS content, using ETag-based HTTP caching when supported.
+     * Loads HTTP content, using ETag-based HTTP caching when supported.
      *
      * @return LoadResult containing content and cache status, never null
      */
@@ -146,7 +146,7 @@ public class JwksHttpCache {
                     this.cachedETag = result.etag;
                     this.cachedAt = now;
 
-                    LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
+                    LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
                     return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
                 }
             } else {
@@ -158,11 +158,11 @@ public class JwksHttpCache {
                 this.cachedETag = result.etag; // May be null if server doesn't support ETags
                 this.cachedAt = now;
 
-                LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
+                LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
                 return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
             }
         } catch (JwksLoadException e) {
-            LOGGER.warn(e, "Failed to load JWKS from %s", httpHandler.getUrl());
+            LOGGER.warn(e, "Failed to load HTTP content from %s", httpHandler.getUrl());
             
             // Return appropriate error state based on whether we have cached content
             if (cachedContent != null) {
@@ -174,27 +174,23 @@ public class JwksHttpCache {
     }
 
     /**
-     * Forces a reload of JWKS content, bypassing cache.
+     * Forces a reload of HTTP content, optionally clearing cache completely.
      *
+     * @param clearCache if true, clears all cached content; if false, only bypasses ETag validation
      * @return LoadResult with fresh content or error state, never null
      */
-    public synchronized LoadResult reload() {
-        LOGGER.debug("Forcing reload of JWKS content from %s", httpHandler.getUrl());
-
-        // Clear ETag to force fresh load
-        this.cachedETag = null;
+    public synchronized LoadResult reload(boolean clearCache) {
+        if (clearCache) {
+            LOGGER.debug("Clearing HTTP cache and reloading from %s", httpHandler.getUrl());
+            this.cachedContent = null;
+            this.cachedETag = null;
+            this.cachedAt = null;
+        } else {
+            LOGGER.debug("Bypassing ETag validation and reloading from %s", httpHandler.getUrl());
+            this.cachedETag = null;
+        }
 
         return load();
-    }
-
-    /**
-     * Clears the cache, forcing next load to fetch fresh content.
-     */
-    public synchronized void clearCache() {
-        LOGGER.debug("Clearing JWKS cache for %s", httpHandler.getUrl());
-        this.cachedContent = null;
-        this.cachedETag = null;
-        this.cachedAt = null;
     }
 
     /**
@@ -203,7 +199,7 @@ public class JwksHttpCache {
     private record HttpCacheResult(String content, String etag, boolean notModified) {}
 
     /**
-     * Fetches JWKS content from the HTTP endpoint with ETag support.
+     * Fetches HTTP content from the endpoint with ETag support.
      *
      * @throws JwksLoadException if HTTP request fails
      */
@@ -238,10 +234,10 @@ public class JwksHttpCache {
             }
 
         } catch (IOException e) {
-            throw new JwksLoadException("Failed to fetch JWKS from " + httpHandler.getUrl(), e);
+            throw new JwksLoadException("Failed to fetch HTTP content from " + httpHandler.getUrl(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new JwksLoadException("Interrupted while fetching JWKS from " + httpHandler.getUrl(), e);
+            throw new JwksLoadException("Interrupted while fetching HTTP content from " + httpHandler.getUrl(), e);
         }
     }
 }
