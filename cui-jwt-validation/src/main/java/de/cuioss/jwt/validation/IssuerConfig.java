@@ -221,12 +221,7 @@ public class IssuerConfig {
         }
 
         // Delegate to the underlying JwksLoader
-        try {
-            return jwksLoader.isHealthy();
-        } catch (Exception e) {
-            // Return false for any exception during health check
-            return false;
-        }
+        return jwksLoader.isHealthy();
     }
 
 }

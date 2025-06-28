@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation.well_known;
 
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.util.RetryException;
 import de.cuioss.jwt.validation.util.RetryUtil;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
@@ -355,12 +356,17 @@ public final class LazyWellKnownHandler {
                 
                 LOGGER.info("Successfully loaded well-known endpoints from: %s", wellKnownUrl);
                 
-            } catch (Exception e) {
+            } catch (WellKnownDiscoveryException e) {
+                // Re-throw discovery exceptions as-is
+                this.initializationError = e;
+                this.initialized = true;
+                throw e;
+            } catch (RetryException e) {
                 // Save the error for future attempts
                 this.initializationError = e;
                 this.initialized = true; // Mark as initialized even on error
-                LOGGER.error(e, "Failed to load well-known endpoints from: %s", wellKnownUrl);
-                throw new WellKnownDiscoveryException("Failed to discover well-known endpoints", e);
+                LOGGER.error(e, "Failed to load well-known endpoints from: %s after %d attempts", wellKnownUrl, e.getAttemptsMade());
+                throw new WellKnownDiscoveryException("Failed to discover well-known endpoints after " + e.getAttemptsMade() + " attempts", e);
             }
         } finally {
             lazyInitLock.writeLock().unlock();
@@ -377,7 +383,7 @@ public final class LazyWellKnownHandler {
         try {
             ensureInitialized();
             return endpoints != null && !endpoints.isEmpty();
-        } catch (Exception e) {
+        } catch (WellKnownDiscoveryException e) {
             LOGGER.debug("Health check failed for well-known handler: %s", e.getMessage());
             return false;
         }

@@ -19,6 +19,7 @@ import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoader;
+import de.cuioss.jwt.validation.jwks.http.JwksLoadException;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.well_known.LazyWellKnownHandler;
@@ -166,7 +167,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
                     return false;
                 }
 
-            } catch (Exception e) {
+            } catch (WellKnownDiscoveryException | JwksLoadException e) {
                 status = LoaderStatus.ERROR;
                 lastError = e;
                 LOGGER.error(e, "Failed to initialize JWKS loader via well-known discovery for: %s", 

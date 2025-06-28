@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.jwks.http;
 
+import de.cuioss.jwt.validation.util.RetryException;
 import de.cuioss.jwt.validation.util.RetryUtil;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
@@ -110,13 +111,13 @@ public class JwksHttpCache {
                 LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
                 return new LoadResult(result.content, false, now);
             }
-        } catch (RuntimeException e) {
+        } catch (RetryException e) {
             // Unwrap JwksLoadException if wrapped by RetryUtil
             if (e.getCause() instanceof JwksLoadException) {
                 throw (JwksLoadException) e.getCause();
             }
-            // Wrap other runtime exceptions
-            throw new JwksLoadException("Failed to load JWKS from " + httpHandler.getUrl(), e);
+            // Wrap retry exceptions with context
+            throw new JwksLoadException("Failed to load JWKS after " + e.getAttemptsMade() + " attempts from " + httpHandler.getUrl(), e);
         }
     }
     

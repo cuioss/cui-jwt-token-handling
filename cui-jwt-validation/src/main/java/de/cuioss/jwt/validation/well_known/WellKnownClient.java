@@ -73,13 +73,14 @@ class WellKnownClient {
             }
 
             return response.body();
+        } catch (WellKnownDiscoveryException e) {
+            // Re-throw as-is to preserve original message
+            throw e;
         } catch (IOException e) {
             throw new WellKnownDiscoveryException("IOException while fetching or reading from " + resolvedUrl, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new WellKnownDiscoveryException("Interrupted while fetching from " + resolvedUrl, e);
-        } catch (Exception e) {
-            throw new WellKnownDiscoveryException("Error while fetching from " + resolvedUrl, e);
         }
     }
 }

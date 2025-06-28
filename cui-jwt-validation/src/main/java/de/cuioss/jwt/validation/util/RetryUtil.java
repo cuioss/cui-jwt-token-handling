@@ -21,7 +21,7 @@ import java.time.Duration;
 import java.util.function.Supplier;
 
 /**
- * Simple retry utility for HTTP operations.
+ * Simple retry utility for operations that may fail transiently.
  * 
  * @author Oliver Wolff
  * @since 1.0
@@ -43,10 +43,10 @@ public final class RetryUtil {
      * @param operationName name for logging
      * @param <T> return type
      * @return the result of the operation
-     * @throws RuntimeException if all attempts fail
+     * @throws RetryException if all attempts fail
      */
     public static <T> T executeWithRetry(Supplier<T> operation, int maxAttempts, Duration delay, String operationName) {
-        Exception lastException = null;
+        RuntimeException lastException = null;
         
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
@@ -56,7 +56,7 @@ public final class RetryUtil {
                     LOGGER.info("Successfully executed %s on attempt %d", operationName, attempt);
                 }
                 return result;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 lastException = e;
                 if (attempt < maxAttempts) {
                     LOGGER.debug("Operation %s failed on attempt %d, retrying after %dms: %s", 
@@ -65,7 +65,7 @@ public final class RetryUtil {
                         Thread.sleep(delay.toMillis());
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
-                        throw new RuntimeException("Operation interrupted: " + operationName, ie);
+                        throw new RetryException("Operation interrupted: " + operationName, ie, attempt);
                     }
                 } else {
                     LOGGER.warn("Operation %s failed after %d attempts", operationName, attempt);
@@ -73,7 +73,7 @@ public final class RetryUtil {
             }
         }
         
-        throw new RuntimeException("Operation failed after " + maxAttempts + " attempts: " + operationName, lastException);
+        throw new RetryException("Operation failed after " + maxAttempts + " attempts: " + operationName, lastException, maxAttempts);
     }
     
     /**
