@@ -64,10 +64,16 @@ public class JwksHttpCache {
         CACHE_CONTENT(false),
 
         /**
-         * An error occurred during loading.
+         * An error occurred during loading, but cached data is still available.
          * Data state is unknown - keys may need reevaluation.
          */
-        ERROR(true);
+        ERROR_WITH_CACHE(true),
+        
+        /**
+         * An error occurred during loading and no cached data is available.
+         * Data state is unknown - keys need reevaluation.
+         */
+        ERROR_NO_CACHE(true);
 
         /**
          * true if data changed and keys need reevaluation, false if unchanged
@@ -115,47 +121,62 @@ public class JwksHttpCache {
     /**
      * Loads JWKS content, using ETag-based HTTP caching when supported.
      *
-     * @return LoadResult containing content and cache status
-     * @throws JwksLoadException if loading fails
+     * @return LoadResult containing content and cache status, never null
      */
     public synchronized LoadResult load() {
-        // If we have cached content and ETag, try conditional request
-        if (cachedContent != null && cachedETag != null) {
-            HttpCacheResult result = fetchJwksContentWithCache();
+        try {
+            // If we have cached content and ETag, try conditional request
+            if (cachedContent != null && cachedETag != null) {
+                HttpCacheResult result = fetchJwksContentWithCache();
 
-            if (result.notModified) {
-                // 304 Not Modified - use cached content
-                LOGGER.debug("JWKS content not modified (304), using cached version");
-                return new LoadResult(cachedContent, LoadState.CACHE_ETAG, cachedAt);
+                if (result.notModified) {
+                    // 304 Not Modified - use cached content
+                    LOGGER.debug("JWKS content not modified (304), using cached version");
+                    return new LoadResult(cachedContent, LoadState.CACHE_ETAG, cachedAt);
+                } else {
+                    // 200 OK - fresh content received
+                    // Check if content actually changed despite new response
+                    if (cachedContent.equals(result.content)) {
+                        LOGGER.debug("JWKS content unchanged despite 200 OK response");
+                        return new LoadResult(cachedContent, LoadState.CACHE_CONTENT, cachedAt);
+                    }
+                    
+                    Instant now = Instant.now();
+                    this.cachedContent = result.content;
+                    this.cachedETag = result.etag;
+                    this.cachedAt = now;
+
+                    LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
+                    return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
+                }
             } else {
-                // 200 OK - fresh content received
+                // No cache or no ETag - fetch fresh content
+                HttpCacheResult result = fetchJwksContentWithCache();
+
                 Instant now = Instant.now();
                 this.cachedContent = result.content;
-                this.cachedETag = result.etag;
+                this.cachedETag = result.etag; // May be null if server doesn't support ETags
                 this.cachedAt = now;
 
                 LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
                 return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
             }
-        } else {
-            // No cache or no ETag - fetch fresh content
-            HttpCacheResult result = fetchJwksContentWithCache();
-
-            Instant now = Instant.now();
-            this.cachedContent = result.content;
-            this.cachedETag = result.etag; // May be null if server doesn't support ETags
-            this.cachedAt = now;
-
-            LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
-            return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
+        } catch (JwksLoadException e) {
+            LOGGER.warn(e, "Failed to load JWKS from %s", httpHandler.getUrl());
+            
+            // Return appropriate error state based on whether we have cached content
+            if (cachedContent != null) {
+                return new LoadResult(cachedContent, LoadState.ERROR_WITH_CACHE, cachedAt);
+            } else {
+                return new LoadResult(null, LoadState.ERROR_NO_CACHE, Instant.now());
+            }
         }
     }
 
     /**
      * Forces a reload of JWKS content, bypassing cache.
      *
-     * @return LoadResult with fresh content
-     * @throws JwksLoadException if loading fails
+     * @return LoadResult with fresh content or error state, never null
      */
     public synchronized LoadResult reload() {
         LOGGER.debug("Forcing reload of JWKS content from %s", httpHandler.getUrl());

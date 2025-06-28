@@ -138,8 +138,14 @@ public class HttpJwksLoader implements JwksLoader {
         try {
             JwksHttpCache.LoadResult result = httpCache.load();
             
-            // Only update key loader if data has changed
-            if (result.loadState().isDataChanged() || keyLoader == null) {
+            // Handle error states appropriately
+            if (result.loadState() == JwksHttpCache.LoadState.ERROR_NO_CACHE) {
+                this.status = LoaderStatus.ERROR;
+                throw new JwksLoadException("Failed to load JWKS and no cached content available");
+            }
+            
+            // Only update key loader if data has changed and we have content
+            if (result.content() != null && (result.loadState().isDataChanged() || keyLoader == null)) {
                 updateKeyLoader(result);
                 LOGGER.info("Keys updated due to data change - load state: %s", result.loadState());
             }
@@ -155,8 +161,11 @@ public class HttpJwksLoader implements JwksLoader {
                 case CACHE_CONTENT:
                     LOGGER.debug("Using cached JWKS content from %s", result.loadedAt());
                     break;
-                case ERROR:
-                    LOGGER.warn("Load operation completed with error state");
+                case ERROR_WITH_CACHE:
+                    LOGGER.warn("Load operation failed but using cached content");
+                    break;
+                case ERROR_NO_CACHE:
+                    LOGGER.warn("Load operation failed with no cached content available");
                     break;
             }
             
