@@ -151,7 +151,7 @@ class JwksHttpCacheTest {
         assertTrue(JwksHttpCache.LoadState.LOADED_FROM_SERVER.isDataChanged());
         assertFalse(JwksHttpCache.LoadState.CACHE_ETAG.isDataChanged());
         assertFalse(JwksHttpCache.LoadState.CACHE_CONTENT.isDataChanged());
-        assertTrue(JwksHttpCache.LoadState.ERROR_WITH_CACHE.isDataChanged());
+        assertFalse(JwksHttpCache.LoadState.ERROR_WITH_CACHE.isDataChanged());
         assertTrue(JwksHttpCache.LoadState.ERROR_NO_CACHE.isDataChanged());
         
         // Test LoadResult with different states

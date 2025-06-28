@@ -65,9 +65,9 @@ public class JwksHttpCache {
 
         /**
          * An error occurred during loading, but cached data is still available.
-         * Data state is unknown - keys may need reevaluation.
+         * Data has not changed - no need to reload keys.
          */
-        ERROR_WITH_CACHE(true),
+        ERROR_WITH_CACHE(false),
         
         /**
          * An error occurred during loading and no cached data is available.
