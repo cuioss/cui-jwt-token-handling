@@ -18,14 +18,11 @@ package de.cuioss.jwt.validation.jwks.http;
 /**
  * Runtime exception thrown when JWKS loading fails.
  * This includes HTTP errors, network failures, and invalid JWKS content.
- * <p>
- * Extends HttpLoadException to maintain compatibility while providing
- * JWKS-specific exception semantics.
  * 
  * @author Oliver Wolff
  * @since 1.0
  */
-public class JwksLoadException extends HttpLoadException {
+public class JwksLoadException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
     

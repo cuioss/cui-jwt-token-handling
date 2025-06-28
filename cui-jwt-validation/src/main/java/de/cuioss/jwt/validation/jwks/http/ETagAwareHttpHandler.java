@@ -122,47 +122,52 @@ public class ETagAwareHttpHandler {
      * @return LoadResult containing content and cache status, never null
      */
     public synchronized LoadResult load() {
-        try {
-            // If we have cached content and ETag, try conditional request
-            if (cachedContent != null && cachedETag != null) {
-                HttpCacheResult result = fetchJwksContentWithCache();
+        // If we have cached content and ETag, try conditional request
+        if (cachedContent != null && cachedETag != null) {
+            HttpCacheResult result = fetchJwksContentWithCache();
 
-                if (result.notModified) {
-                    // 304 Not Modified - use cached content
-                    LOGGER.debug("JWKS content not modified (304), using cached version");
-                    return new LoadResult(cachedContent, LoadState.CACHE_ETAG);
+            if (result.error) {
+                // HTTP error occurred - return appropriate error state
+                if (cachedContent != null) {
+                    return new LoadResult(cachedContent, LoadState.ERROR_WITH_CACHE);
                 } else {
-                    // 200 OK - fresh content received
-                    // Check if content actually changed despite new response
-                    if (cachedContent.equals(result.content)) {
-                        LOGGER.debug("JWKS content unchanged despite 200 OK response");
-                        return new LoadResult(cachedContent, LoadState.CACHE_CONTENT);
-                    }
-                    
-                    this.cachedContent = result.content;
-                    this.cachedETag = result.etag;
+                    return new LoadResult(null, LoadState.ERROR_NO_CACHE);
+                }
+            } else if (result.notModified) {
+                // 304 Not Modified - use cached content
+                LOGGER.debug("HTTP content not modified (304), using cached version");
+                return new LoadResult(cachedContent, LoadState.CACHE_ETAG);
+            } else {
+                // 200 OK - fresh content received
+                // Check if content actually changed despite new response
+                if (cachedContent.equals(result.content)) {
+                    LOGGER.debug("HTTP content unchanged despite 200 OK response");
+                    return new LoadResult(cachedContent, LoadState.CACHE_CONTENT);
+                }
+                
+                this.cachedContent = result.content;
+                this.cachedETag = result.etag;
 
-                    LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
-                    return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER);
+                LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
+                return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER);
+            }
+        } else {
+            // No cache or no ETag - fetch fresh content
+            HttpCacheResult result = fetchJwksContentWithCache();
+
+            if (result.error) {
+                // HTTP error occurred - return appropriate error state
+                if (cachedContent != null) {
+                    return new LoadResult(cachedContent, LoadState.ERROR_WITH_CACHE);
+                } else {
+                    return new LoadResult(null, LoadState.ERROR_NO_CACHE);
                 }
             } else {
-                // No cache or no ETag - fetch fresh content
-                HttpCacheResult result = fetchJwksContentWithCache();
-
                 this.cachedContent = result.content;
                 this.cachedETag = result.etag; // May be null if server doesn't support ETags
 
                 LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
                 return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER);
-            }
-        } catch (HttpLoadException e) {
-            LOGGER.warn(e, "Failed to load HTTP content from %s", httpHandler.getUrl());
-            
-            // Return appropriate error state based on whether we have cached content
-            if (cachedContent != null) {
-                return new LoadResult(cachedContent, LoadState.ERROR_WITH_CACHE);
-            } else {
-                return new LoadResult(null, LoadState.ERROR_NO_CACHE);
             }
         }
     }
@@ -189,12 +194,12 @@ public class ETagAwareHttpHandler {
     /**
      * Internal result for HTTP cache operations.
      */
-    private record HttpCacheResult(String content, String etag, boolean notModified) {}
+    private record HttpCacheResult(String content, String etag, boolean notModified, boolean error) {}
 
     /**
      * Fetches HTTP content from the endpoint with ETag support.
      *
-     * @throws HttpLoadException if HTTP request fails
+     * @return HttpCacheResult with error flag set if request fails
      */
     private HttpCacheResult fetchJwksContentWithCache() {
         // Build request with conditional headers
@@ -214,23 +219,26 @@ public class ETagAwareHttpHandler {
             if (response.statusCode() == 304) {
                 // Not Modified - content hasn't changed
                 LOGGER.debug("Received 304 Not Modified from %s", httpHandler.getUrl());
-                return new HttpCacheResult(null, null, true);
+                return new HttpCacheResult(null, null, true, false);
             } else if (response.statusCode() == 200) {
                 // OK - fresh content
                 String content = response.body();
                 String etag = response.headers().firstValue("ETag").orElse(null);
 
                 LOGGER.debug("Received 200 OK from %s with ETag: %s", httpHandler.getUrl(), etag);
-                return new HttpCacheResult(content, etag, false);
+                return new HttpCacheResult(content, etag, false, false);
             } else {
-                throw new HttpLoadException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
+                LOGGER.warn("HTTP {} from {}", response.statusCode(), httpHandler.getUrl());
+                return new HttpCacheResult(null, null, false, true);
             }
 
         } catch (IOException e) {
-            throw new HttpLoadException("Failed to fetch HTTP content from " + httpHandler.getUrl(), e);
+            LOGGER.warn(e, "Failed to fetch HTTP content from {}", httpHandler.getUrl());
+            return new HttpCacheResult(null, null, false, true);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new HttpLoadException("Interrupted while fetching HTTP content from " + httpHandler.getUrl(), e);
+            LOGGER.warn("Interrupted while fetching HTTP content from {}", httpHandler.getUrl());
+            return new HttpCacheResult(null, null, false, true);
         }
     }
 }
