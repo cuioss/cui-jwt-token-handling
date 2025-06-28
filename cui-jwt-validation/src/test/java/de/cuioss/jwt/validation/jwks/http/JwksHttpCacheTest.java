@@ -49,10 +49,7 @@ class JwksHttpCacheTest {
 
     @Test
     void testBasicLoad() {
-        // Initially no cache
-        assertFalse(cache.hasCache());
-        assertNull(cache.getCachedAt());
-        assertNull(cache.getCachedETag());
+        // Initially no cache - no way to verify directly (internal state hidden)
 
         // First load should fetch from HTTP
         JwksHttpCache.LoadResult result = cache.load();
@@ -63,10 +60,6 @@ class JwksHttpCacheTest {
 
         // Should have called endpoint once
         assertEquals(1, moduleDispatcher.getCallCounter());
-
-        // Cache should now contain content (but ETag may be null if server doesn't support it)
-        assertEquals(result.loadedAt(), cache.getCachedAt());
-        // Note: getCachedETag() may be null if server doesn't provide ETag header
     }
 
     @Test
@@ -102,14 +95,12 @@ class JwksHttpCacheTest {
 
     @Test
     void testClearCache() {
-        // Load and verify cache
+        // Load content first
         cache.load();
-        assertNotNull(cache.getCachedAt());
+        assertEquals(1, moduleDispatcher.getCallCounter());
 
         // Clear cache
         cache.clearCache();
-        assertNull(cache.getCachedAt());
-        assertNull(cache.getCachedETag());
 
         // Next load should fetch fresh
         JwksHttpCache.LoadResult result = cache.load();

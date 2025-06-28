@@ -15,8 +15,6 @@
  */
 package de.cuioss.jwt.validation.jwks.http;
 
-import de.cuioss.jwt.validation.util.RetryException;
-import de.cuioss.jwt.validation.util.RetryUtil;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import lombok.NonNull;
@@ -31,18 +29,18 @@ import java.time.Instant;
  * Simple stateful HTTP cache for JWKS content using ETags.
  * <p>
  * This component handles HTTP calls and provides HTTP-based caching using
- * ETags and "If-None-Match" headers. It tracks whether content was loaded 
+ * ETags and "If-None-Match" headers. It tracks whether content was loaded
  * from cache (304 Not Modified) or freshly fetched (200 OK).
  * <p>
  * Thread-safe implementation using volatile fields and synchronized methods.
- * 
+ *
  * @author Oliver Wolff
  * @since 1.0
  */
 public class JwksHttpCache {
-    
+
     private static final CuiLogger LOGGER = new CuiLogger(JwksHttpCache.class);
-    
+
     /**
      * Enum representing the state of a load operation.
      */
@@ -52,31 +50,34 @@ public class JwksHttpCache {
          * Data has changed - keys should be reloaded/reevaluated.
          */
         LOADED_FROM_SERVER(true),
-        
+
         /**
          * Server responded with 304 Not Modified based on ETag.
          * Data has not changed - no need to reload keys.
          */
         CACHE_ETAG(false),
-        
+
         /**
          * Content was returned from local cache without server request.
          * Data has not changed - no need to reload keys.
          */
         CACHE_CONTENT(false),
-        
+
         /**
          * An error occurred during loading.
          * Data state is unknown - keys may need reevaluation.
          */
         ERROR(true);
-        
+
+        /**
+         * true if data changed and keys need reevaluation, false if unchanged
+         */
         private final boolean dataChanged;
-        
+
         LoadState(boolean dataChanged) {
             this.dataChanged = dataChanged;
         }
-        
+
         /**
          * Indicates whether the data has changed and keys should be reloaded/reevaluated.
          * 
@@ -89,106 +90,82 @@ public class JwksHttpCache {
 
     /**
      * Result of a load operation containing the payload and detailed load state.
-     * 
+     *
      * @param content the JWKS content as string
      * @param loadState the detailed state of the load operation
      * @param loadedAt the instant when content was loaded/cached
      */
     public record LoadResult(String content, LoadState loadState, Instant loadedAt) {}
-    
+
     private final HttpHandler httpHandler;
-    
+
     private volatile String cachedContent;
     private volatile String cachedETag;
     private volatile Instant cachedAt;
-    
+
     /**
      * Creates a new HTTP cache using ETags for cache validation.
-     * 
+     *
      * @param httpHandler the HTTP handler for making requests
      */
     public JwksHttpCache(@NonNull HttpHandler httpHandler) {
         this.httpHandler = httpHandler;
     }
-    
+
     /**
      * Loads JWKS content, using ETag-based HTTP caching when supported.
-     * 
+     *
      * @return LoadResult containing content and cache status
-     * @throws JwksLoadException if loading fails after retries
+     * @throws JwksLoadException if loading fails
      */
     public synchronized LoadResult load() {
-        try {
-            // If we have cached content and ETag, try conditional request
-            if (cachedContent != null && cachedETag != null) {
-                HttpCacheResult result = RetryUtil.executeWithRetry(
-                    this::fetchJwksContentWithCache,
-                    "fetch JWKS from " + httpHandler.getUrl()
-                );
-                
-                if (result.notModified) {
-                    // 304 Not Modified - use cached content
-                    LOGGER.debug("JWKS content not modified (304), using cached version");
-                    return new LoadResult(cachedContent, LoadState.CACHE_ETAG, cachedAt);
-                } else {
-                    // 200 OK - fresh content received
-                    Instant now = Instant.now();
-                    this.cachedContent = result.content;
-                    this.cachedETag = result.etag;
-                    this.cachedAt = now;
-                    
-                    LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
-                    return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
-                }
+        // If we have cached content and ETag, try conditional request
+        if (cachedContent != null && cachedETag != null) {
+            HttpCacheResult result = fetchJwksContentWithCache();
+
+            if (result.notModified) {
+                // 304 Not Modified - use cached content
+                LOGGER.debug("JWKS content not modified (304), using cached version");
+                return new LoadResult(cachedContent, LoadState.CACHE_ETAG, cachedAt);
             } else {
-                // No cache or no ETag - fetch fresh content
-                HttpCacheResult result = RetryUtil.executeWithRetry(
-                    this::fetchJwksContentWithCache,
-                    "fetch JWKS from " + httpHandler.getUrl()
-                );
-                
+                // 200 OK - fresh content received
                 Instant now = Instant.now();
                 this.cachedContent = result.content;
-                this.cachedETag = result.etag; // May be null if server doesn't support ETags
+                this.cachedETag = result.etag;
                 this.cachedAt = now;
-                
+
                 LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
                 return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
             }
-        } catch (RetryException e) {
-            // Unwrap JwksLoadException if wrapped by RetryUtil
-            if (e.getCause() instanceof JwksLoadException) {
-                throw (JwksLoadException) e.getCause();
-            }
-            // Wrap retry exceptions with context
-            throw new JwksLoadException("Failed to load JWKS after " + e.getAttemptsMade() + " attempts from " + httpHandler.getUrl(), e);
+        } else {
+            // No cache or no ETag - fetch fresh content
+            HttpCacheResult result = fetchJwksContentWithCache();
+
+            Instant now = Instant.now();
+            this.cachedContent = result.content;
+            this.cachedETag = result.etag; // May be null if server doesn't support ETags
+            this.cachedAt = now;
+
+            LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
+            return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
         }
     }
-    
+
     /**
      * Forces a reload of JWKS content, bypassing cache.
-     * 
+     *
      * @return LoadResult with fresh content
-     * @throws JwksLoadException if loading fails after retries
+     * @throws JwksLoadException if loading fails
      */
     public synchronized LoadResult reload() {
         LOGGER.debug("Forcing reload of JWKS content from %s", httpHandler.getUrl());
-        
+
         // Clear ETag to force fresh load
         this.cachedETag = null;
-        
+
         return load();
     }
-    
-    /**
-     * Checks if cache contains content.
-     * 
-     * @return true if cache contains content and ETag
-     */
-    public boolean hasCache() {
-        return cachedContent != null && cachedETag != null;
-    }
-    
+
     /**
      * Clears the cache, forcing next load to fetch fresh content.
      */
@@ -198,50 +175,32 @@ public class JwksHttpCache {
         this.cachedETag = null;
         this.cachedAt = null;
     }
-    
-    /**
-     * Gets the time when content was last cached.
-     * 
-     * @return cached timestamp or null if no content is cached
-     */
-    public Instant getCachedAt() {
-        return cachedAt;
-    }
-    
-    /**
-     * Gets the current cached ETag.
-     * 
-     * @return cached ETag or null if no content is cached
-     */
-    public String getCachedETag() {
-        return cachedETag;
-    }
-    
+
     /**
      * Internal result for HTTP cache operations.
      */
     private record HttpCacheResult(String content, String etag, boolean notModified) {}
-    
+
     /**
      * Fetches JWKS content from the HTTP endpoint with ETag support.
-     * 
+     *
      * @throws JwksLoadException if HTTP request fails
      */
     private HttpCacheResult fetchJwksContentWithCache() {
         try {
             HttpClient client = httpHandler.createHttpClient();
-            
+
             // Build request with conditional headers
             HttpRequest.Builder requestBuilder = httpHandler.requestBuilder();
-            
+
             // Add If-None-Match header if we have a cached ETag
             if (cachedETag != null) {
                 requestBuilder.header("If-None-Match", cachedETag);
             }
-            
+
             HttpRequest request = requestBuilder.build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            
+
             if (response.statusCode() == 304) {
                 // Not Modified - content hasn't changed
                 LOGGER.debug("Received 304 Not Modified from %s", httpHandler.getUrl());
@@ -250,13 +209,13 @@ public class JwksHttpCache {
                 // OK - fresh content
                 String content = response.body();
                 String etag = response.headers().firstValue("ETag").orElse(null);
-                
+
                 LOGGER.debug("Received 200 OK from %s with ETag: %s", httpHandler.getUrl(), etag);
                 return new HttpCacheResult(content, etag, false);
             } else {
                 throw new JwksLoadException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
             }
-            
+
         } catch (IOException e) {
             throw new JwksLoadException("Failed to fetch JWKS from " + httpHandler.getUrl(), e);
         } catch (InterruptedException e) {
