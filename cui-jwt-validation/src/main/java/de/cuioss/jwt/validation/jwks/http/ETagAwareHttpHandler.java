@@ -97,17 +97,15 @@ public class ETagAwareHttpHandler {
     /**
      * Result of a load operation containing the payload and detailed load state.
      *
-     * @param content the JWKS content as string
+     * @param content the HTTP content as string
      * @param loadState the detailed state of the load operation
-     * @param loadedAt the instant when content was loaded/cached
      */
-    public record LoadResult(String content, LoadState loadState, Instant loadedAt) {}
+    public record LoadResult(String content, LoadState loadState) {}
 
     private final HttpHandler httpHandler;
 
     private volatile String cachedContent;
     private volatile String cachedETag;
-    private volatile Instant cachedAt;
 
     /**
      * Creates a new ETag-aware HTTP handler for cache validation.
@@ -132,43 +130,39 @@ public class ETagAwareHttpHandler {
                 if (result.notModified) {
                     // 304 Not Modified - use cached content
                     LOGGER.debug("JWKS content not modified (304), using cached version");
-                    return new LoadResult(cachedContent, LoadState.CACHE_ETAG, cachedAt);
+                    return new LoadResult(cachedContent, LoadState.CACHE_ETAG);
                 } else {
                     // 200 OK - fresh content received
                     // Check if content actually changed despite new response
                     if (cachedContent.equals(result.content)) {
                         LOGGER.debug("JWKS content unchanged despite 200 OK response");
-                        return new LoadResult(cachedContent, LoadState.CACHE_CONTENT, cachedAt);
+                        return new LoadResult(cachedContent, LoadState.CACHE_CONTENT);
                     }
                     
-                    Instant now = Instant.now();
                     this.cachedContent = result.content;
                     this.cachedETag = result.etag;
-                    this.cachedAt = now;
 
                     LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
-                    return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
+                    return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER);
                 }
             } else {
                 // No cache or no ETag - fetch fresh content
                 HttpCacheResult result = fetchJwksContentWithCache();
 
-                Instant now = Instant.now();
                 this.cachedContent = result.content;
                 this.cachedETag = result.etag; // May be null if server doesn't support ETags
-                this.cachedAt = now;
 
                 LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
-                return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
+                return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER);
             }
         } catch (JwksLoadException e) {
             LOGGER.warn(e, "Failed to load HTTP content from %s", httpHandler.getUrl());
             
             // Return appropriate error state based on whether we have cached content
             if (cachedContent != null) {
-                return new LoadResult(cachedContent, LoadState.ERROR_WITH_CACHE, cachedAt);
+                return new LoadResult(cachedContent, LoadState.ERROR_WITH_CACHE);
             } else {
-                return new LoadResult(null, LoadState.ERROR_NO_CACHE, Instant.now());
+                return new LoadResult(null, LoadState.ERROR_NO_CACHE);
             }
         }
     }
@@ -184,7 +178,6 @@ public class ETagAwareHttpHandler {
             LOGGER.debug("Clearing HTTP cache and reloading from %s", httpHandler.getUrl());
             this.cachedContent = null;
             this.cachedETag = null;
-            this.cachedAt = null;
         } else {
             LOGGER.debug("Bypassing ETag validation and reloading from %s", httpHandler.getUrl());
             this.cachedETag = null;

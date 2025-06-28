@@ -156,10 +156,10 @@ public class HttpJwksLoader implements JwksLoader {
                     LOGGER.info("Successfully loaded JWKS from HTTP endpoint");
                     break;
                 case CACHE_ETAG:
-                    LOGGER.debug("JWKS content validated via ETag (304 Not Modified) from %s", result.loadedAt());
+                    LOGGER.debug("JWKS content validated via ETag (304 Not Modified)");
                     break;
                 case CACHE_CONTENT:
-                    LOGGER.debug("Using cached JWKS content from %s", result.loadedAt());
+                    LOGGER.debug("Using cached JWKS content");
                     break;
                 case ERROR_WITH_CACHE:
                     LOGGER.warn("Load operation failed but using cached content");

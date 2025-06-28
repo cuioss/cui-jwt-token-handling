@@ -56,7 +56,6 @@ class ETagAwareHttpHandlerTest {
         assertNotNull(result.content());
         assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result.loadState());
         assertTrue(result.loadState().isDataChanged());
-        assertNotNull(result.loadedAt());
 
         // Should have called endpoint once
         assertEquals(1, moduleDispatcher.getCallCounter());
@@ -135,13 +134,12 @@ class ETagAwareHttpHandlerTest {
         
         // Test record properties
         assertNotNull(result.content());
-        assertNotNull(result.loadedAt());
         assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result.loadState());
         assertTrue(result.loadState().isDataChanged());
 
         // Test record equality
         ETagAwareHttpHandler.LoadResult sameResult = new ETagAwareHttpHandler.LoadResult(
-                result.content(), result.loadState(), result.loadedAt());
+                result.content(), result.loadState());
         assertEquals(result, sameResult);
         assertEquals(result.hashCode(), sameResult.hashCode());
     }
@@ -157,15 +155,15 @@ class ETagAwareHttpHandlerTest {
         
         // Test LoadResult with different states
         ETagAwareHttpHandler.LoadResult serverResult = new ETagAwareHttpHandler.LoadResult("content", 
-                ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, java.time.Instant.now());
+                ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER);
         assertTrue(serverResult.loadState().isDataChanged());
         
         ETagAwareHttpHandler.LoadResult etagResult = new ETagAwareHttpHandler.LoadResult("content", 
-                ETagAwareHttpHandler.LoadState.CACHE_ETAG, java.time.Instant.now());
+                ETagAwareHttpHandler.LoadState.CACHE_ETAG);
         assertFalse(etagResult.loadState().isDataChanged());
         
         ETagAwareHttpHandler.LoadResult contentResult = new ETagAwareHttpHandler.LoadResult("content", 
-                ETagAwareHttpHandler.LoadState.CACHE_CONTENT, java.time.Instant.now());
+                ETagAwareHttpHandler.LoadState.CACHE_CONTENT);
         assertFalse(contentResult.loadState().isDataChanged());
     }
 }
