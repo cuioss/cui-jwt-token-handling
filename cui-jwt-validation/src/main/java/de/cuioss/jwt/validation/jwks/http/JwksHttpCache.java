@@ -70,7 +70,7 @@ public class JwksHttpCache {
      * Loads JWKS content, using ETag-based HTTP caching when supported.
      * 
      * @return LoadResult containing content and cache status
-     * @throws RuntimeException if loading fails after retries
+     * @throws JwksLoadException if loading fails after retries
      */
     public synchronized LoadResult load() {
         try {
@@ -110,10 +110,13 @@ public class JwksHttpCache {
                 LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
                 return new LoadResult(result.content, false, now);
             }
-            
-        } catch (Exception e) {
-            LOGGER.error(e, "Failed to load JWKS from %s", httpHandler.getUrl());
-            throw new RuntimeException("Failed to load JWKS", e);
+        } catch (RuntimeException e) {
+            // Unwrap JwksLoadException if wrapped by RetryUtil
+            if (e.getCause() instanceof JwksLoadException) {
+                throw (JwksLoadException) e.getCause();
+            }
+            // Wrap other runtime exceptions
+            throw new JwksLoadException("Failed to load JWKS from " + httpHandler.getUrl(), e);
         }
     }
     
@@ -121,7 +124,7 @@ public class JwksHttpCache {
      * Forces a reload of JWKS content, bypassing cache.
      * 
      * @return LoadResult with fresh content
-     * @throws RuntimeException if loading fails after retries
+     * @throws JwksLoadException if loading fails after retries
      */
     public synchronized LoadResult reload() {
         LOGGER.debug("Forcing reload of JWKS content from %s", httpHandler.getUrl());
@@ -176,6 +179,8 @@ public class JwksHttpCache {
     
     /**
      * Fetches JWKS content from the HTTP endpoint with ETag support.
+     * 
+     * @throws JwksLoadException if HTTP request fails
      */
     private HttpCacheResult fetchJwksContentWithCache() {
         try {
@@ -204,14 +209,14 @@ public class JwksHttpCache {
                 LOGGER.debug("Received 200 OK from %s with ETag: %s", httpHandler.getUrl(), etag);
                 return new HttpCacheResult(content, etag, false);
             } else {
-                throw new IOException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
+                throw new JwksLoadException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
             }
             
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new RuntimeException("Failed to fetch JWKS content", e);
+        } catch (IOException e) {
+            throw new JwksLoadException("Failed to fetch JWKS from " + httpHandler.getUrl(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JwksLoadException("Interrupted while fetching JWKS from " + httpHandler.getUrl(), e);
         }
     }
 }

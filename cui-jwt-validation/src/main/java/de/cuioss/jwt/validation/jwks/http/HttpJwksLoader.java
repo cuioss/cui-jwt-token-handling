@@ -102,7 +102,7 @@ public class HttpJwksLoader implements JwksLoader {
         if (keyLoader == null) {
             try {
                 ensureLoaded();
-            } catch (Exception e) {
+            } catch (JwksLoadException e) {
                 LOGGER.debug("Health check failed during key loading: %s", e.getMessage());
                 return false;
             }
@@ -113,16 +113,18 @@ public class HttpJwksLoader implements JwksLoader {
     /**
      * Forces a reload of JWKS content, bypassing any cache.
      * Useful for refreshing keys when needed.
+     * 
+     * @throws JwksLoadException if reloading fails
      */
     public void reload() {
         try {
             JwksHttpCache.LoadResult result = httpCache.reload();
             updateKeyLoader(result);
             LOGGER.info("Forced reload of JWKS completed");
-        } catch (Exception e) {
+        } catch (JwksLoadException e) {
             this.status = LoaderStatus.ERROR;
             LOGGER.error(e, "Failed to reload JWKS");
-            throw new RuntimeException("Failed to reload JWKS", e);
+            throw e; // Re-throw specific exception
         }
     }
     
@@ -143,10 +145,10 @@ public class HttpJwksLoader implements JwksLoader {
                 LOGGER.info("Successfully loaded JWKS from HTTP endpoint");
             }
             
-        } catch (Exception e) {
+        } catch (JwksLoadException e) {
             this.status = LoaderStatus.ERROR;
             LOGGER.error(e, "Failed to load JWKS");
-            throw new RuntimeException("Failed to load JWKS", e);
+            throw e; // Re-throw specific exception
         }
     }
     
