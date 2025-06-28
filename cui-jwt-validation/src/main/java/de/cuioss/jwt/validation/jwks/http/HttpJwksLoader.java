@@ -21,22 +21,17 @@ import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.key.JWKSKeyLoader;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
-import de.cuioss.jwt.validation.util.RetryUtil;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import lombok.NonNull;
 
-import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 /**
- * Simplified JWKS loader that loads from HTTP endpoint with retry logic.
- * No caching, no statistics - just reliable loading.
+ * JWKS loader that loads from HTTP endpoint with caching support.
+ * Uses JwksHttpCache for stateful HTTP caching without scheduling.
  * 
  * @author Oliver Wolff
  * @since 1.0
@@ -45,14 +40,14 @@ public class HttpJwksLoader implements JwksLoader {
     
     private static final CuiLogger LOGGER = new CuiLogger(HttpJwksLoader.class);
     
-    private final HttpHandler httpHandler;
+    private final JwksHttpCache httpCache;
     private final SecurityEventCounter securityEventCounter;
     private volatile JWKSKeyLoader keyLoader;
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
     
     public HttpJwksLoader(@NonNull HttpHandler httpHandler, 
                           @NonNull SecurityEventCounter securityEventCounter) {
-        this.httpHandler = httpHandler;
+        this.httpCache = new JwksHttpCache(httpHandler, 0); // No caching by default
         this.securityEventCounter = securityEventCounter;
     }
     
@@ -62,7 +57,7 @@ public class HttpJwksLoader implements JwksLoader {
      */
     public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config, 
                           @NonNull SecurityEventCounter securityEventCounter) {
-        this.httpHandler = config.getHttpHandler();
+        this.httpCache = new JwksHttpCache(config.getHttpHandler(), config.getRefreshIntervalSeconds());
         this.securityEventCounter = securityEventCounter;
     }
     
@@ -102,7 +97,7 @@ public class HttpJwksLoader implements JwksLoader {
     
     @Override
     public boolean isHealthy() {
-        // For simplified loader, we consider it healthy if we can load keys
+        // For cached loader, we consider it healthy if we can load keys
         // This will trigger lazy loading on first health check
         if (keyLoader == null) {
             try {
@@ -115,6 +110,22 @@ public class HttpJwksLoader implements JwksLoader {
         return status == LoaderStatus.OK;
     }
     
+    /**
+     * Forces a reload of JWKS content, bypassing any cache.
+     * Useful for refreshing keys when needed.
+     */
+    public void reload() {
+        try {
+            JwksHttpCache.LoadResult result = httpCache.reload();
+            updateKeyLoader(result);
+            LOGGER.info("Forced reload of JWKS completed");
+        } catch (Exception e) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(e, "Failed to reload JWKS");
+            throw new RuntimeException("Failed to reload JWKS", e);
+        }
+    }
+    
     private void ensureLoaded() {
         if (keyLoader == null) {
             loadKeys();
@@ -123,45 +134,28 @@ public class HttpJwksLoader implements JwksLoader {
     
     private void loadKeys() {
         try {
-            String jwksContent = RetryUtil.executeWithRetry(
-                this::fetchJwksContent,
-                "fetch JWKS from " + httpHandler.getUrl()
-            );
+            JwksHttpCache.LoadResult result = httpCache.load();
+            updateKeyLoader(result);
             
-            this.keyLoader = JWKSKeyLoader.builder()
-                .originalString(jwksContent)
-                .securityEventCounter(securityEventCounter)
-                .jwksType(JwksType.HTTP)
-                .build();
-            this.status = LoaderStatus.OK;
-            
-            LOGGER.info("Successfully loaded JWKS from %s", httpHandler.getUrl());
+            if (result.wasFromCache()) {
+                LOGGER.debug("Using cached JWKS content from %s", result.loadedAt());
+            } else {
+                LOGGER.info("Successfully loaded JWKS from HTTP endpoint");
+            }
             
         } catch (Exception e) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(e, "Failed to load JWKS from %s", httpHandler.getUrl());
+            LOGGER.error(e, "Failed to load JWKS");
             throw new RuntimeException("Failed to load JWKS", e);
         }
     }
     
-    private String fetchJwksContent() {
-        try {
-            HttpClient client = httpHandler.createHttpClient();
-            HttpRequest request = httpHandler.requestBuilder().build();
-            
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            
-            if (response.statusCode() != 200) {
-                throw new IOException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
-            }
-            
-            return response.body();
-            
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new RuntimeException("Failed to fetch JWKS content", e);
-        }
+    private void updateKeyLoader(JwksHttpCache.LoadResult result) {
+        this.keyLoader = JWKSKeyLoader.builder()
+            .originalString(result.content())
+            .securityEventCounter(securityEventCounter)
+            .jwksType(JwksType.HTTP)
+            .build();
+        this.status = LoaderStatus.OK;
     }
 }
