@@ -57,7 +57,8 @@ class JwksHttpCacheTest {
         // First load should fetch from HTTP
         JwksHttpCache.LoadResult result = cache.load();
         assertNotNull(result.content());
-        assertFalse(result.wasFromCache());
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result.loadState());
+        assertTrue(result.loadState().isDataChanged());
         assertNotNull(result.loadedAt());
 
         // Should have called endpoint once
@@ -72,13 +73,15 @@ class JwksHttpCacheTest {
     void testCachingBehaviorWithoutETag() {
         // First load
         JwksHttpCache.LoadResult result1 = cache.load();
-        assertFalse(result1.wasFromCache());
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result1.loadState());
+        assertTrue(result1.loadState().isDataChanged());
         assertEquals(1, moduleDispatcher.getCallCounter());
 
         // Second load - without ETag support from server, it will fetch again
         JwksHttpCache.LoadResult result2 = cache.load();
         assertEquals(result1.content(), result2.content());
-        assertFalse(result2.wasFromCache()); // No cache because no ETag
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result2.loadState());
+        assertTrue(result2.loadState().isDataChanged());
         
         // Without ETag from server, each call fetches fresh content
         assertEquals(2, moduleDispatcher.getCallCounter());
@@ -92,7 +95,8 @@ class JwksHttpCacheTest {
 
         // Reload should bypass cache
         JwksHttpCache.LoadResult reloadResult = cache.reload();
-        assertFalse(reloadResult.wasFromCache());
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, reloadResult.loadState());
+        assertTrue(reloadResult.loadState().isDataChanged());
         assertEquals(2, moduleDispatcher.getCallCounter());
     }
 
@@ -109,7 +113,8 @@ class JwksHttpCacheTest {
 
         // Next load should fetch fresh
         JwksHttpCache.LoadResult result = cache.load();
-        assertFalse(result.wasFromCache());
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result.loadState());
+        assertTrue(result.loadState().isDataChanged());
         assertEquals(2, moduleDispatcher.getCallCounter());
     }
 
@@ -120,11 +125,13 @@ class JwksHttpCacheTest {
         // the cache will always fetch fresh content
         
         JwksHttpCache.LoadResult result1 = cache.load();
-        assertFalse(result1.wasFromCache());
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result1.loadState());
+        assertTrue(result1.loadState().isDataChanged());
         
         // Without ETag support, subsequent calls fetch fresh content
         JwksHttpCache.LoadResult result2 = cache.load();
-        assertFalse(result2.wasFromCache());
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result2.loadState());
+        assertTrue(result2.loadState().isDataChanged());
         
         // Content should be the same
         assertEquals(result1.content(), result2.content());
@@ -137,12 +144,35 @@ class JwksHttpCacheTest {
         // Test record properties
         assertNotNull(result.content());
         assertNotNull(result.loadedAt());
-        assertFalse(result.wasFromCache());
+        assertEquals(JwksHttpCache.LoadState.LOADED_FROM_SERVER, result.loadState());
+        assertTrue(result.loadState().isDataChanged());
 
         // Test record equality
         JwksHttpCache.LoadResult sameResult = new JwksHttpCache.LoadResult(
-                result.content(), result.wasFromCache(), result.loadedAt());
+                result.content(), result.loadState(), result.loadedAt());
         assertEquals(result, sameResult);
         assertEquals(result.hashCode(), sameResult.hashCode());
+    }
+    
+    @Test
+    void testLoadStateEnum() {
+        // Test enum properties
+        assertTrue(JwksHttpCache.LoadState.LOADED_FROM_SERVER.isDataChanged());
+        assertFalse(JwksHttpCache.LoadState.CACHE_ETAG.isDataChanged());
+        assertFalse(JwksHttpCache.LoadState.CACHE_CONTENT.isDataChanged());
+        assertTrue(JwksHttpCache.LoadState.ERROR.isDataChanged());
+        
+        // Test LoadResult with different states
+        JwksHttpCache.LoadResult serverResult = new JwksHttpCache.LoadResult("content", 
+                JwksHttpCache.LoadState.LOADED_FROM_SERVER, java.time.Instant.now());
+        assertTrue(serverResult.loadState().isDataChanged());
+        
+        JwksHttpCache.LoadResult etagResult = new JwksHttpCache.LoadResult("content", 
+                JwksHttpCache.LoadState.CACHE_ETAG, java.time.Instant.now());
+        assertFalse(etagResult.loadState().isDataChanged());
+        
+        JwksHttpCache.LoadResult contentResult = new JwksHttpCache.LoadResult("content", 
+                JwksHttpCache.LoadState.CACHE_CONTENT, java.time.Instant.now());
+        assertFalse(contentResult.loadState().isDataChanged());
     }
 }

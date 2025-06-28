@@ -44,13 +44,57 @@ public class JwksHttpCache {
     private static final CuiLogger LOGGER = new CuiLogger(JwksHttpCache.class);
     
     /**
-     * Result of a load operation containing the payload and cache status.
+     * Enum representing the state of a load operation.
+     */
+    public enum LoadState {
+        /**
+         * Content was freshly loaded from the server (200 OK).
+         * Data has changed - keys should be reloaded/reevaluated.
+         */
+        LOADED_FROM_SERVER(true),
+        
+        /**
+         * Server responded with 304 Not Modified based on ETag.
+         * Data has not changed - no need to reload keys.
+         */
+        CACHE_ETAG(false),
+        
+        /**
+         * Content was returned from local cache without server request.
+         * Data has not changed - no need to reload keys.
+         */
+        CACHE_CONTENT(false),
+        
+        /**
+         * An error occurred during loading.
+         * Data state is unknown - keys may need reevaluation.
+         */
+        ERROR(true);
+        
+        private final boolean dataChanged;
+        
+        LoadState(boolean dataChanged) {
+            this.dataChanged = dataChanged;
+        }
+        
+        /**
+         * Indicates whether the data has changed and keys should be reloaded/reevaluated.
+         * 
+         * @return true if data changed and keys need reevaluation, false if unchanged
+         */
+        public boolean isDataChanged() {
+            return dataChanged;
+        }
+    }
+
+    /**
+     * Result of a load operation containing the payload and detailed load state.
      * 
      * @param content the JWKS content as string
-     * @param wasFromCache true if content was loaded from cache (304), false if freshly fetched (200)
+     * @param loadState the detailed state of the load operation
      * @param loadedAt the instant when content was loaded/cached
      */
-    public record LoadResult(String content, boolean wasFromCache, Instant loadedAt) {}
+    public record LoadResult(String content, LoadState loadState, Instant loadedAt) {}
     
     private final HttpHandler httpHandler;
     
@@ -85,7 +129,7 @@ public class JwksHttpCache {
                 if (result.notModified) {
                     // 304 Not Modified - use cached content
                     LOGGER.debug("JWKS content not modified (304), using cached version");
-                    return new LoadResult(cachedContent, true, cachedAt);
+                    return new LoadResult(cachedContent, LoadState.CACHE_ETAG, cachedAt);
                 } else {
                     // 200 OK - fresh content received
                     Instant now = Instant.now();
@@ -94,7 +138,7 @@ public class JwksHttpCache {
                     this.cachedAt = now;
                     
                     LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
-                    return new LoadResult(result.content, false, now);
+                    return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
                 }
             } else {
                 // No cache or no ETag - fetch fresh content
@@ -109,7 +153,7 @@ public class JwksHttpCache {
                 this.cachedAt = now;
                 
                 LOGGER.info("Loaded fresh JWKS content from %s", httpHandler.getUrl());
-                return new LoadResult(result.content, false, now);
+                return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER, now);
             }
         } catch (RetryException e) {
             // Unwrap JwksLoadException if wrapped by RetryUtil

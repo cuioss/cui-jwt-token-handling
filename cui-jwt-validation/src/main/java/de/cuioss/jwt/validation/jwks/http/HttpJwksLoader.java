@@ -137,12 +137,27 @@ public class HttpJwksLoader implements JwksLoader {
     private void loadKeys() {
         try {
             JwksHttpCache.LoadResult result = httpCache.load();
-            updateKeyLoader(result);
             
-            if (result.wasFromCache()) {
-                LOGGER.debug("Using cached JWKS content from %s", result.loadedAt());
-            } else {
-                LOGGER.info("Successfully loaded JWKS from HTTP endpoint");
+            // Only update key loader if data has changed
+            if (result.loadState().isDataChanged() || keyLoader == null) {
+                updateKeyLoader(result);
+                LOGGER.info("Keys updated due to data change - load state: %s", result.loadState());
+            }
+            
+            // Log appropriate message based on load state
+            switch (result.loadState()) {
+                case LOADED_FROM_SERVER:
+                    LOGGER.info("Successfully loaded JWKS from HTTP endpoint");
+                    break;
+                case CACHE_ETAG:
+                    LOGGER.debug("JWKS content validated via ETag (304 Not Modified) from %s", result.loadedAt());
+                    break;
+                case CACHE_CONTENT:
+                    LOGGER.debug("Using cached JWKS content from %s", result.loadedAt());
+                    break;
+                case ERROR:
+                    LOGGER.warn("Load operation completed with error state");
+                    break;
             }
             
         } catch (JwksLoadException e) {
