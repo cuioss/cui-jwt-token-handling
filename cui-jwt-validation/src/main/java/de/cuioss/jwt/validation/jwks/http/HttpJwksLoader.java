@@ -57,12 +57,12 @@ public class HttpJwksLoader implements JwksLoader {
     }
     
     /**
-     * Constructor for backward compatibility with HttpJwksLoaderConfig.
-     * Ignores complex config settings and just uses the URL.
+     * Constructor using HttpJwksLoaderConfig.
+     * Uses the httpHandler directly from the config with all its settings.
      */
     public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config, 
                           @NonNull SecurityEventCounter securityEventCounter) {
-        this.httpHandler = HttpHandler.builder().url(config.getUrl()).build();
+        this.httpHandler = config.getHttpHandler();
         this.securityEventCounter = securityEventCounter;
     }
     
