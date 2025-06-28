@@ -155,7 +155,7 @@ public class ETagAwareHttpHandler {
                 LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
                 return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER);
             }
-        } catch (JwksLoadException e) {
+        } catch (HttpLoadException e) {
             LOGGER.warn(e, "Failed to load HTTP content from %s", httpHandler.getUrl());
             
             // Return appropriate error state based on whether we have cached content
@@ -194,7 +194,7 @@ public class ETagAwareHttpHandler {
     /**
      * Fetches HTTP content from the endpoint with ETag support.
      *
-     * @throws JwksLoadException if HTTP request fails
+     * @throws HttpLoadException if HTTP request fails
      */
     private HttpCacheResult fetchJwksContentWithCache() {
         // Build request with conditional headers
@@ -223,14 +223,14 @@ public class ETagAwareHttpHandler {
                 LOGGER.debug("Received 200 OK from %s with ETag: %s", httpHandler.getUrl(), etag);
                 return new HttpCacheResult(content, etag, false);
             } else {
-                throw new JwksLoadException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
+                throw new HttpLoadException("HTTP " + response.statusCode() + " from " + httpHandler.getUrl());
             }
 
         } catch (IOException e) {
-            throw new JwksLoadException("Failed to fetch HTTP content from " + httpHandler.getUrl(), e);
+            throw new HttpLoadException("Failed to fetch HTTP content from " + httpHandler.getUrl(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new JwksLoadException("Interrupted while fetching HTTP content from " + httpHandler.getUrl(), e);
+            throw new HttpLoadException("Interrupted while fetching HTTP content from " + httpHandler.getUrl(), e);
         }
     }
 }

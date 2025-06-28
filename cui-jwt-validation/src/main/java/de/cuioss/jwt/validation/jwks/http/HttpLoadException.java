@@ -16,35 +16,35 @@
 package de.cuioss.jwt.validation.jwks.http;
 
 /**
- * Runtime exception thrown when JWKS loading fails.
- * This includes HTTP errors, network failures, and invalid JWKS content.
+ * Exception thrown when HTTP content loading fails.
  * <p>
- * Extends HttpLoadException to maintain compatibility while providing
- * JWKS-specific exception semantics.
- * 
+ * This exception is used by HTTP-based loaders to indicate failures in
+ * retrieving content from HTTP endpoints, such as network errors,
+ * HTTP error responses, or content parsing issues.
+ *
  * @author Oliver Wolff
  * @since 1.0
  */
-public class JwksLoadException extends HttpLoadException {
-    
+public class HttpLoadException extends RuntimeException {
+
     private static final long serialVersionUID = 1L;
-    
+
     /**
-     * Constructs a new JWKS load exception with the specified detail message.
+     * Constructs a new HTTP load exception with the specified detail message.
      *
      * @param message the detail message
      */
-    public JwksLoadException(String message) {
+    public HttpLoadException(String message) {
         super(message);
     }
-    
+
     /**
-     * Constructs a new JWKS load exception with the specified detail message and cause.
+     * Constructs a new HTTP load exception with the specified detail message and cause.
      *
      * @param message the detail message
-     * @param cause the cause of the exception
+     * @param cause the cause
      */
-    public JwksLoadException(String message, Throwable cause) {
+    public HttpLoadException(String message, Throwable cause) {
         super(message, cause);
     }
 }
