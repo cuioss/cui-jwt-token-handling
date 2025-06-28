@@ -197,18 +197,18 @@ public class ETagAwareHttpHandler {
      * @throws JwksLoadException if HTTP request fails
      */
     private HttpCacheResult fetchJwksContentWithCache() {
+        // Build request with conditional headers
+        HttpRequest.Builder requestBuilder = httpHandler.requestBuilder();
+
+        // Add If-None-Match header if we have a cached ETag
+        if (cachedETag != null) {
+            requestBuilder.header("If-None-Match", cachedETag);
+        }
+
+        HttpRequest request = requestBuilder.build();
+        
         try {
             HttpClient client = httpHandler.createHttpClient();
-
-            // Build request with conditional headers
-            HttpRequest.Builder requestBuilder = httpHandler.requestBuilder();
-
-            // Add If-None-Match header if we have a cached ETag
-            if (cachedETag != null) {
-                requestBuilder.header("If-None-Match", cachedETag);
-            }
-
-            HttpRequest request = requestBuilder.build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 304) {
