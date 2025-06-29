@@ -91,7 +91,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
             var algorithmPreferences = new SignatureAlgorithmPreferences();
             var claimMapper = new IdentityMapper();
             var httpConfig = HttpJwksLoaderConfig.builder()
-                    .url(TEST_JWKS_URL)
+                    .jwksUrl(TEST_JWKS_URL)
                     .build();
 
             // When
@@ -125,7 +125,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
             var config = IssuerConfig.builder()
                     .issuer(TEST_ISSUER)
                     .httpJwksLoaderConfig(HttpJwksLoaderConfig.builder()
-                            .url(TEST_JWKS_URL)
+                            .jwksUrl(TEST_JWKS_URL)
                             .build())
                     .build();
             var securityEventCounter = new SecurityEventCounter();

@@ -46,7 +46,7 @@ import java.nio.file.Path;
  * 
  * // Configure and create an HTTP-based JWKS loader
  * HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
- *     .url("https://auth.example.com/.well-known/jwks.json")
+ *     .jwksUrl("https://auth.example.com/.well-known/jwks.json")
  *     .refreshIntervalSeconds(60)
  *     .build();
  * JwksLoader loader = JwksLoaderFactory.createHttpLoader(config, securityEventCounter);

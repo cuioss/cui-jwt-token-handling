@@ -93,7 +93,7 @@
  * <pre>
  * // Create configuration
  * HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
- *     .url("https://auth.example.com/.well-known/jwks.json")
+ *     .jwksUrl("https://auth.example.com/.well-known/jwks.json")
  *     .refreshIntervalSeconds(60)
  *     .build();
  *     

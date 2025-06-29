@@ -124,7 +124,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
         LOGGER.info("Derived authServerUrlString: %s", this.authServerUrlString);
         // Create a JwksLoader with the secure SSLContext that uses Keycloak's keystore
         HttpJwksLoaderConfig httpJwksConfig = HttpJwksLoaderConfig.builder()
-                .url(getJWKSUrl()) // Direct JWKS URL from Keycloak container
+                .jwksUrl(getJWKSUrl()) // Direct JWKS URL from Keycloak container
                 .build();
         // Note: SSL context handling moved to HttpHandler level in simplified implementation
 
@@ -237,7 +237,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
             String jwksUrl = wellKnownHandler.getJwksUri() != null ?
                     wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
             HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
-                    .url(jwksUrl)
+                    .jwksUrl(jwksUrl)
                     .build();
             // Note: SSL context handling moved to HttpHandler level in simplified implementation
 
@@ -286,7 +286,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
             String jwksUrl = wellKnownHandler.getJwksUri() != null ?
                     wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
             HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
-                    .url(jwksUrl)
+                    .jwksUrl(jwksUrl)
                     .build();
             // Note: SSL context handling moved to HttpHandler level in simplified implementation
 

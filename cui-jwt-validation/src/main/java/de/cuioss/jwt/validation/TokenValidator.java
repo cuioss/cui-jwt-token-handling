@@ -67,7 +67,7 @@ import static de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
  * <pre>
  * // Configure HTTP-based JWKS loading
  * HttpJwksLoaderConfig httpConfig = HttpJwksLoaderConfig.builder()
- *     .url("https://example.com/.well-known/jwks.json")
+ *     .jwksUrl("https://example.com/.well-known/jwks.json")
  *     .refreshIntervalSeconds(60)
  *     .build();
  *

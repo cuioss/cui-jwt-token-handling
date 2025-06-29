@@ -60,7 +60,7 @@ class HttpJwksLoaderTest {
         securityEventCounter = new SecurityEventCounter();
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(jwksEndpoint)
+                .jwksUrl(jwksEndpoint)
                 .build();
 
         httpJwksLoader = new HttpJwksLoader(config, securityEventCounter);
@@ -161,7 +161,7 @@ class HttpJwksLoaderTest {
 
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(jwksEndpoint)
+                .jwksUrl(jwksEndpoint)
                 .build();
 
         HttpJwksLoader customLoader = new HttpJwksLoader(config, securityEventCounter);
@@ -203,7 +203,7 @@ class HttpJwksLoaderTest {
         // With simplified loader, we need to create a new instance to get updated keys
         // since there's no background refresh or forced reload
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(moduleDispatcher.getCallCounter() > 0 ? "http://localhost:8080/" + JwksResolveDispatcher.LOCAL_PATH : "invalid")
+                .jwksUrl(moduleDispatcher.getCallCounter() > 0 ? "http://localhost:8080/" + JwksResolveDispatcher.LOCAL_PATH : "invalid")
                 .build();
         HttpJwksLoader newLoader = new HttpJwksLoader(config, securityEventCounter);
 
@@ -245,7 +245,7 @@ class HttpJwksLoaderTest {
 
             // Create loader without config (direct HttpHandler)
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .build();
 
             HttpJwksLoader loader = new HttpJwksLoader(config.getHttpHandler(), securityEventCounter);
@@ -269,7 +269,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnDefault();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(0) // Zero means no refresh
                     .build();
 
@@ -294,7 +294,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnDefault();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(1) // 1 second for testing
                     .build();
 
@@ -333,7 +333,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnDefault();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(1) // 1 second for testing
                     .build();
 
@@ -367,7 +367,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnDefault();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(1) // 1 second for testing
                     .build();
 
@@ -404,7 +404,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnDefault();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(10) // Longer interval to avoid multiple executions during test
                     .build();
 
@@ -435,7 +435,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnDefault();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(1)
                     .build();
 
@@ -465,7 +465,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnError();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(1)
                     .build();
 
@@ -495,7 +495,7 @@ class HttpJwksLoaderTest {
             moduleDispatcher.returnDefault();
 
             HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                    .url(jwksEndpoint)
+                    .jwksUrl(jwksEndpoint)
                     .refreshIntervalSeconds(1)
                     .build();
 

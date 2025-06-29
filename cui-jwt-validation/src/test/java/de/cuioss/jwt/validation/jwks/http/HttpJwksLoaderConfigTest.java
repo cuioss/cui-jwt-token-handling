@@ -42,7 +42,7 @@ class HttpJwksLoaderConfigTest {
     void shouldCreateConfigWithDefaultValues() {
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build();
         assertEquals(URI.create(VALID_URL), config.getHttpHandler().getUri());
@@ -57,7 +57,7 @@ class HttpJwksLoaderConfigTest {
 
         SSLContext sslContext = SSLContext.getDefault();
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .sslContext(sslContext)
                 .build();
@@ -72,7 +72,7 @@ class HttpJwksLoaderConfigTest {
 
         String urlWithoutScheme = "example.com/jwks.json";
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(urlWithoutScheme)
+                .jwksUrl(urlWithoutScheme)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build();
         assertEquals(URI.create("https://" + urlWithoutScheme), config.getHttpHandler().getUri());
@@ -84,7 +84,7 @@ class HttpJwksLoaderConfigTest {
 
         SecureSSLContextProvider secureProvider = new SecureSSLContextProvider();
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .tlsVersions(secureProvider)
                 .build();
@@ -97,7 +97,7 @@ class HttpJwksLoaderConfigTest {
 
         int negativeRefreshInterval = -1;
         assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(negativeRefreshInterval)
                 .build());
     }
@@ -107,7 +107,7 @@ class HttpJwksLoaderConfigTest {
     @DisplayName("Should throw exception for missing JWKS URL")
     void shouldThrowExceptionForMissingJwksUrl() {
 
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
+        assertThrows(IllegalStateException.class, () -> HttpJwksLoaderConfig.builder()
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build());
     }
@@ -118,7 +118,7 @@ class HttpJwksLoaderConfigTest {
 
         ScheduledExecutorService customExecutorService = Executors.newScheduledThreadPool(2);
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .scheduledExecutorService(customExecutorService)
                 .build();
@@ -134,7 +134,7 @@ class HttpJwksLoaderConfigTest {
     void shouldCreateDefaultScheduledExecutorServiceWhenRefreshIntervalPositive() {
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL) // Positive refresh interval
                 .build();
         assertNotNull(config.getScheduledExecutorService(),
@@ -146,7 +146,7 @@ class HttpJwksLoaderConfigTest {
     void shouldNotCreateScheduledExecutorServiceWhenRefreshIntervalZero() {
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(0) // Zero refresh interval
                 .build();
         assertNull(config.getScheduledExecutorService(),
@@ -160,7 +160,7 @@ class HttpJwksLoaderConfigTest {
 
         URI testUri = URI.create(VALID_URL);
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .uri(testUri)
+                .jwksUri(testUri)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build();
         assertEquals(testUri, config.getHttpHandler().getUri(),
@@ -173,7 +173,7 @@ class HttpJwksLoaderConfigTest {
 
         int connectTimeout = 30;
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .connectTimeoutSeconds(connectTimeout)
                 .build();
@@ -188,7 +188,7 @@ class HttpJwksLoaderConfigTest {
 
         int readTimeout = 60;
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .readTimeoutSeconds(readTimeout)
                 .build();
@@ -204,7 +204,7 @@ class HttpJwksLoaderConfigTest {
         int connectTimeout = 30;
         int readTimeout = 60;
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .connectTimeoutSeconds(connectTimeout)
                 .readTimeoutSeconds(readTimeout)
@@ -217,7 +217,7 @@ class HttpJwksLoaderConfigTest {
     void shouldThrowExceptionForZeroConnectTimeoutSeconds() {
 
         assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .connectTimeoutSeconds(0)
                 .build());
@@ -229,7 +229,7 @@ class HttpJwksLoaderConfigTest {
 
         int negativeConnectTimeout = -1;
         assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .connectTimeoutSeconds(negativeConnectTimeout)
                 .build());
@@ -240,7 +240,7 @@ class HttpJwksLoaderConfigTest {
     void shouldThrowExceptionForZeroReadTimeoutSeconds() {
 
         assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .readTimeoutSeconds(0)
                 .build());
@@ -252,7 +252,7 @@ class HttpJwksLoaderConfigTest {
 
         int negativeReadTimeout = -1;
         assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .readTimeoutSeconds(negativeReadTimeout)
                 .build());
@@ -263,7 +263,7 @@ class HttpJwksLoaderConfigTest {
     void shouldTestToStringMethod() {
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build();
         String toString = config.toString();
@@ -277,22 +277,79 @@ class HttpJwksLoaderConfigTest {
     void shouldTestEqualsAndHashCode() {
 
         HttpJwksLoaderConfig config1 = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build();
 
         HttpJwksLoaderConfig config2 = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build();
 
         HttpJwksLoaderConfig config3 = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
+                .jwksUrl(VALID_URL)
                 .refreshIntervalSeconds(120) // Different value
                 .build();
         assertEquals(config1, config2, "Configs with same values should be equal");
         assertEquals(config1.hashCode(), config2.hashCode(), "Configs with same values should have same hashCode");
         assertNotEquals(config1, config3, "Configs with different values should not be equal");
         assertNotNull(config1, "Config should not equal null");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when no endpoint configuration is provided")
+    void shouldThrowExceptionWhenNoEndpointConfigured() {
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> 
+            HttpJwksLoaderConfig.builder()
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .build());
+        
+        assertTrue(exception.getMessage().contains("No JWKS endpoint configured"));
+        assertTrue(exception.getMessage().contains("Must call one of: jwksUri(), jwksUrl(), or wellKnown()"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when jwksUri() and jwksUrl() are both used")
+    void shouldThrowExceptionWhenJwksUriAndJwksUrlBothUsed() {
+        HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
+                .jwksUri(URI.create(VALID_URL));
+        
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> 
+            builder.jwksUrl("https://another.example.com/jwks.json"));
+        
+        String message = exception.getMessage();
+        assertTrue(message.contains("Cannot use jwksurl endpoint configuration when jwksuri was already configured"), 
+            "Expected message to contain exclusivity info, but was: " + message);
+        assertTrue(message.contains("mutually exclusive"), 
+            "Expected message to contain 'mutually exclusive', but was: " + message);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when jwksUrl() and jwksUri() are both used")
+    void shouldThrowExceptionWhenJwksUrlAndJwksUriBothUsed() {
+        HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
+                .jwksUrl(VALID_URL);
+        
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> 
+            builder.jwksUri(URI.create("https://another.example.com/jwks.json")));
+        
+        String message = exception.getMessage();
+        assertTrue(message.contains("Cannot use jwksuri endpoint configuration when jwksurl was already configured"), 
+            "Expected message to contain exclusivity info, but was: " + message);
+        assertTrue(message.contains("mutually exclusive"), 
+            "Expected message to contain 'mutually exclusive', but was: " + message);
+    }
+    
+    @Test
+    @DisplayName("Should allow multiple calls to same endpoint configuration method")
+    void shouldAllowMultipleCallsToSameEndpointMethod() {
+        // This should not throw an exception - multiple calls to the same method should be allowed
+        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                .jwksUrl(VALID_URL)
+                .jwksUrl("https://final.example.com/jwks.json") // Override with different URL
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .build();
+        
+        assertEquals(URI.create("https://final.example.com/jwks.json"), config.getHttpHandler().getUri());
     }
 }

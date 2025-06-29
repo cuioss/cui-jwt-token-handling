@@ -54,7 +54,7 @@ import java.util.Set;
  *     .issuer("https://example.com")
  *     .expectedAudience("my-client")
  *     .httpJwksLoaderConfig(HttpJwksLoaderConfig.builder()
- *         .url("https://example.com/.well-known/jwks.json")
+ *         .jwksUrl("https://example.com/.well-known/jwks.json")
  *         .refreshIntervalSeconds(60)
  *         .build())
  *     .build();

@@ -63,7 +63,7 @@ class JwksLoaderFactoryTest {
     void shouldCreateHttpLoader() {
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url("https://example.com/.well-known/jwks.json")
+                .jwksUrl("https://example.com/.well-known/jwks.json")
                 .build();
         JwksLoader loader = JwksLoaderFactory.createHttpLoader(config, securityEventCounter);
         assertNotNull(loader, "Loader should not be null");

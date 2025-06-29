@@ -48,7 +48,7 @@ class SimpleHttpJwksLoaderTest {
         securityEventCounter = new SecurityEventCounter();
 
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(jwksEndpoint)
+                .jwksUrl(jwksEndpoint)
                 .build();
 
         httpJwksLoader = new HttpJwksLoader(config, securityEventCounter);
