@@ -15,6 +15,8 @@
  */
 package de.cuioss.jwt.validation.jwks.well_known;
 
+import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
+import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
@@ -22,8 +24,8 @@ import de.cuioss.jwt.validation.jwks.http.HttpJwksLoader;
 import de.cuioss.jwt.validation.jwks.http.JwksLoadException;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
-import de.cuioss.jwt.validation.well_known.LazyWellKnownHandler;
 import de.cuioss.jwt.validation.well_known.WellKnownDiscoveryException;
+import de.cuioss.jwt.validation.well_known.WellKnownResolver;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import lombok.NonNull;
@@ -31,16 +33,16 @@ import lombok.NonNull;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * JwksLoader implementation that uses delegation to handle the non-deterministic
  * behavior of well-known endpoint discovery.
  * <p>
  * This specialized {@link JwksLoader} implementation properly integrates
- * {@link LazyWellKnownHandler} with the JWT validation system by:
+ * {@link WellKnownResolver} with the JWT validation system by:
  * <ul>
- *   <li>Using delegation pattern to wrap WellKnownHandler functionality</li>
+ *   <li>Using delegation pattern to wrap WellKnownResolver functionality</li>
  *   <li>Implementing lazy initialization of well-known endpoints</li>
  *   <li>Handling discovery failures gracefully with proper fallback</li>
  *   <li>Caching discovered JWKS URI for subsequent requests</li>
@@ -56,15 +58,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Usage example:
  * <pre>
- * LazyWellKnownHandler wellKnownHandler = LazyWellKnownHandler.builder()
+ * WellKnownResolver resolver = HttpWellKnownResolver.builder()
  *     .url("https://example.com/.well-known/openid-configuration")
  *     .build();
  * 
- * WellKnownHandlerJWKSKeyloader loader = new WellKnownHandlerJWKSKeyloader(
- *     wellKnownHandler,
- *     HttpJwksLoaderConfig.builder()
- *         .refreshIntervalSeconds(300)
- *         .build(),
+ * WellKnownResolverJWKSKeyloader loader = new WellKnownResolverJWKSKeyloader(
+ *     resolver,
  *     securityEventCounter
  * );
  * 
@@ -77,33 +76,30 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Oliver Wolff
  * @since 1.0
  */
-public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
+public class WellKnownResolverJWKSKeyloader implements JwksLoader {
 
-    private static final CuiLogger LOGGER = new CuiLogger(WellKnownHandlerJWKSKeyloader.class);
+    private static final CuiLogger LOGGER = new CuiLogger(WellKnownResolverJWKSKeyloader.class);
 
-    private final LazyWellKnownHandler wellKnownHandler;
+    private final WellKnownResolver wellKnownResolver;
     private final SecurityEventCounter securityEventCounter;
 
     // Lazy-initialized delegate loader
-    private volatile HttpJwksLoader delegateLoader;
+    private final AtomicReference<HttpJwksLoader> delegateLoader = new AtomicReference<>();
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
     private volatile Exception lastError;
 
-    private final ReentrantReadWriteLock delegateLock = new ReentrantReadWriteLock();
-
     /**
-     * Creates a new WellKnownHandlerJWKSKeyloader.
+     * Creates a new WellKnownResolverJWKSKeyloader.
      *
-     * @param wellKnownHandler the well-known handler for discovery
+     * @param wellKnownResolver the well-known resolver for discovery
      * @param securityEventCounter the security event counter
      */
-    public WellKnownHandlerJWKSKeyloader(@NonNull LazyWellKnownHandler wellKnownHandler,
+    public WellKnownResolverJWKSKeyloader(@NonNull WellKnownResolver wellKnownResolver,
             @NonNull SecurityEventCounter securityEventCounter) {
-        this.wellKnownHandler = wellKnownHandler;
+        this.wellKnownResolver = wellKnownResolver;
         this.securityEventCounter = securityEventCounter;
 
-        LOGGER.debug("Created WellKnownHandlerJWKSKeyloader for well-known URL: %s",
-                wellKnownHandler.getWellKnownUrl());
+        LOGGER.debug("Created WellKnownResolverJWKSKeyloader for well-known resolver");
     }
 
     /**
@@ -116,7 +112,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
      */
     private boolean ensureDelegateInitialized() {
         // Fast path - already initialized
-        if (delegateLoader != null) {
+        if (delegateLoader.get() != null) {
             return true;
         }
 
@@ -127,10 +123,9 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         }
 
         // Slow path - need to initialize
-        delegateLock.writeLock().lock();
-        try {
+        synchronized (this) {
             // Double-check after acquiring lock
-            if (delegateLoader != null) {
+            if (delegateLoader.get() != null) {
                 return true;
             }
 
@@ -143,7 +138,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
                 LOGGER.debug("Initializing delegate JWKS loader via well-known discovery");
 
                 // Phase 1: Trigger well-known discovery
-                HttpHandler jwksUriHandler = wellKnownHandler.getJwksUri();
+                HttpHandler jwksUriHandler = wellKnownResolver.getJwksUri();
                 if (jwksUriHandler == null) {
                     throw new WellKnownDiscoveryException("No JWKS URI found in discovery document");
                 }
@@ -151,31 +146,27 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
                 // Phase 2: Create HttpJwksLoader with discovered URI
                 LOGGER.debug("Discovered JWKS URI: %s", jwksUriHandler.getUri());
 
-                delegateLoader = new HttpJwksLoader(jwksUriHandler, securityEventCounter);
+                HttpJwksLoader newDelegateLoader = new HttpJwksLoader(jwksUriHandler, securityEventCounter);
 
                 // Check if the delegate is healthy
-                if (delegateLoader.isHealthy()) {
+                if (newDelegateLoader.isHealthy()) {
+                    delegateLoader.set(newDelegateLoader);
                     status = LoaderStatus.OK;
-                    LOGGER.info("Successfully initialized JWKS loader via well-known discovery for: %s",
-                            wellKnownHandler.getWellKnownUrl());
+                    LOGGER.info("Successfully initialized JWKS loader via well-known discovery");
                     return true;
                 } else {
                     status = LoaderStatus.ERROR;
                     lastError = new WellKnownDiscoveryException("Delegate JWKS loader is not healthy");
-                    LOGGER.warn("Delegate JWKS loader initialized but not healthy for: %s",
-                            wellKnownHandler.getWellKnownUrl());
+                    LOGGER.warn(WARN.JWKS_LOADER_NOT_HEALTHY.format(jwksUriHandler.getUri()));
                     return false;
                 }
 
             } catch (WellKnownDiscoveryException | JwksLoadException e) {
                 status = LoaderStatus.ERROR;
                 lastError = e;
-                LOGGER.error(e, "Failed to initialize JWKS loader via well-known discovery for: %s",
-                        wellKnownHandler.getWellKnownUrl());
+                LOGGER.error(e, ERROR.JWKS_LOADER_INIT_FAILED.format("well-known discovery"));
                 return false;
             }
-        } finally {
-            delegateLock.writeLock().unlock();
         }
     }
 
@@ -184,7 +175,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         if (!ensureDelegateInitialized()) {
             return Optional.empty();
         }
-        return delegateLoader.getKeyInfo(kid);
+        return delegateLoader.get().getKeyInfo(kid);
     }
 
     @Override
@@ -192,7 +183,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         if (!ensureDelegateInitialized()) {
             return Optional.empty();
         }
-        return delegateLoader.getFirstKeyInfo();
+        return delegateLoader.get().getFirstKeyInfo();
     }
 
     @Override
@@ -200,7 +191,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         if (!ensureDelegateInitialized()) {
             return List.of();
         }
-        return delegateLoader.getAllKeyInfos();
+        return delegateLoader.get().getAllKeyInfos();
     }
 
     @Override
@@ -208,7 +199,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         if (!ensureDelegateInitialized()) {
             return Set.of();
         }
-        return delegateLoader.keySet();
+        return delegateLoader.get().keySet();
     }
 
     @Override
@@ -225,8 +216,9 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         }
 
         // If we have a delegate, use its status
-        if (delegateLoader != null) {
-            LoaderStatus delegateStatus = delegateLoader.getStatus();
+        HttpJwksLoader loader = delegateLoader.get();
+        if (loader != null) {
+            LoaderStatus delegateStatus = loader.getStatus();
             // Update our status to match
             if (delegateStatus != LoaderStatus.UNDEFINED) {
                 status = delegateStatus;
@@ -239,7 +231,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
     @Override
     public boolean isHealthy() {
         // This triggers the full initialization chain if needed:
-        // 1. Well-known discovery (lazy in LazyWellKnownHandler)
+        // 1. Well-known discovery (lazy in WellKnownResolver)
         // 2. JWKS URI extraction
         // 3. HttpJwksLoader creation
         // 4. JWKS loading (lazy in HttpJwksLoader)
@@ -248,13 +240,14 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
             return false;
         }
 
-        // Check both well-known handler and delegate loader health
-        boolean wellKnownHealthy = wellKnownHandler.isHealthy();
-        boolean delegateHealthy = delegateLoader != null && delegateLoader.isHealthy();
+        // Check both well-known resolver and delegate loader health
+        boolean wellKnownHealthy = wellKnownResolver.isHealthy();
+        HttpJwksLoader loader = delegateLoader.get();
+        boolean delegateHealthy = loader != null && loader.isHealthy();
 
         boolean healthy = wellKnownHealthy && delegateHealthy;
 
-        LOGGER.debug("Health check for WellKnownHandlerJWKSKeyloader: wellKnown=%s, delegate=%s, overall=%s",
+        LOGGER.debug("Health check for WellKnownResolverJWKSKeyloader: wellKnown=%s, delegate=%s, overall=%s",
                 wellKnownHealthy, delegateHealthy, healthy);
 
         return healthy;
@@ -267,14 +260,5 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
      */
     public Exception getLastError() {
         return lastError;
-    }
-
-    /**
-     * Gets the well-known URL being used for discovery.
-     *
-     * @return the well-known URL
-     */
-    public String getWellKnownUrl() {
-        return wellKnownHandler.getWellKnownUrl().toString();
     }
 }

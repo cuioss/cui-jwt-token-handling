@@ -17,7 +17,7 @@ package de.cuioss.jwt.validation;
 
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
-import de.cuioss.jwt.validation.well_known.WellKnownHandler;
+import de.cuioss.jwt.validation.well_known.HttpWellKnownResolver;
 import de.cuioss.test.keycloakit.KeycloakITBase;
 import de.cuioss.test.keycloakit.TestRealm;
 import de.cuioss.tools.logging.CuiLogger;
@@ -224,7 +224,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
             // 2. Perform OIDC Discovery
             // Use the keycloakSslContext to ensure proper SSL certificate validation
             // when connecting to the Keycloak server
-            WellKnownHandler wellKnownHandler = WellKnownHandler.builder()
+            HttpWellKnownResolver wellKnownHandler = HttpWellKnownResolver.builder()
                     .url(wellKnownUrlString)
                     .sslContext(keycloakSslContext)
                     .build();
@@ -276,7 +276,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
         @DisplayName("Should fail validation if expected issuer is incorrect (via Well-Known discovery setup)")
         void shouldFailValidationWithIncorrectExpectedIssuerViaWellKnown() {
             String wellKnownUrlString = TokenKeycloakIT.this.authServerUrlString + "/realms/" + TestRealm.REALM_NAME + "/.well-known/openid-configuration";
-            WellKnownHandler wellKnownHandler = WellKnownHandler.builder()
+            HttpWellKnownResolver wellKnownHandler = HttpWellKnownResolver.builder()
                     .url(wellKnownUrlString)
                     .sslContext(keycloakSslContext)
                     .build();

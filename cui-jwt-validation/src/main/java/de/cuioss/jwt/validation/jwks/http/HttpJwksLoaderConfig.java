@@ -16,7 +16,7 @@
 package de.cuioss.jwt.validation.jwks.http;
 
 import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
-import de.cuioss.jwt.validation.well_known.WellKnownHandler;
+import de.cuioss.jwt.validation.well_known.WellKnownResolver;
 import de.cuioss.tools.base.Preconditions;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
@@ -39,7 +39,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * This class encapsulates configuration options for the HttpJwksLoader,
  * including JWKS endpoint URL, refresh interval, SSL context, and
  * background refresh parameters. The JWKS endpoint URL can be configured
- * directly or discovered via a {@link WellKnownHandler}.
+ * directly or discovered via a {@link WellKnownResolver}.
  * <p>
  * Complex caching parameters (maxCacheSize, adaptiveWindowSize) have been 
  * removed for simplification while keeping essential refresh functionality.
@@ -161,13 +161,13 @@ public class HttpJwksLoaderConfig {
          * The last call among these methods determines the final JWKS URI.
          * </p>
          *
-         * @param wellKnownHandler The {@link WellKnownHandler} instance from which to
-         *                         extract the JWKS URI. Must not be null.
+         * @param wellKnownResolver The {@link WellKnownResolver} instance from which to
+         *                          extract the JWKS URI. Must not be null.
          * @return this builder instance
-         * @throws IllegalArgumentException if {@code wellKnownHandler} is null
+         * @throws IllegalArgumentException if {@code wellKnownResolver} is null
          */
-        public HttpJwksLoaderConfigBuilder wellKnown(@NonNull WellKnownHandler wellKnownHandler) {
-            HttpHandler extractedJwksHandler = wellKnownHandler.getJwksUri();
+        public HttpJwksLoaderConfigBuilder wellKnown(@NonNull WellKnownResolver wellKnownResolver) {
+            HttpHandler extractedJwksHandler = wellKnownResolver.getJwksUri();
             httpHandlerBuilder.uri(extractedJwksHandler.getUri()).sslContext(extractedJwksHandler.getSslContext());
             return this;
         }
