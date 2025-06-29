@@ -151,14 +151,9 @@ public class HttpWellKnownResolverConfig {
             if (preBuiltHttpHandler != null) {
                 wellKnownHttpHandler = preBuiltHttpHandler;
             } else {
-                // Determine timeouts
-                int actualConnectTimeout = connectTimeoutSeconds != null ? connectTimeoutSeconds
-                        : (parserConfig != null ? parserConfig.getWellKnownConnectTimeoutSeconds()
-                        : DEFAULT_CONNECT_TIMEOUT_SECONDS);
-
-                int actualReadTimeout = readTimeoutSeconds != null ? readTimeoutSeconds
-                        : (parserConfig != null ? parserConfig.getWellKnownReadTimeoutSeconds()
-                        : DEFAULT_READ_TIMEOUT_SECONDS);
+                // Use configured timeouts or defaults
+                int actualConnectTimeout = connectTimeoutSeconds != null ? connectTimeoutSeconds : DEFAULT_CONNECT_TIMEOUT_SECONDS;
+                int actualReadTimeout = readTimeoutSeconds != null ? readTimeoutSeconds : DEFAULT_READ_TIMEOUT_SECONDS;
 
                 // Configure timeouts
                 httpHandlerBuilder.connectionTimeoutSeconds(actualConnectTimeout);

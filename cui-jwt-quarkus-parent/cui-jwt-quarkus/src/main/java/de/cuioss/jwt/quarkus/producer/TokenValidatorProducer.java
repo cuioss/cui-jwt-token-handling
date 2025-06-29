@@ -220,7 +220,7 @@ public class TokenValidatorProducer {
         return wellKnownResolverCache.computeIfAbsent(issuerName, key -> {
             LOGGER.debug("Creating HttpWellKnownResolver for issuer '%s' with URL: %s", issuerName, wellKnownUrl);
             HttpWellKnownResolverConfig config = HttpWellKnownResolverConfig.builder()
-                    .wellKnownUrl(wellKnownUrl)
+                    .url(wellKnownUrl)
                     .connectTimeoutSeconds(this.config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
                     .readTimeoutSeconds(this.config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
                     .build();
@@ -270,7 +270,7 @@ public class TokenValidatorProducer {
                 // Create JWKS config with well-known discovery
                 HttpJwksLoaderConfig jwksConfig =
                         HttpJwksLoaderConfig.builder()
-                                .wellKnownResolver(wellKnownResolver)
+                                .wellKnown(wellKnownResolver)
                                 .refreshIntervalSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.REFRESH_INTERVAL_SECONDS_PARTIAL, Integer.class).orElse(300))
                                 .connectTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.CONNECTION_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
                                 .readTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.READ_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
