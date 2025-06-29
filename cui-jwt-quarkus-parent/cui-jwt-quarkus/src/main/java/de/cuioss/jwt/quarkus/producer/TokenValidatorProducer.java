@@ -21,7 +21,8 @@ import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
-import de.cuioss.jwt.validation.well_known.WellKnownHandler;
+import de.cuioss.jwt.validation.well_known.HttpWellKnownResolver;
+import de.cuioss.jwt.validation.well_known.HttpWellKnownResolverConfig;
 import de.cuioss.tools.logging.CuiLogger;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -70,7 +71,7 @@ public class TokenValidatorProducer {
     @Getter
     private List<IssuerConfig> issuerConfigs;
 
-    private final Map<String, WellKnownHandler> wellKnownHandlerCache = new HashMap<>();
+    private final Map<String, HttpWellKnownResolver> wellKnownResolverCache = new HashMap<>();
 
     public TokenValidatorProducer(Config config) {
         this.config = config;
@@ -194,8 +195,8 @@ public class TokenValidatorProducer {
 
         if (wellKnownUrl != null) {
             try {
-                WellKnownHandler wellKnownHandler = getOrCreateWellKnownHandler(issuerName, wellKnownUrl);
-                String discoveredIssuer = wellKnownHandler.getIssuer().getUri().toString();
+                HttpWellKnownResolver wellKnownResolver = getOrCreateWellKnownResolver(issuerName, wellKnownUrl);
+                String discoveredIssuer = wellKnownResolver.getIssuer().getUri().toString();
                 LOGGER.debug("Discovered issuer identifier from well-known URL for issuer '%s': %s", issuerName, discoveredIssuer);
                 return discoveredIssuer;
             } catch (Exception e) {
@@ -209,20 +210,21 @@ public class TokenValidatorProducer {
     }
 
     /**
-     * Gets or creates a cached WellKnownHandler for the given issuer to avoid redundant network calls.
+     * Gets or creates a cached HttpWellKnownResolver for the given issuer to avoid redundant network calls.
      * 
      * @param issuerName the issuer name
      * @param wellKnownUrl the well-known URL
-     * @return cached or newly created WellKnownHandler
+     * @return cached or newly created HttpWellKnownResolver
      */
-    private WellKnownHandler getOrCreateWellKnownHandler(String issuerName, String wellKnownUrl) {
-        return wellKnownHandlerCache.computeIfAbsent(issuerName, key -> {
-            LOGGER.debug("Creating WellKnownHandler for issuer '%s' with URL: %s", issuerName, wellKnownUrl);
-            return WellKnownHandler.builder()
-                    .url(wellKnownUrl)
-                    .connectTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
-                    .readTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
+    private HttpWellKnownResolver getOrCreateWellKnownResolver(String issuerName, String wellKnownUrl) {
+        return wellKnownResolverCache.computeIfAbsent(issuerName, key -> {
+            LOGGER.debug("Creating HttpWellKnownResolver for issuer '%s' with URL: %s", issuerName, wellKnownUrl);
+            HttpWellKnownResolverConfig config = HttpWellKnownResolverConfig.builder()
+                    .wellKnownUrl(wellKnownUrl)
+                    .connectTimeoutSeconds(this.config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.connection-timeout-seconds", Integer.class).orElse(5))
+                    .readTimeoutSeconds(this.config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".jwks.read-timeout-seconds", Integer.class).orElse(5))
                     .build();
+            return new HttpWellKnownResolver(config, securityEventCounter);
         });
     }
 
@@ -262,13 +264,13 @@ public class TokenValidatorProducer {
                 builder.httpJwksLoaderConfig(jwksConfig);
                 LOGGER.debug("Set JWKS URL for " + issuerName + ": " + jwksUrl);
             } else if (wellKnownUrl != null) {
-                // Reuse cached WellKnownHandler to avoid redundant network calls
-                WellKnownHandler wellKnownHandler = getOrCreateWellKnownHandler(issuerName, wellKnownUrl);
+                // Reuse cached HttpWellKnownResolver to avoid redundant network calls
+                HttpWellKnownResolver wellKnownResolver = getOrCreateWellKnownResolver(issuerName, wellKnownUrl);
 
                 // Create JWKS config with well-known discovery
                 HttpJwksLoaderConfig jwksConfig =
                         HttpJwksLoaderConfig.builder()
-                                .wellKnown(wellKnownHandler)
+                                .wellKnownResolver(wellKnownResolver)
                                 .refreshIntervalSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.REFRESH_INTERVAL_SECONDS_PARTIAL, Integer.class).orElse(300))
                                 .connectTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.CONNECTION_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))
                                 .readTimeoutSeconds(config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + JwtPropertyKeys.ISSUERS.JWKS.READ_TIMEOUT_SECONDS_PARTIAL, Integer.class).orElse(5))

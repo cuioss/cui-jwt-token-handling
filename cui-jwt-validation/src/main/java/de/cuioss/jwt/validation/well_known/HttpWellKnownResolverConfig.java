@@ -63,9 +63,9 @@ public class HttpWellKnownResolverConfig {
     private final Duration retryDelay;
 
     private HttpWellKnownResolverConfig(HttpHandler httpHandler,
-                                        ParserConfig parserConfig,
-                                        int maxAttempts,
-                                        Duration retryDelay) {
+            ParserConfig parserConfig,
+            int maxAttempts,
+            Duration retryDelay) {
         this.httpHandler = httpHandler;
         this.parserConfig = parserConfig;
         this.maxAttempts = maxAttempts;
@@ -174,7 +174,7 @@ public class HttpWellKnownResolverConfig {
             int resolverMaxAttempts = maxAttempts != null ? maxAttempts : DEFAULT_MAX_ATTEMPTS;
             Duration resolverRetryDelay = retryDelay != null ? retryDelay : DEFAULT_RETRY_DELAY;
 
-            return new HttpWellKnownResolverConfig(wellKnownHttpHandler, parserConfig, 
+            return new HttpWellKnownResolverConfig(wellKnownHttpHandler, parserConfig,
                     resolverMaxAttempts, resolverRetryDelay);
         }
     }

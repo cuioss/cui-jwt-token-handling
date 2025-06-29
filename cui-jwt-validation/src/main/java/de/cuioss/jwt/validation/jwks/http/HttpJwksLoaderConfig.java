@@ -149,10 +149,10 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
-         * Configures the JWKS URI by extracting it from a {@link WellKnownHandler}.
+         * Configures the JWKS URI by extracting it from a {@link WellKnownResolver}.
          * <p>
          * This method will retrieve the {@code jwks_uri} from the provided
-         * {@code WellKnownHandler}. If the handler does not contain a {@code jwks_uri},
+         * {@code WellKnownResolver}. If the resolver does not contain a {@code jwks_uri},
          * an {@link IllegalArgumentException} will be thrown.
          * </p>
          * <p>

@@ -17,7 +17,6 @@ package de.cuioss.jwt.validation.well_known;
 
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
-import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.tools.logging.CuiLogger;
@@ -88,9 +87,9 @@ public class HttpWellKnownResolver implements WellKnownResolver {
      * @param retryDelay delay between retry attempts
      */
     public HttpWellKnownResolver(@NonNull HttpHandler httpHandler,
-                                 ParserConfig parserConfig,
-                                 int maxAttempts,
-                                 Duration retryDelay) {
+            ParserConfig parserConfig,
+            int maxAttempts,
+            Duration retryDelay) {
         this.httpHandler = httpHandler;
         this.wellKnownUrl = httpHandler.getUrl();
         this.client = new WellKnownClient(httpHandler);
@@ -295,7 +294,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
 
     private void loadEndpoints() {
         Exception lastException = null;
-        
+
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 LOGGER.debug("Loading well-known endpoints from %s (attempt %d/%d)", wellKnownUrl, attempt, maxAttempts);
@@ -363,7 +362,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
 
         // All attempts failed
         this.status = LoaderStatus.ERROR;
-        throw new WellKnownDiscoveryException("Failed to load well-known endpoints from " + wellKnownUrl + 
+        throw new WellKnownDiscoveryException("Failed to load well-known endpoints from " + wellKnownUrl +
                 " after " + maxAttempts + " attempts", lastException);
     }
 }

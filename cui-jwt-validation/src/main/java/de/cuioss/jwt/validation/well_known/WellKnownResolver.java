@@ -24,7 +24,7 @@ import java.util.Optional;
  * Interface for resolving OpenID Connect well-known endpoints.
  * <p>
  * This interface provides a contract for discovering and accessing OIDC provider metadata
- * from .well-known/openid-configuration endpoints. It follows the same pattern as 
+ * from .well-known/openid-configuration endpoints. It follows the same pattern as
  * {@link de.cuioss.jwt.validation.jwks.JwksLoader} with health checking and status reporting.
  * <p>
  * Implementations should provide:
@@ -84,8 +84,4 @@ public interface WellKnownResolver extends HealthStatusProvider {
      * @throws WellKnownDiscoveryException if discovery fails or issuer is not available
      */
     HttpHandler getIssuer();
-
-    // Health status methods inherited from HealthStatusProvider
-    // - boolean isHealthy()
-    // - LoaderStatus getStatus()
 }
