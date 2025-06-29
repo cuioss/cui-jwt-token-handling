@@ -209,11 +209,6 @@ public final class JWTValidationLogMessages {
                 .template("Issuer validation failed. Document issuer '%s' (normalized to base URL for .well-known: %s://%s%s%s) does not match the .well-known URL '%s'. Expected path for .well-known: '%s'. SchemeMatch=%s, HostMatch=%s, PortMatch=%s (IssuerPort=%s, WellKnownPort=%s), PathMatch=%s (WellKnownPath='%s')")
                 .build();
 
-        public static final LogRecord JWKS_RELOAD_FAILED = LogRecordModel.builder()
-                .prefix(PREFIX)
-                .identifier(204)
-                .template("Failed to reload JWKS")
-                .build();
 
         public static final LogRecord JWKS_LOAD_FAILED = LogRecordModel.builder()
                 .prefix(PREFIX)
@@ -253,11 +248,6 @@ public final class JWTValidationLogMessages {
                 .template("Successfully loaded and parsed JWKS from %s with %s keys")
                 .build();
 
-        public static final LogRecord JWKS_RELOAD_COMPLETED = LogRecordModel.builder()
-                .prefix(PREFIX)
-                .identifier(22)
-                .template("Forced reload of JWKS completed with clearCache=%s")
-                .build();
 
         public static final LogRecord JWKS_KEYS_UPDATED = LogRecordModel.builder()
                 .prefix(PREFIX)

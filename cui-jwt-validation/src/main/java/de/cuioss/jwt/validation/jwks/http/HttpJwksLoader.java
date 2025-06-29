@@ -131,24 +131,6 @@ public class HttpJwksLoader implements JwksLoader {
         return status == LoaderStatus.OK;
     }
 
-    /**
-     * Forces a reload of JWKS content, optionally clearing cache completely.
-     * Package-private for testing purposes only.
-     * 
-     * @param clearCache if true, clears all cached content; if false, only bypasses ETag validation
-     * @throws JwksLoadException if reloading fails
-     */
-    void reload(boolean clearCache) {
-        try {
-            ETagAwareHttpHandler.LoadResult result = httpCache.reload(clearCache);
-            updateKeyLoader(result);
-            LOGGER.info(INFO.JWKS_RELOAD_COMPLETED.format(clearCache));
-        } catch (JwksLoadException e) {
-            this.status = LoaderStatus.ERROR;
-            LOGGER.error(e, ERROR.JWKS_RELOAD_FAILED::format);
-            throw e; // Re-throw specific exception
-        }
-    }
 
     /**
      * Shuts down the background refresh scheduler if running.
