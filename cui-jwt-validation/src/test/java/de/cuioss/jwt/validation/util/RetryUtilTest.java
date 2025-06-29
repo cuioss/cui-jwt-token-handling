@@ -25,15 +25,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class RetryUtilTest {
 
     @Test
-    void testSuccessfulOperation() {
+    void successfulOperation() {
         String result = RetryUtil.executeWithRetry(() -> "success", "test operation");
         assertEquals("success", result);
     }
 
     @Test
-    void testRetryOnFailure() {
+    void retryOnFailure() {
         AtomicInteger attempts = new AtomicInteger(0);
-        
+
         String result = RetryUtil.executeWithRetry(() -> {
             int attempt = attempts.incrementAndGet();
             if (attempt < 3) {
@@ -41,30 +41,30 @@ class RetryUtilTest {
             }
             return "success on attempt " + attempt;
         }, 3, Duration.ofMillis(10), "test retry");
-        
+
         assertEquals("success on attempt 3", result);
         assertEquals(3, attempts.get());
     }
 
     @Test
-    void testRetryExhaustion() {
+    void retryExhaustion() {
         AtomicInteger attempts = new AtomicInteger(0);
-        
+
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-            RetryUtil.executeWithRetry(() -> {
-                attempts.incrementAndGet();
-                throw new RuntimeException("Always fails");
-            }, 2, Duration.ofMillis(1), "failing operation")
+                RetryUtil.executeWithRetry(() -> {
+                    attempts.incrementAndGet();
+                    throw new RuntimeException("Always fails");
+                }, 2, Duration.ofMillis(1), "failing operation")
         );
-        
+
         assertTrue(exception.getMessage().contains("Operation failed after 2 attempts"));
         assertEquals(2, attempts.get());
     }
 
     @Test
-    void testDefaultRetrySettings() {
+    void defaultRetrySettings() {
         AtomicInteger attempts = new AtomicInteger(0);
-        
+
         String result = RetryUtil.executeWithRetry(() -> {
             int attempt = attempts.incrementAndGet();
             if (attempt < 2) {
@@ -72,7 +72,7 @@ class RetryUtilTest {
             }
             return "success";
         }, "default retry test");
-        
+
         assertEquals("success", result);
         assertEquals(2, attempts.get());
     }

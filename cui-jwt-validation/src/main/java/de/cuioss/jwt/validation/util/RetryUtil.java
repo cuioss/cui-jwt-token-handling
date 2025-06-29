@@ -27,13 +27,13 @@ import java.util.function.Supplier;
  * @since 1.0
  */
 public final class RetryUtil {
-    
+
     private static final CuiLogger LOGGER = new CuiLogger(RetryUtil.class);
-    
+
     private RetryUtil() {
         // Utility class
     }
-    
+
     /**
      * Executes the given operation with simple retry logic.
      * 
@@ -47,7 +47,7 @@ public final class RetryUtil {
      */
     public static <T> T executeWithRetry(Supplier<T> operation, int maxAttempts, Duration delay, String operationName) {
         RuntimeException lastException = null;
-        
+
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 LOGGER.debug("Executing %s (attempt %d/%d)", operationName, attempt, maxAttempts);
@@ -59,7 +59,7 @@ public final class RetryUtil {
             } catch (RuntimeException e) {
                 lastException = e;
                 if (attempt < maxAttempts) {
-                    LOGGER.debug("Operation %s failed on attempt %d, retrying after %dms: %s", 
+                    LOGGER.debug("Operation %s failed on attempt %d, retrying after %dms: %s",
                             operationName, attempt, delay.toMillis(), e.getMessage());
                     try {
                         Thread.sleep(delay.toMillis());
@@ -72,10 +72,10 @@ public final class RetryUtil {
                 }
             }
         }
-        
+
         throw new RetryException("Operation failed after " + maxAttempts + " attempts: " + operationName, lastException, maxAttempts);
     }
-    
+
     /**
      * Executes with default retry settings (3 attempts, 100ms delay).
      */

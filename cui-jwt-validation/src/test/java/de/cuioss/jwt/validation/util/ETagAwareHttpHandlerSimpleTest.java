@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ETagAwareHttpHandlerSimpleTest {
 
     @Test
-    void testLoadStateEnum() {
+    void loadStateEnum() {
         // Test enum properties
         assertTrue(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER.isDataChanged());
         assertFalse(ETagAwareHttpHandler.LoadState.CACHE_ETAG.isDataChanged());
@@ -40,13 +40,13 @@ class ETagAwareHttpHandlerSimpleTest {
     }
 
     @Test
-    void testLoadResultRecord() {
+    void loadResultRecord() {
         ETagAwareHttpHandler.LoadResult result = new ETagAwareHttpHandler.LoadResult(
                 "content", ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER);
-        
+
         assertEquals("content", result.content());
         assertEquals(ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER, result.loadState());
-        
+
         // Test record equality
         ETagAwareHttpHandler.LoadResult sameResult = new ETagAwareHttpHandler.LoadResult(
                 "content", ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER);
@@ -55,28 +55,28 @@ class ETagAwareHttpHandlerSimpleTest {
     }
 
     @Test
-    void testLoadResultWithNull() {
+    void loadResultWithNull() {
         ETagAwareHttpHandler.LoadResult result = new ETagAwareHttpHandler.LoadResult(
                 null, ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE);
-        
+
         assertNull(result.content());
         assertEquals(ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE, result.loadState());
         assertTrue(result.loadState().isDataChanged());
     }
 
     @Test
-    void testAllLoadStates() {
+    void allLoadStates() {
         // Verify all enum constants exist and have correct properties
         ETagAwareHttpHandler.LoadState[] states = ETagAwareHttpHandler.LoadState.values();
         assertEquals(5, states.length);
-        
+
         // Verify specific states
         assertArrayEquals(new ETagAwareHttpHandler.LoadState[]{
-            ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER,
-            ETagAwareHttpHandler.LoadState.CACHE_ETAG,
-            ETagAwareHttpHandler.LoadState.CACHE_CONTENT,
-            ETagAwareHttpHandler.LoadState.ERROR_WITH_CACHE,
-            ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE
+                ETagAwareHttpHandler.LoadState.LOADED_FROM_SERVER,
+                ETagAwareHttpHandler.LoadState.CACHE_ETAG,
+                ETagAwareHttpHandler.LoadState.CACHE_CONTENT,
+                ETagAwareHttpHandler.LoadState.ERROR_WITH_CACHE,
+                ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE
         }, states);
     }
 }

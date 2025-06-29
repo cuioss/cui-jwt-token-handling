@@ -23,10 +23,8 @@ import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import de.cuioss.tools.net.http.SecureSSLContextProvider;
 import jakarta.json.JsonObject;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import javax.net.ssl.SSLContext;
@@ -96,18 +94,18 @@ public final class LazyWellKnownHandler {
     private volatile Map<String, HttpHandler> endpoints;
     private volatile boolean initialized = false;
     private volatile Exception initializationError;
-    
+
     private final ReentrantReadWriteLock lazyInitLock = new ReentrantReadWriteLock();
 
     /**
      * Creates a new LazyWellKnownHandler with the specified configuration.
      * This constructor is private to enforce use of the builder.
      */
-    private LazyWellKnownHandler(URL wellKnownUrl, 
-                                HttpHandler httpHandler,
-                                WellKnownClient client,
-                                WellKnownParser parser,
-                                WellKnownEndpointMapper mapper) {
+    private LazyWellKnownHandler(URL wellKnownUrl,
+            HttpHandler httpHandler,
+            WellKnownClient client,
+            WellKnownParser parser,
+            WellKnownEndpointMapper mapper) {
         this.wellKnownUrl = wellKnownUrl;
         this.httpHandler = httpHandler;
         this.client = client;
@@ -243,7 +241,7 @@ public final class LazyWellKnownHandler {
          */
         public LazyWellKnownHandler build() {
             HttpHandler wellKnownHttpHandler;
-            
+
             if (preBuiltHttpHandler != null) {
                 // Use the pre-built handler (e.g., wrapped with resilience)
                 wellKnownHttpHandler = preBuiltHttpHandler;
@@ -251,13 +249,13 @@ public final class LazyWellKnownHandler {
             } else {
                 // Build a new handler with the configured parameters
                 // Determine timeouts
-                int actualConnectTimeout = connectTimeoutSeconds != null ? connectTimeoutSeconds 
-                    : (parserConfig != null ? parserConfig.getWellKnownConnectTimeoutSeconds() 
-                    : CONNECT_TIMEOUT_SECONDS);
-                
-                int actualReadTimeout = readTimeoutSeconds != null ? readTimeoutSeconds 
-                    : (parserConfig != null ? parserConfig.getWellKnownReadTimeoutSeconds() 
-                    : READ_TIMEOUT_SECONDS);
+                int actualConnectTimeout = connectTimeoutSeconds != null ? connectTimeoutSeconds
+                        : (parserConfig != null ? parserConfig.getWellKnownConnectTimeoutSeconds()
+                        : CONNECT_TIMEOUT_SECONDS);
+
+                int actualReadTimeout = readTimeoutSeconds != null ? readTimeoutSeconds
+                        : (parserConfig != null ? parserConfig.getWellKnownReadTimeoutSeconds()
+                        : READ_TIMEOUT_SECONDS);
 
                 // Configure timeouts
                 httpHandlerBuilder.connectionTimeoutSeconds(actualConnectTimeout);
@@ -272,7 +270,7 @@ public final class LazyWellKnownHandler {
             }
 
             URL resolvedUrl = wellKnownHttpHandler.getUrl();
-            
+
             // Create components but don't make HTTP requests
             WellKnownClient client = new WellKnownClient(wellKnownHttpHandler);
             WellKnownParser parser = new WellKnownParser(parserConfig);
@@ -314,48 +312,48 @@ public final class LazyWellKnownHandler {
             // Perform the actual discovery
             try {
                 LOGGER.debug("Performing lazy initialization of well-known endpoints for: %s", wellKnownUrl);
-                
+
                 // Fetch and parse discovery document with retry
                 String responseBody = RetryUtil.executeWithRetry(
-                    () -> client.fetchDiscoveryDocument(),
-                    "fetch well-known discovery document from " + wellKnownUrl
+                        () -> client.fetchDiscoveryDocument(),
+                        "fetch well-known discovery document from " + wellKnownUrl
                 );
                 JsonObject discoveryDocument = parser.parseJsonResponse(responseBody, wellKnownUrl);
-                
+
                 LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
-                
+
                 Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
-                
+
                 // Parse all endpoints
                 String issuerString = parser.getString(discoveryDocument, ISSUER_KEY)
                         .orElseThrow(() -> new WellKnownDiscoveryException(
-                            "Required field 'issuer' not found in discovery document from " + wellKnownUrl));
+                                "Required field 'issuer' not found in discovery document from " + wellKnownUrl));
                 parser.validateIssuer(issuerString, wellKnownUrl);
                 mapper.addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, wellKnownUrl, true);
-                
+
                 // JWKS URI (Required)
-                mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY, 
-                    parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), wellKnownUrl, true);
-                
+                mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY,
+                        parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), wellKnownUrl, true);
+
                 // Required endpoints
-                mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY, 
-                    parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
-                mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY, 
-                    parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
-                
+                mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY,
+                        parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
+                mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY,
+                        parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
+
                 // Optional endpoints
-                mapper.addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY, 
-                    parser.getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), wellKnownUrl, false);
-                
+                mapper.addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY,
+                        parser.getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), wellKnownUrl, false);
+
                 // Accessibility check for jwks_uri
                 mapper.performAccessibilityCheck(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY));
-                
+
                 // Success - save the endpoints
                 this.endpoints = parsedEndpoints;
                 this.initialized = true;
-                
+
                 LOGGER.info("Successfully loaded well-known endpoints from: %s", wellKnownUrl);
-                
+
             } catch (WellKnownDiscoveryException e) {
                 // Re-throw discovery exceptions as-is
                 this.initializationError = e;

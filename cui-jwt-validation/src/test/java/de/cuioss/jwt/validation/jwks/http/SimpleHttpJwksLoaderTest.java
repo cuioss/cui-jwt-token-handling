@@ -55,16 +55,16 @@ class SimpleHttpJwksLoaderTest {
     }
 
     @Test
-    void testBasicKeyLoading() {
+    void basicKeyLoading() {
         // Initially undefined status
         assertEquals(LoaderStatus.UNDEFINED, httpJwksLoader.getStatus());
-        
+
         // isHealthy() now triggers loading, so it should return true and load keys
         assertTrue(httpJwksLoader.isHealthy());
-        
+
         // After health check, status should be OK
         assertEquals(LoaderStatus.OK, httpJwksLoader.getStatus());
-        
+
         // Should have called endpoint once during health check
         assertEquals(1, moduleDispatcher.getCallCounter());
 
@@ -78,7 +78,7 @@ class SimpleHttpJwksLoaderTest {
     }
 
     @Test
-    void testCaching() {
+    void caching() {
         // Multiple calls should only hit endpoint once
         httpJwksLoader.getKeyInfo("default-key-id");
         httpJwksLoader.getKeyInfo("default-key-id");
@@ -89,7 +89,7 @@ class SimpleHttpJwksLoaderTest {
     }
 
     @Test
-    void testRetryOnLoad() {
+    void retryOnLoad() {
         // The RetryUtil should handle transient failures automatically
         // This test verifies basic functionality works
         assertNotNull(httpJwksLoader.getAllKeyInfos());

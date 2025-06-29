@@ -16,8 +16,8 @@
 package de.cuioss.jwt.validation.jwks.parser;
 
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
+import de.cuioss.jwt.validation.security.JwkAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
-import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
@@ -42,7 +42,7 @@ class KeyProcessorTest {
     @BeforeEach
     void setUp() {
         securityEventCounter = new SecurityEventCounter();
-        processor = new KeyProcessor(securityEventCounter, new de.cuioss.jwt.validation.security.JwkAlgorithmPreferences());
+        processor = new KeyProcessor(securityEventCounter, new JwkAlgorithmPreferences());
     }
 
     @Nested
@@ -162,13 +162,13 @@ class KeyProcessorTest {
         @Test
         @DisplayName("Should handle invalid EC key parameters")
         void shouldHandleInvalidEcKeyParameters() {
-            // Given an EC JWK with invalid parameters
+            // Given an EC JWK with invalid Base64 parameters that will cause parsing to fail
             JsonObject invalidEcJwk = Json.createObjectBuilder()
                     .add("kty", "EC")
                     .add("kid", "test-key")
                     .add("crv", "P-256")
-                    .add("x", "invalid-x")
-                    .add("y", "invalid-y")
+                    .add("x", "!!invalid-base64!!")
+                    .add("y", "!!invalid-base64!!")
                     .build();
 
             // When processing
@@ -197,7 +197,7 @@ class KeyProcessorTest {
 
             // Then should fail
             assertFalse(result.isPresent(), "Should fail to process key without kty");
-            LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "JWK is missing required field 'kty'");
+            LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Key missing required 'kty' parameter");
         }
 
         @Test
@@ -214,7 +214,7 @@ class KeyProcessorTest {
 
             // Then should fail
             assertFalse(result.isPresent(), "Should fail to process unsupported key type");
-            LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Unsupported key type: oct");
+            LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Unsupported key type: oct");
         }
 
         @Test

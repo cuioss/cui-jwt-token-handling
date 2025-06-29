@@ -42,17 +42,17 @@ import java.util.Optional;
  */
 @RequiredArgsConstructor
 public class KeyProcessor {
-    
+
     private static final CuiLogger LOGGER = new CuiLogger(KeyProcessor.class);
     private static final String RSA_KEY_TYPE = "RSA";
     private static final String EC_KEY_TYPE = "EC";
-    
+
     @NonNull
     private final SecurityEventCounter securityEventCounter;
-    
+
     @NonNull
     private final JwkAlgorithmPreferences jwkAlgorithmPreferences;
-    
+
     /**
      * Process a JWK object and create a KeyInfo with validation.
      * 
@@ -64,7 +64,7 @@ public class KeyProcessor {
         if (!validateKeyParameters(jwk)) {
             return Optional.empty();
         }
-        
+
         // Extract key type
         var keyType = JwkKeyConstants.KeyType.getString(jwk);
         if (keyType.isEmpty()) {
@@ -72,10 +72,10 @@ public class KeyProcessor {
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return Optional.empty();
         }
-        
+
         String kty = keyType.get();
         String kid = JwkKeyConstants.KeyId.from(jwk).orElse("default-key-id");
-        
+
         KeyInfo keyInfo = switch (kty) {
             case RSA_KEY_TYPE -> processRsaKey(jwk, kid);
             case EC_KEY_TYPE -> processEcKey(jwk, kid);
@@ -84,10 +84,10 @@ public class KeyProcessor {
                 yield null;
             }
         };
-        
+
         return Optional.ofNullable(keyInfo);
     }
-    
+
     /**
      * Validates individual key parameters and algorithms.
      * 
@@ -101,16 +101,16 @@ public class KeyProcessor {
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
-        
+
         String keyType = keyObject.getString(JwkKeyConstants.KeyType.KEY);
-        
+
         // Validate key type is supported
         if (!"RSA".equals(keyType) && !"EC".equals(keyType)) {
             LOGGER.warn("Unsupported key type: {}", keyType);
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
-        
+
         // Validate key ID if present (length check)
         if (keyObject.containsKey(JwkKeyConstants.KeyId.KEY)) {
             String keyId = keyObject.getString(JwkKeyConstants.KeyId.KEY);
@@ -120,7 +120,7 @@ public class KeyProcessor {
                 return false;
             }
         }
-        
+
         // Validate algorithm if present
         if (keyObject.containsKey(JwkKeyConstants.Algorithm.KEY)) {
             String algorithm = keyObject.getString(JwkKeyConstants.Algorithm.KEY);
@@ -130,10 +130,10 @@ public class KeyProcessor {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Process an RSA key and create a KeyInfo object.
      *
@@ -154,7 +154,7 @@ public class KeyProcessor {
             return null;
         }
     }
-    
+
     /**
      * Process an EC key and create a KeyInfo object.
      *
@@ -175,7 +175,7 @@ public class KeyProcessor {
             return null;
         }
     }
-    
+
     /**
      * Determine the EC algorithm from the JWK.
      * 
@@ -187,7 +187,7 @@ public class KeyProcessor {
         if (algOption.isPresent()) {
             return algOption.get();
         }
-        
+
         // Determine algorithm based on curve
         String curve = JwkKeyConstants.Curve.from(jwk).orElse("P-256");
         return JwkKeyHandler.determineEcAlgorithm(curve);

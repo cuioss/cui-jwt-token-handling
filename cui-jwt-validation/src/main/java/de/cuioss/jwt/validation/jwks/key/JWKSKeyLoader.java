@@ -30,7 +30,6 @@ import de.cuioss.tools.string.MoreStrings;
 import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 
@@ -228,10 +227,10 @@ public class JWKSKeyLoader implements JwksLoader {
         // Create parser components
         JwksParser parser = new JwksParser(parserConfig, securityEventCounter);
         KeyProcessor processor = new KeyProcessor(securityEventCounter, jwkAlgorithmPreferences);
-        
+
         // Parse JWKS content to get individual JWK objects (includes structure validation)
         List<JsonObject> jwkObjects = parser.parse(originalString);
-        
+
         // Process each key (includes key parameter validation)
         Map<String, KeyInfo> keyMap = new ConcurrentHashMap<>();
         for (JsonObject jwk : jwkObjects) {
@@ -241,7 +240,7 @@ public class JWKSKeyLoader implements JwksLoader {
                 keyMap.put(keyInfo.keyId(), keyInfo);
             }
         }
-        
+
         LoaderStatus status = keyMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
         return new ParseResult(keyMap, status);
     }

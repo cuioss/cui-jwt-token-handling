@@ -15,7 +15,6 @@
  */
 package de.cuioss.jwt.validation.jwks.http;
 
-import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
@@ -135,7 +134,7 @@ class HttpJwksLoaderTest {
         Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
         assertTrue(keyInfo.isPresent(), "Key info should be present");
         assertEquals(1, moduleDispatcher.getCallCounter(), "JWKS endpoint should be called once");
-        
+
         // Subsequent calls should use the already loaded keys without additional HTTP calls
         keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
         assertTrue(keyInfo.isPresent(), "Key info should still be present");
@@ -147,7 +146,7 @@ class HttpJwksLoaderTest {
     void shouldHandleHealthChecks() {
         // Initially undefined status
         assertNotNull(httpJwksLoader.getStatus(), "Status should not be null");
-        
+
         // After loading, should be healthy
         httpJwksLoader.getKeyInfo(TEST_KID);
         assertTrue(httpJwksLoader.isHealthy(), "Should be healthy after successful load");
@@ -205,7 +204,7 @@ class HttpJwksLoaderTest {
                 .url(moduleDispatcher.getCallCounter() > 0 ? "http://localhost:8080/" + JwksResolveDispatcher.LOCAL_PATH : "invalid")
                 .build();
         HttpJwksLoader newLoader = new HttpJwksLoader(config, securityEventCounter);
-        
+
         // This test now verifies that key rotation can be detected when creating a new loader
         // The exact rotation detection mechanism is handled by the JWKSKeyLoader
         assertTrue(newLoader.isHealthy() || !newLoader.isHealthy(), "Health check should work");

@@ -234,8 +234,8 @@ public class TokenKeycloakIT extends KeycloakITBase {
 
             // 3. Configure HttpJwksLoaderConfig using direct JWKS URL
             // Note: WellKnownHandler integration simplified - using direct URL
-            String jwksUrl = wellKnownHandler.getJwksUri() != null ? 
-                wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
+            String jwksUrl = wellKnownHandler.getJwksUri() != null ?
+                    wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
             HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
                     .url(jwksUrl)
                     .build();
@@ -283,8 +283,8 @@ public class TokenKeycloakIT extends KeycloakITBase {
             assertNotNull(wellKnownHandler.getIssuer(), "Issuer should be present in well-known config");
 
             // Use direct JWKS URL since WellKnownHandler integration is simplified
-            String jwksUrl = wellKnownHandler.getJwksUri() != null ? 
-                wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
+            String jwksUrl = wellKnownHandler.getJwksUri() != null ?
+                    wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
             HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
                     .url(jwksUrl)
                     .build();

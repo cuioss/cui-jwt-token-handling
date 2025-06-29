@@ -38,6 +38,7 @@ import lombok.NonNull;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Main entry point for creating and validating JWT tokens.
@@ -118,13 +119,13 @@ public class TokenValidator {
      * Map of healthy issuer configurations.
      * Contains issuers that have passed health checks and are available for token validation.
      */
-    private final Map<String, IssuerConfig> healthyIssuers = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, IssuerConfig> healthyIssuers = new ConcurrentHashMap<>();
 
     /**
      * Map of unhealthy issuer configurations.
      * Contains issuers that have failed health checks but may be retried on-demand.
      */
-    private final Map<String, IssuerConfig> unhealthyIssuers = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, IssuerConfig> unhealthyIssuers = new ConcurrentHashMap<>();
 
     /**
      * Counter for security events that occur during token processing.
@@ -170,7 +171,7 @@ public class TokenValidator {
                 issuerConfig.initSecurityEventCounter(securityEventCounter);
                 builder.put(issuerConfig.getIssuer(), issuerConfig);
                 enabledCount++;
-                
+
                 // Perform initial health check to populate dual maps
                 if (issuerConfig.isHealthy()) {
                     healthyIssuers.put(issuerConfig.getIssuer(), issuerConfig);
@@ -372,7 +373,7 @@ public class TokenValidator {
         IssuerConfig unhealthyConfig = unhealthyIssuers.get(issuer);
         if (unhealthyConfig != null) {
             LOGGER.debug("Performing on-demand health check for previously unhealthy issuer: %s", issuer);
-            
+
             // Perform fail-fast health check
             if (issuerConfig.isHealthy()) {
                 // Move from unhealthy to healthy map

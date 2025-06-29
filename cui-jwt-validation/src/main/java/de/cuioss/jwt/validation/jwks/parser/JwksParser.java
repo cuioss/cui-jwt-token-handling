@@ -47,15 +47,15 @@ import java.util.List;
  */
 @RequiredArgsConstructor
 public class JwksParser {
-    
+
     private static final CuiLogger LOGGER = new CuiLogger(JwksParser.class);
-    
+
     @NonNull
     private final ParserConfig parserConfig;
-    
+
     @NonNull
     private final SecurityEventCounter securityEventCounter;
-    
+
     /**
      * Parse JWKS content and extract individual JWK objects.
      * 
@@ -64,12 +64,12 @@ public class JwksParser {
      */
     public List<JsonObject> parse(String jwksContent) {
         List<JsonObject> result = new ArrayList<>();
-        
+
         // Check content size
         if (!validateContentSize(jwksContent)) {
             return result;
         }
-        
+
         try {
             // Use the JsonReaderFactory from ParserConfig with security settings
             try (JsonReader reader = parserConfig.getJsonReaderFactory()
@@ -82,10 +82,10 @@ public class JwksParser {
             LOGGER.error(e, ERROR.JWKS_INVALID_JSON.format(e.getMessage()));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
         }
-        
+
         return result;
     }
-    
+
     /**
      * Validate JWKS content size to prevent memory exhaustion attacks.
      * 
@@ -95,16 +95,16 @@ public class JwksParser {
     private boolean validateContentSize(String jwksContent) {
         int actualSize = jwksContent.getBytes(StandardCharsets.UTF_8).length;
         int upperLimit = parserConfig.getMaxPayloadSize();
-        
+
         if (actualSize > upperLimit) {
             LOGGER.error(ERROR.JWKS_CONTENT_SIZE_EXCEEDED.format(upperLimit, actualSize));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Extract keys from a JWKS object with validation.
      * Handles both standard JWKS format (with "keys" array) and single key format.
@@ -117,7 +117,7 @@ public class JwksParser {
         if (!validateJwksStructure(jwks)) {
             return;
         }
-        
+
         // Check if this is a JWKS with a "keys" array or a single key
         if (JwkKeyConstants.Keys.isPresent(jwks)) {
             extractKeysFromArray(jwks, result);
@@ -129,7 +129,7 @@ public class JwksParser {
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
         }
     }
-    
+
     /**
      * Validates the structure and content of a JWKS object.
      * 
@@ -143,35 +143,35 @@ public class JwksParser {
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
-        
+
         // Check for excessive number of top-level properties
         if (jwks.size() > 10) {
             LOGGER.warn("JWKS object has excessive number of properties: {}", jwks.size());
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
-        
+
         // If it has a "keys" array, validate it
         if (JwkKeyConstants.Keys.isPresent(jwks)) {
             JsonArray keysArray = jwks.getJsonArray(JwkKeyConstants.Keys.KEY);
-            
+
             // Check array size limits
             if (keysArray.size() > 50) {
                 LOGGER.warn("JWKS keys array exceeds maximum size: {}", keysArray.size());
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
                 return false;
             }
-            
+
             if (keysArray.isEmpty()) {
                 LOGGER.warn("JWKS keys array is empty");
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Extract keys from a standard JWKS with "keys" array.
      * 

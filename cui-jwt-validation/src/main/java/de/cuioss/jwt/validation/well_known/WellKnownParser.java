@@ -19,6 +19,7 @@ import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.tools.logging.CuiLogger;
+import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.json.JsonString;
@@ -63,7 +64,7 @@ class WellKnownParser {
         ParserConfig config = parserConfig != null ? parserConfig : ParserConfig.builder().build();
         try (JsonReader jsonReader = config.getJsonReaderFactory().createReader(new StringReader(responseBody))) {
             return jsonReader.readObject();
-        } catch (jakarta.json.JsonException | IllegalStateException e) {
+        } catch (JsonException | IllegalStateException e) {
             throw new WellKnownDiscoveryException("Failed to parse JSON from " + wellKnownUrl, e);
         }
     }

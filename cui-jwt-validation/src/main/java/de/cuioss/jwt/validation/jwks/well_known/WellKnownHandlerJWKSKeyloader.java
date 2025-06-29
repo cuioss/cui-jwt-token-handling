@@ -98,12 +98,12 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
      * @param securityEventCounter the security event counter
      */
     public WellKnownHandlerJWKSKeyloader(@NonNull LazyWellKnownHandler wellKnownHandler,
-                                        @NonNull SecurityEventCounter securityEventCounter) {
+            @NonNull SecurityEventCounter securityEventCounter) {
         this.wellKnownHandler = wellKnownHandler;
         this.securityEventCounter = securityEventCounter;
-        
-        LOGGER.debug("Created WellKnownHandlerJWKSKeyloader for well-known URL: %s", 
-                    wellKnownHandler.getWellKnownUrl());
+
+        LOGGER.debug("Created WellKnownHandlerJWKSKeyloader for well-known URL: %s",
+                wellKnownHandler.getWellKnownUrl());
     }
 
     /**
@@ -152,26 +152,26 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
                 LOGGER.debug("Discovered JWKS URI: %s", jwksUriHandler.getUri());
 
                 delegateLoader = new HttpJwksLoader(jwksUriHandler, securityEventCounter);
-                
+
                 // Check if the delegate is healthy
                 if (delegateLoader.isHealthy()) {
                     status = LoaderStatus.OK;
-                    LOGGER.info("Successfully initialized JWKS loader via well-known discovery for: %s", 
-                               wellKnownHandler.getWellKnownUrl());
+                    LOGGER.info("Successfully initialized JWKS loader via well-known discovery for: %s",
+                            wellKnownHandler.getWellKnownUrl());
                     return true;
                 } else {
                     status = LoaderStatus.ERROR;
                     lastError = new WellKnownDiscoveryException("Delegate JWKS loader is not healthy");
-                    LOGGER.warn("Delegate JWKS loader initialized but not healthy for: %s", 
-                               wellKnownHandler.getWellKnownUrl());
+                    LOGGER.warn("Delegate JWKS loader initialized but not healthy for: %s",
+                            wellKnownHandler.getWellKnownUrl());
                     return false;
                 }
 
             } catch (WellKnownDiscoveryException | JwksLoadException e) {
                 status = LoaderStatus.ERROR;
                 lastError = e;
-                LOGGER.error(e, "Failed to initialize JWKS loader via well-known discovery for: %s", 
-                            wellKnownHandler.getWellKnownUrl());
+                LOGGER.error(e, "Failed to initialize JWKS loader via well-known discovery for: %s",
+                        wellKnownHandler.getWellKnownUrl());
                 return false;
             }
         } finally {
@@ -223,7 +223,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         if (status == LoaderStatus.UNDEFINED) {
             ensureDelegateInitialized();
         }
-        
+
         // If we have a delegate, use its status
         if (delegateLoader != null) {
             LoaderStatus delegateStatus = delegateLoader.getStatus();
@@ -232,7 +232,7 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
                 status = delegateStatus;
             }
         }
-        
+
         return status;
     }
 
@@ -247,16 +247,16 @@ public class WellKnownHandlerJWKSKeyloader implements JwksLoader {
         if (!ensureDelegateInitialized()) {
             return false;
         }
-        
+
         // Check both well-known handler and delegate loader health
         boolean wellKnownHealthy = wellKnownHandler.isHealthy();
         boolean delegateHealthy = delegateLoader != null && delegateLoader.isHealthy();
-        
+
         boolean healthy = wellKnownHealthy && delegateHealthy;
-        
+
         LOGGER.debug("Health check for WellKnownHandlerJWKSKeyloader: wellKnown=%s, delegate=%s, overall=%s",
-                    wellKnownHealthy, delegateHealthy, healthy);
-        
+                wellKnownHealthy, delegateHealthy, healthy);
+
         return healthy;
     }
 

@@ -24,6 +24,7 @@ import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.key.JWKSKeyLoader;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
+import de.cuioss.jwt.validation.security.JwkAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
@@ -288,7 +289,7 @@ class TokenClaimValidatorEdgeCaseTest {
      */
     private static class FailingJwksKeyLoader extends JWKSKeyLoader {
         public FailingJwksKeyLoader() {
-            super("{}", null, null, new SecurityEventCounter(), new de.cuioss.jwt.validation.security.JwkAlgorithmPreferences(), JwksType.MEMORY); // Empty JWKS
+            super("{}", null, null, new SecurityEventCounter(), new JwkAlgorithmPreferences(), JwksType.MEMORY); // Empty JWKS
         }
 
         @Override

@@ -31,12 +31,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class JwkAlgorithmPreferencesTest {
 
     @Test
-    void testDefaultConstructor() {
+    void defaultConstructor() {
         JwkAlgorithmPreferences preferences = new JwkAlgorithmPreferences();
-        
+
         assertNotNull(preferences.getSupportedAlgorithms());
         assertFalse(preferences.getSupportedAlgorithms().isEmpty());
-        
+
         // Verify default algorithms are supported
         assertTrue(preferences.isSupported("RS256"));
         assertTrue(preferences.isSupported("ES256"));
@@ -44,10 +44,10 @@ class JwkAlgorithmPreferencesTest {
     }
 
     @Test
-    void testCustomConstructor() {
+    void customConstructor() {
         List<String> customAlgorithms = List.of("RS256", "ES256");
         JwkAlgorithmPreferences preferences = new JwkAlgorithmPreferences(customAlgorithms);
-        
+
         assertEquals(customAlgorithms, preferences.getSupportedAlgorithms());
         assertTrue(preferences.isSupported("RS256"));
         assertTrue(preferences.isSupported("ES256"));
@@ -55,12 +55,12 @@ class JwkAlgorithmPreferencesTest {
     }
 
     @Test
-    void testGetDefaultSupportedAlgorithms() {
+    void getDefaultSupportedAlgorithms() {
         List<String> defaultAlgorithms = JwkAlgorithmPreferences.getDefaultSupportedAlgorithms();
-        
+
         assertNotNull(defaultAlgorithms);
         assertFalse(defaultAlgorithms.isEmpty());
-        
+
         // Verify expected algorithms are included
         assertTrue(defaultAlgorithms.contains("RS256"));
         assertTrue(defaultAlgorithms.contains("RS384"));
@@ -71,15 +71,15 @@ class JwkAlgorithmPreferencesTest {
         assertTrue(defaultAlgorithms.contains("PS256"));
         assertTrue(defaultAlgorithms.contains("PS384"));
         assertTrue(defaultAlgorithms.contains("PS512"));
-        
+
         // Verify total count
         assertEquals(9, defaultAlgorithms.size());
     }
 
     @Test
-    void testIsSupportedWithValidAlgorithms() {
+    void isSupportedWithValidAlgorithms() {
         JwkAlgorithmPreferences preferences = new JwkAlgorithmPreferences();
-        
+
         // Test all default supported algorithms
         assertTrue(preferences.isSupported("RS256"));
         assertTrue(preferences.isSupported("RS384"));
@@ -93,9 +93,9 @@ class JwkAlgorithmPreferencesTest {
     }
 
     @Test
-    void testIsSupportedWithInvalidAlgorithms() {
+    void isSupportedWithInvalidAlgorithms() {
         JwkAlgorithmPreferences preferences = new JwkAlgorithmPreferences();
-        
+
         // Test unsupported algorithms
         assertFalse(preferences.isSupported("HS256"));
         assertFalse(preferences.isSupported("HS384"));
@@ -106,29 +106,29 @@ class JwkAlgorithmPreferencesTest {
     }
 
     @Test
-    void testIsSupportedWithNullAndEmpty() {
+    void isSupportedWithNullAndEmpty() {
         JwkAlgorithmPreferences preferences = new JwkAlgorithmPreferences();
-        
+
         assertFalse(preferences.isSupported(null));
         assertFalse(preferences.isSupported(""));
     }
 
     @Test
-    void testCustomPreferencesImmutability() {
+    void customPreferencesImmutability() {
         List<String> mutableList = List.of("RS256", "ES256");
         JwkAlgorithmPreferences preferences = new JwkAlgorithmPreferences(mutableList);
-        
+
         List<String> supportedAlgorithms = preferences.getSupportedAlgorithms();
-        
+
         // Verify the returned list is immutable
-        assertThrows(UnsupportedOperationException.class, () -> 
-            supportedAlgorithms.add("PS256"));
+        assertThrows(UnsupportedOperationException.class, () ->
+                supportedAlgorithms.add("PS256"));
     }
 
     @Test
-    void testCaseSensitivity() {
+    void caseSensitivity() {
         JwkAlgorithmPreferences preferences = new JwkAlgorithmPreferences();
-        
+
         // Algorithms should be case-sensitive
         assertTrue(preferences.isSupported("RS256"));
         assertFalse(preferences.isSupported("rs256"));

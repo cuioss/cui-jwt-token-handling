@@ -15,6 +15,8 @@
  */
 package de.cuioss.jwt.validation.util;
 
+import java.io.Serial;
+
 /**
  * Exception thrown when an operation fails after retry attempts.
  * 
@@ -22,11 +24,12 @@ package de.cuioss.jwt.validation.util;
  * @since 1.0
  */
 public class RetryException extends RuntimeException {
-    
+
+    @Serial
     private static final long serialVersionUID = 1L;
-    
+
     private final int attemptsMade;
-    
+
     /**
      * Constructs a new retry exception with the specified detail message and cause.
      *
@@ -38,7 +41,7 @@ public class RetryException extends RuntimeException {
         super(message, cause);
         this.attemptsMade = attemptsMade;
     }
-    
+
     /**
      * Gets the number of attempts made before failure.
      * 

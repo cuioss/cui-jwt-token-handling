@@ -93,7 +93,8 @@ public class ETagAwareHttpHandler {
      * @param content the HTTP content as string
      * @param loadState the detailed state of the load operation
      */
-    public record LoadResult(String content, LoadState loadState) {}
+    public record LoadResult(String content, LoadState loadState) {
+    }
 
     private final HttpHandler httpHandler;
 
@@ -193,7 +194,8 @@ public class ETagAwareHttpHandler {
     /**
      * Internal result for HTTP fetch operations.
      */
-    private record HttpFetchResult(String content, String etag, boolean notModified, boolean error) {}
+    private record HttpFetchResult(String content, String etag, boolean notModified, boolean error) {
+    }
 
     /**
      * Fetches HTTP content from the endpoint with ETag support.

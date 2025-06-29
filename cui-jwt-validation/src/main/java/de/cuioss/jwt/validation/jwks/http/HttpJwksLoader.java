@@ -38,64 +38,64 @@ import java.util.Set;
  * @since 1.0
  */
 public class HttpJwksLoader implements JwksLoader {
-    
+
     private static final CuiLogger LOGGER = new CuiLogger(HttpJwksLoader.class);
-    
+
     private final ETagAwareHttpHandler httpCache;
     private final SecurityEventCounter securityEventCounter;
     private volatile JWKSKeyLoader keyLoader;
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
-    
-    public HttpJwksLoader(@NonNull HttpHandler httpHandler, 
-                          @NonNull SecurityEventCounter securityEventCounter) {
+
+    public HttpJwksLoader(@NonNull HttpHandler httpHandler,
+            @NonNull SecurityEventCounter securityEventCounter) {
         this.httpCache = new ETagAwareHttpHandler(httpHandler);
         this.securityEventCounter = securityEventCounter;
     }
-    
+
     /**
      * Constructor using HttpJwksLoaderConfig.
      * Uses the httpHandler directly from the config with all its settings.
      */
-    public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config, 
-                          @NonNull SecurityEventCounter securityEventCounter) {
+    public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config,
+            @NonNull SecurityEventCounter securityEventCounter) {
         this.httpCache = new ETagAwareHttpHandler(config.getHttpHandler());
         this.securityEventCounter = securityEventCounter;
     }
-    
+
     @Override
     public Optional<KeyInfo> getKeyInfo(String kid) {
         ensureLoaded();
         return keyLoader != null ? keyLoader.getKeyInfo(kid) : Optional.empty();
     }
-    
+
     @Override
     public Optional<KeyInfo> getFirstKeyInfo() {
         ensureLoaded();
         return keyLoader != null ? keyLoader.getFirstKeyInfo() : Optional.empty();
     }
-    
+
     @Override
     public List<KeyInfo> getAllKeyInfos() {
         ensureLoaded();
         return keyLoader != null ? keyLoader.getAllKeyInfos() : List.of();
     }
-    
+
     @Override
     public Set<String> keySet() {
         ensureLoaded();
         return keyLoader != null ? keyLoader.keySet() : Set.of();
     }
-    
+
     @Override
     public JwksType getJwksType() {
         return JwksType.HTTP;
     }
-    
+
     @Override
     public LoaderStatus getStatus() {
         return status;
     }
-    
+
     @Override
     public boolean isHealthy() {
         // For cached loader, we consider it healthy if we can load keys
@@ -110,7 +110,7 @@ public class HttpJwksLoader implements JwksLoader {
         }
         return status == LoaderStatus.OK;
     }
-    
+
     /**
      * Forces a reload of JWKS content, optionally clearing cache completely.
      * 
@@ -128,29 +128,29 @@ public class HttpJwksLoader implements JwksLoader {
             throw e; // Re-throw specific exception
         }
     }
-    
+
     private void ensureLoaded() {
         if (keyLoader == null) {
             loadKeys();
         }
     }
-    
+
     private void loadKeys() {
         try {
             ETagAwareHttpHandler.LoadResult result = httpCache.load();
-            
+
             // Handle error states appropriately
             if (result.loadState() == ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE) {
                 this.status = LoaderStatus.ERROR;
                 throw new JwksLoadException("Failed to load JWKS and no cached content available");
             }
-            
+
             // Only update key loader if data has changed and we have content
             if (result.content() != null && (result.loadState().isDataChanged() || keyLoader == null)) {
                 updateKeyLoader(result);
                 LOGGER.info("Keys updated due to data change - load state: %s", result.loadState());
             }
-            
+
             // Log appropriate message based on load state
             switch (result.loadState()) {
                 case LOADED_FROM_SERVER:
@@ -169,20 +169,20 @@ public class HttpJwksLoader implements JwksLoader {
                     LOGGER.warn("Load operation failed with no cached content available");
                     break;
             }
-            
+
         } catch (JwksLoadException e) {
             this.status = LoaderStatus.ERROR;
             LOGGER.error(e, "Failed to load JWKS");
             throw e; // Re-throw specific exception
         }
     }
-    
+
     private void updateKeyLoader(ETagAwareHttpHandler.LoadResult result) {
         this.keyLoader = JWKSKeyLoader.builder()
-            .originalString(result.content())
-            .securityEventCounter(securityEventCounter)
-            .jwksType(JwksType.HTTP)
-            .build();
+                .originalString(result.content())
+                .securityEventCounter(securityEventCounter)
+                .jwksType(JwksType.HTTP)
+                .build();
         this.status = LoaderStatus.OK;
     }
 }
