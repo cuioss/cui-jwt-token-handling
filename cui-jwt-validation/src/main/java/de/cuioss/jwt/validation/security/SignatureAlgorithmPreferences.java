@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Utility class for managing algorithm preferences for JWT Token signatures.
+ * Utility class for managing algorithm preferences for JWT signature validation.
  * <p>
- * This class provides methods to get preferred algorithms and check if an algorithm is supported.
- * It implements cryptographic agility by allowing configuration of preferred algorithms
- * and supporting algorithm migration.
+ * This class provides methods to get preferred algorithms and check if an algorithm is supported
+ * during JWT signature verification at runtime. It implements cryptographic agility by allowing 
+ * configuration of preferred algorithms and supporting algorithm migration.
  * <p>
  * For more details on the security aspects, see the
  * <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/security.adoc">Security Specification</a>
@@ -37,9 +37,9 @@ import java.util.Optional;
  * @author Oliver Wolff
  * @since 1.0
  */
-public class AlgorithmPreferences {
+public class SignatureAlgorithmPreferences {
 
-    private static final CuiLogger LOGGER = new CuiLogger(AlgorithmPreferences.class);
+    private static final CuiLogger LOGGER = new CuiLogger(SignatureAlgorithmPreferences.class);
 
     /**
      * List of supported signature algorithms in order of preference (most preferred first).
@@ -55,7 +55,7 @@ public class AlgorithmPreferences {
     /**
      * Default constructor that initializes the preferred algorithms list with default values.
      */
-    public AlgorithmPreferences() {
+    public SignatureAlgorithmPreferences() {
         this.preferredAlgorithms = getDefaultPreferredAlgorithms();
     }
 
@@ -64,24 +64,24 @@ public class AlgorithmPreferences {
      *
      * @param preferredAlgorithms the list of preferred algorithms in order of preference
      */
-    public AlgorithmPreferences(@NonNull List<String> preferredAlgorithms) {
+    public SignatureAlgorithmPreferences(@NonNull List<String> preferredAlgorithms) {
         this.preferredAlgorithms = Collections.unmodifiableList(preferredAlgorithms);
     }
 
     /**
-     * Gets the default list of preferred algorithms in order of preference.
+     * Gets the default list of preferred signature algorithms in order of preference.
      *
-     * @return the default list of preferred algorithms
+     * @return the default list of preferred signature algorithms
      */
     public static List<String> getDefaultPreferredAlgorithms() {
-        LOGGER.debug("Getting default preferred algorithms");
+        LOGGER.debug("Getting default preferred signature algorithms");
 
         // Order algorithms by preference (most secure first)
         return List.of("ES512", "ES384", "ES256", "PS512", "PS384", "PS256", "RS512", "RS384", "RS256");
     }
 
     /**
-     * Checks if an algorithm is supported.
+     * Checks if an algorithm is supported for JWT signature verification.
      *
      * @param algorithm the algorithm to check
      * @return true if the algorithm is supported, false otherwise

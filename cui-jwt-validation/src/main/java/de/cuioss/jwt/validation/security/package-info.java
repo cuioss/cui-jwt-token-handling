@@ -22,7 +22,8 @@
  * <p>
  * Key components:
  * <ul>
- *   <li>{@link de.cuioss.jwt.validation.security.AlgorithmPreferences} - Manages algorithm preferences for JWT Token signatures</li>
+ *   <li>{@link de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences} - Manages algorithm preferences for JWT signature validation</li>
+ *   <li>{@link de.cuioss.jwt.validation.security.JwkAlgorithmPreferences} - Manages algorithm preferences for JWK parsing</li>
  *   <li>{@link de.cuioss.jwt.validation.security.BouncyCastleProviderSingleton} - Provides consistent cryptographic services</li>
  *    <li>{@link de.cuioss.jwt.validation.security.SecurityEventCounter} - Tracks security-relevant events for monitoring</li>
  * </ul>

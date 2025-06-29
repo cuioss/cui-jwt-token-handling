@@ -21,7 +21,7 @@ import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.AccessTokenContent;
 import de.cuioss.jwt.validation.domain.token.IdTokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
-import de.cuioss.jwt.validation.security.AlgorithmPreferences;
+import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
 import de.cuioss.jwt.validation.test.JwtTokenTamperingUtil.TamperingStrategy;
 import de.cuioss.jwt.validation.test.generator.TestTokenGenerators;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
@@ -55,7 +55,7 @@ class JwtTokenTamperingUtilTest {
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                 .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
-                .algorithmPreferences(new AlgorithmPreferences())
+                .algorithmPreferences(new SignatureAlgorithmPreferences())
                 .build();
         tokenValidator = new TokenValidator(config, issuerConfig);
 

@@ -20,7 +20,7 @@ import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.token.AccessTokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.pipeline.TokenSignatureValidator;
-import de.cuioss.jwt.validation.security.AlgorithmPreferences;
+import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.JwtTokenTamperingUtil;
@@ -273,7 +273,7 @@ class OAuth2JWTBestPracticesComplianceTest {
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
-                    .algorithmPreferences(new AlgorithmPreferences())
+                    .algorithmPreferences(new SignatureAlgorithmPreferences())
                     .build());
             TokenValidationException exception = assertThrows(TokenValidationException.class,
                     () -> factory.createAccessToken(largeToken),

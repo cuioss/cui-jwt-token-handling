@@ -18,7 +18,7 @@ package de.cuioss.jwt.validation;
 import de.cuioss.jwt.validation.domain.claim.mapper.IdentityMapper;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
-import de.cuioss.jwt.validation.security.AlgorithmPreferences;
+import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.test.generator.Generators;
 import de.cuioss.test.valueobjects.junit5.contracts.ShouldImplementEqualsAndHashCode;
@@ -88,7 +88,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
             var issuer = TEST_ISSUER;
             var audience = TEST_AUDIENCE;
             var clientId = TEST_CLIENT_ID;
-            var algorithmPreferences = new AlgorithmPreferences();
+            var algorithmPreferences = new SignatureAlgorithmPreferences();
             var claimMapper = new IdentityMapper();
             var httpConfig = HttpJwksLoaderConfig.builder()
                     .url(TEST_JWKS_URL)

@@ -22,7 +22,7 @@ import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.pipeline.DecodedJwt;
-import de.cuioss.jwt.validation.security.AlgorithmPreferences;
+import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
 import de.cuioss.jwt.validation.test.generator.RoleGenerator;
@@ -49,7 +49,7 @@ import java.util.*;
  *   <li>Generate content using generators analogous to AccessTokenGenerator</li>
  *   <li>Provide mutators for content</li>
  *   <li>Generate the actual token representation on demand</li>
- *   <li>Use generators for keyId and signingAlgorithm aligned with AlgorithmPreferences</li>
+ *   <li>Use generators for keyId and signingAlgorithm aligned with SignatureAlgorithmPreferences</li>
  * </ul>
  * <p>
  * The token is created and signed using the Jwts library when getRawToken() is called.
@@ -266,7 +266,7 @@ public class TestTokenHolder implements TokenContent {
         var config = IssuerConfig.builder()
                 .issuer(issuer)
                 .jwksContent(jwksContent)
-                .algorithmPreferences(new AlgorithmPreferences());
+                .algorithmPreferences(new SignatureAlgorithmPreferences());
 
         // Add audience and client ID
         for (String aud : audience) {

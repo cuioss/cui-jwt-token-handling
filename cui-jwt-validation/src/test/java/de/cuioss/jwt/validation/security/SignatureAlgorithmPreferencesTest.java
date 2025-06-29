@@ -32,18 +32,18 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for {@link AlgorithmPreferences}.
+ * Tests for {@link SignatureAlgorithmPreferences}.
  * <p>
- * This test class verifies the functionality of the AlgorithmPreferences class,
+ * This test class verifies the functionality of the SignatureAlgorithmPreferences class,
  * which implements the requirement CUI-JWT-8.5: Cryptographic Agility as specified
  * in the security specification.
  * <p>
  * See: doc/specification/security-specifications.adoc
  */
-@EnableTestLogger(debug = AlgorithmPreferences.class, warn = AlgorithmPreferences.class)
+@EnableTestLogger(debug = SignatureAlgorithmPreferences.class, warn = SignatureAlgorithmPreferences.class)
 @EnableGeneratorController
-@DisplayName("Tests AlgorithmPreferences")
-class AlgorithmPreferencesTest {
+@DisplayName("Tests SignatureAlgorithmPreferences")
+class SignatureAlgorithmPreferencesTest {
 
     @Nested
     @DisplayName("Constructor Tests")
@@ -52,8 +52,8 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Initialize with default algorithms")
         void shouldInitializeWithDefaults() {
-            var preferences = new AlgorithmPreferences();
-            assertEquals(AlgorithmPreferences.getDefaultPreferredAlgorithms(), preferences.getPreferredAlgorithms(),
+            var preferences = new SignatureAlgorithmPreferences();
+            assertEquals(SignatureAlgorithmPreferences.getDefaultPreferredAlgorithms(), preferences.getPreferredAlgorithms(),
                     "Default constructor should initialize with default preferred algorithms");
         }
 
@@ -61,7 +61,7 @@ class AlgorithmPreferencesTest {
         @DisplayName("Initialize with custom algorithms")
         void shouldInitializeWithCustom() {
             var customAlgorithms = List.of("RS256", "ES256");
-            var preferences = new AlgorithmPreferences(customAlgorithms);
+            var preferences = new SignatureAlgorithmPreferences(customAlgorithms);
             assertEquals(customAlgorithms, preferences.getPreferredAlgorithms(),
                     "Constructor should initialize with custom preferred algorithms");
         }
@@ -69,7 +69,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Create unmodifiable list")
         void shouldCreateUnmodifiableList() {
-            var preferences = new AlgorithmPreferences(List.of("RS256", "ES256"));
+            var preferences = new SignatureAlgorithmPreferences(List.of("RS256", "ES256"));
             var preferredAlgorithms = preferences.getPreferredAlgorithms();
             assertThrows(UnsupportedOperationException.class, () -> preferredAlgorithms.add("RS384"),
                     "The preferred algorithms list should be unmodifiable");
@@ -83,7 +83,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Return expected defaults")
         void shouldReturnExpectedDefaults() {
-            var defaultAlgorithms = AlgorithmPreferences.getDefaultPreferredAlgorithms();
+            var defaultAlgorithms = SignatureAlgorithmPreferences.getDefaultPreferredAlgorithms();
             assertNotNull(defaultAlgorithms, "Default algorithms should not be null");
             assertFalse(defaultAlgorithms.isEmpty(), "Default algorithms should not be empty");
             var expectedAlgorithms = List.of(
@@ -103,7 +103,7 @@ class AlgorithmPreferencesTest {
         @DisplayName("Return true for supported algorithms")
         @ValueSource(strings = {"RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512"})
         void shouldReturnTrueForSupported(String algorithm) {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             assertTrue(preferences.isSupported(algorithm), "Algorithm " + algorithm + " should be supported");
         }
 
@@ -111,7 +111,7 @@ class AlgorithmPreferencesTest {
         @DisplayName("Return false for rejected algorithms")
         @ValueSource(strings = {"HS256", "HS384", "HS512", "none"})
         void shouldReturnFalseForRejected(String algorithm) {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             assertFalse(preferences.isSupported(algorithm), "Algorithm " + algorithm + " should be rejected");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
                     "Algorithm " + algorithm + " is explicitly rejected for security reasons");
@@ -121,21 +121,21 @@ class AlgorithmPreferencesTest {
         @DisplayName("Return false for null or empty algorithm")
         @NullAndEmptySource
         void shouldReturnFalseForNullOrEmpty(String algorithm) {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             assertFalse(preferences.isSupported(algorithm), "Null or empty algorithm should not be supported");
         }
 
         @Test
         @DisplayName("Return false for unsupported algorithms")
         void shouldReturnFalseForUnsupported() {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             assertFalse(preferences.isSupported("UNSUPPORTED_ALG"), "Unsupported algorithm should return false");
         }
 
         @Test
         @DisplayName("Respect custom algorithms")
         void shouldRespectCustomAlgorithms() {
-            var preferences = new AlgorithmPreferences(List.of("RS256"));
+            var preferences = new SignatureAlgorithmPreferences(List.of("RS256"));
             assertTrue(preferences.isSupported("RS256"), "RS256 should be supported");
             assertFalse(preferences.isSupported("ES256"), "ES256 should not be supported");
         }
@@ -148,7 +148,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Return most preferred available")
         void shouldReturnMostPreferred() {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             var result = preferences.getMostPreferredAlgorithm(List.of("RS256", "ES256"));
             assertTrue(result.isPresent(), "Result should be present");
             assertEquals("ES256", result.get(), "ES256 should be the most preferred available algorithm");
@@ -157,7 +157,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Return empty for no matches")
         void shouldReturnEmptyForNoMatches() {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             var result = preferences.getMostPreferredAlgorithm(List.of("UNSUPPORTED_ALG"));
             assertFalse(result.isPresent(), "Result should be empty for no matching algorithms");
         }
@@ -165,7 +165,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Return empty for null")
         void shouldReturnEmptyForNull() {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             var result = preferences.getMostPreferredAlgorithm(null);
             assertFalse(result.isPresent(), "Result should be empty for null available algorithms");
         }
@@ -173,7 +173,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Return empty for empty list")
         void shouldReturnEmptyForEmptyList() {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             var result = preferences.getMostPreferredAlgorithm(Collections.emptyList());
             assertFalse(result.isPresent(), "Result should be empty for empty available algorithms");
         }
@@ -181,7 +181,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Respect preference order")
         void shouldRespectPreferenceOrder() {
-            var preferences = new AlgorithmPreferences();
+            var preferences = new SignatureAlgorithmPreferences();
             var availableAlgorithms = List.of("RS256", "RS384", "RS512", "ES256", "ES384", "ES512");
             var result = preferences.getMostPreferredAlgorithm(availableAlgorithms);
             assertTrue(result.isPresent(), "Result should be present");
@@ -191,7 +191,7 @@ class AlgorithmPreferencesTest {
         @Test
         @DisplayName("Work with custom preferences")
         void shouldWorkWithCustomPreferences() {
-            var preferences = new AlgorithmPreferences(List.of("RS256", "ES256"));
+            var preferences = new SignatureAlgorithmPreferences(List.of("RS256", "ES256"));
             var result = preferences.getMostPreferredAlgorithm(List.of("ES256", "RS256"));
             assertTrue(result.isPresent(), "Result should be present");
             assertEquals("RS256", result.get(), "RS256 should be the most preferred available algorithm");

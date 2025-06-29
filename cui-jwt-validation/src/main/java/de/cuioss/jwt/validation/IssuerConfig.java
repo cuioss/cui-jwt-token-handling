@@ -19,7 +19,7 @@ import de.cuioss.jwt.validation.domain.claim.mapper.ClaimMapper;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksLoaderFactory;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
-import de.cuioss.jwt.validation.security.AlgorithmPreferences;
+import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -36,7 +36,7 @@ import java.util.Set;
  * It aggregates all information needed to validate a JWT token.
  * <p>
  * This class contains the issuer URL, expected audience, expected client ID,
- * configuration for JwksLoader and {@link AlgorithmPreferences}.
+ * configuration for JwksLoader and {@link SignatureAlgorithmPreferences}.
  * </p>
  * <p>
  * The JwksLoader is initialized through the {@link #initSecurityEventCounter(SecurityEventCounter)} method
@@ -136,7 +136,7 @@ public class IssuerConfig {
 
 
     @Builder.Default
-    AlgorithmPreferences algorithmPreferences = new AlgorithmPreferences();
+    SignatureAlgorithmPreferences algorithmPreferences = new SignatureAlgorithmPreferences();
 
     /**
      * Custom claim mappers that take precedence over the default ones.

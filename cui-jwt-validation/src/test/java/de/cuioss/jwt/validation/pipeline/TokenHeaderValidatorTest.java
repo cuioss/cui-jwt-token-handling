@@ -19,7 +19,7 @@ import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.TokenType;
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
-import de.cuioss.jwt.validation.security.AlgorithmPreferences;
+import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
@@ -80,7 +80,7 @@ class TokenHeaderValidatorTest {
         @DisplayName("Should create validator with custom algorithm preferences")
         void shouldCreateValidatorWithCustomAlgorithmPreferences() {
             // Given an IssuerConfig with custom algorithm preferences
-            var customAlgorithmPreferences = new AlgorithmPreferences(List.of("RS256", "ES256"));
+            var customAlgorithmPreferences = new SignatureAlgorithmPreferences(List.of("RS256", "ES256"));
             var issuerConfig = IssuerConfig.builder()
                     .issuer(EXPECTED_ISSUER)
                     .algorithmPreferences(customAlgorithmPreferences)
@@ -124,7 +124,7 @@ class TokenHeaderValidatorTest {
             long initialCount = SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.UNSUPPORTED_ALGORITHM);
 
             // Given a validator with custom algorithm preferences that only support ES256
-            var customAlgorithmPreferences = new AlgorithmPreferences(List.of("ES256"));
+            var customAlgorithmPreferences = new SignatureAlgorithmPreferences(List.of("ES256"));
             var issuerConfig = IssuerConfig.builder()
                     .issuer(EXPECTED_ISSUER)
                     .algorithmPreferences(customAlgorithmPreferences)

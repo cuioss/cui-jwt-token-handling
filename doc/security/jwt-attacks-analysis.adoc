@@ -60,7 +60,7 @@ The JWT specification allows tokens to specify the signing algorithm in their he
 The library explicitly rejects the "none" algorithm. For implementation details, see link:security-specifications.adoc#none-algorithm-attack[None Algorithm Attack] in the Security Specifications document.
 
 **Implementation Details:**
-* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/security/AlgorithmPreferences.java[AlgorithmPreferences.java:53] - "none" algorithm is explicitly listed in REJECTED_ALGORITHMS
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/security/SignatureAlgorithmPreferences.java[SignatureAlgorithmPreferences.java:53] - "none" algorithm is explicitly listed in REJECTED_ALGORITHMS
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java:229-241] - Signature validator rejects tokens with unsupported algorithms
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenHeaderValidator.java[TokenHeaderValidator.java:110-132] - Header validator checks algorithm support before signature validation
 
@@ -82,13 +82,13 @@ When using HMAC-based algorithms like `HS256`, the integrity of the JWT depends 
 The library provides protection against weak keys. For implementation details, see link:security-specifications.adoc#trivial-secret-weak-hmac-keys[Trivial Secret] in the Security Specifications document.
 
 **Implementation Details:**
-* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/security/AlgorithmPreferences.java[AlgorithmPreferences.java:53] - HMAC algorithms (HS256, HS384, HS512) are explicitly rejected to prevent weak secret vulnerabilities
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/security/SignatureAlgorithmPreferences.java[SignatureAlgorithmPreferences.java:53] - HMAC algorithms (HS256, HS384, HS512) are explicitly rejected to prevent weak secret vulnerabilities
 * Library exclusively supports asymmetric algorithms (RS*, ES*, PS*) eliminating shared secret vulnerabilities
 * No support for HMAC-based algorithms removes the risk of weak key attacks entirely
 
 ==== Test Coverage
 
-* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/AlgorithmPreferencesTest.java[AlgorithmPreferencesTest] - Tests algorithm preferences
+* link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/SignatureAlgorithmPreferencesTest.java[SignatureAlgorithmPreferencesTest] - Tests algorithm preferences
 * link:../../cui-jwt-validation/src/test/java/de/cuioss/jwt/validation/security/KeyDisclosureVulnerabilityTest.java[KeyDisclosureVulnerabilityTest] - Tests protection against key disclosure
 
 === 4. Algorithm Confusion (RSA to HMAC)
@@ -105,7 +105,7 @@ This attack exploits the fact that the JWT header includes a user-controlled `al
 The library implements several protections against algorithm confusion attacks. For implementation details, see link:security-specifications.adoc#algorithm-confusion[Algorithm Confusion] in the Security Specifications document.
 
 **Implementation Details:**
-* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/security/AlgorithmPreferences.java[AlgorithmPreferences.java:53] - HMAC algorithms are explicitly rejected, preventing RSA-to-HMAC confusion attacks
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/security/SignatureAlgorithmPreferences.java[SignatureAlgorithmPreferences.java:53] - HMAC algorithms are explicitly rejected, preventing RSA-to-HMAC confusion attacks
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java:250-262] - Algorithm compatibility validation ensures token algorithm matches key type
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java:140-148] - Strict algorithm-key matching prevents confusion attacks
 

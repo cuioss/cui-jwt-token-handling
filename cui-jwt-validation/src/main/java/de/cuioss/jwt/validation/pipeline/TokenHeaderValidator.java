@@ -29,7 +29,7 @@ import lombok.NonNull;
  * <p>
  * This class validates the following header elements:
  * <ul>
- *   <li>Algorithm (alg) - against configured AlgorithmPreferences</li>
+ *   <li>Algorithm (alg) - against configured SignatureAlgorithmPreferences</li>
  *   <li>Issuer (iss) - against configured expected issuer</li>
  *   <li>Absence of embedded JWK - to prevent CVE-2018-0114 attacks</li>
  * </ul>
