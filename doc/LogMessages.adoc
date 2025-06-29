@@ -42,6 +42,10 @@ For more details about security events related to these log messages, see the Se
 |ID |Component |Message |Description
 |JWTValidation-001 |TOKEN |TokenValidator initialized with %s issuer configurations |Logged when TokenValidator is initialized with issuer configurations
 |JWTValidation-002 |JWKS |Successfully loaded and parsed JWKS from %s with %s keys |Logged when JWKS is successfully loaded and parsed from a remote endpoint
+|JWTValidation-022 |JWKS |Forced reload of JWKS completed with clearCache=%s |Logged when a forced JWKS reload operation completes successfully
+|JWTValidation-023 |JWKS |Keys updated due to data change - load state: %s |Logged when JWKS keys are updated due to data changes from the endpoint
+|JWTValidation-024 |JWKS |Successfully loaded JWKS from HTTP endpoint |Logged when JWKS is successfully loaded from HTTP endpoint
+|JWTValidation-025 |TOKEN |Issuer %s recovered and moved to healthy state |Logged when an unhealthy issuer recovers and becomes healthy again
 |===
 
 == WARN Level (100-199)
@@ -85,7 +89,13 @@ For more details about security events related to these log messages, see the Se
 |JWTValidation-133 |WELLKNOWN |Accessibility check for %s URL '%s' was interrupted: %s. It might be inaccessible. |Logged when an accessibility check for a URL is interrupted
 |JWTValidation-134 |WELLKNOWN |Accessibility check for %s URL '%s' failed with exception: %s. It might be inaccessible. |Logged when an accessibility check for a URL fails with an exception
 |JWTValidation-135 |JWKS |Creating HttpJwksLoaderConfig with invalid JWKS URI. The loader will return empty results. |Logged when an invalid JWKS URI is provided to HttpJwksLoaderConfig
-|JWTValidation-136 |JWKS |Invalid JWKS URL string provided: %s. The loader will be created but will return empty results. |Logged when an invalid JWKS URL string is provided to HttpJwksLoaderConfig
+|JWTValidation-136 |JWKS |Load operation failed but using cached content |Logged when JWKS load operation fails but cached content is available and used
+|JWTValidation-137 |JWKS |Load operation failed with no cached content available |Logged when JWKS load operation fails and no cached content is available
+|JWTValidation-138 |TOKEN |Issuer %s exists in configuration but not in dual maps - performing health check |Logged when an issuer configuration mismatch is detected in the dual maps
+|JWTValidation-139 |JWKS |Key missing required 'kty' parameter |Logged when a JWK key is missing the required 'kty' parameter
+|JWTValidation-140 |JWKS |Unsupported key type: %s |Logged when an unsupported JWK key type is encountered
+|JWTValidation-141 |JWKS |Key ID exceeds maximum length: %s |Logged when a JWK key ID exceeds the maximum allowed length
+|JWTValidation-142 |JWKS |Invalid or unsupported algorithm: %s |Logged when an invalid or unsupported algorithm is encountered in a JWK
 |===
 
 == ERROR Level (200-299)
@@ -97,4 +107,8 @@ For more details about security events related to these log messages, see the Se
 |JWTValidation-201 |JWKS |JWKS content size exceeds maximum allowed size (upperLimit=%s, actual=%s) |Logged when the JWKS content size exceeds the maximum allowed size, showing both the configured upper limit and the actual content size
 |JWTValidation-202 |JWKS |Failed to parse JWKS JSON: %s |Logged when there is an error parsing the JWKS JSON
 |JWTValidation-203 |WELLKNOWN |Issuer validation failed. Document issuer '%s' (normalized to base URL for .well-known: %s://%s%s%s) does not match the .well-known URL '%s'. Expected path for .well-known: '%s'. SchemeMatch=%s, HostMatch=%s, PortMatch=%s (IssuerPort=%s, WellKnownPort=%s), PathMatch=%s (WellKnownPath='%s') |Logged when the issuer validation fails because the issuer in the discovery document does not match the well-known URL
+|JWTValidation-204 |JWKS |Failed to reload JWKS |Logged when a forced JWKS reload operation fails
+|JWTValidation-205 |JWKS |Failed to load JWKS |Logged when a JWKS load operation fails
+|JWTValidation-206 |WELLKNOWN |Failed to load well-known endpoints from: %s after %d attempts |Logged when loading well-known endpoints fails after multiple retry attempts
+|JWTValidation-207 |JWKS |Failed to initialize JWKS loader via well-known discovery for: %s |Logged when JWKS loader initialization via well-known discovery fails
 |===

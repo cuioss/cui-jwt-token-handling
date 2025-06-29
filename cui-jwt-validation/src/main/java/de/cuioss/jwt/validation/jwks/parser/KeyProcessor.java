@@ -97,7 +97,7 @@ public class KeyProcessor {
     private boolean validateKeyParameters(JsonObject keyObject) {
         // Validate required key type
         if (!JwkKeyConstants.KeyType.isPresent(keyObject)) {
-            LOGGER.warn("Key missing required 'kty' parameter");
+            LOGGER.warn(WARN.JWK_KEY_MISSING_KTY::format);
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
@@ -106,7 +106,7 @@ public class KeyProcessor {
 
         // Validate key type is supported
         if (!"RSA".equals(keyType) && !"EC".equals(keyType)) {
-            LOGGER.warn("Unsupported key type: {}", keyType);
+            LOGGER.warn(WARN.JWK_UNSUPPORTED_KEY_TYPE.format(keyType));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
@@ -115,7 +115,7 @@ public class KeyProcessor {
         if (keyObject.containsKey(JwkKeyConstants.KeyId.KEY)) {
             String keyId = keyObject.getString(JwkKeyConstants.KeyId.KEY);
             if (keyId.length() > 100) {
-                LOGGER.warn("Key ID exceeds maximum length: {}", keyId.length());
+                LOGGER.warn(WARN.JWK_KEY_ID_TOO_LONG.format(keyId.length()));
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
                 return false;
             }
@@ -125,7 +125,7 @@ public class KeyProcessor {
         if (keyObject.containsKey(JwkKeyConstants.Algorithm.KEY)) {
             String algorithm = keyObject.getString(JwkKeyConstants.Algorithm.KEY);
             if (!jwkAlgorithmPreferences.isSupported(algorithm)) {
-                LOGGER.warn("Invalid or unsupported algorithm: {}", algorithm);
+                LOGGER.warn(WARN.JWK_INVALID_ALGORITHM.format(algorithm));
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
                 return false;
             }

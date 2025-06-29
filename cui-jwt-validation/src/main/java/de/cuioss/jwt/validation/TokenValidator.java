@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation;
 
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.domain.token.AccessTokenContent;
 import de.cuioss.jwt.validation.domain.token.IdTokenContent;
@@ -39,6 +40,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static de.cuioss.jwt.validation.JWTValidationLogMessages.INFO;
+import static de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 
 /**
  * Main entry point for creating and validating JWT tokens.
@@ -379,7 +383,7 @@ public class TokenValidator {
                 // Move from unhealthy to healthy map
                 unhealthyIssuers.remove(issuer);
                 healthyIssuers.put(issuer, issuerConfig);
-                LOGGER.info("Issuer %s recovered and moved to healthy state", issuer);
+                LOGGER.info(INFO.ISSUER_RECOVERED.format(issuer));
                 return issuerConfig;
             } else {
                 LOGGER.debug("Issuer %s is still unhealthy", issuer);
@@ -391,7 +395,7 @@ public class TokenValidator {
         }
 
         // This should not happen in normal operation (issuer exists but not in either map)
-        LOGGER.warn("Issuer %s exists in configuration but not in dual maps - performing health check", issuer);
+        LOGGER.warn(WARN.ISSUER_DUAL_MAP_MISMATCH.format(issuer));
         if (issuerConfig.isHealthy()) {
             healthyIssuers.put(issuer, issuerConfig);
             return issuerConfig;

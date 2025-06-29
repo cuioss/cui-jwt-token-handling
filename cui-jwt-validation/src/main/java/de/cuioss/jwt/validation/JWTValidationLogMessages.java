@@ -208,6 +208,30 @@ public final class JWTValidationLogMessages {
                 .identifier(203)
                 .template("Issuer validation failed. Document issuer '%s' (normalized to base URL for .well-known: %s://%s%s%s) does not match the .well-known URL '%s'. Expected path for .well-known: '%s'. SchemeMatch=%s, HostMatch=%s, PortMatch=%s (IssuerPort=%s, WellKnownPort=%s), PathMatch=%s (WellKnownPath='%s')")
                 .build();
+
+        public static final LogRecord JWKS_RELOAD_FAILED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(204)
+                .template("Failed to reload JWKS")
+                .build();
+
+        public static final LogRecord JWKS_LOAD_FAILED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(205)
+                .template("Failed to load JWKS")
+                .build();
+
+        public static final LogRecord WELL_KNOWN_LOAD_FAILED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(206)
+                .template("Failed to load well-known endpoints from: %s after %d attempts")
+                .build();
+
+        public static final LogRecord JWKS_LOADER_INIT_FAILED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(207)
+                .template("Failed to initialize JWKS loader via well-known discovery for: %s")
+                .build();
     }
 
     /**
@@ -227,6 +251,30 @@ public final class JWTValidationLogMessages {
                 .prefix(PREFIX)
                 .identifier(2)
                 .template("Successfully loaded and parsed JWKS from %s with %s keys")
+                .build();
+
+        public static final LogRecord JWKS_RELOAD_COMPLETED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(22)
+                .template("Forced reload of JWKS completed with clearCache=%s")
+                .build();
+
+        public static final LogRecord JWKS_KEYS_UPDATED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(23)
+                .template("Keys updated due to data change - load state: %s")
+                .build();
+
+        public static final LogRecord JWKS_HTTP_LOADED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(24)
+                .template("Successfully loaded JWKS from HTTP endpoint")
+                .build();
+
+        public static final LogRecord ISSUER_RECOVERED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(25)
+                .template("Issuer %s recovered and moved to healthy state")
                 .build();
     }
 
@@ -463,6 +511,102 @@ public final class JWTValidationLogMessages {
                 .prefix(PREFIX)
                 .identifier(135)
                 .template("Creating HttpJwksLoaderConfig with invalid JWKS URI. The loader will return empty results.")
+                .build();
+
+        public static final LogRecord JWKS_LOAD_FAILED_CACHED_CONTENT = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(136)
+                .template("Load operation failed but using cached content")
+                .build();
+
+        public static final LogRecord JWKS_LOAD_FAILED_NO_CACHE = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(137)
+                .template("Load operation failed with no cached content available")
+                .build();
+
+        public static final LogRecord ISSUER_DUAL_MAP_MISMATCH = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(138)
+                .template("Issuer %s exists in configuration but not in dual maps - performing health check")
+                .build();
+
+        public static final LogRecord JWK_KEY_MISSING_KTY = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(139)
+                .template("Key missing required 'kty' parameter")
+                .build();
+
+        public static final LogRecord JWK_UNSUPPORTED_KEY_TYPE = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(140)
+                .template("Unsupported key type: %s")
+                .build();
+
+        public static final LogRecord JWK_KEY_ID_TOO_LONG = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(141)
+                .template("Key ID exceeds maximum length: %s")
+                .build();
+
+        public static final LogRecord JWK_INVALID_ALGORITHM = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(142)
+                .template("Invalid or unsupported algorithm: %s")
+                .build();
+
+        public static final LogRecord JWKS_OBJECT_NULL = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(143)
+                .template("JWKS object is null")
+                .build();
+
+        public static final LogRecord JWKS_EXCESSIVE_PROPERTIES = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(144)
+                .template("JWKS object has excessive number of properties: %s")
+                .build();
+
+        public static final LogRecord JWKS_KEYS_ARRAY_TOO_LARGE = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(145)
+                .template("JWKS keys array exceeds maximum size: %s")
+                .build();
+
+        public static final LogRecord JWKS_KEYS_ARRAY_EMPTY = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(146)
+                .template("JWKS keys array is empty")
+                .build();
+
+        public static final LogRecord OPERATION_RETRY_FAILED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(147)
+                .template("Operation %s failed after %d attempts")
+                .build();
+
+        public static final LogRecord HTTP_STATUS_WARNING = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(148)
+                .template("HTTP %s (%s) from %s")
+                .build();
+
+        public static final LogRecord HTTP_FETCH_FAILED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(149)
+                .template("Failed to fetch HTTP content from %s")
+                .build();
+
+        public static final LogRecord HTTP_FETCH_INTERRUPTED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(150)
+                .template("Interrupted while fetching HTTP content from %s")
+                .build();
+
+        public static final LogRecord JWKS_LOADER_NOT_HEALTHY = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(151)
+                .template("Delegate JWKS loader initialized but not healthy for: %s")
                 .build();
     }
 

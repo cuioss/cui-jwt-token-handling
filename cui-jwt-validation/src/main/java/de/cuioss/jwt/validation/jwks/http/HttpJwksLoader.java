@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.jwks.http;
 
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
@@ -29,6 +30,10 @@ import lombok.NonNull;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import static de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
+import static de.cuioss.jwt.validation.JWTValidationLogMessages.INFO;
+import static de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 
 /**
  * JWKS loader that loads from HTTP endpoint with caching support.
@@ -121,10 +126,10 @@ public class HttpJwksLoader implements JwksLoader {
         try {
             ETagAwareHttpHandler.LoadResult result = httpCache.reload(clearCache);
             updateKeyLoader(result);
-            LOGGER.info("Forced reload of JWKS completed with clearCache=%s", clearCache);
+            LOGGER.info(INFO.JWKS_RELOAD_COMPLETED.format(clearCache));
         } catch (JwksLoadException e) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(e, "Failed to reload JWKS");
+            LOGGER.error(e, ERROR.JWKS_RELOAD_FAILED::format);
             throw e; // Re-throw specific exception
         }
     }
@@ -148,13 +153,13 @@ public class HttpJwksLoader implements JwksLoader {
             // Only update key loader if data has changed and we have content
             if (result.content() != null && (result.loadState().isDataChanged() || keyLoader == null)) {
                 updateKeyLoader(result);
-                LOGGER.info("Keys updated due to data change - load state: %s", result.loadState());
+                LOGGER.info(INFO.JWKS_KEYS_UPDATED.format(result.loadState()));
             }
 
             // Log appropriate message based on load state
             switch (result.loadState()) {
                 case LOADED_FROM_SERVER:
-                    LOGGER.info("Successfully loaded JWKS from HTTP endpoint");
+                    LOGGER.info(INFO.JWKS_HTTP_LOADED::format);
                     break;
                 case CACHE_ETAG:
                     LOGGER.debug("JWKS content validated via ETag (304 Not Modified)");
@@ -163,16 +168,16 @@ public class HttpJwksLoader implements JwksLoader {
                     LOGGER.debug("Using cached JWKS content");
                     break;
                 case ERROR_WITH_CACHE:
-                    LOGGER.warn("Load operation failed but using cached content");
+                    LOGGER.warn(WARN.JWKS_LOAD_FAILED_CACHED_CONTENT::format);
                     break;
                 case ERROR_NO_CACHE:
-                    LOGGER.warn("Load operation failed with no cached content available");
+                    LOGGER.warn(WARN.JWKS_LOAD_FAILED_NO_CACHE::format);
                     break;
             }
 
         } catch (JwksLoadException e) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(e, "Failed to load JWKS");
+            LOGGER.error(e, ERROR.JWKS_LOAD_FAILED::format);
             throw e; // Re-throw specific exception
         }
     }
