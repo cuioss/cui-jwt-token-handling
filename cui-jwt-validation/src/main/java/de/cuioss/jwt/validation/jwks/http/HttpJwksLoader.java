@@ -29,14 +29,19 @@ import lombok.NonNull;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
 import static de.cuioss.jwt.validation.JWTValidationLogMessages.INFO;
 import static de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 
 /**
- * JWKS loader that loads from HTTP endpoint with caching support.
- * Uses ETagAwareHttpHandler for stateful HTTP caching without scheduling.
+ * JWKS loader that loads from HTTP endpoint with caching and background refresh support.
+ * Uses ETagAwareHttpHandler for stateful HTTP caching with optional scheduled background refresh.
+ * Background refresh is automatically started after the first successful key load.
  * 
  * @author Oliver Wolff
  * @since 1.0
@@ -47,23 +52,29 @@ public class HttpJwksLoader implements JwksLoader {
 
     private final ETagAwareHttpHandler httpCache;
     private final SecurityEventCounter securityEventCounter;
+    private final HttpJwksLoaderConfig config;
     private volatile JWKSKeyLoader keyLoader;
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
+    private volatile ScheduledFuture<?> refreshTask;
+    private final AtomicBoolean schedulerStarted = new AtomicBoolean(false);
 
     public HttpJwksLoader(@NonNull HttpHandler httpHandler,
             @NonNull SecurityEventCounter securityEventCounter) {
         this.httpCache = new ETagAwareHttpHandler(httpHandler);
         this.securityEventCounter = securityEventCounter;
+        this.config = null; // No config, no background refresh
     }
 
     /**
      * Constructor using HttpJwksLoaderConfig.
      * Uses the httpHandler directly from the config with all its settings.
+     * Enables background refresh if configured.
      */
     public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config,
             @NonNull SecurityEventCounter securityEventCounter) {
         this.httpCache = new ETagAwareHttpHandler(config.getHttpHandler());
         this.securityEventCounter = securityEventCounter;
+        this.config = config;
     }
 
     @Override
@@ -133,6 +144,26 @@ public class HttpJwksLoader implements JwksLoader {
         }
     }
 
+    /**
+     * Shuts down the background refresh scheduler if running.
+     * This method should be called when the loader is no longer needed.
+     */
+    public void shutdown() {
+        if (refreshTask != null && !refreshTask.isCancelled()) {
+            refreshTask.cancel(false);
+            LOGGER.debug("Background refresh task cancelled");
+        }
+    }
+
+    /**
+     * Checks if background refresh is enabled and running.
+     * 
+     * @return true if background refresh is active, false otherwise
+     */
+    public boolean isBackgroundRefreshActive() {
+        return refreshTask != null && !refreshTask.isCancelled() && !refreshTask.isDone();
+    }
+
     private void ensureLoaded() {
         if (keyLoader == null) {
             loadKeys();
@@ -153,6 +184,9 @@ public class HttpJwksLoader implements JwksLoader {
             if (result.content() != null && (result.loadState().isDataChanged() || keyLoader == null)) {
                 updateKeyLoader(result);
                 LOGGER.info(INFO.JWKS_KEYS_UPDATED.format(result.loadState()));
+
+                // Start background refresh after first successful load
+                startBackgroundRefreshIfNeeded();
             }
 
             // Log appropriate message based on load state
@@ -188,5 +222,48 @@ public class HttpJwksLoader implements JwksLoader {
                 .jwksType(JwksType.HTTP)
                 .build();
         this.status = LoaderStatus.OK;
+    }
+
+    private void startBackgroundRefreshIfNeeded() {
+        if (config != null &&
+                config.getScheduledExecutorService() != null &&
+                config.getRefreshIntervalSeconds() > 0 &&
+                schedulerStarted.compareAndSet(false, true)) {
+
+            ScheduledExecutorService executor = config.getScheduledExecutorService();
+            int intervalSeconds = config.getRefreshIntervalSeconds();
+
+            refreshTask = executor.scheduleAtFixedRate(
+                    this::backgroundRefresh,
+                    intervalSeconds,
+                    intervalSeconds,
+                    TimeUnit.SECONDS
+            );
+
+            LOGGER.info(INFO.JWKS_BACKGROUND_REFRESH_STARTED.format(intervalSeconds));
+        }
+    }
+
+    private void backgroundRefresh() {
+        try {
+            LOGGER.debug("Starting background JWKS refresh");
+            ETagAwareHttpHandler.LoadResult result = httpCache.load();
+
+            // Only update keys if data has actually changed
+            if (result.content() != null && result.loadState().isDataChanged()) {
+                updateKeyLoader(result);
+                LOGGER.info(INFO.JWKS_BACKGROUND_REFRESH_UPDATED.format(result.loadState()));
+            } else {
+                LOGGER.debug("Background refresh completed, no changes detected: %s", result.loadState());
+            }
+
+        } catch (Exception e) {
+            // Don't let background refresh failures affect the loader status
+            // if we already have working keys
+            if (keyLoader == null || !keyLoader.isNotEmpty()) {
+                this.status = LoaderStatus.ERROR;
+            }
+            LOGGER.warn(e, "Background JWKS refresh failed: %s", e.getMessage());
+        }
     }
 }

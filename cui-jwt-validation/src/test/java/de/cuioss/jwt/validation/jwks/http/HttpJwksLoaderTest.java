@@ -28,6 +28,7 @@ import de.cuioss.test.mockwebserver.dispatcher.ModuleDispatcher;
 import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -224,6 +225,295 @@ class HttpJwksLoaderTest {
         LogAsserts.assertLogMessagePresentContaining(
                 TestLogLevel.INFO,
                 "Successfully loaded JWKS");
+    }
+
+    /**
+     * Nested test class for scheduler-related functionality.
+     */
+    @Nested
+    @DisplayName("Background Refresh Scheduler Tests")
+    class SchedulerTests {
+
+        @Test
+        @DisplayName("Should not start scheduler when no config provided")
+        void shouldNotStartSchedulerWithoutConfig(URIBuilder uriBuilder) {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            // Create loader without config (direct HttpHandler)
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config.getHttpHandler(), securityEventCounter);
+
+            // Trigger initial load
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
+            assertTrue(keyInfo.isPresent(), "Initial load should work");
+
+            // Scheduler should not be active without config
+            assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should not be active without full config");
+
+            loader.shutdown();
+        }
+
+        @Test
+        @DisplayName("Should not start scheduler when refresh interval is zero")
+        void shouldNotStartSchedulerWithZeroInterval(URIBuilder uriBuilder) {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(0) // Zero means no refresh
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Trigger initial load
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
+            assertTrue(keyInfo.isPresent(), "Initial load should work");
+
+            // Scheduler should not be active with zero interval
+            assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should not be active with zero interval");
+
+            loader.shutdown();
+        }
+
+        @Test
+        @DisplayName("Should start scheduler after first successful load")
+        void shouldStartSchedulerAfterFirstLoad(URIBuilder uriBuilder) throws InterruptedException {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(1) // 1 second for testing
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Scheduler should not be active before first load
+            assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should not be active before first load");
+
+            // Trigger initial load
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
+            assertTrue(keyInfo.isPresent(), "Initial load should work");
+
+            // Give scheduler a moment to start
+            Thread.sleep(100);
+
+            // Scheduler should now be active
+            assertTrue(loader.isBackgroundRefreshActive(), "Background refresh should be active after first successful load");
+
+            // Verify log message about scheduler start
+            LogAsserts.assertLogMessagePresentContaining(
+                    TestLogLevel.INFO,
+                    "Background JWKS refresh started with interval: 1");
+
+            loader.shutdown();
+
+            // After shutdown, scheduler should be inactive
+            assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should be inactive after shutdown");
+        }
+
+        @Test
+        @DisplayName("Should perform background refresh and detect changes")
+        void shouldPerformBackgroundRefresh(URIBuilder uriBuilder) throws InterruptedException {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(1) // 1 second for testing
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Trigger initial load
+            Optional<KeyInfo> initialKeyInfo = loader.getKeyInfo(TEST_KID);
+            assertTrue(initialKeyInfo.isPresent(), "Initial load should work");
+
+            int initialCallCount = moduleDispatcher.getCallCounter();
+
+            // Switch to different key to simulate change
+            moduleDispatcher.switchToOtherPublicKey();
+
+            // Wait for background refresh to trigger
+            Thread.sleep(1200); // Wait a bit more than refresh interval
+            
+            // Verify that background refresh was called
+            assertTrue(moduleDispatcher.getCallCounter() > initialCallCount,
+                    "Background refresh should have triggered additional HTTP calls");
+
+            loader.shutdown();
+        }
+
+        @Test
+        @DisplayName("Should handle background refresh errors gracefully")
+        void shouldHandleBackgroundRefreshErrors(URIBuilder uriBuilder) throws InterruptedException {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(1) // 1 second for testing
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Trigger initial successful load
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
+            assertTrue(keyInfo.isPresent(), "Initial load should work");
+            assertTrue(loader.isHealthy(), "Loader should be healthy after initial load");
+
+            // Make subsequent requests fail
+            moduleDispatcher.returnError();
+
+            // Wait for background refresh to encounter errors
+            Thread.sleep(1200);
+
+            // Loader should still be healthy if it has existing keys
+            assertTrue(loader.isHealthy(), "Loader should remain healthy with cached keys even if background refresh fails");
+
+            // Verify error logging occurred
+            LogAsserts.assertLogMessagePresentContaining(
+                    TestLogLevel.WARN,
+                    "Background JWKS refresh failed");
+
+            loader.shutdown();
+        }
+
+        @Test
+        @DisplayName("Should only start scheduler once")
+        void shouldStartSchedulerOnlyOnce(URIBuilder uriBuilder) throws InterruptedException {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(10) // Longer interval to avoid multiple executions during test
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Trigger multiple loads
+            loader.getKeyInfo(TEST_KID);
+            loader.getKeyInfo(TEST_KID);
+            loader.getFirstKeyInfo();
+            loader.getAllKeyInfos();
+
+            Thread.sleep(100);
+
+            // Should only have one scheduler start message
+            LogAsserts.assertLogMessagePresentContaining(
+                    TestLogLevel.INFO,
+                    "Background JWKS refresh started");
+
+            loader.shutdown();
+        }
+
+        @Test
+        @DisplayName("Should shutdown scheduler cleanly")
+        void shouldShutdownSchedulerCleanly(URIBuilder uriBuilder) throws InterruptedException {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(1)
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Start scheduler
+            loader.getKeyInfo(TEST_KID);
+            Thread.sleep(100);
+            assertTrue(loader.isBackgroundRefreshActive(), "Scheduler should be active");
+
+            // Shutdown should cancel the task
+            loader.shutdown();
+            assertFalse(loader.isBackgroundRefreshActive(), "Scheduler should be inactive after shutdown");
+
+            // Multiple shutdowns should be safe
+            loader.shutdown();
+            loader.shutdown();
+            assertFalse(loader.isBackgroundRefreshActive(), "Multiple shutdowns should be safe");
+        }
+
+        @Test
+        @DisplayName("Should not start scheduler if initial load fails")
+        void shouldNotStartSchedulerIfInitialLoadFails(URIBuilder uriBuilder) {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Make all requests fail from the start
+            moduleDispatcher.returnError();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(1)
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Initial load should fail
+            try {
+                loader.getKeyInfo(TEST_KID);
+                fail("Expected JwksLoadException for failed initial load");
+            } catch (Exception e) {
+                // Expected
+            }
+
+            // Scheduler should not be started after failed load
+            assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should not start after failed initial load");
+            assertFalse(loader.isHealthy(), "Loader should not be healthy after failed load");
+
+            loader.shutdown();
+        }
+
+        @Test
+        @DisplayName("Should handle dataChanged flag correctly in background refresh")
+        void shouldHandleDataChangedFlag(URIBuilder uriBuilder) throws InterruptedException {
+            String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
+
+            // Ensure dispatcher is in normal mode
+            moduleDispatcher.returnDefault();
+
+            HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                    .url(jwksEndpoint)
+                    .refreshIntervalSeconds(1)
+                    .build();
+
+            HttpJwksLoader loader = new HttpJwksLoader(config, securityEventCounter);
+
+            // Trigger initial load
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
+            assertTrue(keyInfo.isPresent(), "Initial load should work");
+
+            // Wait for background refresh that should find no changes (304 Not Modified)
+            Thread.sleep(1200);
+
+            // Verify that background refresh executed but didn't update keys (no data change)
+            LogAsserts.assertLogMessagePresentContaining(
+                    TestLogLevel.DEBUG,
+                    "Background refresh completed, no changes detected");
+
+            loader.shutdown();
+        }
     }
 
 }

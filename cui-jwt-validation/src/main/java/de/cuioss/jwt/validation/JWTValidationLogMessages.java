@@ -276,6 +276,18 @@ public final class JWTValidationLogMessages {
                 .identifier(25)
                 .template("Issuer %s recovered and moved to healthy state")
                 .build();
+
+        public static final LogRecord JWKS_BACKGROUND_REFRESH_STARTED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(26)
+                .template("Background JWKS refresh started with interval: %s seconds")
+                .build();
+
+        public static final LogRecord JWKS_BACKGROUND_REFRESH_UPDATED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(27)
+                .template("Background JWKS refresh updated keys, load state: %s")
+                .build();
     }
 
     /**

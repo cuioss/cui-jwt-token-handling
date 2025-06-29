@@ -30,6 +30,8 @@ import lombok.ToString;
 
 import javax.net.ssl.SSLContext;
 import java.net.URI;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Configuration parameters for {@link HttpJwksLoader}.
@@ -76,6 +78,14 @@ public class HttpJwksLoaderConfig {
     @EqualsAndHashCode.Exclude
     private final HttpHandler httpHandler;
 
+    /**
+     * The ScheduledExecutorService used for background refresh operations.
+     * Can be null if no background refresh is needed.
+     */
+    @Getter
+    @EqualsAndHashCode.Exclude
+    private final ScheduledExecutorService scheduledExecutorService;
+
 
     /**
      * Creates a new builder for HttpJwksLoaderConfig.
@@ -96,6 +106,7 @@ public class HttpJwksLoaderConfig {
     public static class HttpJwksLoaderConfigBuilder {
         private Integer refreshIntervalSeconds = DEFAULT_REFRESH_INTERVAL_IN_SECONDS;
         private final HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
+        private ScheduledExecutorService scheduledExecutorService;
 
         /**
          * Constructor initializing the HttpHandlerBuilder.
@@ -230,6 +241,17 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
+         * Sets the ScheduledExecutorService for background refresh operations.
+         *
+         * @param scheduledExecutorService the executor service to use
+         * @return this builder instance
+         */
+        public HttpJwksLoaderConfigBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+            this.scheduledExecutorService = scheduledExecutorService;
+            return this;
+        }
+
+        /**
          * Builds a new HttpJwksLoaderConfig instance with the configured parameters.
          * Validates all parameters and applies default values where appropriate.
          *
@@ -246,9 +268,20 @@ public class HttpJwksLoaderConfig {
                 throw new IllegalArgumentException("Invalid URL", e);
             }
 
+            // Create default ScheduledExecutorService if not provided and refresh interval > 0
+            ScheduledExecutorService executor = this.scheduledExecutorService;
+            if (executor == null && refreshIntervalSeconds > 0) {
+                executor = Executors.newScheduledThreadPool(1, r -> {
+                    Thread t = new Thread(r, "jwks-refresh-" + jwksHttpHandler.getUri().getHost());
+                    t.setDaemon(true);
+                    return t;
+                });
+            }
+
             return new HttpJwksLoaderConfig(
                     refreshIntervalSeconds,
-                    jwksHttpHandler);
+                    jwksHttpHandler,
+                    executor);
         }
     }
 }
