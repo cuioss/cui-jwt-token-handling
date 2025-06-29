@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.jwks.http;
 
+import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
@@ -70,7 +71,7 @@ class HttpJwksLoaderTest {
     void shouldCreateLoaderWithConstructor() {
         assertNotNull(httpJwksLoader, "HttpJwksLoader should not be null");
         // Simplified loader doesn't expose config - just verify it was created
-        assertTrue(httpJwksLoader.getStatus() != null, "Status should be available");
+        assertNotNull(httpJwksLoader.isHealthy(), "Status should be available");
     }
 
     @Test
@@ -146,11 +147,11 @@ class HttpJwksLoaderTest {
     @DisplayName("Should handle health checks")
     void shouldHandleHealthChecks() {
         // Initially undefined status
-        assertNotNull(httpJwksLoader.getStatus(), "Status should not be null");
+        assertNotNull(httpJwksLoader.isHealthy(), "Status should not be null");
 
         // After loading, should be healthy
         httpJwksLoader.getKeyInfo(TEST_KID);
-        assertTrue(httpJwksLoader.isHealthy(), "Should be healthy after successful load");
+        assertEquals(LoaderStatus.OK, httpJwksLoader.isHealthy(), "Should be healthy after successful load");
     }
 
     @Test
@@ -208,7 +209,7 @@ class HttpJwksLoaderTest {
 
         // This test now verifies that key rotation can be detected when creating a new loader
         // The exact rotation detection mechanism is handled by the JWKSKeyLoader
-        assertTrue(newLoader.isHealthy() || !newLoader.isHealthy(), "Health check should work");
+        assertNotNull(newLoader.isHealthy(), "Health check should work");
     }
 
     @Test
@@ -375,7 +376,7 @@ class HttpJwksLoaderTest {
             // Trigger initial successful load
             Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
             assertTrue(keyInfo.isPresent(), "Initial load should work");
-            assertTrue(loader.isHealthy(), "Loader should be healthy after initial load");
+            assertEquals(LoaderStatus.OK, loader.isHealthy(), "Loader should be healthy after initial load");
 
             // Make subsequent requests fail
             moduleDispatcher.returnError();
@@ -384,7 +385,7 @@ class HttpJwksLoaderTest {
             Thread.sleep(1200);
 
             // Loader should still be healthy if it has existing keys
-            assertTrue(loader.isHealthy(), "Loader should remain healthy with cached keys even if background refresh fails");
+            assertEquals(LoaderStatus.OK, loader.isHealthy(), "Loader should remain healthy with cached keys even if background refresh fails");
 
             // Verify error logging occurred
             LogAsserts.assertLogMessagePresentContaining(
@@ -480,7 +481,7 @@ class HttpJwksLoaderTest {
 
             // Scheduler should not be started after failed load
             assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should not start after failed initial load");
-            assertFalse(loader.isHealthy(), "Loader should not be healthy after failed load");
+            assertNotEquals(LoaderStatus.OK, loader.isHealthy(), "Loader should not be healthy after failed load");
 
             loader.shutdown();
         }

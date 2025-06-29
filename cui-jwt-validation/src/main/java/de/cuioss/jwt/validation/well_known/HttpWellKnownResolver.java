@@ -242,20 +242,15 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     }
 
     @Override
-    public boolean isHealthy() {
+    public LoaderStatus isHealthy() {
         if (endpoints.get() == null) {
             try {
                 ensureLoaded();
             } catch (WellKnownDiscoveryException e) {
                 LOGGER.debug("Health check failed during endpoint loading: %s", e.getMessage());
-                return false;
+                return LoaderStatus.ERROR;
             }
         }
-        return status == LoaderStatus.OK;
-    }
-
-    @Override
-    public LoaderStatus getStatus() {
         return status;
     }
 

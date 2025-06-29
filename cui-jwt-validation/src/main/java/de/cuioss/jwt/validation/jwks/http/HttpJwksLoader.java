@@ -112,12 +112,7 @@ public class HttpJwksLoader implements JwksLoader {
     }
 
     @Override
-    public LoaderStatus getStatus() {
-        return status;
-    }
-
-    @Override
-    public boolean isHealthy() {
+    public LoaderStatus isHealthy() {
         // For cached loader, we consider it healthy if we can load keys
         // This will trigger lazy loading on first health check
         if (keyLoader.get() == null) {
@@ -125,10 +120,10 @@ public class HttpJwksLoader implements JwksLoader {
                 ensureLoaded();
             } catch (JwksLoadException e) {
                 LOGGER.debug("Health check failed during key loading: %s", e.getMessage());
-                return false;
+                return LoaderStatus.ERROR;
             }
         }
-        return status == LoaderStatus.OK;
+        return status;
     }
 
 

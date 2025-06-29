@@ -22,6 +22,7 @@ import de.cuioss.jwt.validation.domain.token.RefreshTokenContent;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
+import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.pipeline.DecodedJwt;
 import de.cuioss.jwt.validation.pipeline.NonValidatingJwtParser;
 import de.cuioss.jwt.validation.pipeline.TokenBuilder;
@@ -176,7 +177,7 @@ public class TokenValidator {
                 enabledCount++;
 
                 // Perform initial health check to populate dual maps
-                if (issuerConfig.isHealthy()) {
+                if (issuerConfig.isHealthy() == LoaderStatus.OK) {
                     healthyIssuers.put(issuerConfig.getIssuer(), issuerConfig);
                     LOGGER.debug("Issuer %s initialized as healthy", issuerConfig.getIssuer());
                 } else {
@@ -378,7 +379,7 @@ public class TokenValidator {
             LOGGER.debug("Performing on-demand health check for previously unhealthy issuer: %s", issuer);
 
             // Perform fail-fast health check
-            if (issuerConfig.isHealthy()) {
+            if (issuerConfig.isHealthy() == LoaderStatus.OK) {
                 // Move from unhealthy to healthy map
                 unhealthyIssuers.remove(issuer);
                 healthyIssuers.put(issuer, issuerConfig);
@@ -395,7 +396,7 @@ public class TokenValidator {
 
         // This should not happen in normal operation (issuer exists but not in either map)
         LOGGER.warn(WARN.ISSUER_DUAL_MAP_MISMATCH.format(issuer));
-        if (issuerConfig.isHealthy()) {
+        if (issuerConfig.isHealthy() == LoaderStatus.OK) {
             healthyIssuers.put(issuer, issuerConfig);
             return issuerConfig;
         } else {

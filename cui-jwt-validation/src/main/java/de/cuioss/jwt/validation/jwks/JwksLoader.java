@@ -128,8 +128,7 @@ public interface JwksLoader extends HealthStatusProvider {
      */
     JwksType getJwksType();
 
-    // Health status methods inherited from HealthStatusProvider
-    // - boolean isHealthy()
-    // - LoaderStatus getStatus()
+    // Health status method inherited from HealthStatusProvider:
+    // - LoaderStatus isHealthy()
 
 }

@@ -68,7 +68,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * );
  * 
  * // First isHealthy() call triggers discovery and JWKS loading
- * if (loader.isHealthy()) {
+ * if (loader.isHealthy() == LoaderStatus.OK) {
  *     Optional&lt;KeyInfo&gt; key = loader.getKeyInfo("key-id");
  * }
  * </pre>
@@ -149,7 +149,7 @@ public class WellKnownResolverJWKSKeyloader implements JwksLoader {
                 HttpJwksLoader newDelegateLoader = new HttpJwksLoader(jwksUriHandler, securityEventCounter);
 
                 // Check if the delegate is healthy
-                if (newDelegateLoader.isHealthy()) {
+                if (newDelegateLoader.isHealthy() == LoaderStatus.OK) {
                     delegateLoader.set(newDelegateLoader);
                     status = LoaderStatus.OK;
                     LOGGER.info("Successfully initialized JWKS loader via well-known discovery");
@@ -209,27 +209,7 @@ public class WellKnownResolverJWKSKeyloader implements JwksLoader {
     }
 
     @Override
-    public LoaderStatus getStatus() {
-        // Try to initialize if not already done
-        if (status == LoaderStatus.UNDEFINED) {
-            ensureDelegateInitialized();
-        }
-
-        // If we have a delegate, use its status
-        HttpJwksLoader loader = delegateLoader.get();
-        if (loader != null) {
-            LoaderStatus delegateStatus = loader.getStatus();
-            // Update our status to match
-            if (delegateStatus != LoaderStatus.UNDEFINED) {
-                status = delegateStatus;
-            }
-        }
-
-        return status;
-    }
-
-    @Override
-    public boolean isHealthy() {
+    public LoaderStatus isHealthy() {
         // This triggers the full initialization chain if needed:
         // 1. Well-known discovery (lazy in WellKnownResolver)
         // 2. JWKS URI extraction
@@ -237,20 +217,27 @@ public class WellKnownResolverJWKSKeyloader implements JwksLoader {
         // 4. JWKS loading (lazy in HttpJwksLoader)
         
         if (!ensureDelegateInitialized()) {
-            return false;
+            return LoaderStatus.ERROR;
         }
 
         // Check both well-known resolver and delegate loader health
-        boolean wellKnownHealthy = wellKnownResolver.isHealthy();
+        LoaderStatus wellKnownStatus = wellKnownResolver.isHealthy();
         HttpJwksLoader loader = delegateLoader.get();
-        boolean delegateHealthy = loader != null && loader.isHealthy();
+        LoaderStatus delegateStatus = loader != null ? loader.isHealthy() : LoaderStatus.UNDEFINED;
 
-        boolean healthy = wellKnownHealthy && delegateHealthy;
+        // Both must be OK for overall OK status
+        if (wellKnownStatus == LoaderStatus.OK && delegateStatus == LoaderStatus.OK) {
+            status = LoaderStatus.OK;
+        } else if (wellKnownStatus == LoaderStatus.ERROR || delegateStatus == LoaderStatus.ERROR) {
+            status = LoaderStatus.ERROR;
+        } else {
+            status = LoaderStatus.UNDEFINED;
+        }
 
         LOGGER.debug("Health check for WellKnownResolverJWKSKeyloader: wellKnown=%s, delegate=%s, overall=%s",
-                wellKnownHealthy, delegateHealthy, healthy);
+                wellKnownStatus, delegateStatus, status);
 
-        return healthy;
+        return status;
     }
 
     /**

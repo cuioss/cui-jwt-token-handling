@@ -269,26 +269,22 @@ public class JWKSKeyLoader implements JwksLoader {
     }
 
     /**
-     * Gets the status of the JWKS loader.
-     *
-     * @return the status of the loader
-     */
-    @Override
-    public @NonNull LoaderStatus getStatus() {
-        return status;
-    }
-
-    /**
-     * Checks if the JWKS loader is healthy and can access at least one cryptographic key.
+     * Checks the JWKS loader health and returns detailed status information.
      * <p>
      * For in-memory and file-based loaders, this checks if keys were successfully parsed
      * during construction and are currently available.
      *
-     * @return {@code true} if the loader can access at least one key, {@code false} otherwise
+     * @return the current health status, considering both loader status and key availability
      */
     @Override
-    public boolean isHealthy() {
-        return status == LoaderStatus.OK && !keyInfoMap.isEmpty();
+    public @NonNull LoaderStatus isHealthy() {
+        if (status == LoaderStatus.OK && !keyInfoMap.isEmpty()) {
+            return LoaderStatus.OK;
+        } else if (status == LoaderStatus.ERROR) {
+            return LoaderStatus.ERROR;
+        } else {
+            return LoaderStatus.UNDEFINED;
+        }
     }
 
 

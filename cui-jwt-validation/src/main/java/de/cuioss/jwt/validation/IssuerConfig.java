@@ -193,41 +193,18 @@ public class IssuerConfig implements HealthStatusProvider {
     }
 
     /**
-     * Checks if this issuer configuration is healthy and can provide cryptographic keys.
+     * Checks the health status of this issuer configuration.
      * <p>
      * This method provides a unified view of both configuration state (enabled) and runtime state (healthy).
      * The health check process:
      * <ol>
-     *   <li>Returns {@code false} immediately if the issuer is disabled</li>
-     *   <li>Returns {@code false} if the JwksLoader is not initialized</li>
+     *   <li>Returns {@link LoaderStatus#UNDEFINED} immediately if the issuer is disabled</li>
+     *   <li>Returns {@link LoaderStatus#UNDEFINED} if the JwksLoader is not initialized</li>
      *   <li>Delegates to the underlying {@link JwksLoader#isHealthy()} method</li>
      * </ol>
      * <p>
      * For HTTP-based loaders, this may trigger lazy loading of JWKS content if not already loaded.
      * The method is designed to be fail-fast and thread-safe.
-     *
-     * @return {@code true} if the issuer is enabled and the underlying JwksLoader is healthy,
-     *         {@code false} otherwise
-     * @since 1.0
-     */
-    @Override
-    public boolean isHealthy() {
-        // Return false if the issuer is disabled
-        if (!enabled) {
-            return false;
-        }
-
-        // Return false if the JwksLoader is not initialized
-        if (jwksLoader == null) {
-            return false;
-        }
-
-        // Delegate to the underlying JwksLoader
-        return jwksLoader.isHealthy();
-    }
-
-    /**
-     * Gets the current status of this issuer configuration.
      * <p>
      * The status reflects the combined state of configuration and runtime health:
      * <ul>
@@ -236,11 +213,11 @@ public class IssuerConfig implements HealthStatusProvider {
      *   <li>{@link LoaderStatus#ERROR} - Issuer is enabled but JwksLoader has errors</li>
      * </ul>
      *
-     * @return the current status of this issuer configuration
+     * @return the current health status of this issuer configuration
      * @since 1.0
      */
     @Override
-    public LoaderStatus getStatus() {
+    public LoaderStatus isHealthy() {
         // Return UNDEFINED if the issuer is disabled
         if (!enabled) {
             return LoaderStatus.UNDEFINED;
@@ -252,7 +229,7 @@ public class IssuerConfig implements HealthStatusProvider {
         }
 
         // Delegate to the underlying JwksLoader
-        return jwksLoader.getStatus();
+        return jwksLoader.isHealthy();
     }
 
 }
