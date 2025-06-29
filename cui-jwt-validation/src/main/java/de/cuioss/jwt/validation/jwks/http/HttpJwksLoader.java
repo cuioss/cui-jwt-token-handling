@@ -33,6 +33,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
 import static de.cuioss.jwt.validation.JWTValidationLogMessages.INFO;
@@ -53,9 +54,9 @@ public class HttpJwksLoader implements JwksLoader {
     private final ETagAwareHttpHandler httpCache;
     private final SecurityEventCounter securityEventCounter;
     private final HttpJwksLoaderConfig config;
-    private volatile JWKSKeyLoader keyLoader;
+    private final AtomicReference<JWKSKeyLoader> keyLoader = new AtomicReference<>();
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
-    private volatile ScheduledFuture<?> refreshTask;
+    private final AtomicReference<ScheduledFuture<?>> refreshTask = new AtomicReference<>();
     private final AtomicBoolean schedulerStarted = new AtomicBoolean(false);
 
     public HttpJwksLoader(@NonNull HttpHandler httpHandler,
@@ -80,25 +81,29 @@ public class HttpJwksLoader implements JwksLoader {
     @Override
     public Optional<KeyInfo> getKeyInfo(String kid) {
         ensureLoaded();
-        return keyLoader != null ? keyLoader.getKeyInfo(kid) : Optional.empty();
+        JWKSKeyLoader loader = keyLoader.get();
+        return loader != null ? loader.getKeyInfo(kid) : Optional.empty();
     }
 
     @Override
     public Optional<KeyInfo> getFirstKeyInfo() {
         ensureLoaded();
-        return keyLoader != null ? keyLoader.getFirstKeyInfo() : Optional.empty();
+        JWKSKeyLoader loader = keyLoader.get();
+        return loader != null ? loader.getFirstKeyInfo() : Optional.empty();
     }
 
     @Override
     public List<KeyInfo> getAllKeyInfos() {
         ensureLoaded();
-        return keyLoader != null ? keyLoader.getAllKeyInfos() : List.of();
+        JWKSKeyLoader loader = keyLoader.get();
+        return loader != null ? loader.getAllKeyInfos() : List.of();
     }
 
     @Override
     public Set<String> keySet() {
         ensureLoaded();
-        return keyLoader != null ? keyLoader.keySet() : Set.of();
+        JWKSKeyLoader loader = keyLoader.get();
+        return loader != null ? loader.keySet() : Set.of();
     }
 
     @Override
@@ -115,7 +120,7 @@ public class HttpJwksLoader implements JwksLoader {
     public boolean isHealthy() {
         // For cached loader, we consider it healthy if we can load keys
         // This will trigger lazy loading on first health check
-        if (keyLoader == null) {
+        if (keyLoader.get() == null) {
             try {
                 ensureLoaded();
             } catch (JwksLoadException e) {
@@ -150,8 +155,9 @@ public class HttpJwksLoader implements JwksLoader {
      * Package-private for testing purposes only.
      */
     void shutdown() {
-        if (refreshTask != null && !refreshTask.isCancelled()) {
-            refreshTask.cancel(false);
+        ScheduledFuture<?> task = refreshTask.get();
+        if (task != null && !task.isCancelled()) {
+            task.cancel(false);
             LOGGER.debug("Background refresh task cancelled");
         }
     }
@@ -163,12 +169,24 @@ public class HttpJwksLoader implements JwksLoader {
      * @return true if background refresh is active, false otherwise
      */
     boolean isBackgroundRefreshActive() {
-        return refreshTask != null && !refreshTask.isCancelled() && !refreshTask.isDone();
+        ScheduledFuture<?> task = refreshTask.get();
+        return task != null && !task.isCancelled() && !task.isDone();
     }
 
     private void ensureLoaded() {
-        if (keyLoader == null) {
-            loadKeys();
+        if (keyLoader.get() == null) {
+            loadKeysIfNeeded();
+        }
+    }
+
+    private void loadKeysIfNeeded() {
+        // Double-checked locking pattern with AtomicReference
+        if (keyLoader.get() == null) {
+            synchronized (this) {
+                if (keyLoader.get() == null) {
+                    loadKeys();
+                }
+            }
         }
     }
 
@@ -183,7 +201,7 @@ public class HttpJwksLoader implements JwksLoader {
             }
 
             // Only update key loader if data has changed and we have content
-            if (result.content() != null && (result.loadState().isDataChanged() || keyLoader == null)) {
+            if (result.content() != null && (result.loadState().isDataChanged() || keyLoader.get() == null)) {
                 updateKeyLoader(result);
                 LOGGER.info(INFO.JWKS_KEYS_UPDATED.format(result.loadState()));
 
@@ -218,11 +236,12 @@ public class HttpJwksLoader implements JwksLoader {
     }
 
     private void updateKeyLoader(ETagAwareHttpHandler.LoadResult result) {
-        this.keyLoader = JWKSKeyLoader.builder()
+        JWKSKeyLoader newLoader = JWKSKeyLoader.builder()
                 .jwksContent(result.content())
                 .securityEventCounter(securityEventCounter)
                 .jwksType(JwksType.HTTP)
                 .build();
+        keyLoader.set(newLoader);
         this.status = LoaderStatus.OK;
     }
 
@@ -235,12 +254,13 @@ public class HttpJwksLoader implements JwksLoader {
             ScheduledExecutorService executor = config.getScheduledExecutorService();
             int intervalSeconds = config.getRefreshIntervalSeconds();
 
-            refreshTask = executor.scheduleAtFixedRate(
+            ScheduledFuture<?> task = executor.scheduleAtFixedRate(
                     this::backgroundRefresh,
                     intervalSeconds,
                     intervalSeconds,
                     TimeUnit.SECONDS
             );
+            refreshTask.set(task);
 
             LOGGER.info(INFO.JWKS_BACKGROUND_REFRESH_STARTED.format(intervalSeconds));
         }
