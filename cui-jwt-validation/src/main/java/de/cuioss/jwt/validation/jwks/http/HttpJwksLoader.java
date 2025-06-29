@@ -128,11 +128,12 @@ public class HttpJwksLoader implements JwksLoader {
 
     /**
      * Forces a reload of JWKS content, optionally clearing cache completely.
+     * Package-private for testing purposes only.
      * 
      * @param clearCache if true, clears all cached content; if false, only bypasses ETag validation
      * @throws JwksLoadException if reloading fails
      */
-    public void reload(boolean clearCache) {
+    void reload(boolean clearCache) {
         try {
             ETagAwareHttpHandler.LoadResult result = httpCache.reload(clearCache);
             updateKeyLoader(result);
@@ -146,9 +147,9 @@ public class HttpJwksLoader implements JwksLoader {
 
     /**
      * Shuts down the background refresh scheduler if running.
-     * This method should be called when the loader is no longer needed.
+     * Package-private for testing purposes only.
      */
-    public void shutdown() {
+    void shutdown() {
         if (refreshTask != null && !refreshTask.isCancelled()) {
             refreshTask.cancel(false);
             LOGGER.debug("Background refresh task cancelled");
@@ -157,10 +158,11 @@ public class HttpJwksLoader implements JwksLoader {
 
     /**
      * Checks if background refresh is enabled and running.
+     * Package-private for testing purposes only.
      * 
      * @return true if background refresh is active, false otherwise
      */
-    public boolean isBackgroundRefreshActive() {
+    boolean isBackgroundRefreshActive() {
         return refreshTask != null && !refreshTask.isCancelled() && !refreshTask.isDone();
     }
 
@@ -245,25 +247,15 @@ public class HttpJwksLoader implements JwksLoader {
     }
 
     private void backgroundRefresh() {
-        try {
-            LOGGER.debug("Starting background JWKS refresh");
-            ETagAwareHttpHandler.LoadResult result = httpCache.load();
+        LOGGER.debug("Starting background JWKS refresh");
+        ETagAwareHttpHandler.LoadResult result = httpCache.load();
 
-            // Only update keys if data has actually changed
-            if (result.content() != null && result.loadState().isDataChanged()) {
-                updateKeyLoader(result);
-                LOGGER.info(INFO.JWKS_BACKGROUND_REFRESH_UPDATED.format(result.loadState()));
-            } else {
-                LOGGER.debug("Background refresh completed, no changes detected: %s", result.loadState());
-            }
-
-        } catch (Exception e) {
-            // Don't let background refresh failures affect the loader status
-            // if we already have working keys
-            if (keyLoader == null || !keyLoader.isNotEmpty()) {
-                this.status = LoaderStatus.ERROR;
-            }
-            LOGGER.warn(e, "Background JWKS refresh failed: %s", e.getMessage());
+        // Only update keys if data has actually changed
+        if (result.content() != null && result.loadState().isDataChanged()) {
+            updateKeyLoader(result);
+            LOGGER.info(INFO.JWKS_BACKGROUND_REFRESH_UPDATED.format(result.loadState()));
+        } else {
+            LOGGER.debug("Background refresh completed, no changes detected: %s", result.loadState());
         }
     }
 }
