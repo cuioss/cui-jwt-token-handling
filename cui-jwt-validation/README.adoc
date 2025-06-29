@@ -141,56 +141,59 @@ See xref:../doc/specification/well-known.adoc[OIDC Discovery Specification Detai
 
 OpenID Connect Discovery provides a standardized way for clients (Relying Parties) to dynamically discover information about an OpenID Provider (OP), such as its issuer identifier and JWKS URI. This is typically done by fetching a JSON document from a well-known endpoint: `/.well-known/openid-configuration` relative to the issuer's base URL.
 
-This library supports configuring the `HttpJwksLoaderConfig` (and subsequently the `TokenValidator`) using the information retrieved from such an endpoint via the `WellKnownHandler`.
+This library supports configuring the `HttpJwksLoaderConfig` (and subsequently the `TokenValidator`) using the information retrieved from such an endpoint via the `HttpWellKnownResolver`.
 
 === Benefits
 
 * **Simplified Configuration**: Reduces the need to manually configure the `jwks_uri` and `issuer` if they are discoverable.
-* **Dynamic Updates**: Although `WellKnownHandler` itself performs a one-time fetch, the principle of discovery allows for more dynamic setups if the handler is re-initialized based on external triggers (not covered by default).
+* **Dynamic Updates**: Although `HttpWellKnownResolver` itself performs a one-time fetch, the principle of discovery allows for more dynamic setups if the handler is re-initialized based on external triggers (not covered by default).
 * **Standard Compliance**: Aligns with OIDC standards for provider information retrieval.
 
-==== Using WellKnownHandler
+==== Using HttpWellKnownResolver
 
-The `de.cuioss.jwt.validation.wellKnown.WellKnownHandler` class is responsible for fetching and parsing the OIDC discovery document.
+The `de.cuioss.jwt.validation.wellKnown.HttpWellKnownResolver` class is responsible for fetching and parsing the OIDC discovery document.
 
 [source,java]
 ----
-import de.cuioss.jwt.validation.well_known.WellKnownHandler;
+import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.well_known.HttpWellKnownResolver;
 import de.cuioss.jwt.validation.well_known.WellKnownDiscoveryException;
 
 // ...
 
 try {
     String wellKnownUrl = "https://your-idp.com/realms/my-realm/.well-known/openid-configuration";
-    WellKnownHandler wellKnownHandler = WellKnownHandler.builder()
+    ParserConfig parserConfig = ParserConfig.builder().build(); // Use defaults or customize as needed
+    HttpWellKnownResolver wellKnownResolver = HttpWellKnownResolver.builder()
             .url(wellKnownUrl)
+            .parserConfig(parserConfig)
             .build();
 
-    // The handler now contains the discovered metadata, e.g.:
-    // HttpHandler jwksHandler = wellKnownHandler.getJwksUri();
-    // HttpHandler issuerHandler = wellKnownHandler.getIssuer();
+    // The resolver now contains the discovered metadata, e.g.:
+    // HttpHandler jwksHandler = wellKnownResolver.getJwksUri();
+    // HttpHandler issuerHandler = wellKnownResolver.getIssuer();
     // URL jwksUri = jwksHandler.getUrl();
     // URL issuerUrl = issuerHandler.getUrl();
 
-    // This handler can then be used to configure HttpJwksLoaderConfig
+    // This resolver can then be used to configure HttpJwksLoaderConfig
 } catch (WellKnownDiscoveryException e) {
     // Handle exceptions related to discovery, e.g., network issues, malformed JSON, missing required fields
     LOGGER.error("OIDC Discovery failed: %s", e.getMessage());
 }
 ----
-The `WellKnownHandler.builder().url().build()` pattern will fetch the document, parse it, and validate key aspects like the issuer consistency. It may throw a `WellKnownDiscoveryException` if the process fails.
+The `HttpWellKnownResolver.builder().url().build()` pattern will fetch the document, parse it, and validate key aspects like the issuer consistency. It may throw a `WellKnownDiscoveryException` if the process fails.
 
 ==== Configuring HttpJwksLoaderConfig
 
-Once you have a `WellKnownHandler` instance, you can use it to configure the `HttpJwksLoaderConfig`:
+Once you have a `HttpWellKnownResolver` instance, you can use it to configure the `HttpJwksLoaderConfig`:
 
 [source,java]
 ----
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
-// Assuming wellKnownHandler is already initialized as shown above
+// Assuming wellKnownResolver is already initialized as shown above
 
 HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
-    .wellKnown(wellKnownHandler) // This extracts the jwks_uri from the handler
+    .wellKnown(wellKnownResolver) // This extracts the jwks_uri from the handler
     // Optionally set other HttpJwksLoaderConfig properties like:
     // .refreshIntervalSeconds(300)
     // .connectTimeoutSeconds(30) // Connection timeout in seconds (default: system default)
@@ -201,17 +204,17 @@ HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
 
 ==== Configuring TokenValidator
 
-The `HttpJwksLoaderConfig` (configured via `WellKnownHandler`) is then used with `IssuerConfig` to set up the `TokenValidator`. It's crucial to use the issuer identifier obtained from the `WellKnownHandler` for the `expectedIssuer` in `IssuerConfig` to ensure consistency.
+The `HttpJwksLoaderConfig` (configured via `HttpWellKnownResolver`) is then used with `IssuerConfig` to set up the `TokenValidator`. It's crucial to use the issuer identifier obtained from the `HttpWellKnownResolver` for the `expectedIssuer` in `IssuerConfig` to ensure consistency.
 
 [source,java]
 ----
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.IssuerConfig;
 
-// Assuming jwksConfig is configured using wellKnownHandler as shown above
-// And wellKnownHandler is available
+// Assuming jwksConfig is configured using wellKnownResolver as shown above
+// And wellKnownResolver is available
 
-String expectedIssuerFromDiscovery = wellKnownHandler.getIssuer().getUrl().toString();
+String expectedIssuerFromDiscovery = wellKnownResolver.getIssuer().getUrl().toString();
 
 IssuerConfig issuerConfig = IssuerConfig.builder()
     .issuer(expectedIssuerFromDiscovery) // Use issuer from discovery
@@ -228,7 +231,7 @@ TokenValidator validator = new TokenValidator(issuerConfig);
 
 ==== Considerations
 
-* **Initial Latency**: The call to `WellKnownHandler.builder().url().build()` involves a network request to fetch the discovery document. This adds a one-time latency during initialization
+* **Initial Latency**: The call to `HttpWellKnownResolver.builder().url().build()` involves a network request to fetch the discovery document. This adds a one-time latency during initialization
 * **Error Handling**: Robust error handling for `WellKnownDiscoveryException` is important during application startup or when initializing the handler
 * **SSL/TLS**: Ensure the JVM running the application trusts the SSL certificate of the OIDC provider if its well-known endpoint is served over HTTPS. For fetching the JWKS via `HttpJwksLoader`, you can provide a custom `SSLContext` in `HttpJwksLoaderConfig`
 
