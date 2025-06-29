@@ -19,6 +19,7 @@ import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
+import de.cuioss.jwt.validation.util.ETagAwareHttpHandler;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import de.cuioss.tools.net.http.SecureSSLContextProvider;
@@ -69,7 +70,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
 
     private final HttpHandler httpHandler;
     private final URL wellKnownUrl;
-    private final WellKnownClient client;
+    private final ETagAwareHttpHandler etagHandler;
     private final WellKnownParser parser;
     private final WellKnownEndpointMapper mapper;
     private final int maxAttempts;
@@ -92,7 +93,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
             Duration retryDelay) {
         this.httpHandler = httpHandler;
         this.wellKnownUrl = httpHandler.getUrl();
-        this.client = new WellKnownClient(httpHandler);
+        this.etagHandler = new ETagAwareHttpHandler(httpHandler);
         this.parser = new WellKnownParser(parserConfig);
         this.mapper = new WellKnownEndpointMapper(httpHandler);
         this.maxAttempts = maxAttempts > 0 ? maxAttempts : DEFAULT_MAX_ATTEMPTS;
@@ -295,8 +296,13 @@ public class HttpWellKnownResolver implements WellKnownResolver {
                 LOGGER.debug("Loading well-known endpoints from %s (attempt %d/%d)", wellKnownUrl, attempt, maxAttempts);
 
                 // Fetch and parse discovery document
-                String responseBody = client.fetchDiscoveryDocument();
-                JsonObject discoveryDocument = parser.parseJsonResponse(responseBody, wellKnownUrl);
+                ETagAwareHttpHandler.LoadResult result = etagHandler.load();
+                if (result.content() == null) {
+                    throw new WellKnownDiscoveryException("Failed to fetch discovery document from " + wellKnownUrl);
+                }
+                JsonObject discoveryDocument = parser.parseJsonResponse(result.content(), wellKnownUrl);
+
+                LOGGER.debug("Discovery document load state: %s", result.loadState());
 
                 LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
 
