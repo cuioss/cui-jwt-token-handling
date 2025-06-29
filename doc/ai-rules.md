@@ -135,6 +135,7 @@ Common Maven commands for CUI projects:
 - Prefer composition over inheritance
 - Return empty collections instead of null
 - Use Optional for nullable return values
+- Never catch or throw generic Exception or RuntimeException - always use specific exception types
 - Use DSL-style nested constants for logging messages
 - Follow builder pattern for complex object creation
 - Implement fluent interfaces where appropriate
