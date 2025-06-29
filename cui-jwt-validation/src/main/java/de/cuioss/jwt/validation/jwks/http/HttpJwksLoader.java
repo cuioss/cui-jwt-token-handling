@@ -183,7 +183,7 @@ public class HttpJwksLoader implements JwksLoader {
 
     private void updateKeyLoader(ETagAwareHttpHandler.LoadResult result) {
         this.keyLoader = JWKSKeyLoader.builder()
-                .originalString(result.content())
+                .jwksContent(result.content())
                 .securityEventCounter(securityEventCounter)
                 .jwksType(JwksType.HTTP)
                 .build();

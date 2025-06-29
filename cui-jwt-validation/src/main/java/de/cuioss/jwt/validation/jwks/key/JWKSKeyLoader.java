@@ -44,8 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * This implementation supports cryptographic agility by handling multiple key types
  * and algorithms, including RSA, EC, and RSA-PSS.
  * <p>
- * The class stores the original JWKS content string and the ETag value from HTTP responses
- * to support content-based caching and HTTP 304 "Not Modified" handling in HttpJwksLoader.
+ * This class processes and stores the parsed JWKS keys in memory for efficient access.
  * <p>
  * Security features:
  * <ul>
@@ -60,15 +59,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Oliver Wolff
  * @since 1.0
  */
-@ToString(of = {"keyInfoMap", "originalString", "etag", "parserConfig", "securityEventCounter"})
-@EqualsAndHashCode(of = {"keyInfoMap", "originalString", "etag", "parserConfig", "securityEventCounter"})
+@ToString(of = {"keyInfoMap", "parserConfig", "securityEventCounter"})
+@EqualsAndHashCode(of = {"keyInfoMap", "parserConfig", "securityEventCounter"})
 public class JWKSKeyLoader implements JwksLoader {
 
     private static final CuiLogger LOGGER = new CuiLogger(JWKSKeyLoader.class);
 
-    @NonNull
-    private final String originalString;
-    private final String etag;
     private final ParserConfig parserConfig;
     @NonNull
     private final SecurityEventCounter securityEventCounter;
@@ -84,8 +80,7 @@ public class JWKSKeyLoader implements JwksLoader {
      * Builder for JWKSKeyLoader.
      */
     public static class JWKSKeyLoaderBuilder {
-        private String originalString;
-        private String etag;
+        private String jwksContent;
         private ParserConfig parserConfig = ParserConfig.builder().build();
         private SecurityEventCounter securityEventCounter;
         private JwkAlgorithmPreferences jwkAlgorithmPreferences = new JwkAlgorithmPreferences(); // Default instance
@@ -95,24 +90,13 @@ public class JWKSKeyLoader implements JwksLoader {
         }
 
         /**
-         * Sets the original JWKS content string.
+         * Sets the JWKS content string to be parsed.
          *
-         * @param originalString the JWKS content as a string
+         * @param jwksContent the JWKS content as a string
          * @return this builder
          */
-        public JWKSKeyLoaderBuilder originalString(String originalString) {
-            this.originalString = originalString;
-            return this;
-        }
-
-        /**
-         * Sets the ETag value.
-         *
-         * @param etag the ETag value
-         * @return this builder
-         */
-        public JWKSKeyLoaderBuilder etag(String etag) {
-            this.etag = etag;
+        public JWKSKeyLoaderBuilder jwksContent(String jwksContent) {
+            this.jwksContent = jwksContent;
             return this;
         }
 
@@ -166,19 +150,19 @@ public class JWKSKeyLoader implements JwksLoader {
          * @return a new JWKSKeyLoader
          */
         public JWKSKeyLoader build() {
-            if (originalString == null) {
-                throw new IllegalArgumentException("originalString must not be null");
+            if (jwksContent == null) {
+                throw new IllegalArgumentException("jwksContent must not be null");
             }
             if (securityEventCounter == null) {
                 throw new IllegalArgumentException("securityEventCounter must not be null");
             }
             try {
-                return new JWKSKeyLoader(originalString, etag, parserConfig, securityEventCounter, jwkAlgorithmPreferences, jwksType);
+                return new JWKSKeyLoader(jwksContent, parserConfig, securityEventCounter, jwkAlgorithmPreferences, jwksType);
             } catch (JsonException | IllegalStateException | IllegalArgumentException e) {
                 // If an exception occurs during construction, log it and return an empty JWKSKeyLoader
                 LOGGER.warn(e, WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
-                return new JWKSKeyLoader("{}", etag, parserConfig != null ? parserConfig : ParserConfig.builder().build(), securityEventCounter, jwkAlgorithmPreferences != null ? jwkAlgorithmPreferences : new JwkAlgorithmPreferences(), jwksType);
+                return new JWKSKeyLoader("{}", parserConfig != null ? parserConfig : ParserConfig.builder().build(), securityEventCounter, jwkAlgorithmPreferences != null ? jwkAlgorithmPreferences : new JwkAlgorithmPreferences(), jwksType);
             }
         }
     }
@@ -194,42 +178,38 @@ public class JWKSKeyLoader implements JwksLoader {
 
 
     /**
-     * Creates a new JWKSKeyLoader with the specified JWKS content, ETag, ParserConfig, SecurityEventCounter, and JwkAlgorithmPreferences.
+     * Creates a new JWKSKeyLoader with the specified JWKS content, ParserConfig, SecurityEventCounter, and JwkAlgorithmPreferences.
      *
-     * @param originalString the JWKS content as a string, must not be null
-     * @param etag        the ETag value from the HTTP response, may be null
+     * @param jwksContent the JWKS content as a string, must not be null
      * @param parserConfig the configuration for parsing, may be null (defaults to a new instance)
      * @param securityEventCounter the counter for security events, must not be null
      * @param jwkAlgorithmPreferences the JWK algorithm preferences for parsing validation, must not be null
      * @param jwksType the type of JWKS source, must not be null
      */
     public JWKSKeyLoader(
-            @NonNull String originalString,
-            String etag,
+            @NonNull String jwksContent,
             ParserConfig parserConfig,
             @NonNull SecurityEventCounter securityEventCounter,
             @NonNull JwkAlgorithmPreferences jwkAlgorithmPreferences,
             @NonNull JwksType jwksType) {
-        this.originalString = originalString;
-        this.etag = etag;
         this.parserConfig = parserConfig != null ? parserConfig : ParserConfig.builder().build();
         this.securityEventCounter = securityEventCounter;
         this.jwkAlgorithmPreferences = jwkAlgorithmPreferences;
         this.jwksType = jwksType;
 
-        ParseResult result = parseJwksContent(originalString);
+        ParseResult result = parseJwksContent(jwksContent);
         this.keyInfoMap = result.keyInfoMap();
         this.status = result.status();
     }
 
 
-    private ParseResult parseJwksContent(String originalString) {
+    private ParseResult parseJwksContent(String jwksContent) {
         // Create parser components
         JwksParser parser = new JwksParser(parserConfig, securityEventCounter);
         KeyProcessor processor = new KeyProcessor(securityEventCounter, jwkAlgorithmPreferences);
 
         // Parse JWKS content to get individual JWK objects (includes structure validation)
-        List<JsonObject> jwkObjects = parser.parse(originalString);
+        List<JsonObject> jwkObjects = parser.parse(jwksContent);
 
         // Process each key (includes key parameter validation)
         Map<String, KeyInfo> keyMap = new ConcurrentHashMap<>();

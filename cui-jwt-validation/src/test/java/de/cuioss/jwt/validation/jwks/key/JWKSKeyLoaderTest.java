@@ -46,8 +46,8 @@ class JWKSKeyLoaderTest {
         jwksContent = InMemoryJWKSFactory.createDefaultJwks();
         securityEventCounter = new SecurityEventCounter();
         keyLoader = JWKSKeyLoader.builder()
-                .originalString(jwksContent)
-                .etag(TEST_ETAG)
+                .jwksContent(jwksContent)
+                
                 .securityEventCounter(securityEventCounter)
                 .build();
     }
@@ -108,7 +108,7 @@ class JWKSKeyLoaderTest {
 
             String invalidJwksContent = InMemoryJWKSFactory.createInvalidJson();
             JWKSKeyLoader invalidLoader = JWKSKeyLoader.builder()
-                    .originalString(invalidJwksContent)
+                    .jwksContent(invalidJwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
             Optional<KeyInfo> keyInfo = invalidLoader.getKeyInfo(TEST_KID);
@@ -122,7 +122,7 @@ class JWKSKeyLoaderTest {
 
             String missingFieldsJwksContent = InMemoryJWKSFactory.createJwksWithMissingFields(TEST_KID);
             JWKSKeyLoader missingFieldsLoader = JWKSKeyLoader.builder()
-                    .originalString(missingFieldsJwksContent)
+                    .jwksContent(missingFieldsJwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
             Optional<KeyInfo> keyInfo = missingFieldsLoader.getKeyInfo(TEST_KID);
@@ -146,7 +146,7 @@ class JWKSKeyLoaderTest {
         void shouldReportEmptyWhenNoKeysArePresent() {
             String emptyJwksContent = "{}";
             JWKSKeyLoader emptyLoader = JWKSKeyLoader.builder()
-                    .originalString(emptyJwksContent)
+                    .jwksContent(emptyJwksContent)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
             boolean notEmpty = emptyLoader.isNotEmpty();
@@ -167,8 +167,8 @@ class JWKSKeyLoaderTest {
                     .maxDepth(5)
                     .build();
             JWKSKeyLoader loaderWithCustomConfig = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
-                    .etag(TEST_ETAG)
+                    .jwksContent(jwksContent)
+                    
                     .parserConfig(customConfig)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();
@@ -188,7 +188,7 @@ class JWKSKeyLoaderTest {
             // Create a large JWKS content that exceeds the maximum size
             // Add enough padding to exceed maxSize
             JWKSKeyLoader loader = JWKSKeyLoader.builder()
-                    .originalString("{\"keys\":[" + "\"x\":\"" + "a".repeat(maxSize) + "\"}]}"
+                    .jwksContent("{\"keys\":[" + "\"x\":\"" + "a".repeat(maxSize) + "\"}]}"
 
                     )
                     .parserConfig(restrictiveConfig)

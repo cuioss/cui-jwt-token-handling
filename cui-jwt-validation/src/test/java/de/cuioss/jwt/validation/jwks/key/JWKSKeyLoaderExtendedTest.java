@@ -57,7 +57,7 @@ class JWKSKeyLoaderExtendedTest {
             String jwksContent = InMemoryKeyMaterialHandler.createJwks(InMemoryKeyMaterialHandler.Algorithm.ES256, "ec-key-id");
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -84,7 +84,7 @@ class JWKSKeyLoaderExtendedTest {
                     """;
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -107,7 +107,7 @@ class JWKSKeyLoaderExtendedTest {
             jwksContent.append("\"keys\":[{\"kty\":\"RSA\",\"kid\":\"test-key-id\"}]}");
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent.toString())
+                    .jwksContent(jwksContent.toString())
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -121,7 +121,7 @@ class JWKSKeyLoaderExtendedTest {
             String jwksContent = "{\"keys\":[]}";
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -142,7 +142,7 @@ class JWKSKeyLoaderExtendedTest {
             jwksContent.append("]}");
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent.toString())
+                    .jwksContent(jwksContent.toString())
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -169,7 +169,7 @@ class JWKSKeyLoaderExtendedTest {
                     """;
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -194,7 +194,7 @@ class JWKSKeyLoaderExtendedTest {
                     """.formatted(longKeyId);
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -219,7 +219,7 @@ class JWKSKeyLoaderExtendedTest {
                     """;
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -238,8 +238,8 @@ class JWKSKeyLoaderExtendedTest {
             String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
-                    .etag("test-etag")
+                    .jwksContent(jwksContent)
+                    
                     .securityEventCounter(securityEventCounter)
                     .build();
 
@@ -259,7 +259,7 @@ class JWKSKeyLoaderExtendedTest {
         @DisplayName("Should throw exception when builder is missing securityEventCounter")
         void shouldThrowExceptionWhenBuilderIsMissingSecurityEventCounter() {
             JWKSKeyLoader.JWKSKeyLoaderBuilder content = JWKSKeyLoader.builder()
-                    .originalString("content");
+                    .jwksContent("content");
             assertThrows(IllegalArgumentException.class, content::build,
                     "Builder should throw exception when securityEventCounter is missing");
         }

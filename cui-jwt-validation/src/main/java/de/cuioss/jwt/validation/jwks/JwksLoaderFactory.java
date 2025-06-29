@@ -91,7 +91,7 @@ public class JwksLoaderFactory {
             String jwksContent = new String(Files.readAllBytes(Path.of(filePath)));
             LOGGER.debug("Successfully read JWKS from file: %s", filePath);
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .jwksType(JwksType.FILE)
                     .build();
@@ -101,7 +101,7 @@ public class JwksLoaderFactory {
             LOGGER.warn(e, JWTValidationLogMessages.WARN.FAILED_TO_READ_JWKS_FILE.format(filePath));
             securityEventCounter.increment(SecurityEventCounter.EventType.FAILED_TO_READ_JWKS_FILE);
             return JWKSKeyLoader.builder()
-                    .originalString("{}")
+                    .jwksContent("{}")
                     .securityEventCounter(securityEventCounter)
                     .jwksType(JwksType.FILE)
                     .build(); // Empty JWKS
@@ -119,7 +119,7 @@ public class JwksLoaderFactory {
         LOGGER.debug("Resolving key loader for in-memory JWKS data");
         try {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
-                    .originalString(jwksContent)
+                    .jwksContent(jwksContent)
                     .securityEventCounter(securityEventCounter)
                     .jwksType(JwksType.MEMORY)
                     .build();
@@ -129,7 +129,7 @@ public class JwksLoaderFactory {
             LOGGER.warn(e, JWTValidationLogMessages.WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
             securityEventCounter.increment(SecurityEventCounter.EventType.JWKS_JSON_PARSE_FAILED);
             return JWKSKeyLoader.builder()
-                    .originalString("{}")
+                    .jwksContent("{}")
                     .securityEventCounter(securityEventCounter)
                     .jwksType(JwksType.MEMORY)
                     .build(); // Empty JWKS
