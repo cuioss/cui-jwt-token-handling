@@ -28,11 +28,10 @@ import lombok.NonNull;
 
 import javax.net.ssl.SSLContext;
 import java.net.URL;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * HTTP-based implementation of WellKnownResolver that discovers OIDC endpoints.
@@ -65,18 +64,13 @@ public class HttpWellKnownResolver implements WellKnownResolver {
 
     private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 2;
     private static final int DEFAULT_READ_TIMEOUT_SECONDS = 3;
-    private static final int DEFAULT_MAX_ATTEMPTS = 3;
-    private static final Duration DEFAULT_RETRY_DELAY = Duration.ofMillis(100);
 
-    private final HttpHandler httpHandler;
     private final URL wellKnownUrl;
     private final ETagAwareHttpHandler etagHandler;
     private final WellKnownParser parser;
     private final WellKnownEndpointMapper mapper;
-    private final int maxAttempts;
-    private final Duration retryDelay;
 
-    private final AtomicReference<Map<String, HttpHandler>> endpoints = new AtomicReference<>();
+    private final Map<String, HttpHandler> endpoints = new ConcurrentHashMap<>();
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
 
     /**
@@ -84,27 +78,12 @@ public class HttpWellKnownResolver implements WellKnownResolver {
      *
      * @param httpHandler the HTTP handler for making requests
      * @param parserConfig the parser configuration
-     * @param maxAttempts maximum retry attempts
-     * @param retryDelay delay between retry attempts
      */
-    public HttpWellKnownResolver(@NonNull HttpHandler httpHandler,
-            ParserConfig parserConfig,
-            int maxAttempts,
-            Duration retryDelay) {
-        this.httpHandler = httpHandler;
+    public HttpWellKnownResolver(@NonNull HttpHandler httpHandler, ParserConfig parserConfig) {
         this.wellKnownUrl = httpHandler.getUrl();
         this.etagHandler = new ETagAwareHttpHandler(httpHandler);
         this.parser = new WellKnownParser(parserConfig);
         this.mapper = new WellKnownEndpointMapper(httpHandler);
-        this.maxAttempts = maxAttempts > 0 ? maxAttempts : DEFAULT_MAX_ATTEMPTS;
-        this.retryDelay = retryDelay != null ? retryDelay : DEFAULT_RETRY_DELAY;
-    }
-
-    /**
-     * Creates a new HTTP well-known resolver with default retry settings.
-     */
-    public HttpWellKnownResolver(@NonNull HttpHandler httpHandler, ParserConfig parserConfig) {
-        this(httpHandler, parserConfig, DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_DELAY);
     }
 
     /**
@@ -123,8 +102,6 @@ public class HttpWellKnownResolver implements WellKnownResolver {
         private HttpHandler preBuiltHttpHandler;
         private Integer connectTimeoutSeconds;
         private Integer readTimeoutSeconds;
-        private Integer maxAttempts;
-        private Duration retryDelay;
 
         public HttpWellKnownResolverBuilder() {
             this.httpHandlerBuilder = HttpHandler.builder();
@@ -170,15 +147,6 @@ public class HttpWellKnownResolver implements WellKnownResolver {
             return this;
         }
 
-        public HttpWellKnownResolverBuilder maxAttempts(int maxAttempts) {
-            this.maxAttempts = maxAttempts;
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder retryDelay(Duration retryDelay) {
-            this.retryDelay = retryDelay;
-            return this;
-        }
 
         public HttpWellKnownResolver build() {
             HttpHandler wellKnownHttpHandler;
@@ -202,12 +170,9 @@ public class HttpWellKnownResolver implements WellKnownResolver {
                 }
             }
 
-            int resolverMaxAttempts = maxAttempts != null ? maxAttempts : DEFAULT_MAX_ATTEMPTS;
-            Duration resolverRetryDelay = retryDelay != null ? retryDelay : DEFAULT_RETRY_DELAY;
-
             LOGGER.debug("Created HttpWellKnownResolver for URL: %s (not yet loaded)", wellKnownHttpHandler.getUrl());
 
-            return new HttpWellKnownResolver(wellKnownHttpHandler, parserConfig, resolverMaxAttempts, resolverRetryDelay);
+            return new HttpWellKnownResolver(wellKnownHttpHandler, parserConfig);
         }
     }
 
@@ -232,7 +197,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     @Override
     public Optional<HttpHandler> getUserinfoEndpoint() {
         ensureLoaded();
-        return Optional.ofNullable(endpoints.get().get(USERINFO_ENDPOINT_KEY));
+        return Optional.ofNullable(endpoints.get(USERINFO_ENDPOINT_KEY));
     }
 
     @Override
@@ -243,7 +208,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
 
     @Override
     public LoaderStatus isHealthy() {
-        if (endpoints.get() == null) {
+        if (endpoints.isEmpty()) {
             try {
                 ensureLoaded();
             } catch (WellKnownDiscoveryException e) {
@@ -255,11 +220,10 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     }
 
     private HttpHandler getEndpoint(String key) {
-        Map<String, HttpHandler> currentEndpoints = endpoints.get();
-        if (currentEndpoints == null) {
+        if (endpoints.isEmpty()) {
             throw new WellKnownDiscoveryException("Endpoints not loaded");
         }
-        HttpHandler handler = currentEndpoints.get(key);
+        HttpHandler handler = endpoints.get(key);
         if (handler == null) {
             throw new WellKnownDiscoveryException("Endpoint not found: " + key);
         }
@@ -267,16 +231,16 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     }
 
     private void ensureLoaded() {
-        if (endpoints.get() == null) {
+        if (endpoints.isEmpty()) {
             loadEndpointsIfNeeded();
         }
     }
 
     private void loadEndpointsIfNeeded() {
-        // Double-checked locking pattern with AtomicReference
-        if (endpoints.get() == null) {
+        // Double-checked locking pattern with ConcurrentHashMap
+        if (endpoints.isEmpty()) {
             synchronized (this) {
-                if (endpoints.get() == null) {
+                if (endpoints.isEmpty()) {
                     loadEndpoints();
                 }
             }
@@ -284,81 +248,57 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     }
 
     private void loadEndpoints() {
-        Exception lastException = null;
+        try {
+            LOGGER.debug("Loading well-known endpoints from %s", wellKnownUrl);
 
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-                LOGGER.debug("Loading well-known endpoints from %s (attempt %d/%d)", wellKnownUrl, attempt, maxAttempts);
-
-                // Fetch and parse discovery document
-                ETagAwareHttpHandler.LoadResult result = etagHandler.load();
-                if (result.content() == null) {
-                    throw new WellKnownDiscoveryException("Failed to fetch discovery document from " + wellKnownUrl);
-                }
-                JsonObject discoveryDocument = parser.parseJsonResponse(result.content(), wellKnownUrl);
-
-                LOGGER.debug("Discovery document load state: %s", result.loadState());
-
-                LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
-
-                Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
-
-                // Parse all endpoints
-                String issuerString = parser.getString(discoveryDocument, ISSUER_KEY)
-                        .orElseThrow(() -> new WellKnownDiscoveryException(
-                                "Required field 'issuer' not found in discovery document from " + wellKnownUrl));
-                parser.validateIssuer(issuerString, wellKnownUrl);
-                mapper.addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, wellKnownUrl, true);
-
-                // JWKS URI (Required)
-                mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY,
-                        parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), wellKnownUrl, true);
-
-                // Required endpoints
-                mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY,
-                        parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
-                mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY,
-                        parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
-
-                // Optional endpoints
-                mapper.addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY,
-                        parser.getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), wellKnownUrl, false);
-
-                // Accessibility check for jwks_uri
-                mapper.performAccessibilityCheck(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY));
-
-                // Success - save the endpoints
-                this.endpoints.set(parsedEndpoints);
-                this.status = LoaderStatus.OK;
-
-                if (attempt > 1) {
-                    LOGGER.info("Successfully loaded well-known endpoints from %s on attempt %d", wellKnownUrl, attempt);
-                } else {
-                    LOGGER.info("Successfully loaded well-known endpoints from: %s", wellKnownUrl);
-                }
-                return;
-
-            } catch (WellKnownDiscoveryException e) {
-                lastException = e;
-                if (attempt < maxAttempts) {
-                    LOGGER.debug("Well-known discovery failed on attempt %d, retrying after %dms: %s",
-                            attempt, retryDelay.toMillis(), e.getMessage());
-                    try {
-                        Thread.sleep(retryDelay.toMillis());
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        this.status = LoaderStatus.ERROR;
-                        throw new WellKnownDiscoveryException("Well-known discovery interrupted", ie);
-                    }
-                } else {
-                    LOGGER.error(e, ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, attempt));
-                }
+            // Fetch and parse discovery document
+            ETagAwareHttpHandler.LoadResult result = etagHandler.load();
+            if (result.content() == null) {
+                throw new WellKnownDiscoveryException("Failed to fetch discovery document from " + wellKnownUrl);
             }
-        }
+            JsonObject discoveryDocument = parser.parseJsonResponse(result.content(), wellKnownUrl);
 
-        // All attempts failed
-        this.status = LoaderStatus.ERROR;
-        throw new WellKnownDiscoveryException("Failed to load well-known endpoints from " + wellKnownUrl +
-                " after " + maxAttempts + " attempts", lastException);
+            LOGGER.debug("Discovery document load state: %s", result.loadState());
+
+            LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
+
+            Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
+
+            // Parse all endpoints
+            String issuerString = parser.getString(discoveryDocument, ISSUER_KEY)
+                    .orElseThrow(() -> new WellKnownDiscoveryException(
+                            "Required field 'issuer' not found in discovery document from " + wellKnownUrl));
+            parser.validateIssuer(issuerString, wellKnownUrl);
+            mapper.addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, wellKnownUrl, true);
+
+            // JWKS URI (Required)
+            mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY,
+                    parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), wellKnownUrl, true);
+
+            // Required endpoints
+            mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY,
+                    parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
+            mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY,
+                    parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
+
+            // Optional endpoints
+            mapper.addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY,
+                    parser.getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), wellKnownUrl, false);
+
+            // Accessibility check for jwks_uri
+            mapper.performAccessibilityCheck(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY));
+
+            // Success - save the endpoints
+            this.endpoints.clear();
+            this.endpoints.putAll(parsedEndpoints);
+            this.status = LoaderStatus.OK;
+
+            LOGGER.info("Successfully loaded well-known endpoints from: %s", wellKnownUrl);
+
+        } catch (WellKnownDiscoveryException e) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(e, ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            throw e;
+        }
     }
 }

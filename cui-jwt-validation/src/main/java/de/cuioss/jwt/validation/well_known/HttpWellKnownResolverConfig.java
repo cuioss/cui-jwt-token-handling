@@ -24,24 +24,21 @@ import lombok.ToString;
 
 import javax.net.ssl.SSLContext;
 import java.net.URL;
-import java.time.Duration;
 
 /**
  * Configuration for HttpWellKnownResolver instances.
  * <p>
  * This class provides a builder pattern for configuring HTTP well-known resolvers
- * with customizable timeouts, retry settings, and SSL configurations.
+ * with customizable timeouts and SSL configurations.
  * <p>
  * Example usage:
  * <pre>
  * HttpWellKnownResolverConfig config = HttpWellKnownResolverConfig.builder()
  *     .url("https://example.com/.well-known/openid-configuration")
  *     .connectTimeoutSeconds(5)
- *     .maxAttempts(3)
  *     .build();
  * 
- * HttpWellKnownResolver resolver = new HttpWellKnownResolver(config.getHttpHandler(), config.getParserConfig(),
- *     config.getMaxAttempts(), config.getRetryDelay());
+ * HttpWellKnownResolver resolver = new HttpWellKnownResolver(config.getHttpHandler(), config.getParserConfig());
  * </pre>
  *
  * @author Oliver Wolff
@@ -54,22 +51,13 @@ public class HttpWellKnownResolverConfig {
 
     private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 2;
     private static final int DEFAULT_READ_TIMEOUT_SECONDS = 3;
-    private static final int DEFAULT_MAX_ATTEMPTS = 3;
-    private static final Duration DEFAULT_RETRY_DELAY = Duration.ofMillis(100);
 
     private final HttpHandler httpHandler;
     private final ParserConfig parserConfig;
-    private final int maxAttempts;
-    private final Duration retryDelay;
 
-    private HttpWellKnownResolverConfig(HttpHandler httpHandler,
-            ParserConfig parserConfig,
-            int maxAttempts,
-            Duration retryDelay) {
+    private HttpWellKnownResolverConfig(HttpHandler httpHandler, ParserConfig parserConfig) {
         this.httpHandler = httpHandler;
         this.parserConfig = parserConfig;
-        this.maxAttempts = maxAttempts;
-        this.retryDelay = retryDelay;
     }
 
     /**
@@ -88,8 +76,6 @@ public class HttpWellKnownResolverConfig {
         private HttpHandler preBuiltHttpHandler;
         private Integer connectTimeoutSeconds;
         private Integer readTimeoutSeconds;
-        private Integer maxAttempts;
-        private Duration retryDelay;
 
         public HttpWellKnownResolverConfigBuilder() {
             this.httpHandlerBuilder = HttpHandler.builder();
@@ -135,15 +121,6 @@ public class HttpWellKnownResolverConfig {
             return this;
         }
 
-        public HttpWellKnownResolverConfigBuilder maxAttempts(int maxAttempts) {
-            this.maxAttempts = maxAttempts;
-            return this;
-        }
-
-        public HttpWellKnownResolverConfigBuilder retryDelay(Duration retryDelay) {
-            this.retryDelay = retryDelay;
-            return this;
-        }
 
         public HttpWellKnownResolverConfig build() {
             HttpHandler wellKnownHttpHandler;
@@ -166,11 +143,7 @@ public class HttpWellKnownResolverConfig {
                 }
             }
 
-            int resolverMaxAttempts = maxAttempts != null ? maxAttempts : DEFAULT_MAX_ATTEMPTS;
-            Duration resolverRetryDelay = retryDelay != null ? retryDelay : DEFAULT_RETRY_DELAY;
-
-            return new HttpWellKnownResolverConfig(wellKnownHttpHandler, parserConfig,
-                    resolverMaxAttempts, resolverRetryDelay);
+            return new HttpWellKnownResolverConfig(wellKnownHttpHandler, parserConfig);
         }
     }
 }
