@@ -18,6 +18,7 @@ package de.cuioss.jwt.validation;
 import de.cuioss.jwt.validation.domain.claim.mapper.ClaimMapper;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksLoaderFactory;
+import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
@@ -78,7 +79,7 @@ import java.util.Set;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class IssuerConfig {
+public class IssuerConfig implements HealthStatusProvider {
 
     /**
      * Whether this issuer configuration is enabled.
@@ -209,6 +210,7 @@ public class IssuerConfig {
      *         {@code false} otherwise
      * @since 1.0
      */
+    @Override
     public boolean isHealthy() {
         // Return false if the issuer is disabled
         if (!enabled) {
@@ -222,6 +224,35 @@ public class IssuerConfig {
 
         // Delegate to the underlying JwksLoader
         return jwksLoader.isHealthy();
+    }
+
+    /**
+     * Gets the current status of this issuer configuration.
+     * <p>
+     * The status reflects the combined state of configuration and runtime health:
+     * <ul>
+     *   <li>{@link LoaderStatus#UNDEFINED} - Issuer is disabled or JwksLoader not initialized</li>
+     *   <li>{@link LoaderStatus#OK} - Issuer is enabled and JwksLoader is healthy</li>
+     *   <li>{@link LoaderStatus#ERROR} - Issuer is enabled but JwksLoader has errors</li>
+     * </ul>
+     *
+     * @return the current status of this issuer configuration
+     * @since 1.0
+     */
+    @Override
+    public LoaderStatus getStatus() {
+        // Return UNDEFINED if the issuer is disabled
+        if (!enabled) {
+            return LoaderStatus.UNDEFINED;
+        }
+
+        // Return UNDEFINED if the JwksLoader is not initialized
+        if (jwksLoader == null) {
+            return LoaderStatus.UNDEFINED;
+        }
+
+        // Delegate to the underlying JwksLoader
+        return jwksLoader.getStatus();
     }
 
 }

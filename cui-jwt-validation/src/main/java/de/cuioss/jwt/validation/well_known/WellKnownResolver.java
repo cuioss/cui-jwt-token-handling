@@ -15,7 +15,7 @@
  */
 package de.cuioss.jwt.validation.well_known;
 
-import de.cuioss.jwt.validation.jwks.LoaderStatus;
+import de.cuioss.jwt.validation.HealthStatusProvider;
 import de.cuioss.tools.net.http.HttpHandler;
 
 import java.util.Optional;
@@ -38,7 +38,7 @@ import java.util.Optional;
  * @author Oliver Wolff
  * @since 1.0
  */
-public interface WellKnownResolver {
+public interface WellKnownResolver extends HealthStatusProvider {
 
     /**
      * Gets the JWKS URI endpoint handler.
@@ -85,21 +85,7 @@ public interface WellKnownResolver {
      */
     HttpHandler getIssuer();
 
-    /**
-     * Checks if the well-known resolver is healthy.
-     * <p>
-     * This method should trigger lazy loading if endpoints haven't been resolved yet.
-     * A resolver is considered healthy if it can successfully discover and access
-     * the required well-known endpoints.
-     *
-     * @return true if the resolver is healthy and endpoints can be accessed, false otherwise
-     */
-    boolean isHealthy();
-
-    /**
-     * Gets the current status of the well-known resolver.
-     *
-     * @return the current LoaderStatus
-     */
-    LoaderStatus getStatus();
+    // Health status methods inherited from HealthStatusProvider
+    // - boolean isHealthy()
+    // - LoaderStatus getStatus()
 }

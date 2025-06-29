@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.jwks;
 
+import de.cuioss.jwt.validation.HealthStatusProvider;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 
 import java.util.List;
@@ -89,7 +90,7 @@ import java.util.Set;
  * @since 1.0
  */
 @SuppressWarnings("JavadocLinkAsPlainText")
-public interface JwksLoader {
+public interface JwksLoader extends HealthStatusProvider {
 
     /**
      * Gets a key by its ID.
@@ -127,34 +128,8 @@ public interface JwksLoader {
      */
     JwksType getJwksType();
 
-    /**
-     * Gets the status of the JWKS loader.
-     * <p>
-     * A loader status is OK if it can load at least one key.
-     *
-     * @return the status of the loader
-     */
-    LoaderStatus getStatus();
-
-    /**
-     * Checks if the JWKS loader is healthy and can access at least one cryptographic key.
-     * <p>
-     * This method performs an actual health check by attempting to verify that the loader
-     * can access its keys. For HTTP-based loaders, this may trigger a lazy loading operation
-     * if keys haven't been loaded yet.
-     * <p>
-     * Implementation requirements:
-     * <ul>
-     *   <li>Returns {@code true} if the loader can access at least one cryptographic key</li>
-     *   <li>Returns {@code false} if the loader cannot access any keys or encounters errors</li>
-     *   <li>For lazy-loading implementations, this triggers the initial loading if needed</li>
-     *   <li>Must be thread-safe for concurrent access</li>
-     *   <li>Should be fail-fast to avoid blocking callers</li>
-     * </ul>
-     *
-     * @return {@code true} if the loader is healthy and can access keys, {@code false} otherwise
-     * @since 1.0
-     */
-    boolean isHealthy();
+    // Health status methods inherited from HealthStatusProvider
+    // - boolean isHealthy()
+    // - LoaderStatus getStatus()
 
 }
