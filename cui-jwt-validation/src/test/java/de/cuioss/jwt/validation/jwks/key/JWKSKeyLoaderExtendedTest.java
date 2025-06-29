@@ -233,18 +233,17 @@ class JWKSKeyLoaderExtendedTest {
     @DisplayName("Factory Method and Builder Tests")
     class FactoryMethodAndBuilderTests {
         @Test
-        @DisplayName("Should create loader using factory method")
-        void shouldCreateLoaderUsingFactoryMethod() {
+        @DisplayName("Should create loader using builder")
+        void shouldCreateLoaderUsingBuilder() {
             String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
 
-            JWKSKeyLoader keyLoader = JWKSKeyLoader.create(
-                    jwksContent,
-                    "test-etag",
-                    null,
-                    securityEventCounter,
-                    JwksType.MEMORY);
+            JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
+                    .originalString(jwksContent)
+                    .etag("test-etag")
+                    .securityEventCounter(securityEventCounter)
+                    .build();
 
-            assertTrue(keyLoader.isNotEmpty(), "Loader created with factory method should parse JWKS");
+            assertTrue(keyLoader.isNotEmpty(), "Loader created with builder should parse JWKS");
             assertEquals(JwksType.MEMORY, keyLoader.getJwksType(), "Loader should have correct JWKS type");
         }
 

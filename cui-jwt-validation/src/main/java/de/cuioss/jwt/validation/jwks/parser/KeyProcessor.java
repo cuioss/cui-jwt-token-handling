@@ -19,6 +19,7 @@ import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
 import de.cuioss.jwt.validation.jwks.key.JwkKeyConstants;
 import de.cuioss.jwt.validation.jwks.key.JwkKeyHandler;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
+import de.cuioss.jwt.validation.security.JwkAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SecurityEventCounter.EventType;
 import de.cuioss.tools.logging.CuiLogger;
@@ -49,13 +50,21 @@ public class KeyProcessor {
     @NonNull
     private final SecurityEventCounter securityEventCounter;
     
+    @NonNull
+    private final JwkAlgorithmPreferences jwkAlgorithmPreferences;
+    
     /**
-     * Process a JWK object and create a KeyInfo.
+     * Process a JWK object and create a KeyInfo with validation.
      * 
      * @param jwk the JWK object to process
      * @return an Optional containing the KeyInfo if processing succeeded, empty otherwise
      */
     public Optional<KeyInfo> processKey(JsonObject jwk) {
+        // Validate key parameters first
+        if (!validateKeyParameters(jwk)) {
+            return Optional.empty();
+        }
+        
         // Extract key type
         var keyType = JwkKeyConstants.KeyType.getString(jwk);
         if (keyType.isEmpty()) {
@@ -77,6 +86,52 @@ public class KeyProcessor {
         };
         
         return Optional.ofNullable(keyInfo);
+    }
+    
+    /**
+     * Validates individual key parameters and algorithms.
+     * 
+     * @param keyObject the individual key object to validate
+     * @return true if the key is valid, false otherwise
+     */
+    private boolean validateKeyParameters(JsonObject keyObject) {
+        // Validate required key type
+        if (!JwkKeyConstants.KeyType.isPresent(keyObject)) {
+            LOGGER.warn("Key missing required 'kty' parameter");
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+        
+        String keyType = keyObject.getString(JwkKeyConstants.KeyType.KEY);
+        
+        // Validate key type is supported
+        if (!"RSA".equals(keyType) && !"EC".equals(keyType)) {
+            LOGGER.warn("Unsupported key type: {}", keyType);
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+        
+        // Validate key ID if present (length check)
+        if (keyObject.containsKey(JwkKeyConstants.KeyId.KEY)) {
+            String keyId = keyObject.getString(JwkKeyConstants.KeyId.KEY);
+            if (keyId.length() > 100) {
+                LOGGER.warn("Key ID exceeds maximum length: {}", keyId.length());
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+        }
+        
+        // Validate algorithm if present
+        if (keyObject.containsKey(JwkKeyConstants.Algorithm.KEY)) {
+            String algorithm = keyObject.getString(JwkKeyConstants.Algorithm.KEY);
+            if (!jwkAlgorithmPreferences.isSupported(algorithm)) {
+                LOGGER.warn("Invalid or unsupported algorithm: {}", algorithm);
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     /**

@@ -19,9 +19,8 @@
  * <p>
  * This package contains components for parsing, validating, and processing JWKS content:
  * <ul>
- *   <li>{@link de.cuioss.jwt.validation.jwks.parser.JwksParser} - Parses JWKS JSON content</li>
- *   <li>{@link de.cuioss.jwt.validation.jwks.parser.JwksValidator} - Validates JWKS structure and keys</li>
- *   <li>{@link de.cuioss.jwt.validation.jwks.parser.KeyProcessor} - Processes individual JWK objects</li>
+ *   <li>{@link de.cuioss.jwt.validation.jwks.parser.JwksParser} - Parses and validates JWKS JSON content</li>
+ *   <li>{@link de.cuioss.jwt.validation.jwks.parser.KeyProcessor} - Processes and validates individual JWK objects</li>
  * </ul>
  * <p>
  * These components are designed to be used together to provide secure and robust JWKS processing

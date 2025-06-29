@@ -42,7 +42,7 @@ class KeyProcessorTest {
     @BeforeEach
     void setUp() {
         securityEventCounter = new SecurityEventCounter();
-        processor = new KeyProcessor(securityEventCounter);
+        processor = new KeyProcessor(securityEventCounter, new de.cuioss.jwt.validation.security.JwkAlgorithmPreferences());
     }
 
     @Nested

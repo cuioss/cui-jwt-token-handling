@@ -21,7 +21,6 @@ import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.parser.JwksParser;
-import de.cuioss.jwt.validation.jwks.parser.JwksValidator;
 import de.cuioss.jwt.validation.jwks.parser.KeyProcessor;
 import de.cuioss.jwt.validation.security.JwkAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
@@ -68,17 +67,12 @@ public class JWKSKeyLoader implements JwksLoader {
 
     private static final CuiLogger LOGGER = new CuiLogger(JWKSKeyLoader.class);
 
-    @Getter
     @NonNull
     private final String originalString;
-    @Getter
     private final String etag;
-    @Getter
     private final ParserConfig parserConfig;
-    @Getter
     @NonNull
     private final SecurityEventCounter securityEventCounter;
-    @Getter
     @NonNull
     private final JwkAlgorithmPreferences jwkAlgorithmPreferences;
     @NonNull
@@ -130,7 +124,7 @@ public class JWKSKeyLoader implements JwksLoader {
          * @return this builder
          */
         public JWKSKeyLoaderBuilder parserConfig(ParserConfig parserConfig) {
-            this.parserConfig = parserConfig;
+            this.parserConfig = parserConfig != null ? parserConfig : ParserConfig.builder().build();
             return this;
         }
 
@@ -152,7 +146,7 @@ public class JWKSKeyLoader implements JwksLoader {
          * @return this builder
          */
         public JWKSKeyLoaderBuilder jwkAlgorithmPreferences(JwkAlgorithmPreferences jwkAlgorithmPreferences) {
-            this.jwkAlgorithmPreferences = jwkAlgorithmPreferences;
+            this.jwkAlgorithmPreferences = jwkAlgorithmPreferences != null ? jwkAlgorithmPreferences : new JwkAlgorithmPreferences();
             return this;
         }
 
@@ -179,16 +173,13 @@ public class JWKSKeyLoader implements JwksLoader {
             if (securityEventCounter == null) {
                 throw new IllegalArgumentException("securityEventCounter must not be null");
             }
-            if (jwkAlgorithmPreferences == null) {
-                jwkAlgorithmPreferences = new JwkAlgorithmPreferences(); // Use default if not set
-            }
             try {
                 return new JWKSKeyLoader(originalString, etag, parserConfig, securityEventCounter, jwkAlgorithmPreferences, jwksType);
             } catch (JsonException | IllegalStateException | IllegalArgumentException e) {
                 // If an exception occurs during construction, log it and return an empty JWKSKeyLoader
                 LOGGER.warn(e, WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
-                return new JWKSKeyLoader("{}", etag, parserConfig, securityEventCounter, jwkAlgorithmPreferences, jwksType);
+                return new JWKSKeyLoader("{}", etag, parserConfig != null ? parserConfig : ParserConfig.builder().build(), securityEventCounter, jwkAlgorithmPreferences != null ? jwkAlgorithmPreferences : new JwkAlgorithmPreferences(), jwksType);
             }
         }
     }
@@ -232,81 +223,18 @@ public class JWKSKeyLoader implements JwksLoader {
         this.status = result.status();
     }
 
-    /**
-     * Factory method to create a JWKS key loader with comprehensive validation.
-     *
-     * @param originalString       the JWKS JSON string
-     * @param etag                 the ETag for caching (can be null)
-     * @param parserConfig         the parser configuration (can be null, will use default)
-     * @param securityEventCounter the security event counter for tracking events
-     * @param jwkAlgorithmPreferences the JWK algorithm preferences (can be null, will use default)
-     * @param jwksType             the type of JWKS (file, HTTP, etc.)
-     * @return a new JWKSKeyLoader instance
-     * @throws IllegalArgumentException if originalString or securityEventCounter is null
-     */
-    public static JWKSKeyLoader create(
-            @NonNull String originalString,
-            String etag,
-            ParserConfig parserConfig,
-            @NonNull SecurityEventCounter securityEventCounter,
-            JwkAlgorithmPreferences jwkAlgorithmPreferences,
-            @NonNull JwksType jwksType) {
-        JwkAlgorithmPreferences preferences = jwkAlgorithmPreferences != null ? jwkAlgorithmPreferences : new JwkAlgorithmPreferences();
-        return new JWKSKeyLoader(originalString, etag, parserConfig, securityEventCounter, preferences, jwksType);
-    }
-
-    /**
-     * Factory method to create a JWKS key loader with default JWK algorithm preferences.
-     *
-     * @param originalString       the JWKS JSON string
-     * @param etag                 the ETag for caching (can be null)
-     * @param parserConfig         the parser configuration (can be null, will use default)
-     * @param securityEventCounter the security event counter for tracking events
-     * @param jwksType             the type of JWKS (file, HTTP, etc.)
-     * @return a new JWKSKeyLoader instance
-     * @throws IllegalArgumentException if originalString or securityEventCounter is null
-     */
-    public static JWKSKeyLoader create(
-            @NonNull String originalString,
-            String etag,
-            ParserConfig parserConfig,
-            @NonNull SecurityEventCounter securityEventCounter,
-            @NonNull JwksType jwksType) {
-        return create(originalString, etag, parserConfig, securityEventCounter, null, jwksType);
-    }
 
     private ParseResult parseJwksContent(String originalString) {
         // Create parser components
         JwksParser parser = new JwksParser(parserConfig, securityEventCounter);
-        JwksValidator validator = new JwksValidator(jwkAlgorithmPreferences, securityEventCounter);
-        KeyProcessor processor = new KeyProcessor(securityEventCounter);
+        KeyProcessor processor = new KeyProcessor(securityEventCounter, jwkAlgorithmPreferences);
         
-        // First, parse to get the main JWKS object for structure validation
-        try {
-            var reader = parserConfig.getJsonReaderFactory().createReader(new java.io.StringReader(originalString));
-            JsonObject jwksObject = reader.readObject();
-            reader.close();
-            
-            // Validate JWKS structure first
-            if (!validator.validateJwksStructure(jwksObject)) {
-                return new ParseResult(new ConcurrentHashMap<>(), LoaderStatus.ERROR);
-            }
-        } catch (Exception e) {
-            // If we can't parse the JWKS at all, fall back to the parser which will handle the error
-        }
-        
-        // Parse JWKS content to get individual JWK objects
+        // Parse JWKS content to get individual JWK objects (includes structure validation)
         List<JsonObject> jwkObjects = parser.parse(originalString);
         
-        // Process each key
+        // Process each key (includes key parameter validation)
         Map<String, KeyInfo> keyMap = new ConcurrentHashMap<>();
         for (JsonObject jwk : jwkObjects) {
-            // Validate key parameters
-            if (!validator.validateKeyParameters(jwk)) {
-                continue;
-            }
-            
-            // Process key
             var keyInfoOpt = processor.processKey(jwk);
             if (keyInfoOpt.isPresent()) {
                 KeyInfo keyInfo = keyInfoOpt.get();

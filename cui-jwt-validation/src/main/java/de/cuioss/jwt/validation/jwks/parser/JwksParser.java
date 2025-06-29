@@ -35,10 +35,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Parses JWKS content and extracts individual JWK objects.
+ * Parses and validates JWKS content, extracting individual JWK objects.
  * This class is responsible for:
  * <ul>
  *   <li>Parsing JSON content with security limits</li>
+ *   <li>Validating JWKS structure and constraints</li>
  *   <li>Extracting keys from JWKS structure</li>
  *   <li>Handling both standard JWKS format and single key format</li>
  *   <li>Security event tracking for parsing failures</li>
@@ -105,13 +106,18 @@ public class JwksParser {
     }
     
     /**
-     * Extract keys from a JWKS object.
+     * Extract keys from a JWKS object with validation.
      * Handles both standard JWKS format (with "keys" array) and single key format.
      * 
      * @param jwks the JWKS object
      * @param result the list to store extracted keys
      */
     private void extractKeys(JsonObject jwks, List<JsonObject> result) {
+        // Validate JWKS structure first
+        if (!validateJwksStructure(jwks)) {
+            return;
+        }
+        
         // Check if this is a JWKS with a "keys" array or a single key
         if (JwkKeyConstants.Keys.isPresent(jwks)) {
             extractKeysFromArray(jwks, result);
@@ -122,6 +128,48 @@ public class JwksParser {
             LOGGER.warn(WARN.JWKS_MISSING_KEYS::format);
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
         }
+    }
+    
+    /**
+     * Validates the structure and content of a JWKS object.
+     * 
+     * @param jwks the JWKS object to validate
+     * @return true if the JWKS structure is valid, false otherwise
+     */
+    private boolean validateJwksStructure(JsonObject jwks) {
+        // Basic null check
+        if (jwks == null) {
+            LOGGER.warn("JWKS object is null");
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+        
+        // Check for excessive number of top-level properties
+        if (jwks.size() > 10) {
+            LOGGER.warn("JWKS object has excessive number of properties: {}", jwks.size());
+            securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+            return false;
+        }
+        
+        // If it has a "keys" array, validate it
+        if (JwkKeyConstants.Keys.isPresent(jwks)) {
+            JsonArray keysArray = jwks.getJsonArray(JwkKeyConstants.Keys.KEY);
+            
+            // Check array size limits
+            if (keysArray.size() > 50) {
+                LOGGER.warn("JWKS keys array exceeds maximum size: {}", keysArray.size());
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+            
+            if (keysArray.isEmpty()) {
+                LOGGER.warn("JWKS keys array is empty");
+                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     /**
