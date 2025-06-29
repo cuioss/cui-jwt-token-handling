@@ -66,8 +66,23 @@ Execute comprehensive quality verification and commit workflow for a specific mo
    - DO NOT proceed to next step until current step is 100% clean
    - Apply fixes systematically and verify each fix
 
-4. **Git Commit**:
-   - Only proceed to commit when BOTH builds pass completely
+4. **Artifact Cleanup Verification**:
+   ```bash
+   find <module-name>/src/main/java -name "*.class" -type f
+   find <module-name>/src/test/java -name "*.class" -type f
+   find <module-name>/src -name "*.jar" -type f
+   find <module-name>/src -name "*.war" -type f
+   find <module-name>/src -name "target" -type d
+   ```
+   - Verify NO class files exist in source directories
+   - Verify NO jar/war files exist in source directories
+   - Verify NO target directories exist in source directories
+   - Ensure NO build artifacts contaminate source code
+   - Clean up any artifacts found before proceeding
+   - **FAIL BUILD** if any artifacts are found in src/ directories
+
+5. **Git Commit**:
+   - Only proceed to commit when ALL steps pass completely
    - Create descriptive commit message explaining the changes
    - Include Co-Authored-By: Claude footer
 
@@ -77,4 +92,5 @@ Execute comprehensive quality verification and commit workflow for a specific mo
 - **NEVER skip error fixes** - Every warning and error must be resolved
 - **NEVER use shortcuts** - Run complete verification cycles
 - **NEVER commit with failing builds** - Only commit when everything passes
+- **NEVER commit with source artifacts** - Source directories must be clean of .class files
 - **ALWAYS fix issues systematically** - Address root causes, not symptoms
