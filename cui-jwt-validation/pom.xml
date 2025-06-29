@@ -45,11 +45,6 @@
             <artifactId>jakarta.json-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- Caffeine cache -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
         <!-- BouncyCastle for cryptographic operations -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
