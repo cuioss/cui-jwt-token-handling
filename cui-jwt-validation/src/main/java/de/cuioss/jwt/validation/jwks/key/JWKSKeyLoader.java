@@ -197,16 +197,9 @@ public class JWKSKeyLoader implements JwksLoader {
         this.jwkAlgorithmPreferences = jwkAlgorithmPreferences;
         this.jwksType = jwksType;
 
-        ParseResult result = parseJwksContent(jwksContent);
-        this.keyInfoMap = result.keyInfoMap();
-        this.status = result.status();
-    }
-
-
-    private ParseResult parseJwksContent(String jwksContent) {
-        // Create parser components
-        JwksParser parser = new JwksParser(parserConfig, securityEventCounter);
-        KeyProcessor processor = new KeyProcessor(securityEventCounter, jwkAlgorithmPreferences);
+        // Parse JWKS content inline
+        JwksParser parser = new JwksParser(this.parserConfig, this.securityEventCounter);
+        KeyProcessor processor = new KeyProcessor(this.securityEventCounter, this.jwkAlgorithmPreferences);
 
         // Parse JWKS content to get individual JWK objects (includes structure validation)
         List<JsonObject> jwkObjects = parser.parse(jwksContent);
@@ -221,12 +214,10 @@ public class JWKSKeyLoader implements JwksLoader {
             }
         }
 
-        LoaderStatus status = keyMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
-        return new ParseResult(keyMap, status);
+        this.keyInfoMap = keyMap;
+        this.status = keyMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
     }
 
-    private record ParseResult(Map<String, KeyInfo> keyInfoMap, LoaderStatus status) {
-    }
 
     /**
      * Checks if this loader contains valid keys.

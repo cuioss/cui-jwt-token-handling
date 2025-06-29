@@ -47,7 +47,7 @@ class JWKSKeyLoaderTest {
         securityEventCounter = new SecurityEventCounter();
         keyLoader = JWKSKeyLoader.builder()
                 .jwksContent(jwksContent)
-                
+
                 .securityEventCounter(securityEventCounter)
                 .build();
     }
@@ -168,7 +168,7 @@ class JWKSKeyLoaderTest {
                     .build();
             JWKSKeyLoader loaderWithCustomConfig = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
-                    
+
                     .parserConfig(customConfig)
                     .securityEventCounter(new SecurityEventCounter())
                     .build();

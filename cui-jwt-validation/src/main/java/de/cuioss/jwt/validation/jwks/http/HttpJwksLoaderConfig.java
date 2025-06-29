@@ -30,8 +30,6 @@ import lombok.ToString;
 
 import javax.net.ssl.SSLContext;
 import java.net.URI;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Configuration parameters for {@link HttpJwksLoader}.
@@ -56,7 +54,6 @@ import java.util.concurrent.ScheduledExecutorService;
 public class HttpJwksLoaderConfig {
 
     private static final CuiLogger LOGGER = new CuiLogger(HttpJwksLoaderConfig.class);
-    private static final int DEFAULT_BACKGROUND_REFRESH_PERCENTAGE = 80;
 
     /**
      * A Default of 10 minutes (600 seconds).
@@ -79,21 +76,6 @@ public class HttpJwksLoaderConfig {
     @EqualsAndHashCode.Exclude
     private final HttpHandler httpHandler;
 
-    /**
-     * The percentage of the refresh interval at which to perform background refresh.
-     * For example, if refreshIntervalSeconds is 60 and backgroundRefreshPercentage is 80,
-     * background refresh will occur at 48 seconds (80% of 60).
-     */
-    @Getter
-    private final int backgroundRefreshPercentage;
-
-    /**
-     * The ScheduledExecutorService for background refresh tasks.
-     * If null, a new one will be created.
-     */
-    @Getter
-    @EqualsAndHashCode.Exclude
-    private final ScheduledExecutorService scheduledExecutorService;
 
     /**
      * Creates a new builder for HttpJwksLoaderConfig.
@@ -112,9 +94,7 @@ public class HttpJwksLoaderConfig {
      * Builder for creating HttpJwksLoaderConfig instances with validation.
      */
     public static class HttpJwksLoaderConfigBuilder {
-        private Integer backgroundRefreshPercentage = DEFAULT_BACKGROUND_REFRESH_PERCENTAGE;
         private Integer refreshIntervalSeconds = DEFAULT_REFRESH_INTERVAL_IN_SECONDS;
-        private ScheduledExecutorService scheduledExecutorService;
         private final HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
 
         /**
@@ -124,23 +104,6 @@ public class HttpJwksLoaderConfig {
             this.httpHandlerBuilder = HttpHandler.builder();
         }
 
-        /**
-         * Sets the percentage of the refresh interval at which to perform background refresh.
-         * <p>
-         * For example, if refreshIntervalSeconds is 60 and backgroundRefreshPercentage is 80,
-         * background refresh will occur at 48 seconds (80% of 60).
-         * </p>
-         *
-         * @param backgroundRefreshPercentage the percentage of the refresh interval
-         * @return this builder instance
-         * @throws IllegalArgumentException if backgroundRefreshPercentage is not between 1 and 100
-         */
-        public HttpJwksLoaderConfigBuilder backgroundRefreshPercentage(int backgroundRefreshPercentage) {
-            Preconditions.checkArgument(backgroundRefreshPercentage > 0 && backgroundRefreshPercentage <= 100,
-                    "backgroundRefreshPercentage must be between 1 and 100");
-            this.backgroundRefreshPercentage = backgroundRefreshPercentage;
-            return this;
-        }
 
         /**
          * Sets the JWKS URI directly.
@@ -225,16 +188,6 @@ public class HttpJwksLoaderConfig {
             return this;
         }
 
-        /**
-         * Sets the ScheduledExecutorService for background refresh tasks.
-         *
-         * @param scheduledExecutorService the ScheduledExecutorService to use
-         * @return this builder instance
-         */
-        public HttpJwksLoaderConfigBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
-            this.scheduledExecutorService = scheduledExecutorService;
-            return this;
-        }
 
         /**
          * Sets the SSL context to use for HTTPS connections.
@@ -292,15 +245,10 @@ public class HttpJwksLoaderConfig {
                 LOGGER.warn(WARN.INVALID_JWKS_URI::format);
                 throw new IllegalArgumentException("Invalid URL", e);
             }
-            if (scheduledExecutorService == null && refreshIntervalSeconds > 0) {
-                scheduledExecutorService = Executors.newScheduledThreadPool(1);
-            }
 
             return new HttpJwksLoaderConfig(
                     refreshIntervalSeconds,
-                    jwksHttpHandler,
-                    backgroundRefreshPercentage,
-                    scheduledExecutorService);
+                    jwksHttpHandler);
         }
     }
 }

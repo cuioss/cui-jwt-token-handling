@@ -23,8 +23,6 @@ import org.junit.jupiter.api.Test;
 import javax.net.ssl.SSLContext;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -48,7 +46,7 @@ class HttpJwksLoaderConfigTest {
         assertEquals(URI.create(VALID_URL), config.getHttpHandler().getUri());
         assertEquals(REFRESH_INTERVAL, config.getRefreshIntervalSeconds());
         assertNotNull(config.getHttpHandler().getSslContext());
-        assertEquals(80, config.getBackgroundRefreshPercentage()); // Default value
+        // Basic config verification completed
     }
 
     @Test
@@ -56,17 +54,14 @@ class HttpJwksLoaderConfigTest {
     void shouldCreateConfigWithCustomValues() throws NoSuchAlgorithmException {
 
         SSLContext sslContext = SSLContext.getDefault();
-        int backgroundRefreshPercentage = 70;
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .url(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .sslContext(sslContext)
-                .backgroundRefreshPercentage(backgroundRefreshPercentage)
                 .build();
         assertEquals(URI.create(VALID_URL), config.getHttpHandler().getUri());
         assertEquals(REFRESH_INTERVAL, config.getRefreshIntervalSeconds());
         assertNotNull(config.getHttpHandler().getSslContext());
-        assertEquals(backgroundRefreshPercentage, config.getBackgroundRefreshPercentage());
     }
 
     @Test
@@ -105,41 +100,6 @@ class HttpJwksLoaderConfigTest {
                 .build());
     }
 
-    @Test
-    @DisplayName("Should throw exception for negative background refresh percentage")
-    void shouldThrowExceptionForNegativeBackgroundRefreshPercentage() {
-
-        int negativePercentage = -1;
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .backgroundRefreshPercentage(negativePercentage)
-                .build());
-    }
-
-    @Test
-    @DisplayName("Should throw exception for zero background refresh percentage")
-    void shouldThrowExceptionForZeroBackgroundRefreshPercentage() {
-
-        int zeroPercentage = 0;
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .backgroundRefreshPercentage(zeroPercentage)
-                .build());
-    }
-
-    @Test
-    @DisplayName("Should throw exception for too high background refresh percentage")
-    void shouldThrowExceptionForTooHighBackgroundRefreshPercentage() {
-
-        int tooHighPercentage = 101;
-        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .backgroundRefreshPercentage(tooHighPercentage)
-                .build());
-    }
 
     @Test
     @DisplayName("Should throw exception for missing JWKS URL")
@@ -150,46 +110,6 @@ class HttpJwksLoaderConfigTest {
                 .build());
     }
 
-    @Test
-    @DisplayName("Should use custom ScheduledExecutorService")
-    void shouldUseCustomScheduledExecutorService() {
-
-        ScheduledExecutorService customExecutorService = Executors.newScheduledThreadPool(2);
-        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .scheduledExecutorService(customExecutorService)
-                .build();
-        assertSame(customExecutorService, config.getScheduledExecutorService(),
-                "Custom executor service should be used");
-
-        // Clean up
-        customExecutorService.shutdown();
-    }
-
-    @Test
-    @DisplayName("Should create default ScheduledExecutorService when refresh interval is positive")
-    void shouldCreateDefaultScheduledExecutorServiceWhenRefreshIntervalPositive() {
-
-        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL) // Positive refresh interval
-                .build();
-        assertNotNull(config.getScheduledExecutorService(),
-                "Default executor service should be created for positive refresh interval");
-    }
-
-    @Test
-    @DisplayName("Should not create ScheduledExecutorService when refresh interval is zero")
-    void shouldNotCreateScheduledExecutorServiceWhenRefreshIntervalZero() {
-
-        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .url(VALID_URL)
-                .refreshIntervalSeconds(0) // Zero refresh interval
-                .build();
-        assertNull(config.getScheduledExecutorService(),
-                "No executor service should be created for zero refresh interval");
-    }
 
     @Test
     @DisplayName("Should handle URI parameter method")
@@ -316,19 +236,16 @@ class HttpJwksLoaderConfigTest {
         HttpJwksLoaderConfig config1 = HttpJwksLoaderConfig.builder()
                 .url(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .backgroundRefreshPercentage(80)
                 .build();
 
         HttpJwksLoaderConfig config2 = HttpJwksLoaderConfig.builder()
                 .url(VALID_URL)
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .backgroundRefreshPercentage(80)
                 .build();
 
         HttpJwksLoaderConfig config3 = HttpJwksLoaderConfig.builder()
                 .url(VALID_URL)
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .backgroundRefreshPercentage(70) // Different value
+                .refreshIntervalSeconds(120) // Different value
                 .build();
         assertEquals(config1, config2, "Configs with same values should be equal");
         assertEquals(config1.hashCode(), config2.hashCode(), "Configs with same values should have same hashCode");

@@ -239,7 +239,7 @@ class JWKSKeyLoaderExtendedTest {
 
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
-                    
+
                     .securityEventCounter(securityEventCounter)
                     .build();
 
