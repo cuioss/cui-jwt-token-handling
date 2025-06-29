@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * and algorithms, including RSA, EC, and RSA-PSS.
  * <p>
  * The class stores the original JWKS content string and the ETag value from HTTP responses
- * to support content-based caching and HTTP 304 "Not Modified" handling in {@link HttpJwksLoader}.
+ * to support content-based caching and HTTP 304 "Not Modified" handling in HttpJwksLoader.
  * <p>
  * Security features:
  * <ul>

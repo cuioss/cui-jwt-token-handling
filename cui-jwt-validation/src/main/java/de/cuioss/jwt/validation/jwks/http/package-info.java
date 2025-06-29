@@ -25,10 +25,10 @@
  *       {@link de.cuioss.jwt.validation.jwks.JwksLoader} for HTTP-based JWKS sources</li>
  *   <li>{@link de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig} - Configuration parameters
  *       for the HTTP JWKS loader</li>
- *   <li>{@link de.cuioss.jwt.validation.jwks.http.JwksHttpClient} - Client for making HTTP requests
+ *   <li>JwksHttpClient - Client for making HTTP requests
  *       to JWKS endpoints</li>
- *   <li>{@link de.cuioss.jwt.validation.jwks.http.JwksCacheManager} - Manages caching of JWKS keys</li>
- *   <li>{@link de.cuioss.jwt.validation.jwks.http.BackgroundRefreshManager} - Manages background
+ *   <li>JwksCacheManager - Manages caching of JWKS keys</li>
+ *   <li>BackgroundRefreshManager - Manages background
  *       refresh of JWKS content</li>
  * </ul>
  * 
