@@ -280,22 +280,28 @@ public final class JWTValidationLogMessages {
                 .template("Failed to parse RSA key with ID %s: %s")
                 .build();
 
-        public static final LogRecord JWKS_JSON_PARSE_FAILED = LogRecordModel.builder()
+        public static final LogRecord EC_KEY_PARSE_FAILED = LogRecordModel.builder()
                 .prefix(PREFIX)
                 .identifier(107)
+                .template("Failed to parse EC key with ID %s: %s")
+                .build();
+
+        public static final LogRecord JWKS_JSON_PARSE_FAILED = LogRecordModel.builder()
+                .prefix(PREFIX)
+                .identifier(108)
                 .template("Failed to parse JWKS JSON: %s")
                 .build();
 
         public static final LogRecord FAILED_TO_DECODE_JWT = LogRecordModel.builder()
                 .prefix(PREFIX)
-                .identifier(108)
+                .identifier(109)
                 .template("Failed to decode JWT Token")
                 .build();
 
 
         public static final LogRecord INVALID_JWT_FORMAT = LogRecordModel.builder()
                 .prefix(PREFIX)
-                .identifier(109)
+                .identifier(110)
                 .template("Invalid JWT Token format: expected 3 parts but got %s")
                 .build();
 
