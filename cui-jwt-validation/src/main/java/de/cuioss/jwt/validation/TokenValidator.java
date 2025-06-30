@@ -36,7 +36,9 @@ import de.cuioss.tools.string.MoreStrings;
 import lombok.Getter;
 import lombok.NonNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -116,20 +118,20 @@ public class TokenValidator {
     private static final CuiLogger LOGGER = new CuiLogger(TokenValidator.class);
 
     private final NonValidatingJwtParser jwtParser;
+    
+    /**
+     * List of enabled issuer configurations.
+     * Since issuer identifiers are now dynamically resolved, we store configurations 
+     * in a list and match them during token validation.
+     */
     @Getter
-    private final Map<String, IssuerConfig> issuerConfigMap;
+    private final List<IssuerConfig> issuerConfigs;
 
     /**
-     * Map of healthy issuer configurations.
-     * Contains issuers that have passed health checks and are available for token validation.
+     * Cache of resolved issuer identifier to IssuerConfig mappings for performance.
+     * This cache is populated dynamically as issuer identifiers are resolved.
      */
-    private final Map<String, IssuerConfig> healthyIssuers = new ConcurrentHashMap<>();
-
-    /**
-     * Map of unhealthy issuer configurations.
-     * Contains issuers that have failed health checks but may be retried on-demand.
-     */
-    private final Map<String, IssuerConfig> unhealthyIssuers = new ConcurrentHashMap<>();
+    private final Map<String, IssuerConfig> issuerConfigCache = new ConcurrentHashMap<>();
 
     /**
      * Counter for security events that occur during token processing.
@@ -165,51 +167,22 @@ public class TokenValidator {
                 .securityEventCounter(securityEventCounter)
                 .build();
 
-        // Initialize issuerConfigMap with enabled issuers only
-        var builder = new MapBuilder<String, IssuerConfig>();
+        // Initialize list with enabled issuers only
+        List<IssuerConfig> enabledConfigs = new ArrayList<>();
         int enabledCount = 0;
         for (IssuerConfig issuerConfig : issuerConfigs) {
             // Only process enabled issuers (constructor filtering as per I1 requirements)
             if (issuerConfig.isEnabled()) {
                 // Initialize the JwksLoader with the SecurityEventCounter
                 issuerConfig.initSecurityEventCounter(securityEventCounter);
-
-                // Use both configured and effective issuer as map keys to handle well-known discovery
-                String configuredIssuer = issuerConfig.getIssuer();
-                String effectiveIssuer = issuerConfig.getEffectiveIssuer();
-                
-                // Always put configured issuer in map
-                builder.put(configuredIssuer, issuerConfig);
-                
-                // If effective issuer is different from configured, also put it in map
-                if (!configuredIssuer.equals(effectiveIssuer)) {
-                    builder.put(effectiveIssuer, issuerConfig);
-                    LOGGER.debug("Mapped both configured issuer '%s' and effective issuer '%s' to same config", configuredIssuer, effectiveIssuer);
-                }
-                
+                enabledConfigs.add(issuerConfig);
                 enabledCount++;
-
-                // Perform initial health check to populate dual maps using effective issuer
-                if (issuerConfig.isHealthy() == LoaderStatus.OK) {
-                    healthyIssuers.put(effectiveIssuer, issuerConfig);
-                    // Also map configured issuer if different
-                    if (!configuredIssuer.equals(effectiveIssuer)) {
-                        healthyIssuers.put(configuredIssuer, issuerConfig);
-                    }
-                    LOGGER.debug("Issuer %s initialized as healthy (effective issuer: %s)", configuredIssuer, effectiveIssuer);
-                } else {
-                    unhealthyIssuers.put(effectiveIssuer, issuerConfig);
-                    // Also map configured issuer if different
-                    if (!configuredIssuer.equals(effectiveIssuer)) {
-                        unhealthyIssuers.put(configuredIssuer, issuerConfig);
-                    }
-                    LOGGER.debug("Issuer %s initialized as unhealthy (effective issuer: %s)", configuredIssuer, effectiveIssuer);
-                }
+                LOGGER.debug("Added enabled issuer configuration");
             } else {
-                LOGGER.debug("Skipping disabled issuer: %s", issuerConfig.getIssuer());
+                LOGGER.debug("Skipping disabled issuer configuration");
             }
         }
-        this.issuerConfigMap = builder.toImmutableMap();
+        this.issuerConfigs = Collections.unmodifiableList(enabledConfigs);
 
         LOGGER.debug("Created TokenValidator with %d enabled issuer configurations (%d total)", enabledCount, issuerConfigs.length);
         LOGGER.info(JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED.format(enabledCount));
@@ -361,72 +334,44 @@ public class TokenValidator {
     }
 
     /**
-     * Resolves issuer configuration using dual-map architecture with on-demand health checking.
+     * Resolves the appropriate issuer configuration for the given issuer.
      * <p>
-     * Implementation of I1 requirements:
-     * <ul>
-     *   <li>If issuer is in {@code healthyIssuers} map: Use it directly (no health check needed)</li>
-     *   <li>If issuer is in {@code unhealthyIssuers} map: Perform on-demand health check</li>
-     *   <li>If health check succeeds: Move issuer from unhealthy to healthy map</li>
-     *   <li>All health checks are fail-fast with short timeouts</li>
-     * </ul>
+     * This method searches through all configured IssuerConfig instances to find
+     * one whose getIssuerIdentifier() matches the provided issuer. It uses a cache
+     * for performance optimization and falls back to iterating through all configs
+     * when no cached entry exists.
+     * </p>
      *
      * @param issuer the issuer to resolve configuration for
      * @return the issuer configuration if healthy and available
      * @throws TokenValidationException if no configuration found or issuer is unhealthy
      */
     private IssuerConfig resolveIssuerConfig(String issuer) {
-        // Check if issuer is in healthy map first (most common case)
-        IssuerConfig healthyConfig = healthyIssuers.get(issuer);
-        if (healthyConfig != null) {
-            LOGGER.debug("Using healthy issuer: %s", issuer);
-            return healthyConfig;
+        // Check cache first for performance
+        IssuerConfig cachedConfig = issuerConfigCache.get(issuer);
+        if (cachedConfig != null) {
+            LOGGER.debug("Using cached issuer config for: %s", issuer);
+            return cachedConfig;
         }
 
-        // Check if issuer exists in overall configuration
-        IssuerConfig issuerConfig = issuerConfigMap.get(issuer);
-        if (issuerConfig == null) {
-            LOGGER.warn(JWTValidationLogMessages.WARN.NO_ISSUER_CONFIG.format(issuer));
-            securityEventCounter.increment(SecurityEventCounter.EventType.NO_ISSUER_CONFIG);
-            throw new TokenValidationException(
-                    SecurityEventCounter.EventType.NO_ISSUER_CONFIG,
-                    "No issuer configuration found for issuer: " + issuer
-            );
-        }
-
-        // Check if issuer is in unhealthy map and perform on-demand health check
-        IssuerConfig unhealthyConfig = unhealthyIssuers.get(issuer);
-        if (unhealthyConfig != null) {
-            LOGGER.debug("Performing on-demand health check for previously unhealthy issuer: %s", issuer);
-
-            // Perform fail-fast health check
-            if (issuerConfig.isHealthy() == LoaderStatus.OK) {
-                // Move from unhealthy to healthy map
-                unhealthyIssuers.remove(issuer);
-                healthyIssuers.put(issuer, issuerConfig);
-                LOGGER.info(INFO.ISSUER_RECOVERED.format(issuer));
+        // Search through all configured issuer configs
+        for (IssuerConfig issuerConfig : issuerConfigs) {
+            Optional<String> configIssuer = issuerConfig.getIssuerIdentifier();
+            if (configIssuer.isPresent() && configIssuer.get().equals(issuer)) {
+                // Found matching issuer config, cache it for future use
+                issuerConfigCache.put(issuer, issuerConfig);
+                LOGGER.debug("Found and cached issuer config for: %s", issuer);
                 return issuerConfig;
-            } else {
-                LOGGER.debug("Issuer %s is still unhealthy", issuer);
-                throw new TokenValidationException(
-                        SecurityEventCounter.EventType.NO_ISSUER_CONFIG,
-                        "Issuer is currently unhealthy and cannot validate tokens: " + issuer
-                );
             }
         }
 
-        // This should not happen in normal operation (issuer exists but not in either map)
-        LOGGER.warn(WARN.ISSUER_DUAL_MAP_MISMATCH.format(issuer));
-        if (issuerConfig.isHealthy() == LoaderStatus.OK) {
-            healthyIssuers.put(issuer, issuerConfig);
-            return issuerConfig;
-        } else {
-            unhealthyIssuers.put(issuer, issuerConfig);
-            throw new TokenValidationException(
-                    SecurityEventCounter.EventType.NO_ISSUER_CONFIG,
-                    "Issuer is unhealthy and cannot validate tokens: " + issuer
-            );
-        }
+        // No matching issuer configuration found
+        LOGGER.warn(JWTValidationLogMessages.WARN.NO_ISSUER_CONFIG.format(issuer));
+        securityEventCounter.increment(SecurityEventCounter.EventType.NO_ISSUER_CONFIG);
+        throw new TokenValidationException(
+                SecurityEventCounter.EventType.NO_ISSUER_CONFIG,
+                "No issuer configuration found for issuer: " + issuer
+        );
     }
 
     private void validateTokenHeader(DecodedJwt decodedJwt, IssuerConfig issuerConfig) {
@@ -469,7 +414,9 @@ public class TokenValidator {
      * @since 1.0
      */
     public int getHealthyIssuerCount() {
-        return healthyIssuers.size();
+        return (int) issuerConfigs.stream()
+                .filter(config -> config.isHealthy() == LoaderStatus.OK)
+                .count();
     }
 
     /**
@@ -479,7 +426,9 @@ public class TokenValidator {
      * @since 1.0
      */
     public int getUnhealthyIssuerCount() {
-        return unhealthyIssuers.size();
+        return (int) issuerConfigs.stream()
+                .filter(config -> config.isHealthy() != LoaderStatus.OK)
+                .count();
     }
 
     /**
@@ -490,7 +439,11 @@ public class TokenValidator {
      * @since 1.0
      */
     public boolean isIssuerHealthy(String issuer) {
-        return healthyIssuers.containsKey(issuer);
+        return issuerConfigs.stream()
+                .anyMatch(config -> {
+                    Optional<String> configIssuer = config.getIssuerIdentifier();
+                    return configIssuer.isPresent() && configIssuer.get().equals(issuer);
+                });
     }
 
     /**

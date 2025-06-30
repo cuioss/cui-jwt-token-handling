@@ -30,6 +30,7 @@ import lombok.Singular;
 import lombok.ToString;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -51,16 +52,18 @@ import java.util.Set;
  * <pre>
  * // Create an issuer configuration with HTTP-based JWKS loading
  * IssuerConfig issuerConfig = IssuerConfig.builder()
- *     .issuer("https://example.com")
  *     .expectedAudience("my-client")
  *     .httpJwksLoaderConfig(HttpJwksLoaderConfig.builder()
- *         .jwksUrl("https://example.com/.well-known/jwks.json")
+ *         .wellKnownUrl("https://example.com/.well-known/openid-configuration")
  *         .refreshIntervalSeconds(60)
  *         .build())
  *     .build();
  *
  * // Initialize the security event counter -> This is usually done by TokenValidator
  * issuerConfig.initSecurityEventCounter(new SecurityEventCounter());
+ *
+ * // Issuer identifier is dynamically obtained from well-known discovery
+ * Optional&lt;String&gt; issuer = issuerConfig.getIssuerIdentifier();
  * </pre>
  * <p>
  * Implements requirements:
@@ -94,17 +97,6 @@ public class IssuerConfig implements HealthStatusProvider {
     @Builder.Default
     boolean enabled = true;
 
-    /**
-     * The issuer URL that identifies the token issuer.
-     * This value is matched against the "iss" claim in the token.
-     * <p>
-     * Note: When using well-known discovery through HttpJwksLoaderConfig,
-     * the effective issuer identifier may be retrieved from the discovery document
-     * via {@link #getEffectiveIssuer()}.
-     * </p>
-     */
-    @NonNull
-    String issuer;
 
     /**
      * Set of expected audience values.
@@ -192,36 +184,39 @@ public class IssuerConfig implements HealthStatusProvider {
             jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
         } else {
             // Throw exception if no configuration is present for an enabled issuer
-            throw new IllegalStateException("No JwksLoader configuration is present for enabled issuer. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided. " + "Issuer: " + issuer + ", httpJwksLoaderConfig: " + (httpJwksLoaderConfig != null) + ", jwksFilePath: " + (jwksFilePath != null) + ", jwksContent: " + (jwksContent != null));
+            throw new IllegalStateException("No JwksLoader configuration is present for enabled issuer. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided. " + "httpJwksLoaderConfig: " + (httpJwksLoaderConfig != null) + ", jwksFilePath: " + (jwksFilePath != null) + ", jwksContent: " + (jwksContent != null));
         }
 
     }
 
     /**
-     * Gets the effective issuer identifier for token validation.
+     * Gets the issuer identifier for token validation.
      * <p>
-     * This method provides the authoritative issuer identifier that should be used
-     * for token validation. The resolution logic is:
+     * This method provides the issuer identifier that should be used for token validation.
+     * For well-known discovery configurations, this method only returns an actual issuer
+     * identifier if the underlying {@link de.cuioss.jwt.validation.jwks.http.HttpJwksLoader#isHealthy()}
+     * returns a non-error response, ensuring that the issuer identifier is only available
+     * when the discovery process has completed successfully.
+     * </p>
+     * <p>
+     * The resolution logic is:
      * <ol>
-     *   <li>If the JwksLoader provides an issuer identifier (e.g., from well-known discovery), use that</li>
-     *   <li>Otherwise, use the configured issuer from this config</li>
+     *   <li>If the JwksLoader is initialized and healthy, delegate to its issuer identifier</li>
+     *   <li>Otherwise, return empty to indicate no issuer identifier is available</li>
      * </ol>
-     * <p>
-     * This delegation pattern ensures that when using well-known discovery, the issuer
-     * identifier from the discovery document takes precedence over the configured value.
      * </p>
      *
-     * @return the effective issuer identifier to use for token validation
+     * @return an Optional containing the issuer identifier if available, empty otherwise
      * @since 1.0
      */
-    public String getEffectiveIssuer() {
-        // If JwksLoader is initialized and provides an issuer identifier, use that
-        if (jwksLoader != null) {
-            return jwksLoader.getIssuerIdentifier().orElse(issuer);
+    public Optional<String> getIssuerIdentifier() {
+        // Only return issuer identifier if JwksLoader is initialized and healthy
+        if (jwksLoader != null && jwksLoader.isHealthy() == LoaderStatus.OK) {
+            return jwksLoader.getIssuerIdentifier();
         }
-
-        // Fallback to configured issuer
-        return issuer;
+        
+        // Return empty if JwksLoader is not healthy or not initialized
+        return Optional.empty();
     }
 
     /**

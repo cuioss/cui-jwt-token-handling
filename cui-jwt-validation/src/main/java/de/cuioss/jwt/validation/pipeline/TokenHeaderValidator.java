@@ -24,6 +24,8 @@ import jakarta.annotation.Nonnull;
 import lombok.Builder;
 import lombok.NonNull;
 
+import java.util.Optional;
+
 /**
  * Validator for JWT Token headers.
  * <p>
@@ -151,13 +153,22 @@ public class TokenHeaderValidator {
         }
         var givenIssuer = decodedJwt.getIssuer().get();
 
-        String effectiveIssuer = issuerConfig.getEffectiveIssuer();
-        if (!effectiveIssuer.equals(givenIssuer)) {
-            LOGGER.warn(JWTValidationLogMessages.WARN.ISSUER_MISMATCH.format(givenIssuer, effectiveIssuer));
+        Optional<String> expectedIssuer = issuerConfig.getIssuerIdentifier();
+        if (expectedIssuer.isEmpty()) {
+            LOGGER.warn("No issuer identifier available from IssuerConfig - configuration may not be healthy");
             securityEventCounter.increment(SecurityEventCounter.EventType.ISSUER_MISMATCH);
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.ISSUER_MISMATCH,
-                    "Issuer mismatch: expected '%s' but found '%s'".formatted(effectiveIssuer, givenIssuer)
+                    "No issuer identifier available from configuration"
+            );
+        }
+        
+        if (!expectedIssuer.get().equals(givenIssuer)) {
+            LOGGER.warn(JWTValidationLogMessages.WARN.ISSUER_MISMATCH.format(givenIssuer, expectedIssuer.get()));
+            securityEventCounter.increment(SecurityEventCounter.EventType.ISSUER_MISMATCH);
+            throw new TokenValidationException(
+                    SecurityEventCounter.EventType.ISSUER_MISMATCH,
+                    "Issuer mismatch: expected '%s' but found '%s'".formatted(expectedIssuer.get(), givenIssuer)
             );
         }
 
