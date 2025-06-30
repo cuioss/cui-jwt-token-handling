@@ -17,10 +17,10 @@ package de.cuioss.jwt.validation.jwks;
 
 import de.cuioss.jwt.validation.HealthStatusProvider;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
+import de.cuioss.jwt.validation.security.SecurityEventCounter;
+import lombok.NonNull;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Interface for loading JSON Web Keys (JWK) from a JWKS source.
@@ -64,12 +64,6 @@ import java.util.Set;
  *
  * // Get a key by ID
  * Optional&lt;KeyInfo&gt; keyInfo = httpJwksLoader.getKeyInfo("my-key-id");
- *
- * // Get the first available key
- * Optional&lt;KeyInfo&gt; firstKey = httpJwksLoader.getFirstKeyInfo();
- *
- * // Get all available key IDs
- * Set&lt;String&gt; keyIds = httpJwksLoader.keySet();
  * </pre>
  * <p>
  * In-memory JWKS loader:
@@ -79,8 +73,8 @@ import java.util.Set;
  * SecurityEventCounter securityEventCounter = new SecurityEventCounter();
  * JwksLoader inMemoryJwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
  *
- * // Get all available keys
- * List&lt;KeyInfo&gt; allKeys = inMemoryJwksLoader.getAllKeyInfos();
+ * // Get a key by ID
+ * Optional&lt;KeyInfo&gt; keyInfo = inMemoryJwksLoader.getKeyInfo("my-key-id");
  * </pre>
  * <p>
  * For more details on the security aspects, see the
@@ -101,27 +95,6 @@ public interface JwksLoader extends HealthStatusProvider {
     Optional<KeyInfo> getKeyInfo(String kid);
 
     /**
-     * Gets the first available key.
-     *
-     * @return an Optional containing the first key info if available, empty otherwise
-     */
-    Optional<KeyInfo> getFirstKeyInfo();
-
-    /**
-     * Gets all available keys with their algorithms.
-     *
-     * @return a List containing all available key infos
-     */
-    List<KeyInfo> getAllKeyInfos();
-
-    /**
-     * Gets the set of all available key IDs.
-     *
-     * @return a Set containing all available key IDs
-     */
-    Set<String> keySet();
-
-    /**
      * Gets the type of JWKS source used by this loader.
      *
      * @return the JWKS source type
@@ -139,4 +112,20 @@ public interface JwksLoader extends HealthStatusProvider {
      * @return an Optional containing the issuer identifier if available, empty otherwise
      */
     Optional<String> getIssuerIdentifier();
+
+    /**
+     * Initializes the JwksLoader with the provided SecurityEventCounter.
+     * <p>
+     * This method should be called after construction to complete the initialization
+     * of the JWKS loader with the security event counter for tracking security events.
+     * </p>
+     * <p>
+     * This method is not thread-safe and should be called before the object is shared
+     * between threads.
+     * </p>
+     *
+     * @param securityEventCounter the counter for security events, must not be null
+     * @throws NullPointerException if securityEventCounter is null
+     */
+    void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter);
 }

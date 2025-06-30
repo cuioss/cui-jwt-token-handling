@@ -317,7 +317,9 @@ public class InMemoryKeyMaterialHandler {
      */
     public static JwksLoader createJwksLoader(Algorithm algorithm, String keyId, SecurityEventCounter securityEventCounter) {
         String jwksContent = createJwks(algorithm, keyId);
-        return JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
+        JwksLoader loader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
+        loader.initSecurityEventCounter(securityEventCounter);
+        return loader;
     }
 
     /**
@@ -427,7 +429,9 @@ public class InMemoryKeyMaterialHandler {
      */
     public static JwksLoader createMultiAlgorithmJwksLoader(@NonNull SecurityEventCounter securityEventCounter) {
         String jwksContent = createMultiAlgorithmJwks();
-        return JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
+        JwksLoader loader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
+        loader.initSecurityEventCounter(securityEventCounter);
+        return loader;
     }
 
     /**

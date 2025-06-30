@@ -31,9 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -62,7 +60,8 @@ class HttpJwksLoaderTest {
                 .jwksUrl(jwksEndpoint)
                 .build();
 
-        httpJwksLoader = new HttpJwksLoader(config, securityEventCounter);
+        httpJwksLoader = new HttpJwksLoader(config);
+        httpJwksLoader.initSecurityEventCounter(securityEventCounter);
     }
 
     @Test
@@ -101,30 +100,31 @@ class HttpJwksLoaderTest {
     }
 
     @Test
-    @DisplayName("Should get first key info")
-    void shouldGetFirstKeyInfo() {
-
-        Optional<KeyInfo> keyInfo = httpJwksLoader.getFirstKeyInfo();
-        assertTrue(keyInfo.isPresent(), "First key info should be present");
+    @DisplayName("Should get key info for test kid")
+    void shouldGetKeyInfoForTestKid() {
+        // Test getting the specific test key
+        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
+        assertTrue(keyInfo.isPresent(), "Key info should be present for test kid");
+        assertEquals(TEST_KID, keyInfo.get().keyId(), "Key ID should match test kid");
     }
 
     @Test
-    @DisplayName("Should get all key infos")
-    void shouldGetAllKeyInfos() {
-
-        List<KeyInfo> keyInfos = httpJwksLoader.getAllKeyInfos();
-        assertNotNull(keyInfos, "Key infos should not be null");
-        assertFalse(keyInfos.isEmpty(), "Key infos should not be empty");
+    @DisplayName("Should verify key loading works")
+    void shouldVerifyKeyLoadingWorks() {
+        // Verify that keys are loaded properly by checking a known key
+        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
+        assertTrue(keyInfo.isPresent(), "Key should be loaded successfully");
+        assertNotNull(keyInfo.get().key(), "Key object should not be null");
+        assertNotNull(keyInfo.get().keyId(), "Key ID should not be null");
     }
 
     @Test
-    @DisplayName("Should get key set")
-    void shouldGetKeySet() {
-
-        Set<String> keySet = httpJwksLoader.keySet();
-        assertNotNull(keySet, "Key set should not be null");
-        assertFalse(keySet.isEmpty(), "Key set should not be empty");
-        assertTrue(keySet.contains(TEST_KID), "Key set should contain test key ID");
+    @DisplayName("Should verify test key exists")
+    void shouldVerifyTestKeyExists() {
+        // Verify that the test key is available
+        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
+        assertTrue(keyInfo.isPresent(), "Test key should be available");
+        assertEquals(TEST_KID, keyInfo.get().keyId(), "Key ID should match expected test ID");
     }
 
     @Test
@@ -163,7 +163,8 @@ class HttpJwksLoaderTest {
                 .jwksUrl(jwksEndpoint)
                 .build();
 
-        HttpJwksLoader customLoader = new HttpJwksLoader(config, securityEventCounter);
+        HttpJwksLoader customLoader = new HttpJwksLoader(config);
+        customLoader.initSecurityEventCounter(securityEventCounter);
         assertNotNull(customLoader);
 
         // Verify it works
@@ -199,14 +200,17 @@ class HttpJwksLoaderTest {
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .jwksUrl(jwksEndpoint)
                 .build();
-        HttpJwksLoader newLoader = new HttpJwksLoader(config, securityEventCounter);
+        HttpJwksLoader newLoader = new HttpJwksLoader(config);
+        newLoader.initSecurityEventCounter(securityEventCounter);
 
         // Verify the new loader works independently
         assertNotNull(newLoader.isHealthy(), "Health check should work for new loader");
 
-        // Both loaders should be functional
-        assertNotNull(httpJwksLoader.keySet(), "Original loader key set should be available");
-        assertNotNull(newLoader.getAllKeyInfos(), "New loader should be able to retrieve key infos");
+        // Both loaders should be functional - test with getKeyInfo
+        Optional<KeyInfo> originalLoaderKey = httpJwksLoader.getKeyInfo(TEST_KID);
+        Optional<KeyInfo> newLoaderKey = newLoader.getKeyInfo(TEST_KID);
+        assertTrue(originalLoaderKey.isPresent(), "Original loader should have the key");
+        assertTrue(newLoaderKey.isPresent(), "New loader should be able to retrieve the key");
     }
 
     @Test

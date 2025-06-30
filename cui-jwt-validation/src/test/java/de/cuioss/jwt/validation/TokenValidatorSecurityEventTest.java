@@ -57,7 +57,7 @@ class TokenValidatorSecurityEventTest {
 
         // Create issuer config
         IssuerConfig issuerConfig = IssuerConfig.builder()
-
+                .issuerIdentifier("Token-Test-testIssuer")
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                 .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)

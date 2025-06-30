@@ -51,7 +51,8 @@ class SimpleHttpJwksLoaderTest {
                 .jwksUrl(jwksEndpoint)
                 .build();
 
-        httpJwksLoader = new HttpJwksLoader(config, securityEventCounter);
+        httpJwksLoader = new HttpJwksLoader(config);
+        httpJwksLoader.initSecurityEventCounter(securityEventCounter);
     }
 
     @Test
@@ -79,8 +80,8 @@ class SimpleHttpJwksLoaderTest {
         // Multiple calls should only hit endpoint once
         httpJwksLoader.getKeyInfo("default-key-id");
         httpJwksLoader.getKeyInfo("default-key-id");
-        httpJwksLoader.getFirstKeyInfo();
-        httpJwksLoader.getAllKeyInfos();
+        httpJwksLoader.getKeyInfo("another-key-id");
+        httpJwksLoader.isHealthy();
 
         assertEquals(1, moduleDispatcher.getCallCounter());
     }
@@ -89,7 +90,8 @@ class SimpleHttpJwksLoaderTest {
     void retryOnLoad() {
         // The RetryUtil should handle transient failures automatically
         // This test verifies basic functionality works
-        assertNotNull(httpJwksLoader.getAllKeyInfos());
-        assertFalse(httpJwksLoader.keySet().isEmpty());
+        Optional<KeyInfo> keyInfo = httpJwksLoader.getKeyInfo("default-key-id");
+        assertTrue(keyInfo.isPresent());
+        assertNotNull(keyInfo.get().key());
     }
 }

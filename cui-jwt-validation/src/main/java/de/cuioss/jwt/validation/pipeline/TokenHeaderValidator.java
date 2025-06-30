@@ -24,8 +24,6 @@ import jakarta.annotation.Nonnull;
 import lombok.Builder;
 import lombok.NonNull;
 
-import java.util.Optional;
-
 /**
  * Validator for JWT Token headers.
  * <p>
@@ -70,6 +68,10 @@ public class TokenHeaderValidator {
 
     /**
      * Validates a decoded JWT Token's header.
+     * <p>
+     * Note: Issuer validation is now performed at the TokenValidator level during
+     * issuer configuration resolution, not here.
+     * </p>
      *
      * @param decodedJwt the decoded JWT Token to validate
      * @throws TokenValidationException if the token header is invalid
@@ -78,7 +80,7 @@ public class TokenHeaderValidator {
         LOGGER.trace("Validating validation header");
 
         validateAlgorithm(decodedJwt);
-        validateIssuer(decodedJwt);
+        // Issuer validation removed - now handled in TokenValidator.resolveIssuerConfig()
         validateNoEmbeddedJwk(decodedJwt);
 
         LOGGER.debug("Token header is valid");
@@ -133,45 +135,4 @@ public class TokenHeaderValidator {
         LOGGER.debug("Algorithm is valid: %s", algorithm.get());
     }
 
-    /**
-     * Validates the validation's issuer against the configured expected issuers.
-     *
-     * @param decodedJwt the decoded JWT Token
-     * @throws TokenValidationException if the issuer is invalid
-     */
-    @SuppressWarnings("java:S3655") // Suppress warning for using Optional.get()
-    // as we check for presence before calling it
-    private void validateIssuer(DecodedJwt decodedJwt) {
-
-        if (decodedJwt.getIssuer().isEmpty()) {
-            LOGGER.warn(JWTValidationLogMessages.WARN.MISSING_CLAIM.format("iss"));
-            securityEventCounter.increment(SecurityEventCounter.EventType.MISSING_CLAIM);
-            throw new TokenValidationException(
-                    SecurityEventCounter.EventType.MISSING_CLAIM,
-                    "Missing required issuer (iss) claim in token"
-            );
-        }
-        var givenIssuer = decodedJwt.getIssuer().get();
-
-        Optional<String> expectedIssuer = issuerConfig.getIssuerIdentifier();
-        if (expectedIssuer.isEmpty()) {
-            LOGGER.warn("No issuer identifier available from IssuerConfig - configuration may not be healthy");
-            securityEventCounter.increment(SecurityEventCounter.EventType.ISSUER_MISMATCH);
-            throw new TokenValidationException(
-                    SecurityEventCounter.EventType.ISSUER_MISMATCH,
-                    "No issuer identifier available from configuration"
-            );
-        }
-
-        if (!expectedIssuer.get().equals(givenIssuer)) {
-            LOGGER.warn(JWTValidationLogMessages.WARN.ISSUER_MISMATCH.format(givenIssuer, expectedIssuer.get()));
-            securityEventCounter.increment(SecurityEventCounter.EventType.ISSUER_MISMATCH);
-            throw new TokenValidationException(
-                    SecurityEventCounter.EventType.ISSUER_MISMATCH,
-                    "Issuer mismatch: expected '%s' but found '%s'".formatted(expectedIssuer.get(), givenIssuer)
-            );
-        }
-
-        LOGGER.debug("Successfully validated issuer: %s", givenIssuer);
-    }
 }

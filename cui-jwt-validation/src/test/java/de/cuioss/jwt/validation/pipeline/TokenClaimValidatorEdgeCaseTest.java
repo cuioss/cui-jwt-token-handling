@@ -38,7 +38,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -67,9 +69,10 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldValidateTokenThatIsAboutToExpire() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-
+                    .issuerIdentifier("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
+                    .jwksContent("{\"keys\":[]}")
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -87,9 +90,10 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldFailValidationForTokenThatHasJustExpired() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-
+                    .issuerIdentifier("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
+                    .jwksContent("{\"keys\":[]}")
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -114,9 +118,10 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldValidateTokenWithNotBeforeTimeInThePast() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-
+                    .issuerIdentifier("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
+                    .jwksContent("{\"keys\":[]}")
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -134,9 +139,10 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldValidateTokenWithNotBeforeTimeSlightlyInTheFuture() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-
+                    .issuerIdentifier("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
+                    .jwksContent("{\"keys\":[]}")
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -155,9 +161,10 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldFailValidationForTokenWithNotBeforeTimeFarInTheFuture() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-
+                    .issuerIdentifier("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
+                    .jwksContent("{\"keys\":[]}")
                     .build();
             var validator = createValidator(issuerConfig);
 
@@ -186,7 +193,7 @@ class TokenClaimValidatorEdgeCaseTest {
 
             // Given an IssuerConfig with empty JWKS content
             var issuerConfig = IssuerConfig.builder()
-
+                    .issuerIdentifier("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent("{}")  // Empty JWKS content
@@ -298,22 +305,6 @@ class TokenClaimValidatorEdgeCaseTest {
             return Optional.empty();
         }
 
-        @Override
-        public Optional<KeyInfo> getFirstKeyInfo() {
-            // Simulate a network failure by returning an empty Optional
-            return Optional.empty();
-        }
-
-        @Override
-        public List<KeyInfo> getAllKeyInfos() {
-            // Simulate a network failure by returning an empty list
-            return Collections.emptyList();
-        }
-
-        @Override
-        public Set<String> keySet() {
-            // Simulate a network failure by returning an empty set
-            return Collections.emptySet();
-        }
+        // Removed overrides for methods that no longer exist in JwksLoader interface
     }
 }

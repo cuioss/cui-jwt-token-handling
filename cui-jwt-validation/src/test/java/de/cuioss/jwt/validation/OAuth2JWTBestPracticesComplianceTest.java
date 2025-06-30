@@ -69,7 +69,7 @@ class OAuth2JWTBestPracticesComplianceTest {
 
         // Create issuer config with explicit audience validation
         IssuerConfig issuerConfig = IssuerConfig.builder()
-
+                .issuerIdentifier(TestTokenHolder.TEST_ISSUER)
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                 .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)
@@ -269,7 +269,7 @@ class OAuth2JWTBestPracticesComplianceTest {
                     .maxTokenSize(customMaxSize)
                     .build();
             var factory = new TokenValidator(customConfig, IssuerConfig.builder()
-
+                    .issuerIdentifier("test-issuer")
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent(InMemoryJWKSFactory.createDefaultJwks())

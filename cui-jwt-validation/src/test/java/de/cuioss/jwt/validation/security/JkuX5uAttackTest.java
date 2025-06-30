@@ -55,7 +55,7 @@ class JkuX5uAttackTest {
     void setUp() {
         // Create issuer config with JWKS content
         IssuerConfig issuerConfig = IssuerConfig.builder()
-
+                .issuerIdentifier(TestTokenHolder.TEST_ISSUER)
                 .expectedAudience("test-client")
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                 .build();

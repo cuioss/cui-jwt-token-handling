@@ -27,9 +27,7 @@ import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import lombok.NonNull;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -53,22 +51,21 @@ public class HttpJwksLoader implements JwksLoader {
 
     private static final CuiLogger LOGGER = new CuiLogger(HttpJwksLoader.class);
 
-    private final SecurityEventCounter securityEventCounter;
+    private SecurityEventCounter securityEventCounter;
     private final HttpJwksLoaderConfig config;
     private final AtomicReference<JWKSKeyLoader> keyLoader = new AtomicReference<>();
     private final AtomicReference<ETagAwareHttpHandler> httpCache = new AtomicReference<>();
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
     private final AtomicReference<ScheduledFuture<?>> refreshTask = new AtomicReference<>();
     private final AtomicBoolean schedulerStarted = new AtomicBoolean(false);
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     /**
      * Constructor using HttpJwksLoaderConfig.
      * Supports both direct HTTP handlers and WellKnownResolver configurations.
-     * ETagAwareHttpHandler is created dynamically based on configuration health status.
+     * The SecurityEventCounter must be set via initSecurityEventCounter() before use.
      */
-    public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config,
-            @NonNull SecurityEventCounter securityEventCounter) {
-        this.securityEventCounter = securityEventCounter;
+    public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config) {
         this.config = config;
     }
 
@@ -79,26 +76,6 @@ public class HttpJwksLoader implements JwksLoader {
         return loader != null ? loader.getKeyInfo(kid) : Optional.empty();
     }
 
-    @Override
-    public Optional<KeyInfo> getFirstKeyInfo() {
-        ensureLoaded();
-        JWKSKeyLoader loader = keyLoader.get();
-        return loader != null ? loader.getFirstKeyInfo() : Optional.empty();
-    }
-
-    @Override
-    public List<KeyInfo> getAllKeyInfos() {
-        ensureLoaded();
-        JWKSKeyLoader loader = keyLoader.get();
-        return loader != null ? loader.getAllKeyInfos() : List.of();
-    }
-
-    @Override
-    public Set<String> keySet() {
-        ensureLoaded();
-        JWKSKeyLoader loader = keyLoader.get();
-        return loader != null ? loader.keySet() : Set.of();
-    }
 
     @Override
     public JwksType getJwksType() {
@@ -165,6 +142,9 @@ public class HttpJwksLoader implements JwksLoader {
     }
 
     private void ensureLoaded() {
+        if (!initialized.get()) {
+            throw new IllegalStateException("HttpJwksLoader not initialized. Call initSecurityEventCounter() first.");
+        }
         if (keyLoader.get() == null) {
             loadKeysIfNeeded();
         }
@@ -238,9 +218,10 @@ public class HttpJwksLoader implements JwksLoader {
     private void updateKeyLoader(ETagAwareHttpHandler.LoadResult result) {
         JWKSKeyLoader newLoader = JWKSKeyLoader.builder()
                 .jwksContent(result.content())
-                .securityEventCounter(securityEventCounter)
                 .jwksType(getJwksType())
                 .build();
+        // Initialize the JWKSKeyLoader with the SecurityEventCounter
+        newLoader.initSecurityEventCounter(securityEventCounter);
         keyLoader.set(newLoader);
         this.status = LoaderStatus.OK;
     }
@@ -357,6 +338,14 @@ public class HttpJwksLoader implements JwksLoader {
                 LOGGER.error(e, "Failed to resolve JWKS URI from well-known endpoint: %s", e.getMessage());
                 return Optional.empty();
             }
+        }
+    }
+
+    @Override
+    public void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter) {
+        if (initialized.compareAndSet(false, true)) {
+            this.securityEventCounter = securityEventCounter;
+            LOGGER.debug("HttpJwksLoader initialized with SecurityEventCounter");
         }
     }
 }

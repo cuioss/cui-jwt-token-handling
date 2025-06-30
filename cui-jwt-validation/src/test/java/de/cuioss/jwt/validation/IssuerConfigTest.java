@@ -78,7 +78,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
                     .build();
 
             // Then
-            assertEquals(jwksContent, config.getJwksContent());
+            assertNotNull(config.getJwksLoader());
             assertEquals(TEST_ISSUER, config.getIssuerIdentifier().orElse(null));
             assertTrue(config.getExpectedAudience().isEmpty());
             assertTrue(config.getExpectedClientId().isEmpty());
@@ -111,7 +111,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
             assertEquals(Set.of(clientId), config.getExpectedClientId());
             assertEquals(algorithmPreferences, config.getAlgorithmPreferences());
             assertEquals(claimMapper, config.getClaimMappers().get("test-claim"));
-            assertEquals(httpConfig, config.getHttpJwksLoaderConfig());
+            assertNotNull(config.getJwksLoader());
         }
     }
 
@@ -181,8 +181,8 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldThrowExceptionDuringBuildWhenNoJwksLoaderConfig() {
             // When/Then - build should now throw since validation happens during construction
             var exception = assertThrows(IllegalStateException.class, () ->
-                IssuerConfig.builder()
-                        .build());
+                    IssuerConfig.builder()
+                            .build());
 
             assertTrue(exception.getMessage().contains("No JwksLoader configuration is present"));
         }
@@ -239,9 +239,9 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldThrowExceptionWhenNoJwksConfigurationIsPresent() {
             // When/Then - should throw during build
             var exception = assertThrows(IllegalStateException.class, () ->
-                IssuerConfig.builder()
-                        .issuerIdentifier("test-issuer")
-                        .build());
+                    IssuerConfig.builder()
+                            .issuerIdentifier("test-issuer")
+                            .build());
             assertTrue(exception.getMessage().contains("No JwksLoader configuration is present"));
         }
 
@@ -250,9 +250,9 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldThrowExceptionWhenIssuerIdentifierMissingForInMemoryJwks() {
             // When/Then - should throw during build
             var exception = assertThrows(IllegalStateException.class, () ->
-                IssuerConfig.builder()
-                        .jwksContent(TEST_JWKS_CONTENT)
-                        .build());
+                    IssuerConfig.builder()
+                            .jwksContent(TEST_JWKS_CONTENT)
+                            .build());
             assertTrue(exception.getMessage().contains("issuerIdentifier is required"));
         }
 
@@ -261,9 +261,9 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldThrowExceptionWhenIssuerIdentifierMissingForFileBasedJwks() {
             // When/Then - should throw during build
             var exception = assertThrows(IllegalStateException.class, () ->
-                IssuerConfig.builder()
-                        .jwksFilePath("/path/to/jwks.json")
-                        .build());
+                    IssuerConfig.builder()
+                            .jwksFilePath("/path/to/jwks.json")
+                            .build());
             assertTrue(exception.getMessage().contains("issuerIdentifier is required"));
         }
 

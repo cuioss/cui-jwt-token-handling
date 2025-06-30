@@ -262,9 +262,9 @@ public class TestTokenHolder implements TokenContent {
         // Create the JWKS content
         String jwksContent = InMemoryKeyMaterialHandler.createJwks(signingAlgorithm, keyId);
 
-        // Build and return the IssuerConfig
+        // Build and return the IssuerConfig using the new issuerIdentifier field
         var config = IssuerConfig.builder()
-
+                .issuerIdentifier(issuer)
                 .jwksContent(jwksContent)
                 .algorithmPreferences(new SignatureAlgorithmPreferences());
 

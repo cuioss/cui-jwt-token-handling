@@ -48,8 +48,8 @@ class JWKSKeyLoaderTest {
         keyLoader = JWKSKeyLoader.builder()
                 .jwksContent(jwksContent)
 
-                .securityEventCounter(securityEventCounter)
                 .build();
+        keyLoader.initSecurityEventCounter(securityEventCounter);
     }
 
     @Nested
@@ -64,21 +64,22 @@ class JWKSKeyLoaderTest {
         }
 
         @Test
-        @DisplayName("Should get first key when available")
-        void shouldGetFirstKeyWhenAvailable() {
-
-            Optional<KeyInfo> keyInfo = keyLoader.getFirstKeyInfo();
-            assertTrue(keyInfo.isPresent(), "First key info should be present");
+        @DisplayName("Should get key by known kid")
+        void shouldGetKeyByKnownKid() {
+            // Test getting a key by its known ID
+            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo(TEST_KID);
+            assertTrue(keyInfo.isPresent(), "Key info should be present for known kid");
+            assertEquals(TEST_KID, keyInfo.get().keyId(), "Key ID should match");
         }
 
         @Test
-        @DisplayName("Should return correct keySet")
-        void shouldReturnCorrectKeySet() {
-
-            var keySet = keyLoader.keySet();
-            assertFalse(keySet.isEmpty(), "KeySet should not be empty");
-            assertTrue(keySet.contains(TEST_KID), "KeySet should contain the test key ID");
-            assertEquals(1, keySet.size(), "KeySet should contain exactly one key");
+        @DisplayName("Should verify test key exists")
+        void shouldVerifyTestKeyExists() {
+            // Verify that the test key is loaded correctly
+            Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo(TEST_KID);
+            assertTrue(keyInfo.isPresent(), "Test key should be loaded");
+            assertNotNull(keyInfo.get().key(), "Key object should not be null");
+            assertEquals(TEST_KID, keyInfo.get().keyId(), "Key ID should match test ID");
         }
     }
 
@@ -109,8 +110,8 @@ class JWKSKeyLoaderTest {
             String invalidJwksContent = InMemoryJWKSFactory.createInvalidJson();
             JWKSKeyLoader invalidLoader = JWKSKeyLoader.builder()
                     .jwksContent(invalidJwksContent)
-                    .securityEventCounter(new SecurityEventCounter())
                     .build();
+            invalidLoader.initSecurityEventCounter(new SecurityEventCounter());
             Optional<KeyInfo> keyInfo = invalidLoader.getKeyInfo(TEST_KID);
             assertFalse(keyInfo.isPresent(), "Key info should not be present when JWKS is invalid");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, "Failed to parse JWKS JSON");
@@ -123,8 +124,8 @@ class JWKSKeyLoaderTest {
             String missingFieldsJwksContent = InMemoryJWKSFactory.createJwksWithMissingFields(TEST_KID);
             JWKSKeyLoader missingFieldsLoader = JWKSKeyLoader.builder()
                     .jwksContent(missingFieldsJwksContent)
-                    .securityEventCounter(new SecurityEventCounter())
                     .build();
+            missingFieldsLoader.initSecurityEventCounter(new SecurityEventCounter());
             Optional<KeyInfo> keyInfo = missingFieldsLoader.getKeyInfo(TEST_KID);
             assertFalse(keyInfo.isPresent(), "Key info should not be present when JWK is missing required fields");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Failed to parse RSA key");
@@ -147,8 +148,8 @@ class JWKSKeyLoaderTest {
             String emptyJwksContent = "{}";
             JWKSKeyLoader emptyLoader = JWKSKeyLoader.builder()
                     .jwksContent(emptyJwksContent)
-                    .securityEventCounter(new SecurityEventCounter())
                     .build();
+            emptyLoader.initSecurityEventCounter(new SecurityEventCounter());
             boolean notEmpty = emptyLoader.isNotEmpty();
             assertFalse(notEmpty, "Loader should report empty when no keys are present");
         }
@@ -170,8 +171,8 @@ class JWKSKeyLoaderTest {
                     .jwksContent(jwksContent)
 
                     .parserConfig(customConfig)
-                    .securityEventCounter(new SecurityEventCounter())
                     .build();
+            loaderWithCustomConfig.initSecurityEventCounter(new SecurityEventCounter());
             assertTrue(loaderWithCustomConfig.isNotEmpty(),
                     "Loader should parse valid JWKS with custom config");
         }
@@ -192,8 +193,8 @@ class JWKSKeyLoaderTest {
 
                     )
                     .parserConfig(restrictiveConfig)
-                    .securityEventCounter(new SecurityEventCounter())
                     .build();
+            loader.initSecurityEventCounter(new SecurityEventCounter());
             assertFalse(loader.isNotEmpty(), "Loader should reject content exceeding maximum size");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, JWKS_CONTENT_SIZE_EXCEEDED.resolveIdentifierString());
         }

@@ -113,6 +113,7 @@ class ClientConfusionAttackTest {
 
         // Create an IssuerConfig with a different client ID than what's in the token
         IssuerConfig issuerConfig = IssuerConfig.builder()
+                .issuerIdentifier(TestTokenHolder.TEST_ISSUER)
                 .expectedClientId(ALTERNATIVE_CLIENT_ID) // Use a different client ID
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                 .build();
@@ -193,6 +194,7 @@ class ClientConfusionAttackTest {
 
         // Create an IssuerConfig with the correct audience but no client ID
         IssuerConfig issuerConfig = IssuerConfig.builder()
+                .issuerIdentifier(TestTokenHolder.TEST_ISSUER)
                 .expectedAudience(tokenHolder.getAuthorizedParty())
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                 .build();

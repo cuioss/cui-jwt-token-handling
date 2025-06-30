@@ -286,12 +286,20 @@ class TokenValidatorTest {
         void shouldLogWarningWhenKeyIsNotFound(TestTokenHolder tokenHolder) {
             String token = tokenHolder.getRawToken();
 
-            IssuerConfig newIssuerConfig = IssuerConfig.builder()
+            // Get issuer from the token holder to match the test issuer
+            String issuer = TestTokenHolder.TEST_ISSUER;
+            if (tokenHolder.getClaims().containsKey(ClaimName.ISSUER.getName())) {
+                issuer = tokenHolder.getClaims().get(ClaimName.ISSUER.getName()).getOriginalString();
+            }
 
+            // Create JWKS with a different key ID so the issuer is healthy but key is not found
+            String jwksContent = InMemoryJWKSFactory.createValidJwksWithKeyId("different-key-id");
+
+            IssuerConfig newIssuerConfig = IssuerConfig.builder()
+                    .issuerIdentifier(issuer)
+                    .jwksContent(jwksContent)
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
-                    // Use JWKS with a different key ID so the issuer is healthy but key is not found
-                    .jwksContent(InMemoryJWKSFactory.createValidJwksWithKeyId("different-key-id"))
                     .build();
 
             TokenValidator newTokenValidator = new TokenValidator(newIssuerConfig);
