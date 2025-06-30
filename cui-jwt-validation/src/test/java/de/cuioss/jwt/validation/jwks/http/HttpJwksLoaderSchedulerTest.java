@@ -31,10 +31,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger
@@ -43,8 +43,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class HttpJwksLoaderSchedulerTest {
 
     private static final String TEST_KID = InMemoryJWKSFactory.DEFAULT_KEY_ID;
-    private static final int MAX_WAIT_TIME_MS = 5000; // Maximum wait time for async operations
-    private static final int POLL_INTERVAL_MS = 100; // How often to check conditions
 
     @Getter
     private final JwksResolveDispatcher moduleDispatcher = new JwksResolveDispatcher();
@@ -57,29 +55,6 @@ class HttpJwksLoaderSchedulerTest {
         securityEventCounter = new SecurityEventCounter();
     }
 
-    /**
-     * Waits for a condition to become true, polling at regular intervals.
-     * 
-     * @param condition the condition to wait for
-     * @param maxWaitMs maximum time to wait in milliseconds
-     * @param message message to include in assertion error
-     * @return true if condition was met, false if timeout
-     */
-    private boolean waitForCondition(BooleanSupplier condition, long maxWaitMs, String message) {
-        long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < maxWaitMs) {
-            if (condition.getAsBoolean()) {
-                return true;
-            }
-            try {
-                Thread.sleep(POLL_INTERVAL_MS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return false;
-            }
-        }
-        return false;
-    }
 
     @Test
     @DisplayName("Should not start scheduler when no config provided")
@@ -154,11 +129,10 @@ class HttpJwksLoaderSchedulerTest {
         Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
         assertTrue(keyInfo.isPresent(), "Initial load should work");
 
-        // Wait for scheduler to start using proper synchronization
-        assertTrue(
-                waitForCondition(() -> loader.isBackgroundRefreshActive(), 2000, "Scheduler start"),
-                "Background refresh should be active after first successful load"
-        );
+        // Wait for scheduler to start using Awaitility
+        await("Background refresh scheduler to start")
+                .atMost(2, SECONDS)
+                .until(loader::isBackgroundRefreshActive);
 
         // Verify log message about scheduler start
         LogAsserts.assertLogMessagePresentContaining(
@@ -195,15 +169,10 @@ class HttpJwksLoaderSchedulerTest {
         // Switch to different key to simulate change
         moduleDispatcher.switchToOtherPublicKey();
 
-        // Wait for background refresh to trigger
-        assertTrue(
-                waitForCondition(
-                        () -> moduleDispatcher.getCallCounter() > initialCallCount,
-                        2000,
-                        "Background refresh should have triggered additional HTTP calls"
-                ),
-                "Background refresh should have triggered additional HTTP calls within 2 seconds"
-        );
+        // Wait for background refresh to trigger using Awaitility
+        await("Background refresh to detect key changes and make additional HTTP call")
+                .atMost(2, SECONDS)
+                .until(() -> moduleDispatcher.getCallCounter() > initialCallCount);
 
         loader.shutdown();
     }
@@ -232,8 +201,10 @@ class HttpJwksLoaderSchedulerTest {
         moduleDispatcher.returnError();
 
         // Wait for background refresh to encounter errors - scheduler runs every 1 second
-        CountDownLatch waitLatch = new CountDownLatch(1);
-        waitLatch.await(1500, TimeUnit.MILLISECONDS); // Wait long enough for scheduler to run
+        await("Scheduler to execute at least one background refresh cycle")
+                .atMost(1500, MILLISECONDS)
+                .pollDelay(1200, MILLISECONDS) // Give scheduler time to run at least once
+                .until(() -> true); // Just wait for the time period
 
         // Loader should still be healthy if it has existing keys
         assertEquals(LoaderStatus.OK, loader.isHealthy(), "Loader should remain healthy with cached keys even if background refresh fails");
@@ -267,11 +238,10 @@ class HttpJwksLoaderSchedulerTest {
         loader.getFirstKeyInfo();
         loader.getAllKeyInfos();
 
-        // Wait for scheduler to start 
-        assertTrue(
-                waitForCondition(() -> loader.isBackgroundRefreshActive(), 500, "Scheduler start"),
-                "Scheduler should start after operations"
-        );
+        // Wait for scheduler to start using Awaitility
+        await("Scheduler to activate after multiple operations")
+                .atMost(500, MILLISECONDS)
+                .until(loader::isBackgroundRefreshActive);
 
         // Should only have one scheduler start message
         LogAsserts.assertLogMessagePresentContaining(
@@ -298,10 +268,9 @@ class HttpJwksLoaderSchedulerTest {
 
         // Start scheduler
         loader.getKeyInfo(TEST_KID);
-        assertTrue(
-                waitForCondition(() -> loader.isBackgroundRefreshActive(), 500, "Scheduler start"),
-                "Scheduler should be active after key load"
-        );
+        await("Scheduler to start after key load")
+                .atMost(500, MILLISECONDS)
+                .until(loader::isBackgroundRefreshActive);
 
         // Shutdown should cancel the task
         loader.shutdown();
@@ -363,8 +332,10 @@ class HttpJwksLoaderSchedulerTest {
         assertTrue(keyInfo.isPresent(), "Initial load should work");
 
         // Wait for background refresh to execute - scheduler runs every 1 second  
-        CountDownLatch waitLatch = new CountDownLatch(1);
-        waitLatch.await(1500, TimeUnit.MILLISECONDS); // Wait long enough for scheduler to run
+        await("At least one background refresh cycle to complete")
+                .atMost(1500, MILLISECONDS)
+                .pollDelay(1200, MILLISECONDS) // Give scheduler time to run at least once
+                .until(() -> true); // Just wait for the time period
 
         // Verify that background refresh executed - it should have logged either:
         // - "Background refresh completed, no changes detected" if 304 Not Modified
