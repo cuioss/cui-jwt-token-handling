@@ -174,18 +174,36 @@ public class TokenValidator {
                 // Initialize the JwksLoader with the SecurityEventCounter
                 issuerConfig.initSecurityEventCounter(securityEventCounter);
 
-                // Use effective issuer as map key (supports well-known discovery)
+                // Use both configured and effective issuer as map keys to handle well-known discovery
+                String configuredIssuer = issuerConfig.getIssuer();
                 String effectiveIssuer = issuerConfig.getEffectiveIssuer();
-                builder.put(effectiveIssuer, issuerConfig);
+                
+                // Always put configured issuer in map
+                builder.put(configuredIssuer, issuerConfig);
+                
+                // If effective issuer is different from configured, also put it in map
+                if (!configuredIssuer.equals(effectiveIssuer)) {
+                    builder.put(effectiveIssuer, issuerConfig);
+                    LOGGER.debug("Mapped both configured issuer '%s' and effective issuer '%s' to same config", configuredIssuer, effectiveIssuer);
+                }
+                
                 enabledCount++;
 
-                // Perform initial health check to populate dual maps
+                // Perform initial health check to populate dual maps using effective issuer
                 if (issuerConfig.isHealthy() == LoaderStatus.OK) {
                     healthyIssuers.put(effectiveIssuer, issuerConfig);
-                    LOGGER.debug("Issuer %s initialized as healthy (effective issuer: %s)", issuerConfig.getIssuer(), effectiveIssuer);
+                    // Also map configured issuer if different
+                    if (!configuredIssuer.equals(effectiveIssuer)) {
+                        healthyIssuers.put(configuredIssuer, issuerConfig);
+                    }
+                    LOGGER.debug("Issuer %s initialized as healthy (effective issuer: %s)", configuredIssuer, effectiveIssuer);
                 } else {
                     unhealthyIssuers.put(effectiveIssuer, issuerConfig);
-                    LOGGER.debug("Issuer %s initialized as unhealthy (effective issuer: %s)", issuerConfig.getIssuer(), effectiveIssuer);
+                    // Also map configured issuer if different
+                    if (!configuredIssuer.equals(effectiveIssuer)) {
+                        unhealthyIssuers.put(configuredIssuer, issuerConfig);
+                    }
+                    LOGGER.debug("Issuer %s initialized as unhealthy (effective issuer: %s)", configuredIssuer, effectiveIssuer);
                 }
             } else {
                 LOGGER.debug("Skipping disabled issuer: %s", issuerConfig.getIssuer());
