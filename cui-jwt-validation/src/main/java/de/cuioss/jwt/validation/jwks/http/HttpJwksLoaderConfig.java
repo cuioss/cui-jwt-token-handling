@@ -16,6 +16,7 @@
 package de.cuioss.jwt.validation.jwks.http;
 
 import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
+import de.cuioss.jwt.validation.well_known.HttpWellKnownResolver;
 import de.cuioss.jwt.validation.well_known.WellKnownResolver;
 import de.cuioss.tools.base.Preconditions;
 import de.cuioss.tools.logging.CuiLogger;
@@ -114,7 +115,8 @@ public class HttpJwksLoaderConfig {
     private enum EndpointSource {
         JWKS_URI,
         JWKS_URL,
-        WELL_KNOWN
+        WELL_KNOWN_URL,
+        WELL_KNOWN_URI
     }
 
     /**
@@ -124,7 +126,7 @@ public class HttpJwksLoaderConfig {
         private Integer refreshIntervalSeconds = DEFAULT_REFRESH_INTERVAL_IN_SECONDS;
         private final HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
         private ScheduledExecutorService scheduledExecutorService;
-        private WellKnownResolver wellKnownResolver;
+        private WellKnownConfig wellKnownConfig;
 
         // Track which endpoint configuration method was used to ensure mutual exclusivity
         private EndpointSource endpointSource = null;
@@ -140,7 +142,7 @@ public class HttpJwksLoaderConfig {
         /**
          * Sets the JWKS URI directly.
          * <p>
-         * This method is mutually exclusive with {@link #jwksUrl(String)} and {@link #wellKnown(WellKnownResolver)}.
+         * This method is mutually exclusive with {@link #jwksUrl(String)}, {@link #wellKnownUrl(String)}, and {@link #wellKnownUri(URI)}.
          * Only one endpoint configuration method can be used per builder instance.
          * </p>
          *
@@ -158,7 +160,7 @@ public class HttpJwksLoaderConfig {
         /**
          * Sets the JWKS URL as a string, which will be converted to a URI.
          * <p>
-         * This method is mutually exclusive with {@link #jwksUri(URI)} and {@link #wellKnown(WellKnownResolver)}.
+         * This method is mutually exclusive with {@link #jwksUri(URI)}, {@link #wellKnownUrl(String)}, and {@link #wellKnownUri(URI)}.
          * Only one endpoint configuration method can be used per builder instance.
          * </p>
          *
@@ -174,26 +176,52 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
-         * Configures the JWKS loading using a {@link WellKnownResolver}.
+         * Configures the JWKS loading using well-known endpoint discovery from a URL string.
          * <p>
-         * This method stores the WellKnownResolver for dynamic JWKS URI resolution.
-         * The JWKS URI will be extracted at runtime when the resolver is healthy.
+         * This method creates a {@link WellKnownConfig} internally for dynamic JWKS URI resolution.
+         * The JWKS URI will be extracted at runtime from the well-known discovery document.
          * </p>
          * <p>
-         * This method is mutually exclusive with {@link #jwksUri(URI)} and {@link #jwksUrl(String)}.
+         * This method is mutually exclusive with {@link #jwksUri(URI)}, {@link #jwksUrl(String)}, and {@link #wellKnownUri(URI)}.
          * Only one endpoint configuration method can be used per builder instance.
          * </p>
          *
-         * @param wellKnownResolver The {@link WellKnownResolver} instance to use for
-         *                          JWKS URI discovery. Must not be null.
+         * @param wellKnownUrl The well-known discovery endpoint URL string. Must not be null.
          * @return this builder instance
          * @throws IllegalStateException if another endpoint configuration method was already used
-         * @throws IllegalArgumentException if {@code wellKnownResolver} is null
+         * @throws IllegalArgumentException if {@code wellKnownUrl} is null or invalid
          */
-        public HttpJwksLoaderConfigBuilder wellKnown(@NonNull WellKnownResolver wellKnownResolver) {
-            validateEndpointExclusivity(EndpointSource.WELL_KNOWN);
-            this.endpointSource = EndpointSource.WELL_KNOWN;
-            this.wellKnownResolver = wellKnownResolver;
+        public HttpJwksLoaderConfigBuilder wellKnownUrl(@NonNull String wellKnownUrl) {
+            validateEndpointExclusivity(EndpointSource.WELL_KNOWN_URL);
+            this.endpointSource = EndpointSource.WELL_KNOWN_URL;
+            this.wellKnownConfig = WellKnownConfig.builder()
+                    .wellKnownUrl(wellKnownUrl)
+                    .build();
+            return this;
+        }
+
+        /**
+         * Configures the JWKS loading using well-known endpoint discovery from a URI.
+         * <p>
+         * This method creates a {@link WellKnownConfig} internally for dynamic JWKS URI resolution.
+         * The JWKS URI will be extracted at runtime from the well-known discovery document.
+         * </p>
+         * <p>
+         * This method is mutually exclusive with {@link #jwksUri(URI)}, {@link #jwksUrl(String)}, and {@link #wellKnownUrl(String)}.
+         * Only one endpoint configuration method can be used per builder instance.
+         * </p>
+         *
+         * @param wellKnownUri The well-known discovery endpoint URI. Must not be null.
+         * @return this builder instance
+         * @throws IllegalStateException if another endpoint configuration method was already used
+         * @throws IllegalArgumentException if {@code wellKnownUri} is null
+         */
+        public HttpJwksLoaderConfigBuilder wellKnownUri(@NonNull URI wellKnownUri) {
+            validateEndpointExclusivity(EndpointSource.WELL_KNOWN_URI);
+            this.endpointSource = EndpointSource.WELL_KNOWN_URI;
+            this.wellKnownConfig = WellKnownConfig.builder()
+                    .wellKnownUri(wellKnownUri)
+                    .build();
             return this;
         }
 
@@ -286,7 +314,7 @@ public class HttpJwksLoaderConfig {
             if (endpointSource != null && endpointSource != proposedSource) {
                 throw new IllegalStateException(
                         ("Cannot use %s endpoint configuration when %s was already configured. " +
-                                "Methods jwksUri(), jwksUrl(), and wellKnown() are mutually exclusive.")
+                                "Methods jwksUri(), jwksUrl(), wellKnownUrl(), and wellKnownUri() are mutually exclusive.")
                                 .formatted(proposedSource.name().toLowerCase().replace("_", ""), endpointSource.name().toLowerCase().replace("_", "")));
             }
         }
@@ -303,15 +331,15 @@ public class HttpJwksLoaderConfig {
             // Ensure at least one endpoint configuration method was used
             if (endpointSource == null) {
                 throw new IllegalStateException(
-                        "No JWKS endpoint configured. Must call one of: jwksUri(), jwksUrl(), or wellKnown()");
+                        "No JWKS endpoint configured. Must call one of: jwksUri(), jwksUrl(), wellKnownUrl(), or wellKnownUri()");
             }
 
             HttpHandler jwksHttpHandler = null;
             WellKnownResolver configuredWellKnownResolver = null;
 
-            if (endpointSource == EndpointSource.WELL_KNOWN) {
-                // Store the WellKnownResolver for dynamic resolution
-                configuredWellKnownResolver = this.wellKnownResolver;
+            if (endpointSource == EndpointSource.WELL_KNOWN_URL || endpointSource == EndpointSource.WELL_KNOWN_URI) {
+                // Create WellKnownResolver from WellKnownConfig
+                configuredWellKnownResolver = createWellKnownResolver(this.wellKnownConfig);
             } else {
                 // Build the HttpHandler for direct URL/URI configuration
                 try {
@@ -338,6 +366,18 @@ public class HttpJwksLoaderConfig {
                     jwksHttpHandler,
                     configuredWellKnownResolver,
                     executor);
+        }
+
+        /**
+         * Creates a WellKnownResolver from the given WellKnownConfig.
+         * Uses the WellKnownConfig which internally manages HttpHandler creation.
+         *
+         * @param config the WellKnownConfig to create the resolver from
+         * @return a configured WellKnownResolver instance
+         * @throws IllegalArgumentException if the configuration is invalid
+         */
+        private WellKnownResolver createWellKnownResolver(WellKnownConfig config) {
+            return new HttpWellKnownResolver(config);
         }
     }
 }

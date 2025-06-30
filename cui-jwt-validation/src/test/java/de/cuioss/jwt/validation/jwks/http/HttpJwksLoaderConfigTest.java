@@ -305,7 +305,7 @@ class HttpJwksLoaderConfigTest {
                         .build());
 
         assertTrue(exception.getMessage().contains("No JWKS endpoint configured"));
-        assertTrue(exception.getMessage().contains("Must call one of: jwksUri(), jwksUrl(), or wellKnown()"));
+        assertTrue(exception.getMessage().contains("Must call one of: jwksUri(), jwksUrl(), wellKnownUrl(), or wellKnownUri()"));
     }
 
     @Test

@@ -17,6 +17,7 @@ package de.cuioss.jwt.validation;
 
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
+import de.cuioss.jwt.validation.jwks.http.WellKnownConfig;
 import de.cuioss.jwt.validation.well_known.HttpWellKnownResolver;
 import de.cuioss.test.keycloakit.KeycloakITBase;
 import de.cuioss.test.keycloakit.TestRealm;
@@ -224,10 +225,11 @@ public class TokenKeycloakIT extends KeycloakITBase {
             // 2. Perform OIDC Discovery
             // Use the keycloakSslContext to ensure proper SSL certificate validation
             // when connecting to the Keycloak server
-            HttpWellKnownResolver wellKnownHandler = HttpWellKnownResolver.builder()
-                    .url(wellKnownUrlString)
+            WellKnownConfig wellKnownConfig = WellKnownConfig.builder()
+                    .wellKnownUrl(wellKnownUrlString)
                     .sslContext(keycloakSslContext)
                     .build();
+            HttpWellKnownResolver wellKnownHandler = new HttpWellKnownResolver(wellKnownConfig);
             assertNotNull(wellKnownHandler.getJwksUri(), "JWKS URI should be present in well-known config");
             assertNotNull(wellKnownHandler.getIssuer(), "Issuer should be present in well-known config");
             URL keycloakIssuerUrl = wellKnownHandler.getIssuer().getUrl();
@@ -276,10 +278,11 @@ public class TokenKeycloakIT extends KeycloakITBase {
         @DisplayName("Should fail validation if expected issuer is incorrect (via Well-Known discovery setup)")
         void shouldFailValidationWithIncorrectExpectedIssuerViaWellKnown() {
             String wellKnownUrlString = TokenKeycloakIT.this.authServerUrlString + "/realms/" + TestRealm.REALM_NAME + "/.well-known/openid-configuration";
-            HttpWellKnownResolver wellKnownHandler = HttpWellKnownResolver.builder()
-                    .url(wellKnownUrlString)
+            WellKnownConfig wellKnownConfig = WellKnownConfig.builder()
+                    .wellKnownUrl(wellKnownUrlString)
                     .sslContext(keycloakSslContext)
                     .build();
+            HttpWellKnownResolver wellKnownHandler = new HttpWellKnownResolver(wellKnownConfig);
             assertNotNull(wellKnownHandler.getIssuer(), "Issuer should be present in well-known config");
 
             // Use direct JWKS URL since WellKnownHandler integration is simplified

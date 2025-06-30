@@ -187,28 +187,26 @@ class HttpJwksLoaderTest {
     }
 
     @Test
-    @DisplayName("Should detect key rotation and log warning")
-    void shouldDetectKeyRotationAndLogWarning() {
-        // Get initial count of key rotation events
-        long initialRotationCount = securityEventCounter.getCount(SecurityEventCounter.EventType.KEY_ROTATION_DETECTED);
-
+    @DisplayName("Should work with multiple loader instances")
+    void shouldWorkWithMultipleLoaderInstances(URIBuilder uriBuilder) {
         // First, get a key to ensure keys are loaded
         Optional<KeyInfo> initialKeyInfo = httpJwksLoader.getKeyInfo(TEST_KID);
         assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
 
-        // Switch to a different key to simulate key rotation
-        moduleDispatcher.switchToOtherPublicKey();
-
-        // With simplified loader, we need to create a new instance to get updated keys
-        // since there's no background refresh or forced reload
+        // Create a new loader instance with the same configuration
+        // This tests that multiple loaders can work independently  
+        String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
-                .jwksUrl(moduleDispatcher.getCallCounter() > 0 ? "http://localhost:8080/" + JwksResolveDispatcher.LOCAL_PATH : "invalid")
+                .jwksUrl(jwksEndpoint)
                 .build();
         HttpJwksLoader newLoader = new HttpJwksLoader(config, securityEventCounter);
 
-        // This test now verifies that key rotation can be detected when creating a new loader
-        // The exact rotation detection mechanism is handled by the JWKSKeyLoader
-        assertNotNull(newLoader.isHealthy(), "Health check should work");
+        // Verify the new loader works independently
+        assertNotNull(newLoader.isHealthy(), "Health check should work for new loader");
+
+        // Both loaders should be functional
+        assertNotNull(httpJwksLoader.keySet(), "Original loader key set should be available");
+        assertNotNull(newLoader.getAllKeyInfos(), "New loader should be able to retrieve key infos");
     }
 
     @Test

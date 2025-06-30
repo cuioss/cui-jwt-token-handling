@@ -17,16 +17,14 @@ package de.cuioss.jwt.validation.well_known;
 
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
-import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
+import de.cuioss.jwt.validation.jwks.http.WellKnownConfig;
 import de.cuioss.jwt.validation.util.ETagAwareHttpHandler;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
-import de.cuioss.tools.net.http.SecureSSLContextProvider;
 import jakarta.json.JsonObject;
 import lombok.NonNull;
 
-import javax.net.ssl.SSLContext;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,9 +60,6 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     private static final String TOKEN_ENDPOINT_KEY = "token_endpoint";
     private static final String USERINFO_ENDPOINT_KEY = "userinfo_endpoint";
 
-    private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 2;
-    private static final int DEFAULT_READ_TIMEOUT_SECONDS = 3;
-
     private final URL wellKnownUrl;
     private final ETagAwareHttpHandler etagHandler;
     private final WellKnownParser parser;
@@ -74,106 +69,17 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     private volatile LoaderStatus status = LoaderStatus.UNDEFINED;
 
     /**
-     * Creates a new HTTP well-known resolver.
+     * Creates a new HTTP well-known resolver from WellKnownConfig.
      *
-     * @param httpHandler the HTTP handler for making requests
-     * @param parserConfig the parser configuration
+     * @param config the well-known configuration containing HTTP handler and parser settings
      */
-    public HttpWellKnownResolver(@NonNull HttpHandler httpHandler, ParserConfig parserConfig) {
+    public HttpWellKnownResolver(@NonNull WellKnownConfig config) {
+        HttpHandler httpHandler = config.getHttpHandler();
         this.wellKnownUrl = httpHandler.getUrl();
         this.etagHandler = new ETagAwareHttpHandler(httpHandler);
-        this.parser = new WellKnownParser(parserConfig);
+        this.parser = new WellKnownParser(config.getParserConfig());
         this.mapper = new WellKnownEndpointMapper(httpHandler);
-    }
-
-    /**
-     * Returns a new builder for creating HttpWellKnownResolver instances.
-     */
-    public static HttpWellKnownResolverBuilder builder() {
-        return new HttpWellKnownResolverBuilder();
-    }
-
-    /**
-     * Builder for creating HttpWellKnownResolver instances.
-     */
-    public static class HttpWellKnownResolverBuilder {
-        private ParserConfig parserConfig;
-        private HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
-        private HttpHandler preBuiltHttpHandler;
-        private Integer connectTimeoutSeconds;
-        private Integer readTimeoutSeconds;
-
-        public HttpWellKnownResolverBuilder() {
-            this.httpHandlerBuilder = HttpHandler.builder();
-        }
-
-        public HttpWellKnownResolverBuilder url(String wellKnownUrlString) {
-            httpHandlerBuilder.url(wellKnownUrlString);
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder url(URL wellKnownUrl) {
-            httpHandlerBuilder.url(wellKnownUrl);
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder sslContext(SSLContext sslContext) {
-            httpHandlerBuilder.sslContext(sslContext);
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder tlsVersions(SecureSSLContextProvider secureSSLContextProvider) {
-            httpHandlerBuilder.tlsVersions(secureSSLContextProvider);
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder connectTimeoutSeconds(int connectTimeoutSeconds) {
-            this.connectTimeoutSeconds = connectTimeoutSeconds;
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder readTimeoutSeconds(int readTimeoutSeconds) {
-            this.readTimeoutSeconds = readTimeoutSeconds;
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder parserConfig(ParserConfig parserConfig) {
-            this.parserConfig = parserConfig;
-            return this;
-        }
-
-        public HttpWellKnownResolverBuilder httpHandler(HttpHandler httpHandler) {
-            this.preBuiltHttpHandler = httpHandler;
-            return this;
-        }
-
-
-        public HttpWellKnownResolver build() {
-            HttpHandler wellKnownHttpHandler;
-
-            if (preBuiltHttpHandler != null) {
-                wellKnownHttpHandler = preBuiltHttpHandler;
-                LOGGER.debug("Using pre-built HttpHandler for well-known discovery");
-            } else {
-                // Use configured timeouts or defaults
-                int actualConnectTimeout = connectTimeoutSeconds != null ? connectTimeoutSeconds : DEFAULT_CONNECT_TIMEOUT_SECONDS;
-                int actualReadTimeout = readTimeoutSeconds != null ? readTimeoutSeconds : DEFAULT_READ_TIMEOUT_SECONDS;
-
-                // Configure timeouts
-                httpHandlerBuilder.connectionTimeoutSeconds(actualConnectTimeout);
-                httpHandlerBuilder.readTimeoutSeconds(actualReadTimeout);
-
-                try {
-                    wellKnownHttpHandler = httpHandlerBuilder.build();
-                } catch (IllegalArgumentException | IllegalStateException e) {
-                    throw new IllegalArgumentException("Invalid .well-known URL configuration", e);
-                }
-            }
-
-            LOGGER.debug("Created HttpWellKnownResolver for URL: %s (not yet loaded)", wellKnownHttpHandler.getUrl());
-
-            return new HttpWellKnownResolver(wellKnownHttpHandler, parserConfig);
-        }
+        LOGGER.debug("Created HttpWellKnownResolver for URL: %s (not yet loaded)", wellKnownUrl);
     }
 
     @Override

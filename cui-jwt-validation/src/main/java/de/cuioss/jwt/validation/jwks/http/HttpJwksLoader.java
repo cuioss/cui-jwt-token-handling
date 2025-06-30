@@ -22,6 +22,7 @@ import de.cuioss.jwt.validation.jwks.key.JWKSKeyLoader;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.util.ETagAwareHttpHandler;
+import de.cuioss.jwt.validation.well_known.WellKnownDiscoveryException;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import lombok.NonNull;
@@ -44,7 +45,7 @@ import static de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
  * Supports both direct HTTP endpoints and well-known discovery.
  * Uses ETagAwareHttpHandler for stateful HTTP caching with optional scheduled background refresh.
  * Background refresh is automatically started after the first successful key load.
- * 
+ *
  * @author Oliver Wolff
  * @since 1.0
  */
@@ -135,7 +136,7 @@ public class HttpJwksLoader implements JwksLoader {
     /**
      * Checks if background refresh is enabled and running.
      * Package-private for testing purposes only.
-     * 
+     *
      * @return true if background refresh is active, false otherwise
      */
     boolean isBackgroundRefreshActive() {
@@ -163,11 +164,13 @@ public class HttpJwksLoader implements JwksLoader {
     private void loadKeys() {
         try {
             // Ensure we have a healthy ETagAwareHttpHandler
-            ETagAwareHttpHandler cache = ensureHttpCache();
-            if (cache == null) {
+            Optional<ETagAwareHttpHandler> cacheOpt = ensureHttpCache();
+            if (cacheOpt.isEmpty()) {
                 this.status = LoaderStatus.ERROR;
                 throw new JwksLoadException("Unable to establish healthy HTTP connection for JWKS loading");
             }
+
+            ETagAwareHttpHandler cache = cacheOpt.get();
 
             ETagAwareHttpHandler.LoadResult result = cache.load();
 
@@ -223,10 +226,7 @@ public class HttpJwksLoader implements JwksLoader {
     }
 
     private void startBackgroundRefreshIfNeeded() {
-        if (config != null &&
-                config.getScheduledExecutorService() != null &&
-                config.getRefreshIntervalSeconds() > 0 &&
-                schedulerStarted.compareAndSet(false, true)) {
+        if (config.getScheduledExecutorService() != null && config.getRefreshIntervalSeconds() > 0 && schedulerStarted.compareAndSet(false, true)) {
 
             ScheduledExecutorService executor = config.getScheduledExecutorService();
             int intervalSeconds = config.getRefreshIntervalSeconds();
@@ -245,11 +245,13 @@ public class HttpJwksLoader implements JwksLoader {
 
     private void backgroundRefresh() {
         LOGGER.debug("Starting background JWKS refresh");
-        ETagAwareHttpHandler cache = httpCache.get();
-        if (cache == null) {
+        Optional<ETagAwareHttpHandler> cacheOpt = Optional.ofNullable(httpCache.get());
+        if (cacheOpt.isEmpty()) {
             LOGGER.warn("Background refresh skipped - no HTTP cache available");
             return;
         }
+
+        ETagAwareHttpHandler cache = cacheOpt.get();
 
         ETagAwareHttpHandler.LoadResult result = cache.load();
 
@@ -273,20 +275,14 @@ public class HttpJwksLoader implements JwksLoader {
      * Ensures that we have a healthy ETagAwareHttpHandler based on configuration.
      * Creates the handler dynamically based on whether we have a direct HTTP handler
      * or need to resolve via WellKnownResolver.
-     * 
-     * @return the ETagAwareHttpHandler if healthy, null if sources are not healthy
+     *
+     * @return Optional containing the ETagAwareHttpHandler if healthy, empty if sources are not healthy
      */
-    private ETagAwareHttpHandler ensureHttpCache() {
+    private Optional<ETagAwareHttpHandler> ensureHttpCache() {
         // Fast path - already have a cache (set by direct constructor or previous initialization)
         ETagAwareHttpHandler cache = httpCache.get();
         if (cache != null) {
-            return cache;
-        }
-
-        // Config must be available
-        if (config == null) {
-            LOGGER.error("No HttpJwksLoaderConfig available");
-            return null;
+            return Optional.of(cache);
         }
 
         // Slow path - need to create cache based on configuration
@@ -294,7 +290,7 @@ public class HttpJwksLoader implements JwksLoader {
             // Double-check after acquiring lock
             cache = httpCache.get();
             if (cache != null) {
-                return cache;
+                return Optional.of(cache);
             }
 
             try {
@@ -304,7 +300,7 @@ public class HttpJwksLoader implements JwksLoader {
                             config.getHttpHandler().getUri());
                     cache = new ETagAwareHttpHandler(config.getHttpHandler());
                     httpCache.set(cache);
-                    return cache;
+                    return Optional.of(cache);
 
                 } else if (config.getWellKnownResolver() != null) {
                     // Well-known resolver configuration
@@ -313,31 +309,32 @@ public class HttpJwksLoader implements JwksLoader {
                     // Check if well-known resolver is healthy
                     if (config.getWellKnownResolver().isHealthy() != LoaderStatus.OK) {
                         LOGGER.debug("WellKnownResolver is not healthy, cannot create HTTP cache");
-                        return null;
+                        return Optional.empty();
                     }
 
                     // Extract JWKS URI from well-known resolver
                     HttpHandler jwksHandler = config.getWellKnownResolver().getJwksUri();
                     if (jwksHandler == null) {
                         LOGGER.warn("WellKnownResolver did not provide JWKS URI");
-                        return null;
+                        return Optional.empty();
                     }
 
                     LOGGER.info("Successfully resolved JWKS URI from well-known endpoint: %s", jwksHandler.getUri());
                     cache = new ETagAwareHttpHandler(jwksHandler);
                     httpCache.set(cache);
-                    return cache;
+                    return Optional.of(cache);
 
                 } else {
-                    LOGGER.error("HttpJwksLoaderConfig has neither httpHandler nor wellKnownResolver configured. " +
-                            "HttpHandler: %s, WellKnownResolver: %s",
-                            config.getHttpHandler(), config.getWellKnownResolver());
-                    return null;
+                    LOGGER.error("HttpJwksLoaderConfig has neither httpHandler nor wellKnownResolver configured.");
+                    return Optional.empty();
                 }
 
-            } catch (Exception e) {
-                LOGGER.error(e, "Failed to create ETagAwareHttpHandler: %s", e.getMessage());
-                return null;
+            } catch (NullPointerException e) {
+                LOGGER.error(e, "HttpHandler is null when creating ETagAwareHttpHandler: %s", e.getMessage());
+                return Optional.empty();
+            } catch (WellKnownDiscoveryException e) {
+                LOGGER.error(e, "Failed to resolve JWKS URI from well-known endpoint: %s", e.getMessage());
+                return Optional.empty();
             }
         }
     }
