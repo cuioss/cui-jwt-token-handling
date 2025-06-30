@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test for {@link SecurityEventCounter}.
@@ -145,7 +144,7 @@ class SecurityEventCounterTest {
                 .atMost(1, SECONDS)
                 .until(() -> counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY) == expectedTotal);
 
-        assertEquals(expectedTotal, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY), 
+        assertEquals(expectedTotal, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY),
                 "Counter should equal total increments from all threads");
     }
 }
