@@ -23,7 +23,10 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -105,11 +108,13 @@ class SecurityEventCounterTest {
     void shouldBeThreadSafe() throws InterruptedException {
         var threadCount = 10;
         var incrementsPerThread = 1000;
+        var expectedTotal = threadCount * incrementsPerThread;
         var counter = new SecurityEventCounter();
         var startLatch = new CountDownLatch(1);
-        var endLatch = new CountDownLatch(threadCount);
+        var completedThreads = new AtomicInteger(0);
         var executor = Executors.newFixedThreadPool(threadCount);
 
+        // Submit all threads
         for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 try {
@@ -120,16 +125,27 @@ class SecurityEventCounterTest {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } finally {
-                    endLatch.countDown();
+                    completedThreads.incrementAndGet();
                 }
             });
         }
 
+        // Start all threads simultaneously
         startLatch.countDown();
-        var completed = endLatch.await(10, TimeUnit.SECONDS);
+
+        // Use Awaitility to wait for all threads to complete with better error reporting
+        await("All threads to complete their increment operations")
+                .atMost(10, SECONDS)
+                .until(() -> completedThreads.get() == threadCount);
+
         executor.shutdown();
 
-        assertTrue(completed, "All threads should complete within timeout");
-        assertEquals(threadCount * incrementsPerThread, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY), "Counter should equal total increments from all threads");
+        // Verify the final count using Awaitility for consistent state verification
+        await("Counter to reach expected total from all threads")
+                .atMost(1, SECONDS)
+                .until(() -> counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY) == expectedTotal);
+
+        assertEquals(expectedTotal, counter.getCount(SecurityEventCounter.EventType.TOKEN_EMPTY), 
+                "Counter should equal total increments from all threads");
     }
 }
