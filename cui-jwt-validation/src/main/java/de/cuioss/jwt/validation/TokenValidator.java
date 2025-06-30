@@ -173,16 +173,19 @@ public class TokenValidator {
             if (issuerConfig.isEnabled()) {
                 // Initialize the JwksLoader with the SecurityEventCounter
                 issuerConfig.initSecurityEventCounter(securityEventCounter);
-                builder.put(issuerConfig.getIssuer(), issuerConfig);
+
+                // Use effective issuer as map key (supports well-known discovery)
+                String effectiveIssuer = issuerConfig.getEffectiveIssuer();
+                builder.put(effectiveIssuer, issuerConfig);
                 enabledCount++;
 
                 // Perform initial health check to populate dual maps
                 if (issuerConfig.isHealthy() == LoaderStatus.OK) {
-                    healthyIssuers.put(issuerConfig.getIssuer(), issuerConfig);
-                    LOGGER.debug("Issuer %s initialized as healthy", issuerConfig.getIssuer());
+                    healthyIssuers.put(effectiveIssuer, issuerConfig);
+                    LOGGER.debug("Issuer %s initialized as healthy (effective issuer: %s)", issuerConfig.getIssuer(), effectiveIssuer);
                 } else {
-                    unhealthyIssuers.put(issuerConfig.getIssuer(), issuerConfig);
-                    LOGGER.debug("Issuer %s initialized as unhealthy", issuerConfig.getIssuer());
+                    unhealthyIssuers.put(effectiveIssuer, issuerConfig);
+                    LOGGER.debug("Issuer %s initialized as unhealthy (effective issuer: %s)", issuerConfig.getIssuer(), effectiveIssuer);
                 }
             } else {
                 LOGGER.debug("Skipping disabled issuer: %s", issuerConfig.getIssuer());

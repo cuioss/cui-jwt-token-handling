@@ -120,6 +120,21 @@ public class HttpJwksLoader implements JwksLoader {
         return status;
     }
 
+    @Override
+    public Optional<String> getIssuerIdentifier() {
+        // Return issuer identifier from well-known resolver if configured
+        if (config.getWellKnownResolver() != null) {
+            try {
+                if (config.getWellKnownResolver().isHealthy() == LoaderStatus.OK) {
+                    return Optional.of(config.getWellKnownResolver().getIssuer().getUri().toString());
+                }
+            } catch (Exception e) {
+                LOGGER.debug("Failed to retrieve issuer identifier from well-known resolver: %s", e.getMessage());
+            }
+        }
+        return Optional.empty();
+    }
+
 
     /**
      * Shuts down the background refresh scheduler if running.

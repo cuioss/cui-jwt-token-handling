@@ -151,12 +151,13 @@ public class TokenHeaderValidator {
         }
         var givenIssuer = decodedJwt.getIssuer().get();
 
-        if (!issuerConfig.getIssuer().equals(givenIssuer)) {
-            LOGGER.warn(JWTValidationLogMessages.WARN.ISSUER_MISMATCH.format(givenIssuer, issuerConfig.getIssuer()));
+        String effectiveIssuer = issuerConfig.getEffectiveIssuer();
+        if (!effectiveIssuer.equals(givenIssuer)) {
+            LOGGER.warn(JWTValidationLogMessages.WARN.ISSUER_MISMATCH.format(givenIssuer, effectiveIssuer));
             securityEventCounter.increment(SecurityEventCounter.EventType.ISSUER_MISMATCH);
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.ISSUER_MISMATCH,
-                    "Issuer mismatch: expected '%s' but found '%s'".formatted(issuerConfig.getIssuer(), givenIssuer)
+                    "Issuer mismatch: expected '%s' but found '%s'".formatted(effectiveIssuer, givenIssuer)
             );
         }
 

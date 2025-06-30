@@ -293,6 +293,11 @@ class TokenSignatureValidatorTest {
             public LoaderStatus isHealthy() {
                 return LoaderStatus.OK;
             }
+
+            @Override
+            public Optional<String> getIssuerIdentifier() {
+                return Optional.empty();
+            }
         };
 
         // Create the validator with the custom JwksLoader and security event counter

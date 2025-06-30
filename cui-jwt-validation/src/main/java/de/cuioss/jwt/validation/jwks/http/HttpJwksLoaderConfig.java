@@ -42,7 +42,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * background refresh parameters. The JWKS endpoint URL can be configured
  * directly or discovered via a {@link WellKnownResolver}.
  * <p>
- * Complex caching parameters (maxCacheSize, adaptiveWindowSize) have been 
+ * Complex caching parameters (maxCacheSize, adaptiveWindowSize) have been
  * removed for simplification while keeping essential refresh functionality.
  * <p>
  * For more detailed information about the HTTP-based JWKS loading, see the
@@ -137,7 +137,6 @@ public class HttpJwksLoaderConfig {
         public HttpJwksLoaderConfigBuilder() {
             this.httpHandlerBuilder = HttpHandler.builder();
         }
-
 
         /**
          * Sets the JWKS URI directly.
@@ -306,6 +305,11 @@ public class HttpJwksLoaderConfig {
 
         /**
          * Validates that the proposed endpoint source doesn't conflict with an already configured one.
+         * <p>
+         * This validation ensures mutual exclusivity between direct JWKS endpoint configuration
+         * and well-known discovery configuration. When using well-known discovery, the issuer identifier
+         * is automatically provided by the discovery document and cannot be manually configured.
+         * </p>
          *
          * @param proposedSource the endpoint source that is being configured
          * @throws IllegalStateException if another endpoint configuration method was already used
@@ -314,7 +318,8 @@ public class HttpJwksLoaderConfig {
             if (endpointSource != null && endpointSource != proposedSource) {
                 throw new IllegalStateException(
                         ("Cannot use %s endpoint configuration when %s was already configured. " +
-                                "Methods jwksUri(), jwksUrl(), wellKnownUrl(), and wellKnownUri() are mutually exclusive.")
+                                "Methods jwksUri(), jwksUrl(), wellKnownUrl(), and wellKnownUri() are mutually exclusive. " +
+                                "When using well-known discovery, the issuer identifier is automatically provided by the discovery document.")
                                 .formatted(proposedSource.name().toLowerCase().replace("_", ""), endpointSource.name().toLowerCase().replace("_", "")));
             }
         }

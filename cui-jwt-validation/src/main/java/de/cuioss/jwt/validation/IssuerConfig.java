@@ -97,6 +97,11 @@ public class IssuerConfig implements HealthStatusProvider {
     /**
      * The issuer URL that identifies the token issuer.
      * This value is matched against the "iss" claim in the token.
+     * <p>
+     * Note: When using well-known discovery through HttpJwksLoaderConfig,
+     * the effective issuer identifier may be retrieved from the discovery document
+     * via {@link #getEffectiveIssuer()}.
+     * </p>
      */
     @NonNull
     String issuer;
@@ -190,6 +195,33 @@ public class IssuerConfig implements HealthStatusProvider {
             throw new IllegalStateException("No JwksLoader configuration is present for enabled issuer. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided. " + "Issuer: " + issuer + ", httpJwksLoaderConfig: " + (httpJwksLoaderConfig != null) + ", jwksFilePath: " + (jwksFilePath != null) + ", jwksContent: " + (jwksContent != null));
         }
 
+    }
+
+    /**
+     * Gets the effective issuer identifier for token validation.
+     * <p>
+     * This method provides the authoritative issuer identifier that should be used
+     * for token validation. The resolution logic is:
+     * <ol>
+     *   <li>If the JwksLoader provides an issuer identifier (e.g., from well-known discovery), use that</li>
+     *   <li>Otherwise, use the configured issuer from this config</li>
+     * </ol>
+     * <p>
+     * This delegation pattern ensures that when using well-known discovery, the issuer
+     * identifier from the discovery document takes precedence over the configured value.
+     * </p>
+     *
+     * @return the effective issuer identifier to use for token validation
+     * @since 1.0
+     */
+    public String getEffectiveIssuer() {
+        // If JwksLoader is initialized and provides an issuer identifier, use that
+        if (jwksLoader != null) {
+            return jwksLoader.getIssuerIdentifier().orElse(issuer);
+        }
+
+        // Fallback to configured issuer
+        return issuer;
     }
 
     /**

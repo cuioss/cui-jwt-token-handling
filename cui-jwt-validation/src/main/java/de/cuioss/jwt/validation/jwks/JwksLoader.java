@@ -128,6 +128,18 @@ public interface JwksLoader extends HealthStatusProvider {
      */
     JwksType getJwksType();
 
+    /**
+     * Gets the issuer identifier associated with this JWKS loader.
+     * <p>
+     * For HTTP-based loaders using well-known discovery, this returns the issuer
+     * identifier from the discovery document. For other loaders, this may return
+     * an empty Optional if no issuer identifier is configured or available.
+     * </p>
+     *
+     * @return an Optional containing the issuer identifier if available, empty otherwise
+     */
+    Optional<String> getIssuerIdentifier();
+
     // Health status method inherited from HealthStatusProvider:
     // - LoaderStatus isHealthy()
 

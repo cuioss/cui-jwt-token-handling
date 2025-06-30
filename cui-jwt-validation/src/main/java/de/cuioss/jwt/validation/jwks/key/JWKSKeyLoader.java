@@ -287,5 +287,11 @@ public class JWKSKeyLoader implements JwksLoader {
         }
     }
 
+    @Override
+    public Optional<String> getIssuerIdentifier() {
+        // In-memory and file-based loaders don't have associated issuer identifiers
+        return Optional.empty();
+    }
+
 
 }
