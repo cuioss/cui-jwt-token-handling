@@ -52,7 +52,7 @@ class SimpleHttpJwksLoaderTest {
                 .build();
 
         httpJwksLoader = new HttpJwksLoader(config);
-        httpJwksLoader.initSecurityEventCounter(securityEventCounter);
+        httpJwksLoader.initJWKSLoader(securityEventCounter);
     }
 
     @Test

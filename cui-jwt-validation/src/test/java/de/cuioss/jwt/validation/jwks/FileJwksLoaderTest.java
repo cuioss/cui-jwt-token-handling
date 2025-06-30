@@ -61,7 +61,7 @@ class FileJwksLoaderTest {
 
         // Create the FileJwksLoader with the temporary file
         fileJwksLoader = JwksLoaderFactory.createFileLoader(jwksFilePath.toString());
-        fileJwksLoader.initSecurityEventCounter(securityEventCounter);
+        fileJwksLoader.initJWKSLoader(securityEventCounter);
     }
 
     @Test
@@ -105,7 +105,7 @@ class FileJwksLoaderTest {
         // Get initial count
         long initialCount = securityEventCounter.getCount(SecurityEventCounter.EventType.FAILED_TO_READ_JWKS_FILE);
         JwksLoader nonExistentFileLoader = JwksLoaderFactory.createFileLoader(tempDir.resolve("non-existent.json").toString());
-        nonExistentFileLoader.initSecurityEventCounter(securityEventCounter);
+        nonExistentFileLoader.initJWKSLoader(securityEventCounter);
         Optional<KeyInfo> keyInfo = nonExistentFileLoader.getKeyInfo(TEST_KID);
         assertFalse(keyInfo.isPresent(), "Key info should not be present for missing file");
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Failed to read JWKS from file");
@@ -121,7 +121,7 @@ class FileJwksLoaderTest {
         Path invalidJwksPath = tempDir.resolve("invalid-jwks.json");
         Files.writeString(invalidJwksPath, InMemoryJWKSFactory.createInvalidJson());
         JwksLoader invalidJwksLoader = JwksLoaderFactory.createFileLoader(invalidJwksPath.toString());
-        invalidJwksLoader.initSecurityEventCounter(securityEventCounter);
+        invalidJwksLoader.initJWKSLoader(securityEventCounter);
         Optional<KeyInfo> keyInfo = invalidJwksLoader.getKeyInfo(TEST_KID);
         assertFalse(keyInfo.isPresent(), "Key info should not be present for invalid JWKS");
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, "Failed to parse JWKS JSON");
@@ -136,7 +136,7 @@ class FileJwksLoaderTest {
         String missingFieldsJwksContent = InMemoryJWKSFactory.createJwksWithMissingFields(TEST_KID);
         Files.writeString(missingFieldsJwksPath, missingFieldsJwksContent);
         JwksLoader missingFieldsJwksLoader = JwksLoaderFactory.createFileLoader(missingFieldsJwksPath.toString());
-        missingFieldsJwksLoader.initSecurityEventCounter(securityEventCounter);
+        missingFieldsJwksLoader.initJWKSLoader(securityEventCounter);
         Optional<KeyInfo> keyInfo = missingFieldsJwksLoader.getKeyInfo(TEST_KID);
         assertFalse(keyInfo.isPresent(), "Key info should not be present for missing fields");
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Failed to parse RSA key");
@@ -157,7 +157,7 @@ class FileJwksLoaderTest {
 
         // Create a new FileJwksLoader to force refresh
         JwksLoader newLoader = JwksLoaderFactory.createFileLoader(jwksFilePath.toString());
-        newLoader.initSecurityEventCounter(securityEventCounter);
+        newLoader.initJWKSLoader(securityEventCounter);
 
         // Then - verify the old key is no longer available and the new key is
         Optional<KeyInfo> oldKeyInfo = newLoader.getKeyInfo(TEST_KID);

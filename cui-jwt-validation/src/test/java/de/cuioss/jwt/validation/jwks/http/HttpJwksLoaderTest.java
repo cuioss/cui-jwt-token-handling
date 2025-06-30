@@ -61,7 +61,7 @@ class HttpJwksLoaderTest {
                 .build();
 
         httpJwksLoader = new HttpJwksLoader(config);
-        httpJwksLoader.initSecurityEventCounter(securityEventCounter);
+        httpJwksLoader.initJWKSLoader(securityEventCounter);
     }
 
     @Test
@@ -164,7 +164,7 @@ class HttpJwksLoaderTest {
                 .build();
 
         HttpJwksLoader customLoader = new HttpJwksLoader(config);
-        customLoader.initSecurityEventCounter(securityEventCounter);
+        customLoader.initJWKSLoader(securityEventCounter);
         assertNotNull(customLoader);
 
         // Verify it works
@@ -195,13 +195,13 @@ class HttpJwksLoaderTest {
         assertTrue(initialKeyInfo.isPresent(), "Initial key info should be present");
 
         // Create a new loader instance with the same configuration
-        // This tests that multiple loaders can work independently  
+        // This tests that multiple loaders can work independently
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
                 .jwksUrl(jwksEndpoint)
                 .build();
         HttpJwksLoader newLoader = new HttpJwksLoader(config);
-        newLoader.initSecurityEventCounter(securityEventCounter);
+        newLoader.initJWKSLoader(securityEventCounter);
 
         // Verify the new loader works independently
         assertNotNull(newLoader.isHealthy(), "Health check should work for new loader");

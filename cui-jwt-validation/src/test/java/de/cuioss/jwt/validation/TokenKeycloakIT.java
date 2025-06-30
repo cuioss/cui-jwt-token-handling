@@ -17,8 +17,8 @@ package de.cuioss.jwt.validation;
 
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
-import de.cuioss.jwt.validation.jwks.http.WellKnownConfig;
 import de.cuioss.jwt.validation.well_known.HttpWellKnownResolver;
+import de.cuioss.jwt.validation.well_known.WellKnownConfig;
 import de.cuioss.test.keycloakit.KeycloakITBase;
 import de.cuioss.test.keycloakit.TestRealm;
 import de.cuioss.tools.logging.CuiLogger;

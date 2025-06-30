@@ -127,5 +127,5 @@ public interface JwksLoader extends HealthStatusProvider {
      * @param securityEventCounter the counter for security events, must not be null
      * @throws NullPointerException if securityEventCounter is null
      */
-    void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter);
+    void initJWKSLoader(@NonNull SecurityEventCounter securityEventCounter);
 }

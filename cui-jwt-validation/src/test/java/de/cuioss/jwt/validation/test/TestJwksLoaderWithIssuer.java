@@ -45,7 +45,7 @@ public class TestJwksLoaderWithIssuer implements JwksLoader {
         this.delegate = JwksLoaderFactory.createInMemoryLoader(jwksContent);
         this.issuer = issuer;
         // Initialize immediately for testing
-        this.delegate.initSecurityEventCounter(new SecurityEventCounter());
+        this.delegate.initJWKSLoader(new SecurityEventCounter());
     }
 
     @Override
@@ -75,8 +75,8 @@ public class TestJwksLoaderWithIssuer implements JwksLoader {
     }
 
     @Override
-    public void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter) {
+    public void initJWKSLoader(@NonNull SecurityEventCounter securityEventCounter) {
         // Delegate to the wrapped JwksLoader
-        delegate.initSecurityEventCounter(securityEventCounter);
+        delegate.initJWKSLoader(securityEventCounter);
     }
 }

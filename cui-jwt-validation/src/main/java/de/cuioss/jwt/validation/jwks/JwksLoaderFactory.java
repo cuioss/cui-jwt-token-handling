@@ -36,14 +36,14 @@ import lombok.experimental.UtilityClass;
  * <pre>
  * // Create a SecurityEventCounter for tracking security events
  * SecurityEventCounter securityEventCounter = new SecurityEventCounter();
- * 
+ *
  * // Configure and create an HTTP-based JWKS loader
  * HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
  *     .jwksUrl("https://auth.example.com/.well-known/jwks.json")
  *     .refreshIntervalSeconds(60)
  *     .build();
  * JwksLoader loader = JwksLoaderFactory.createHttpLoader(config, securityEventCounter);
- * 
+ *
  * // Get a key by ID
  * Optional&lt;KeyInfo&gt; keyInfo = loader.getKeyInfo("kid123");
  * </pre>
@@ -61,7 +61,7 @@ public class JwksLoaderFactory {
 
     /**
      * Creates a JwksLoader that loads JWKS from an HTTP endpoint.
-     * The SecurityEventCounter must be initialized separately via initSecurityEventCounter().
+     * The SecurityEventCounter must be initialized separately via initJWKSLoader().
      *
      * @param config the configuration for the HTTP JWKS loader
      * @return an instance of JwksLoader
@@ -73,7 +73,7 @@ public class JwksLoaderFactory {
 
     /**
      * Creates a JwksLoader that loads JWKS from a file.
-     * The SecurityEventCounter must be initialized separately via initSecurityEventCounter().
+     * The SecurityEventCounter must be initialized separately via initJWKSLoader().
      *
      * @param filePath the path to the JWKS file
      * @return an instance of JwksLoader
@@ -88,7 +88,7 @@ public class JwksLoaderFactory {
 
     /**
      * Creates a JwksLoader that loads JWKS from in-memory string content.
-     * The SecurityEventCounter must be initialized separately via initSecurityEventCounter().
+     * The SecurityEventCounter must be initialized separately via initJWKSLoader().
      *
      * @param jwksContent the JWKS content as a string
      * @return an instance of JwksLoader

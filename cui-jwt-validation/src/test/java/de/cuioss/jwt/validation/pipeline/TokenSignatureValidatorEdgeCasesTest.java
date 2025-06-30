@@ -56,7 +56,7 @@ class TokenSignatureValidatorEdgeCasesTest {
 
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
 
         validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
     }

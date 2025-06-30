@@ -20,7 +20,7 @@ import java.io.Serial;
 /**
  * Runtime exception thrown when JWKS loading fails.
  * This includes HTTP errors, network failures, and invalid JWKS content.
- * 
+ *
  * @author Oliver Wolff
  * @since 1.0
  */
@@ -38,13 +38,4 @@ public class JwksLoadException extends RuntimeException {
         super(message);
     }
 
-    /**
-     * Constructs a new JWKS load exception with the specified detail message and cause.
-     *
-     * @param message the detail message
-     * @param cause the cause of the exception
-     */
-    public JwksLoadException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

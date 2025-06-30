@@ -87,7 +87,7 @@ class TokenSignatureValidatorTest {
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
 
         // Create the validator with the in-memory JwksLoader and security event counter
         TokenSignatureValidator validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
@@ -125,7 +125,7 @@ class TokenSignatureValidatorTest {
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
 
         // Create the validator with the in-memory JwksLoader and security event counter
         TokenSignatureValidator validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
@@ -160,7 +160,7 @@ class TokenSignatureValidatorTest {
         // Create an in-memory JwksLoader with a different key ID
         String jwksContent = InMemoryJWKSFactory.createValidJwksWithKeyId("different-key-id");
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
 
         // Create the validator with the in-memory JwksLoader and security event counter
         TokenSignatureValidator validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
@@ -195,7 +195,7 @@ class TokenSignatureValidatorTest {
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
 
         // Create the validator with the in-memory JwksLoader and security event counter
         TokenSignatureValidator validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
@@ -231,7 +231,7 @@ class TokenSignatureValidatorTest {
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createDefaultJwks();
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
 
         // Create the validator with the in-memory JwksLoader and security event counter
         TokenSignatureValidator validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);
@@ -291,7 +291,7 @@ class TokenSignatureValidatorTest {
             }
 
             @Override
-            public void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter) {
+            public void initJWKSLoader(@NonNull SecurityEventCounter securityEventCounter) {
                 // This is a test implementation, no initialization needed
             }
         };

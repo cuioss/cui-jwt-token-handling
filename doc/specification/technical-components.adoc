@@ -196,12 +196,12 @@ IssuerConfig config = IssuerConfig.builder()
 
 ===== Phase 2: JwksLoader Initialization  
 
-The `initSecurityEventCounter()` method handles pure initialization:
+The `initJWKSLoader()` method handles pure initialization:
 
 [source,java]
 ----
 // Later, when SecurityEventCounter is available
-config.initSecurityEventCounter(securityEventCounter);  // ✅ Pure initialization
+config.initJWKSLoader(securityEventCounter);  // ✅ Pure initialization
 ----
 
 **Initialization Process:**

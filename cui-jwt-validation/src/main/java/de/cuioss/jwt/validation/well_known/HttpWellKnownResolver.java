@@ -18,7 +18,6 @@ package de.cuioss.jwt.validation.well_known;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
 import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
-import de.cuioss.jwt.validation.jwks.http.WellKnownConfig;
 import de.cuioss.jwt.validation.util.ETagAwareHttpHandler;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;

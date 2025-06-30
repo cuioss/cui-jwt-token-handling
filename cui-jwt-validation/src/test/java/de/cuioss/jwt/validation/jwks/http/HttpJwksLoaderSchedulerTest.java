@@ -71,7 +71,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Trigger initial load
         Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
@@ -97,7 +97,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Trigger initial load
         Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
@@ -123,7 +123,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Scheduler should not be active before first load
         assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should not be active before first load");
@@ -162,7 +162,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Trigger initial load
         Optional<KeyInfo> initialKeyInfo = loader.getKeyInfo(TEST_KID);
@@ -195,7 +195,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Trigger initial successful load
         Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
@@ -236,7 +236,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Trigger multiple loads
         loader.getKeyInfo(TEST_KID);
@@ -271,7 +271,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Start scheduler
         loader.getKeyInfo(TEST_KID);
@@ -303,7 +303,7 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Initial load should fail
         try {
@@ -334,13 +334,13 @@ class HttpJwksLoaderSchedulerTest {
                 .build();
 
         HttpJwksLoader loader = new HttpJwksLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
 
         // Trigger initial load
         Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
         assertTrue(keyInfo.isPresent(), "Initial load should work");
 
-        // Wait for background refresh to execute - scheduler runs every 1 second  
+        // Wait for background refresh to execute - scheduler runs every 1 second
         await("At least one background refresh cycle to complete")
                 .atMost(1500, MILLISECONDS)
                 .pollDelay(1200, MILLISECONDS) // Give scheduler time to run at least once

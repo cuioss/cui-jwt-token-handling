@@ -59,7 +59,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo("ec-key-id");
             assertTrue(keyInfo.isPresent(), "EC key info should be present");
@@ -86,7 +86,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo("ec-key-id");
             assertTrue(keyInfo.isPresent(), "EC key info should be present");
@@ -109,7 +109,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent.toString())
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             assertFalse(keyLoader.isNotEmpty(), "Loader should reject JWKS with excessive properties");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "JWKS object has excessive number of properties");
@@ -123,7 +123,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             assertFalse(keyLoader.isNotEmpty(), "Loader should reject JWKS with empty keys array");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "JWKS keys array is empty");
@@ -144,7 +144,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent.toString())
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             assertFalse(keyLoader.isNotEmpty(), "Loader should reject JWKS with excessive keys");
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "JWKS keys array exceeds maximum size");
@@ -171,7 +171,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo("unsupported-key-id");
             assertFalse(keyInfo.isPresent(), "Key with unsupported type should not be present");
@@ -196,7 +196,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo(longKeyId);
             assertFalse(keyInfo.isPresent(), "Key with excessively long key ID should not be present");
@@ -221,7 +221,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent(jwksContent)
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             Optional<KeyInfo> keyInfo = keyLoader.getKeyInfo("invalid-alg-key-id");
             assertFalse(keyInfo.isPresent(), "Key with invalid algorithm should not be present");
@@ -241,7 +241,7 @@ class JWKSKeyLoaderExtendedTest {
                     .jwksContent(jwksContent)
 
                     .build();
-            keyLoader.initSecurityEventCounter(securityEventCounter);
+            keyLoader.initJWKSLoader(securityEventCounter);
 
             assertTrue(keyLoader.isNotEmpty(), "Loader created with builder should parse JWKS");
             assertEquals(JwksType.MEMORY, keyLoader.getJwksType(), "Loader should have correct JWKS type");
@@ -261,7 +261,7 @@ class JWKSKeyLoaderExtendedTest {
             JWKSKeyLoader keyLoader = JWKSKeyLoader.builder()
                     .jwksContent("{\"keys\":[]}")
                     .build();
-            
+
             assertThrows(IllegalStateException.class, keyLoader::isNotEmpty,
                     "Loader should throw exception when used before initialization");
         }

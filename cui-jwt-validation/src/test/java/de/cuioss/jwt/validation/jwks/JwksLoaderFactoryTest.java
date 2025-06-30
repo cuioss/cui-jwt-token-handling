@@ -66,7 +66,7 @@ class JwksLoaderFactoryTest {
                 .jwksUrl("https://example.com/.well-known/jwks.json")
                 .build();
         JwksLoader loader = JwksLoaderFactory.createHttpLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(HttpJwksLoader.class, loader, "Loader should be an instance of HttpJwksLoader");
         assertEquals(JwksType.HTTP, loader.getJwksType(), "Loader should have HTTP type");
@@ -81,7 +81,7 @@ class JwksLoaderFactoryTest {
                 .wellKnownUrl("https://example.com/.well-known/openid-configuration")
                 .build();
         JwksLoader loader = JwksLoaderFactory.createHttpLoader(config);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(HttpJwksLoader.class, loader, "Loader should be an instance of HttpJwksLoader");
         assertEquals(JwksType.WELL_KNOWN, loader.getJwksType(), "Loader should have WELL_KNOWN type");
@@ -95,7 +95,7 @@ class JwksLoaderFactoryTest {
         Path jwksFile = tempDir.resolve("jwks.json");
         Files.writeString(jwksFile, jwksContent);
         JwksLoader loader = JwksLoaderFactory.createFileLoader(jwksFile.toString());
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.FILE, loader.getJwksType(), "Loader should have FILE type");
@@ -108,7 +108,7 @@ class JwksLoaderFactoryTest {
 
         String nonExistentFile = "non-existent-file.json";
         JwksLoader loader = JwksLoaderFactory.createFileLoader(nonExistentFile);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.FILE, loader.getJwksType(), "Loader should have FILE type");
@@ -120,7 +120,7 @@ class JwksLoaderFactoryTest {
     void shouldCreateInMemoryLoader() {
 
         JwksLoader loader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.MEMORY, loader.getJwksType(), "Loader should have MEMORY type");
@@ -133,7 +133,7 @@ class JwksLoaderFactoryTest {
 
         String invalidContent = "invalid-json";
         JwksLoader loader = JwksLoaderFactory.createInMemoryLoader(invalidContent);
-        loader.initSecurityEventCounter(securityEventCounter);
+        loader.initJWKSLoader(securityEventCounter);
         assertNotNull(loader, "Loader should not be null");
         assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
         assertEquals(JwksType.MEMORY, loader.getJwksType(), "Loader should have MEMORY type");

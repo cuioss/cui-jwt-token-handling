@@ -61,7 +61,7 @@ class TokenSignatureValidatorAlgorithmTest {
         // Create an in-memory JwksLoader with a valid key
         String jwksContent = InMemoryJWKSFactory.createMultiAlgorithmJwks();
         JwksLoader jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent);
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
 
         // Create the validator with the in-memory JwksLoader and security event counter
         validator = new TokenSignatureValidator(jwksLoader, securityEventCounter);

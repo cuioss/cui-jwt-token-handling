@@ -116,7 +116,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
     }
 
     @Nested
-    @DisplayName("Tests for initSecurityEventCounter")
+    @DisplayName("Tests for initJWKSLoader")
     class InitSecurityEventCounterTests {
 
         @Test

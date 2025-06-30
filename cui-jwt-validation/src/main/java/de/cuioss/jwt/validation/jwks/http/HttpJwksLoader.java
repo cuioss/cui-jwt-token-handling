@@ -63,7 +63,7 @@ public class HttpJwksLoader implements JwksLoader {
     /**
      * Constructor using HttpJwksLoaderConfig.
      * Supports both direct HTTP handlers and WellKnownResolver configurations.
-     * The SecurityEventCounter must be set via initSecurityEventCounter() before use.
+     * The SecurityEventCounter must be set via initJWKSLoader() before use.
      */
     public HttpJwksLoader(@NonNull HttpJwksLoaderConfig config) {
         this.config = config;
@@ -143,7 +143,7 @@ public class HttpJwksLoader implements JwksLoader {
 
     private void ensureLoaded() {
         if (!initialized.get()) {
-            throw new IllegalStateException("HttpJwksLoader not initialized. Call initSecurityEventCounter() first.");
+            throw new IllegalStateException("HttpJwksLoader not initialized. Call initJWKSLoader() first.");
         }
         if (keyLoader.get() == null) {
             loadKeysIfNeeded();
@@ -221,7 +221,7 @@ public class HttpJwksLoader implements JwksLoader {
                 .jwksType(getJwksType())
                 .build();
         // Initialize the JWKSKeyLoader with the SecurityEventCounter
-        newLoader.initSecurityEventCounter(securityEventCounter);
+        newLoader.initJWKSLoader(securityEventCounter);
         keyLoader.set(newLoader);
         this.status = LoaderStatus.OK;
     }
@@ -342,7 +342,7 @@ public class HttpJwksLoader implements JwksLoader {
     }
 
     @Override
-    public void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter) {
+    public void initJWKSLoader(@NonNull SecurityEventCounter securityEventCounter) {
         if (initialized.compareAndSet(false, true)) {
             this.securityEventCounter = securityEventCounter;
             LOGGER.debug("HttpJwksLoader initialized with SecurityEventCounter");
