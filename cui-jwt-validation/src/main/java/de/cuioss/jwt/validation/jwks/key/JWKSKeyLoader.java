@@ -154,7 +154,7 @@ public class JWKSKeyLoader implements JwksLoader {
 
         /**
          * Builds a new JWKSKeyLoader with deferred initialization.
-         * The SecurityEventCounter must be set via initSecurityEventCounter() before use.
+         * The SecurityEventCounter must be set via initJWKSLoader() before use.
          *
          * @return a new JWKSKeyLoader
          */
@@ -178,7 +178,7 @@ public class JWKSKeyLoader implements JwksLoader {
 
     /**
      * Creates a new JWKSKeyLoader with deferred initialization.
-     * The SecurityEventCounter must be set via initSecurityEventCounter() before use.
+     * The SecurityEventCounter must be set via initJWKSLoader() before use.
      *
      * @param jwksContent the JWKS content as a string, may be null if jwksFilePath is provided
      * @param jwksFilePath the path to the JWKS file, may be null if jwksContent is provided
@@ -200,29 +200,6 @@ public class JWKSKeyLoader implements JwksLoader {
         this.status = LoaderStatus.UNDEFINED;
     }
 
-    /**
-     * Legacy constructor for backward compatibility.
-     * @deprecated Use the builder pattern with deferred initialization instead
-     */
-    @Deprecated
-    public JWKSKeyLoader(
-            @NonNull String jwksContent,
-            ParserConfig parserConfig,
-            @NonNull SecurityEventCounter securityEventCounter,
-            @NonNull JwkAlgorithmPreferences jwkAlgorithmPreferences,
-            @NonNull JwksType jwksType) {
-        this.jwksContent = jwksContent;
-        this.jwksFilePath = null;
-        this.parserConfig = parserConfig != null ? parserConfig : ParserConfig.builder().build();
-        this.securityEventCounter = securityEventCounter;
-        this.jwkAlgorithmPreferences = jwkAlgorithmPreferences;
-        this.jwksType = jwksType;
-        this.initialized = true;
-
-        // Immediately initialize for backward compatibility
-        initializeKeys();
-    }
-
 
     /**
      * Checks if this loader contains valid keys.
@@ -236,7 +213,7 @@ public class JWKSKeyLoader implements JwksLoader {
 
     private void ensureInitialized() {
         if (!initialized) {
-            throw new IllegalStateException("JWKSKeyLoader not initialized. Call initSecurityEventCounter() first.");
+            throw new IllegalStateException("JWKSKeyLoader not initialized. Call initJWKSLoader() first.");
         }
     }
 
@@ -292,7 +269,7 @@ public class JWKSKeyLoader implements JwksLoader {
     }
 
     @Override
-    public void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter) {
+    public void initJWKSLoader(@NonNull SecurityEventCounter securityEventCounter) {
         if (!initialized) {
             this.securityEventCounter = securityEventCounter;
             this.initialized = true;

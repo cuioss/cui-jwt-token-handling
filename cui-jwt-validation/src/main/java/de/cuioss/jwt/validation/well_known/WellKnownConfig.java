@@ -13,77 +13,181 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.cuioss.jwt.validation.well_known;
+package de.cuioss.jwt.validation.jwks.http;
 
-import lombok.Builder;
-import lombok.Value;
+import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.tools.net.http.HttpHandler;
+import de.cuioss.tools.net.http.SecureSSLContextProvider;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
+import javax.net.ssl.SSLContext;
+import java.net.URI;
 
 /**
- * Configuration class for well-known endpoint operations.
+ * Configuration for well-known endpoint discovery.
  * <p>
- * This class provides configuration options for well-known endpoint discovery,
- * such as HTTP timeout settings and retry behavior.
+ * This class encapsulates all configuration parameters needed to create a
+ * {@link de.cuioss.jwt.validation.well_known.WellKnownResolver} for OIDC endpoint discovery.
+ * It uses an internal {@link HttpHandler} built with sensible defaults while allowing
+ * customization of timeouts, SSL context, and parser configuration.
  * <p>
- * This class is immutable and thread-safe.
- * <p>
- * Usage example:
- * <pre>
- * WellKnownConfig config = WellKnownConfig.builder()
- *     .connectTimeoutSeconds(5)
- *     .readTimeoutSeconds(10)
- *     .maxAttempts(3)
- *     .build();
- * </pre>
- * <p>
- * Implements requirements:
- * <ul>
- *   <li><a href="https://github.com/cuioss/cui-jwt/tree/main/doc/Requirements.adoc#CUI-JWT-4">CUI-JWT-4: Key Management</a></li>
- * </ul>
- * <p>
- * For more detailed specifications, see the
- * <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/well-known.adoc">Well-Known Discovery Specification</a>
+ * The configuration supports both String URLs and URI objects for the well-known endpoint,
+ * and provides comprehensive SSL/TLS configuration options through the HttpHandler builder pattern.
  *
+ * @author Oliver Wolff
  * @since 1.0
  */
-@Builder
-@Value
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString
+@EqualsAndHashCode
 public class WellKnownConfig {
 
     /**
-     * Default connection timeout for well-known endpoint HTTP requests in seconds.
+     * Default connect timeout in seconds for well-known endpoint requests.
      */
-    public static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 2;
+    private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 2;
 
     /**
-     * Default read timeout for well-known endpoint HTTP requests in seconds.
+     * Default read timeout in seconds for well-known endpoint requests.
      */
-    public static final int DEFAULT_READ_TIMEOUT_SECONDS = 3;
+    private static final int DEFAULT_READ_TIMEOUT_SECONDS = 3;
 
     /**
-     * Default maximum number of retry attempts for well-known endpoint requests.
+     * The HTTP handler for well-known endpoint requests.
      */
-    public static final int DEFAULT_MAX_ATTEMPTS = 3;
+    @Getter
+    private final HttpHandler httpHandler;
 
     /**
-     * Connection timeout for well-known endpoint HTTP requests in seconds.
-     * This value determines how long to wait when establishing connections to
-     * well-known OpenID configuration endpoints.
+     * Parser configuration for JSON processing.
      */
-    @Builder.Default
-    int connectTimeoutSeconds = DEFAULT_CONNECT_TIMEOUT_SECONDS;
+    @Getter
+    private final ParserConfig parserConfig;
 
     /**
-     * Read timeout for well-known endpoint HTTP requests in seconds.
-     * This value determines how long to wait when reading data from
-     * well-known OpenID configuration endpoints.
+     * Creates a new builder for WellKnownConfig.
+     *
+     * @return a new WellKnownConfigBuilder instance
      */
-    @Builder.Default
-    int readTimeoutSeconds = DEFAULT_READ_TIMEOUT_SECONDS;
+    public static WellKnownConfigBuilder builder() {
+        return new WellKnownConfigBuilder();
+    }
 
     /**
-     * Maximum number of retry attempts for well-known endpoint requests.
-     * This value determines how many times to retry failed requests before giving up.
+     * Builder for creating WellKnownConfig instances using HttpHandler builder pattern.
      */
-    @Builder.Default
-    int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+    public static class WellKnownConfigBuilder {
+        private final HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
+        private ParserConfig parserConfig;
+
+        /**
+         * Constructor initializing the HttpHandlerBuilder with sensible defaults.
+         */
+        public WellKnownConfigBuilder() {
+            this.httpHandlerBuilder = HttpHandler.builder()
+                    .connectionTimeoutSeconds(DEFAULT_CONNECT_TIMEOUT_SECONDS)
+                    .readTimeoutSeconds(DEFAULT_READ_TIMEOUT_SECONDS);
+        }
+
+        /**
+         * Sets the well-known endpoint URL as a string.
+         *
+         * @param wellKnownUrl the well-known endpoint URL string. Must not be null.
+         * @return this builder instance
+         * @throws IllegalArgumentException if the URL is invalid
+         */
+        public WellKnownConfigBuilder wellKnownUrl(@NonNull String wellKnownUrl) {
+            httpHandlerBuilder.url(wellKnownUrl);
+            return this;
+        }
+
+        /**
+         * Sets the well-known endpoint URI.
+         *
+         * @param wellKnownUri the well-known endpoint URI. Must not be null.
+         * @return this builder instance
+         */
+        public WellKnownConfigBuilder wellKnownUri(@NonNull URI wellKnownUri) {
+            httpHandlerBuilder.uri(wellKnownUri);
+            return this;
+        }
+
+        /**
+         * Sets the connection timeout in seconds.
+         *
+         * @param connectTimeoutSeconds the connection timeout in seconds. Must be positive.
+         * @return this builder instance
+         * @throws IllegalArgumentException if connectTimeoutSeconds is not positive
+         */
+        public WellKnownConfigBuilder connectTimeoutSeconds(int connectTimeoutSeconds) {
+            httpHandlerBuilder.connectionTimeoutSeconds(connectTimeoutSeconds);
+            return this;
+        }
+
+        /**
+         * Sets the read timeout in seconds.
+         *
+         * @param readTimeoutSeconds the read timeout in seconds. Must be positive.
+         * @return this builder instance
+         * @throws IllegalArgumentException if readTimeoutSeconds is not positive
+         */
+        public WellKnownConfigBuilder readTimeoutSeconds(int readTimeoutSeconds) {
+            httpHandlerBuilder.readTimeoutSeconds(readTimeoutSeconds);
+            return this;
+        }
+
+        /**
+         * Sets the SSL context for HTTPS connections.
+         *
+         * @param sslContext the SSL context to use
+         * @return this builder instance
+         */
+        public WellKnownConfigBuilder sslContext(SSLContext sslContext) {
+            httpHandlerBuilder.sslContext(sslContext);
+            return this;
+        }
+
+        /**
+         * Sets the TLS versions configuration.
+         *
+         * @param tlsVersions the TLS versions configuration
+         * @return this builder instance
+         */
+        public WellKnownConfigBuilder tlsVersions(SecureSSLContextProvider tlsVersions) {
+            httpHandlerBuilder.tlsVersions(tlsVersions);
+            return this;
+        }
+
+        /**
+         * Sets the parser configuration for JSON processing.
+         *
+         * @param parserConfig the parser configuration
+         * @return this builder instance
+         */
+        public WellKnownConfigBuilder parserConfig(ParserConfig parserConfig) {
+            this.parserConfig = parserConfig;
+            return this;
+        }
+
+        /**
+         * Builds a new WellKnownConfig instance.
+         *
+         * @return a new WellKnownConfig instance
+         * @throws IllegalStateException if no well-known URI was configured
+         * @throws IllegalArgumentException if the HTTP handler configuration is invalid
+         */
+        public WellKnownConfig build() {
+            try {
+                HttpHandler httpHandler = httpHandlerBuilder.build();
+                return new WellKnownConfig(httpHandler, parserConfig);
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                throw new IllegalArgumentException("Invalid well-known endpoint configuration", e);
+            }
+        }
+    }
 }

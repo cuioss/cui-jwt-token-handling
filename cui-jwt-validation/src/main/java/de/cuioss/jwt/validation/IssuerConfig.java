@@ -57,7 +57,7 @@ import java.util.*;
  *     .build(); // Validation happens automatically during build()
  *
  * // Initialize the security event counter -> This is usually done by TokenValidator
- * issuerConfig.initSecurityEventCounter(new SecurityEventCounter());
+ * issuerConfig.initJWKSLoader(new SecurityEventCounter());
  *
  * // Issuer identifier is dynamically obtained from well-known discovery
  * Optional&lt;String&gt; issuer = issuerConfig.getIssuerIdentifier();
@@ -166,7 +166,7 @@ public class IssuerConfig implements HealthStatusProvider {
         }
 
         // Initialize the JwksLoader with the SecurityEventCounter
-        jwksLoader.initSecurityEventCounter(securityEventCounter);
+        jwksLoader.initJWKSLoader(securityEventCounter);
     }
 
 
@@ -260,7 +260,6 @@ public class IssuerConfig implements HealthStatusProvider {
      *   <li>Issuer identifier is provided when required (not needed for well-known discovery)</li>
      *   <li>Algorithm preferences and claim mappers are properly initialized</li>
      * </ul>
-     * </p>
      */
     public static class IssuerConfigBuilder {
         // Lombok-generated fields
@@ -272,7 +271,6 @@ public class IssuerConfig implements HealthStatusProvider {
         private Map<String, ClaimMapper> claimMappers;
         private JwksLoader jwksLoader;
 
-        // Temporary fields for JWKS configuration
         private HttpJwksLoaderConfig httpJwksLoaderConfig;
         private String jwksFilePath;
         private String jwksContent;
@@ -310,7 +308,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *   <li>{@code "https://accounts.google.com"} - Google OAuth2 issuer</li>
          *   <li>{@code "internal-service"} - Internal service identifier</li>
          * </ul>
-         * </p>
          *
          * @param issuerIdentifier the issuer identifier that must match the "iss" claim in tokens
          * @return this builder instance for method chaining
@@ -335,7 +332,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *   <li>{@code "https://api.example.com"} - API endpoint URL</li>
          *   <li>{@code "urn:my-service"} - URN-based service identifier</li>
          * </ul>
-         * </p>
          *
          * @param expectedAudience the audience value that tokens must match
          * @return this builder instance for method chaining
@@ -379,7 +375,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *   <li>{@code "mobile-app-android"} - Mobile application client identifier</li>
          *   <li>{@code "service-to-service"} - Service-to-service client identifier</li>
          * </ul>
-         * </p>
          *
          * @param expectedClientId the client ID value that tokens must match
          * @return this builder instance for method chaining
@@ -431,7 +426,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *     .build();
          * builder.algorithmPreferences(preferences);
          * </pre>
-         * </p>
          *
          * @param algorithmPreferences the signature algorithm preferences to use
          * @return this builder instance for method chaining
@@ -457,11 +451,10 @@ public class IssuerConfig implements HealthStatusProvider {
          * <pre>
          * ClaimMapper customScopeMapper = new CustomScopeMapper();
          * builder.claimMapper("scope", customScopeMapper);
-         * 
+         *
          * ClaimMapper rolesMapper = new RolesMapper();
          * builder.claimMapper("roles", rolesMapper);
          * </pre>
-         * </p>
          *
          * @param key the name of the claim to apply the custom mapper to
          * @param claimMapper the custom mapper implementation for processing the claim
@@ -504,7 +497,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *   <li>The loader's {@link JwksLoader#getJwksType()} method returns an appropriate type</li>
          *   <li>If the loader doesn't provide issuer identification, set {@link #issuerIdentifier(String)}</li>
          * </ul>
-         * </p>
          * <p>
          * Note: If a custom JwksLoader is provided, the other JWKS configuration methods
          * ({@link #httpJwksLoaderConfig}, {@link #jwksFilePath}, {@link #jwksContent}) will be ignored.
@@ -534,7 +526,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *   <li><strong>Background Refresh:</strong> Automatically refresh JWKS in the background</li>
          *   <li><strong>Caching and ETags:</strong> Efficient caching with HTTP ETags support</li>
          * </ul>
-         * </p>
          * <p>
          * Example configurations:
          * <pre>
@@ -543,16 +534,15 @@ public class IssuerConfig implements HealthStatusProvider {
          *     .jwksUrl("https://auth.example.com/.well-known/jwks.json")
          *     .refreshIntervalSeconds(300) // 5 minutes
          *     .build();
-         * 
+         *
          * // Well-Known Discovery
          * HttpJwksLoaderConfig discoveryConfig = HttpJwksLoaderConfig.builder()
          *     .wellKnownUrl("https://auth.example.com/.well-known/openid-configuration")
          *     .refreshIntervalSeconds(600) // 10 minutes
          *     .build();
-         * 
+         *
          * builder.httpJwksLoaderConfig(directConfig);
          * </pre>
-         * </p>
          * <p>
          * <strong>Important:</strong> When using well-known discovery, the {@link #issuerIdentifier(String)}
          * is optional as it will be automatically extracted from the discovery document. For direct JWKS URLs,
@@ -585,14 +575,13 @@ public class IssuerConfig implements HealthStatusProvider {
          * <pre>
          * // Absolute path
          * builder.jwksFilePath("/etc/security/jwks.json");
-         * 
+         *
          * // Relative path (relative to application working directory)
          * builder.jwksFilePath("config/jwks.json");
-         * 
+         *
          * // Classpath resource (if using resource loading utilities)
          * builder.jwksFilePath("classpath:jwks/public-keys.json");
          * </pre>
-         * </p>
          * <p>
          * <strong>Required:</strong> When using file-based JWKS loading, the {@link #issuerIdentifier(String)}
          * must be explicitly provided as it cannot be determined from the file content.
@@ -635,10 +624,9 @@ public class IssuerConfig implements HealthStatusProvider {
          *     }
          *   ]
          * }""";
-         * 
+         *
          * builder.jwksContent(jwksJson);
          * </pre>
-         * </p>
          * <p>
          * <strong>Required:</strong> When using in-memory JWKS content, the {@link #issuerIdentifier(String)}
          * must be explicitly provided as it cannot be determined from the content.
@@ -671,7 +659,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *   <li><strong>Algorithm Preferences:</strong> Initialized with secure defaults if not explicitly set</li>
          *   <li><strong>Claim Mappers:</strong> Initialized as empty map if not explicitly set</li>
          * </ul>
-         * </p>
          * <p>
          * The method automatically creates the appropriate {@link JwksLoader} based on the configuration:
          * <ol>
@@ -680,7 +667,6 @@ public class IssuerConfig implements HealthStatusProvider {
          *   <li>File-based loader (if {@link #jwksFilePath(String)} is configured)</li>
          *   <li>In-memory loader (if {@link #jwksContent(String)} is configured)</li>
          * </ol>
-         * </p>
          * <p>
          * <strong>Note:</strong> The {@link SecurityEventCounter} is not initialized during build.
          * It must be set later via {@link IssuerConfig#initSecurityEventCounter(SecurityEventCounter)}
@@ -727,7 +713,7 @@ public class IssuerConfig implements HealthStatusProvider {
         private void createJwksLoaderIfNeeded() {
             if (jwksLoader == null) {
                 // Create JwksLoader based on the first available configuration
-                // SecurityEventCounter will be set later via initSecurityEventCounter()
+                // SecurityEventCounter will be set later via initJWKSLoader()
                 if (httpJwksLoaderConfig != null) {
                     jwksLoader = JwksLoaderFactory.createHttpLoader(httpJwksLoaderConfig);
                 } else if (jwksFilePath != null) {
