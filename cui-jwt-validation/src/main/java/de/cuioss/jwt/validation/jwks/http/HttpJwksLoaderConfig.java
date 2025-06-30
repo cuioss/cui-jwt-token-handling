@@ -72,11 +72,19 @@ public class HttpJwksLoaderConfig {
 
     /**
      * The HttpHandler used for HTTP requests.
+     * Will be null if using WellKnownResolver.
      */
-    @NonNull
     @Getter
     @EqualsAndHashCode.Exclude
     private final HttpHandler httpHandler;
+
+    /**
+     * The WellKnownResolver used for well-known endpoint discovery.
+     * Will be null if using direct HttpHandler.
+     */
+    @Getter
+    @EqualsAndHashCode.Exclude
+    private final WellKnownResolver wellKnownResolver;
 
     /**
      * The ScheduledExecutorService used for background refresh operations.
@@ -116,7 +124,8 @@ public class HttpJwksLoaderConfig {
         private Integer refreshIntervalSeconds = DEFAULT_REFRESH_INTERVAL_IN_SECONDS;
         private final HttpHandler.HttpHandlerBuilder httpHandlerBuilder;
         private ScheduledExecutorService scheduledExecutorService;
-        
+        private WellKnownResolver wellKnownResolver;
+
         // Track which endpoint configuration method was used to ensure mutual exclusivity
         private EndpointSource endpointSource = null;
 
@@ -165,19 +174,18 @@ public class HttpJwksLoaderConfig {
         }
 
         /**
-         * Configures the JWKS URI by extracting it from a {@link WellKnownResolver}.
+         * Configures the JWKS loading using a {@link WellKnownResolver}.
          * <p>
-         * This method will retrieve the {@code jwks_uri} from the provided
-         * {@code WellKnownResolver}. If the resolver does not contain a {@code jwks_uri},
-         * an {@link IllegalArgumentException} will be thrown.
+         * This method stores the WellKnownResolver for dynamic JWKS URI resolution.
+         * The JWKS URI will be extracted at runtime when the resolver is healthy.
          * </p>
          * <p>
          * This method is mutually exclusive with {@link #jwksUri(URI)} and {@link #jwksUrl(String)}.
          * Only one endpoint configuration method can be used per builder instance.
          * </p>
          *
-         * @param wellKnownResolver The {@link WellKnownResolver} instance from which to
-         *                          extract the JWKS URI. Must not be null.
+         * @param wellKnownResolver The {@link WellKnownResolver} instance to use for
+         *                          JWKS URI discovery. Must not be null.
          * @return this builder instance
          * @throws IllegalStateException if another endpoint configuration method was already used
          * @throws IllegalArgumentException if {@code wellKnownResolver} is null
@@ -185,8 +193,7 @@ public class HttpJwksLoaderConfig {
         public HttpJwksLoaderConfigBuilder wellKnown(@NonNull WellKnownResolver wellKnownResolver) {
             validateEndpointExclusivity(EndpointSource.WELL_KNOWN);
             this.endpointSource = EndpointSource.WELL_KNOWN;
-            HttpHandler extractedJwksHandler = wellKnownResolver.getJwksUri();
-            httpHandlerBuilder.uri(extractedJwksHandler.getUri()).sslContext(extractedJwksHandler.getSslContext());
+            this.wellKnownResolver = wellKnownResolver;
             return this;
         }
 
@@ -278,9 +285,9 @@ public class HttpJwksLoaderConfig {
         private void validateEndpointExclusivity(EndpointSource proposedSource) {
             if (endpointSource != null && endpointSource != proposedSource) {
                 throw new IllegalStateException(
-                    ("Cannot use %s endpoint configuration when %s was already configured. " +
-                    "Methods jwksUri(), jwksUrl(), and wellKnown() are mutually exclusive.")
-                    .formatted(proposedSource.name().toLowerCase().replace("_", ""), endpointSource.name().toLowerCase().replace("_", "")));
+                        ("Cannot use %s endpoint configuration when %s was already configured. " +
+                                "Methods jwksUri(), jwksUrl(), and wellKnown() are mutually exclusive.")
+                                .formatted(proposedSource.name().toLowerCase().replace("_", ""), endpointSource.name().toLowerCase().replace("_", "")));
             }
         }
 
@@ -296,22 +303,31 @@ public class HttpJwksLoaderConfig {
             // Ensure at least one endpoint configuration method was used
             if (endpointSource == null) {
                 throw new IllegalStateException(
-                    "No JWKS endpoint configured. Must call one of: jwksUri(), jwksUrl(), or wellKnown()");
+                        "No JWKS endpoint configured. Must call one of: jwksUri(), jwksUrl(), or wellKnown()");
             }
-            // Build the HttpHandler for the well-known URL
-            HttpHandler jwksHttpHandler;
-            try {
-                jwksHttpHandler = httpHandlerBuilder.build();
-            } catch (IllegalArgumentException | IllegalStateException e) {
-                LOGGER.warn(WARN.INVALID_JWKS_URI::format);
-                throw new IllegalArgumentException("Invalid URL", e);
+
+            HttpHandler jwksHttpHandler = null;
+            WellKnownResolver configuredWellKnownResolver = null;
+
+            if (endpointSource == EndpointSource.WELL_KNOWN) {
+                // Store the WellKnownResolver for dynamic resolution
+                configuredWellKnownResolver = this.wellKnownResolver;
+            } else {
+                // Build the HttpHandler for direct URL/URI configuration
+                try {
+                    jwksHttpHandler = httpHandlerBuilder.build();
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                    LOGGER.warn(WARN.INVALID_JWKS_URI::format);
+                    throw new IllegalArgumentException("Invalid URL", e);
+                }
             }
 
             // Create default ScheduledExecutorService if not provided and refresh interval > 0
             ScheduledExecutorService executor = this.scheduledExecutorService;
             if (executor == null && refreshIntervalSeconds > 0) {
+                String hostName = jwksHttpHandler != null ? jwksHttpHandler.getUri().getHost() : "wellknown";
                 executor = Executors.newScheduledThreadPool(1, r -> {
-                    Thread t = new Thread(r, "jwks-refresh-" + jwksHttpHandler.getUri().getHost());
+                    Thread t = new Thread(r, "jwks-refresh-" + hostName);
                     t.setDaemon(true);
                     return t;
                 });
@@ -320,6 +336,7 @@ public class HttpJwksLoaderConfig {
             return new HttpJwksLoaderConfig(
                     refreshIntervalSeconds,
                     jwksHttpHandler,
+                    configuredWellKnownResolver,
                     executor);
         }
     }

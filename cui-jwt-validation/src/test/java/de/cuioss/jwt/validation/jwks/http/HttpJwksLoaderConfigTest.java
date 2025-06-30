@@ -299,11 +299,11 @@ class HttpJwksLoaderConfigTest {
     @Test
     @DisplayName("Should throw exception when no endpoint configuration is provided")
     void shouldThrowExceptionWhenNoEndpointConfigured() {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> 
-            HttpJwksLoaderConfig.builder()
-                .refreshIntervalSeconds(REFRESH_INTERVAL)
-                .build());
-        
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                HttpJwksLoaderConfig.builder()
+                        .refreshIntervalSeconds(REFRESH_INTERVAL)
+                        .build());
+
         assertTrue(exception.getMessage().contains("No JWKS endpoint configured"));
         assertTrue(exception.getMessage().contains("Must call one of: jwksUri(), jwksUrl(), or wellKnown()"));
     }
@@ -313,15 +313,15 @@ class HttpJwksLoaderConfigTest {
     void shouldThrowExceptionWhenJwksUriAndJwksUrlBothUsed() {
         HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
                 .jwksUri(URI.create(VALID_URL));
-        
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> 
-            builder.jwksUrl("https://another.example.com/jwks.json"));
-        
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                builder.jwksUrl("https://another.example.com/jwks.json"));
+
         String message = exception.getMessage();
-        assertTrue(message.contains("Cannot use jwksurl endpoint configuration when jwksuri was already configured"), 
-            "Expected message to contain exclusivity info, but was: " + message);
-        assertTrue(message.contains("mutually exclusive"), 
-            "Expected message to contain 'mutually exclusive', but was: " + message);
+        assertTrue(message.contains("Cannot use jwksurl endpoint configuration when jwksuri was already configured"),
+                "Expected message to contain exclusivity info, but was: " + message);
+        assertTrue(message.contains("mutually exclusive"),
+                "Expected message to contain 'mutually exclusive', but was: " + message);
     }
 
     @Test
@@ -329,17 +329,17 @@ class HttpJwksLoaderConfigTest {
     void shouldThrowExceptionWhenJwksUrlAndJwksUriBothUsed() {
         HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
                 .jwksUrl(VALID_URL);
-        
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> 
-            builder.jwksUri(URI.create("https://another.example.com/jwks.json")));
-        
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                builder.jwksUri(URI.create("https://another.example.com/jwks.json")));
+
         String message = exception.getMessage();
-        assertTrue(message.contains("Cannot use jwksuri endpoint configuration when jwksurl was already configured"), 
-            "Expected message to contain exclusivity info, but was: " + message);
-        assertTrue(message.contains("mutually exclusive"), 
-            "Expected message to contain 'mutually exclusive', but was: " + message);
+        assertTrue(message.contains("Cannot use jwksuri endpoint configuration when jwksurl was already configured"),
+                "Expected message to contain exclusivity info, but was: " + message);
+        assertTrue(message.contains("mutually exclusive"),
+                "Expected message to contain 'mutually exclusive', but was: " + message);
     }
-    
+
     @Test
     @DisplayName("Should allow multiple calls to same endpoint configuration method")
     void shouldAllowMultipleCallsToSameEndpointMethod() {
@@ -349,7 +349,7 @@ class HttpJwksLoaderConfigTest {
                 .jwksUrl("https://final.example.com/jwks.json") // Override with different URL
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build();
-        
+
         assertEquals(URI.create("https://final.example.com/jwks.json"), config.getHttpHandler().getUri());
     }
 }
