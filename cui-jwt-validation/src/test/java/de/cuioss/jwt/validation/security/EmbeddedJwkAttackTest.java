@@ -55,7 +55,7 @@ class EmbeddedJwkAttackTest {
     void setUp() {
         // Create issuer config with JWKS content
         IssuerConfig issuerConfig = IssuerConfig.builder()
-                .issuer("Token-Test-testIssuer")
+
                 .expectedAudience("test-client")
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                 .build();

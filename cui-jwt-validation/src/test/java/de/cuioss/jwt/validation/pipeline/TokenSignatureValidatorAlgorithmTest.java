@@ -77,7 +77,7 @@ class TokenSignatureValidatorAlgorithmTest {
         Instant expiration = now.plus(1, ChronoUnit.HOURS);
 
         return Jwts.builder().subject("test-subject")
-                .issuer(ISSUER)
+
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
                 .header().add("kid", algorithm.name()).and()

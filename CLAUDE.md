@@ -58,6 +58,7 @@ Execute comprehensive quality verification and commit workflow for a specific mo
    - Runs complete build with all tests
    - Validates full integration and functionality
    - Ensures no regressions introduced
+   - This will take nearly 8 Minutes. Always wait for it to complete. !0 minutes on the outside
    - **NO SHORTCUTS** - Fix ALL test failures and build errors
 
 3. **Error Resolution Loop**:

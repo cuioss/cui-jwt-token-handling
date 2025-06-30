@@ -131,14 +131,12 @@ public class TokenKeycloakIT extends KeycloakITBase {
 
         // Create IssuerConfig for access tokens (audience: "account")
         IssuerConfig accessTokenIssuerConfig = IssuerConfig.builder()
-                .issuer(getIssuer()) // Direct Issuer URL from Keycloak container
                 .expectedAudience("account") // Access tokens have "account" audience
                 .httpJwksLoaderConfig(httpJwksConfig)
                 .build();
 
         // Create IssuerConfig for ID tokens (audience: "test_client")
         IssuerConfig idTokenIssuerConfig = IssuerConfig.builder()
-                .issuer(getIssuer()) // Direct Issuer URL from Keycloak container
                 .expectedAudience("test_client") // ID tokens have client ID as audience
                 .httpJwksLoaderConfig(httpJwksConfig)
                 .build();
@@ -245,7 +243,6 @@ public class TokenKeycloakIT extends KeycloakITBase {
 
             // 4. Configure IssuerConfig and TokenValidator
             IssuerConfig issuerConfig = IssuerConfig.builder()
-                    .issuer(keycloakIssuerUrl.toString()) // Use issuer from discovery
                     .expectedAudience("account") // Access tokens have "account" audience
                     .httpJwksLoaderConfig(jwksConfig)
                     .build();
@@ -295,7 +292,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
 
             String incorrectIssuer = "https://incorrect-issuer.com/auth/realms/cui-test";
             IssuerConfig issuerConfig = IssuerConfig.builder()
-                    .issuer(incorrectIssuer) // Manually set incorrect issuer
+                    // Manually set incorrect issuer
                     .expectedAudience("account") // Access tokens have "account" audience
                     .httpJwksLoaderConfig(jwksConfig)
                     .build();

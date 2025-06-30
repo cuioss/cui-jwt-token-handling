@@ -162,7 +162,7 @@ public class TokenHeaderValidator {
                     "No issuer identifier available from configuration"
             );
         }
-        
+
         if (!expectedIssuer.get().equals(givenIssuer)) {
             LOGGER.warn(JWTValidationLogMessages.WARN.ISSUER_MISMATCH.format(givenIssuer, expectedIssuer.get()));
             securityEventCounter.increment(SecurityEventCounter.EventType.ISSUER_MISMATCH);

@@ -264,7 +264,7 @@ public class TestTokenHolder implements TokenContent {
 
         // Build and return the IssuerConfig
         var config = IssuerConfig.builder()
-                .issuer(issuer)
+
                 .jwksContent(jwksContent)
                 .algorithmPreferences(new SignatureAlgorithmPreferences());
 

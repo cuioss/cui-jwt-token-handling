@@ -51,7 +51,7 @@ class JwtTokenTamperingUtilTest {
         // Create validation factory with default configuration
         ParserConfig config = ParserConfig.builder().build();
         IssuerConfig issuerConfig = IssuerConfig.builder()
-                .issuer(ISSUER)
+
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                 .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(InMemoryJWKSFactory.createDefaultJwks())

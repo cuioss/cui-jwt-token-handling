@@ -67,7 +67,7 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldValidateTokenThatIsAboutToExpire() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
@@ -87,7 +87,7 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldFailValidationForTokenThatHasJustExpired() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
@@ -114,7 +114,7 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldValidateTokenWithNotBeforeTimeInThePast() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
@@ -134,7 +134,7 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldValidateTokenWithNotBeforeTimeSlightlyInTheFuture() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
@@ -155,7 +155,7 @@ class TokenClaimValidatorEdgeCaseTest {
         void shouldFailValidationForTokenWithNotBeforeTimeFarInTheFuture() {
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
@@ -186,7 +186,7 @@ class TokenClaimValidatorEdgeCaseTest {
 
             // Given an IssuerConfig with empty JWKS content
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .jwksContent("{}")  // Empty JWKS content

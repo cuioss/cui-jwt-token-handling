@@ -20,7 +20,6 @@ import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
-import de.cuioss.test.generator.Generators;
 import de.cuioss.test.valueobjects.junit5.contracts.ShouldImplementEqualsAndHashCode;
 import de.cuioss.test.valueobjects.junit5.contracts.ShouldImplementToString;
 import de.cuioss.tools.logging.CuiLogger;
@@ -56,7 +55,9 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
 
     @Override
     public IssuerConfig getUnderTest() {
-        return IssuerConfig.builder().issuer(Generators.nonBlankStrings().next()).build();
+        return IssuerConfig.builder()
+                .jwksContent(TEST_JWKS_CONTENT)
+                .build();
     }
 
     @Nested
@@ -67,15 +68,15 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         @DisplayName("Should build with minimal configuration")
         void shouldBuildWithMinimalConfig() {
             // Given
-            var issuer = TEST_ISSUER;
+            var jwksContent = TEST_JWKS_CONTENT;
 
             // When
             var config = IssuerConfig.builder()
-                    .issuer(issuer)
+                    .jwksContent(jwksContent)
                     .build();
 
             // Then
-            assertEquals(issuer, config.getIssuer());
+            assertEquals(jwksContent, config.getJwksContent());
             assertTrue(config.getExpectedAudience().isEmpty());
             assertTrue(config.getExpectedClientId().isEmpty());
             assertNotNull(config.getAlgorithmPreferences());
@@ -85,7 +86,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         @DisplayName("Should build with complete configuration")
         void shouldBuildWithCompleteConfig() {
             // Given
-            var issuer = TEST_ISSUER;
             var audience = TEST_AUDIENCE;
             var clientId = TEST_CLIENT_ID;
             var algorithmPreferences = new SignatureAlgorithmPreferences();
@@ -96,7 +96,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
 
             // When
             var config = IssuerConfig.builder()
-                    .issuer(issuer)
                     .expectedAudience(audience)
                     .expectedClientId(clientId)
                     .algorithmPreferences(algorithmPreferences)
@@ -105,7 +104,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
                     .build();
 
             // Then
-            assertEquals(issuer, config.getIssuer());
             assertEquals(Set.of(audience), config.getExpectedAudience());
             assertEquals(Set.of(clientId), config.getExpectedClientId());
             assertEquals(algorithmPreferences, config.getAlgorithmPreferences());
@@ -123,7 +121,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldInitializeWithHttpJwksLoader() {
             // Given
             var config = IssuerConfig.builder()
-                    .issuer(TEST_ISSUER)
                     .httpJwksLoaderConfig(HttpJwksLoaderConfig.builder()
                             .jwksUrl(TEST_JWKS_URL)
                             .build())
@@ -145,7 +142,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
             Files.writeString(jwksFilePath, TEST_JWKS_CONTENT);
 
             var config = IssuerConfig.builder()
-                    .issuer(TEST_ISSUER)
                     .jwksFilePath(jwksFilePath.toString())
                     .build();
             var securityEventCounter = new SecurityEventCounter();
@@ -162,7 +158,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldInitializeWithInMemoryJwksLoader() {
             // Given
             var config = IssuerConfig.builder()
-                    .issuer(TEST_ISSUER)
                     .jwksContent(TEST_JWKS_CONTENT)
                     .build();
             var securityEventCounter = new SecurityEventCounter();
@@ -181,7 +176,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldThrowExceptionWhenNoJwksLoaderConfigIsPresent() {
             // Given
             var config = IssuerConfig.builder()
-                    .issuer(TEST_ISSUER)
                     .build();
             var securityEventCounter = new SecurityEventCounter();
 
@@ -196,7 +190,6 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         void shouldThrowExceptionWhenSecurityEventCounterIsNull() {
             // Given
             var config = IssuerConfig.builder()
-                    .issuer(TEST_ISSUER)
                     .jwksContent(TEST_JWKS_CONTENT)
                     .build();
 

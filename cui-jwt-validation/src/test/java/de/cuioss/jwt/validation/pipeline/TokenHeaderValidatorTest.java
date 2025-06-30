@@ -21,6 +21,7 @@ import de.cuioss.jwt.validation.domain.claim.ClaimValue;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
+import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
 import de.cuioss.jwt.validation.test.TestTokenHolder;
 import de.cuioss.jwt.validation.test.generator.ClaimControlParameter;
 import de.cuioss.test.generator.junit.EnableGeneratorController;
@@ -52,6 +53,8 @@ class TokenHeaderValidatorTest {
 
     // Helper method to create a TokenHeaderValidator with the shared SecurityEventCounter
     private TokenHeaderValidator createValidator(IssuerConfig issuerConfig) {
+        // Initialize the IssuerConfig with the SecurityEventCounter so JwksLoader is created
+        issuerConfig.initSecurityEventCounter(SECURITY_EVENT_COUNTER);
         return new TokenHeaderValidator(issuerConfig, SECURITY_EVENT_COUNTER);
     }
 
@@ -62,9 +65,9 @@ class TokenHeaderValidatorTest {
         @Test
         @DisplayName("Should create validator with expected issuer")
         void shouldCreateValidatorWithExpectedIssuer() {
-            // Given an IssuerConfig with expected issuer
+            // Given an IssuerConfig with JWKS content
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
 
             // When creating the validator
@@ -72,7 +75,6 @@ class TokenHeaderValidatorTest {
 
             // Then the validator should be created without warnings
             assertNotNull(validator);
-            assertEquals(EXPECTED_ISSUER, issuerConfig.getIssuer());
             assertNotNull(issuerConfig.getAlgorithmPreferences());
         }
 
@@ -82,7 +84,7 @@ class TokenHeaderValidatorTest {
             // Given an IssuerConfig with custom algorithm preferences
             var customAlgorithmPreferences = new SignatureAlgorithmPreferences(List.of("RS256", "ES256"));
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .algorithmPreferences(customAlgorithmPreferences)
                     .build();
 
@@ -105,7 +107,7 @@ class TokenHeaderValidatorTest {
         void shouldValidateTokenWithSupportedAlgorithm() {
             // Given a validator with default algorithm preferences
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
             TokenHeaderValidator validator = createValidator(issuerConfig);
 
@@ -126,7 +128,7 @@ class TokenHeaderValidatorTest {
             // Given a validator with custom algorithm preferences that only support ES256
             var customAlgorithmPreferences = new SignatureAlgorithmPreferences(List.of("ES256"));
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .algorithmPreferences(customAlgorithmPreferences)
                     .build();
             TokenHeaderValidator validator = createValidator(issuerConfig);
@@ -158,7 +160,7 @@ class TokenHeaderValidatorTest {
 
             // Given a validator
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
             TokenHeaderValidator validator = createValidator(issuerConfig);
 
@@ -189,7 +191,7 @@ class TokenHeaderValidatorTest {
         void shouldValidateTokenWithExpectedIssuer() {
             // Given a validator with expected issuer
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
             TokenHeaderValidator validator = createValidator(issuerConfig);
 
@@ -210,7 +212,7 @@ class TokenHeaderValidatorTest {
 
             // Given a validator with expected issuer
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
             TokenHeaderValidator validator = createValidator(issuerConfig);
 
@@ -242,7 +244,7 @@ class TokenHeaderValidatorTest {
 
             // Given a validator with expected issuer
             var issuerConfig = IssuerConfig.builder()
-                    .issuer(EXPECTED_ISSUER)
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
             TokenHeaderValidator validator = createValidator(issuerConfig);
 
@@ -275,7 +277,7 @@ class TokenHeaderValidatorTest {
 
             // Given a validator with an expected issuer that doesn't match the validation's issuer
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("dummy-issuer")
+                    .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
                     .build();
             TokenHeaderValidator validator = createValidator(issuerConfig);
 

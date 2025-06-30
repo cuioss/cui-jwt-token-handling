@@ -38,11 +38,11 @@ import java.util.Set;
  * String jwksFilePath = "/path/to/jwks.json";
  * SecurityEventCounter securityEventCounter = new SecurityEventCounter();
  * JwksLoader fileJwksLoader = JwksLoaderFactory.createFileLoader(jwksFilePath, securityEventCounter);
- * 
+ *
  * // Get a key by ID
  * String keyId = "my-key-id";
  * Optional&lt;KeyInfo&gt; keyInfo = fileJwksLoader.getKeyInfo(keyId);
- * 
+ *
  * // Use the key if present
  * keyInfo.ifPresent(info -> {
  *     PublicKey publicKey = info.getKey();
@@ -61,13 +61,13 @@ import java.util.Set;
  *     .build();
  * SecurityEventCounter securityEventCounter = new SecurityEventCounter();
  * JwksLoader httpJwksLoader = JwksLoaderFactory.createHttpLoader(config, securityEventCounter);
- * 
+ *
  * // Get a key by ID
  * Optional&lt;KeyInfo&gt; keyInfo = httpJwksLoader.getKeyInfo("my-key-id");
- * 
+ *
  * // Get the first available key
  * Optional&lt;KeyInfo&gt; firstKey = httpJwksLoader.getFirstKeyInfo();
- * 
+ *
  * // Get all available key IDs
  * Set&lt;String&gt; keyIds = httpJwksLoader.keySet();
  * </pre>
@@ -78,14 +78,14 @@ import java.util.Set;
  * String jwksContent = "{\"keys\":[{\"kty\":\"RSA\",\"kid\":\"my-key-id\",\"use\":\"sig\",\"alg\":\"RS256\",\"n\":\"...\",\"e\":\"...\"}]}";
  * SecurityEventCounter securityEventCounter = new SecurityEventCounter();
  * JwksLoader inMemoryJwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
- * 
+ *
  * // Get all available keys
  * List&lt;KeyInfo&gt; allKeys = inMemoryJwksLoader.getAllKeyInfos();
  * </pre>
  * <p>
  * For more details on the security aspects, see the
  * <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/security.adoc">Security Specification</a>
- * 
+ *
  * @author Oliver Wolff
  * @since 1.0
  */
@@ -139,8 +139,4 @@ public interface JwksLoader extends HealthStatusProvider {
      * @return an Optional containing the issuer identifier if available, empty otherwise
      */
     Optional<String> getIssuerIdentifier();
-
-    // Health status method inherited from HealthStatusProvider:
-    // - LoaderStatus isHealthy()
-
 }

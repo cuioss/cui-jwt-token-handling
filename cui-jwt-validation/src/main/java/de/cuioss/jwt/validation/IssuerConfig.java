@@ -204,7 +204,6 @@ public class IssuerConfig implements HealthStatusProvider {
      *   <li>If the JwksLoader is initialized and healthy, delegate to its issuer identifier</li>
      *   <li>Otherwise, return empty to indicate no issuer identifier is available</li>
      * </ol>
-     * </p>
      *
      * @return an Optional containing the issuer identifier if available, empty otherwise
      * @since 1.0
@@ -214,7 +213,7 @@ public class IssuerConfig implements HealthStatusProvider {
         if (jwksLoader != null && jwksLoader.isHealthy() == LoaderStatus.OK) {
             return jwksLoader.getIssuerIdentifier();
         }
-        
+
         // Return empty if JwksLoader is not healthy or not initialized
         return Optional.empty();
     }

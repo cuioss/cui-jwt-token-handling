@@ -30,17 +30,12 @@ import de.cuioss.jwt.validation.pipeline.TokenClaimValidator;
 import de.cuioss.jwt.validation.pipeline.TokenHeaderValidator;
 import de.cuioss.jwt.validation.pipeline.TokenSignatureValidator;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
-import de.cuioss.tools.collect.MapBuilder;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.string.MoreStrings;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static de.cuioss.jwt.validation.JWTValidationLogMessages.INFO;
@@ -118,7 +113,7 @@ public class TokenValidator {
     private static final CuiLogger LOGGER = new CuiLogger(TokenValidator.class);
 
     private final NonValidatingJwtParser jwtParser;
-    
+
     /**
      * List of enabled issuer configurations.
      * Since issuer identifiers are now dynamically resolved, we store configurations 

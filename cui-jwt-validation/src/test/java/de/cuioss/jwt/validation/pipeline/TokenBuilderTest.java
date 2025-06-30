@@ -51,7 +51,7 @@ class TokenBuilderTest {
     void setUp() {
         // Create a simple IssuerConfig for testing
         IssuerConfig issuerConfig = IssuerConfig.builder()
-                .issuer("https://test-issuer.com")
+
                 .build();
 
         tokenBuilder = new TokenBuilder(issuerConfig);

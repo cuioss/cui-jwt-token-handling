@@ -76,7 +76,7 @@ class TokenClaimValidatorTest {
         @DisplayName("Create validator with all recommended elements")
         void shouldCreateValidatorWithAllRecommendedElements() {
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(Set.of(TestTokenHolder.TEST_AUDIENCE))
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
@@ -94,7 +94,7 @@ class TokenClaimValidatorTest {
             long initialCount = SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.MISSING_RECOMMENDED_ELEMENT);
 
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                     .build();
 
@@ -112,7 +112,7 @@ class TokenClaimValidatorTest {
             long initialCount = SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.MISSING_RECOMMENDED_ELEMENT);
 
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                     .build();
 
@@ -130,7 +130,7 @@ class TokenClaimValidatorTest {
             long initialCount = SECURITY_EVENT_COUNTER.getCount(SecurityEventCounter.EventType.MISSING_RECOMMENDED_ELEMENT);
 
             var issuerConfig = IssuerConfig.builder()
-                    .issuer("test-issuer")
+
                     .build();
 
             TokenClaimValidator validator = createValidator(issuerConfig);
