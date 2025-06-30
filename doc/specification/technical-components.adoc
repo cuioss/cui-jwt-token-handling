@@ -136,50 +136,90 @@ This specification has been implemented in the following classes:
 
 Each IssuerConfig instance contains all the information needed to validate tokens from a specific issuer:
 
-* Issuer URL (configured value, may be overridden by well-known discovery)
-* Expected audience values
-* Expected client ID values
-* JWKS configuration (one of the following):
-** HTTP JWKS configuration (httpJwksLoaderConfig) - supports well-known discovery
-** File path to JWKS file (jwksFilePath)
-** In-memory JWKS content (jwksContent)
-* Algorithm preferences
-* Custom claim mappers
+* **Issuer Identifier** (`issuerIdentifier`) - Required for all JWKS loading variants except well-known discovery
+* **Expected audience values** - Used for audience claim validation
+* **Expected client ID values** - Used for authorized party claim validation
+* **JWKS configuration** (one of the following):
+** HTTP JWKS configuration (httpJwksLoaderConfig) - supports both direct HTTP endpoints and well-known discovery
+** File path to JWKS file (jwksFilePath) - requires explicit issuerIdentifier
+** In-memory JWKS content (jwksContent) - requires explicit issuerIdentifier
+* **Algorithm preferences** - Specifies allowed signature algorithms
+* **Custom claim mappers** - For custom claim processing
 
-==== Issuer Identification and Well-Known Discovery
+==== Issuer Identification Strategy
 
-The IssuerConfig supports dynamic issuer identification through a delegation pattern:
+The IssuerConfig supports a sophisticated issuer identification strategy that distinguishes between different JWKS loading methods:
 
-* **Configured Issuer**: The `issuer` field provides the base issuer identifier
-* **Effective Issuer**: The `getEffectiveIssuer()` method returns the authoritative issuer identifier for token validation
-* **Delegation Logic**: When using HTTP JWKS configuration with well-known discovery, the effective issuer is retrieved from the OpenID Connect discovery document via the JwksLoader
+* **Well-Known Discovery**: The issuer identifier is automatically extracted from the OpenID Connect discovery document
+* **Direct HTTP/File/In-Memory**: The issuer identifier must be explicitly configured via the `issuerIdentifier` field
 
-This approach ensures that when well-known discovery is used, the issuer identifier from the discovery document takes precedence over the configured value, providing automatic issuer identification for dynamic environments.
+The resolution logic prioritizes dynamic identification over static configuration:
 
-Example usage:
 [source,java]
 ----
-// The effective issuer may differ from the configured issuer when using well-known discovery
-String tokenIssuer = decodedToken.getIssuer();
-String effectiveIssuer = issuerConfig.getEffectiveIssuer();
-if (effectiveIssuer.equals(tokenIssuer)) {
-    // Validation proceeds
+public Optional<String> getIssuerIdentifier() {
+    // First try to get issuer identifier from JwksLoader (for well-known discovery)
+    if (jwksLoader != null && jwksLoader.isHealthy() == LoaderStatus.OK) {
+        Optional<String> jwksLoaderIssuer = jwksLoader.getIssuerIdentifier();
+        if (jwksLoaderIssuer.isPresent()) {
+            return jwksLoaderIssuer;
+        }
+    }
+    
+    // Fall back to configured issuer identifier (for file-based, in-memory, etc.)
+    return Optional.ofNullable(issuerIdentifier);
 }
 ----
 
-==== Lazy Initialization
+==== Configuration Validation and Initialization
 
-The IssuerConfig uses a lazy initialization approach for the JwksLoader. Instead of requiring a pre-initialized JwksLoader, it accepts configuration parameters and initializes the appropriate JwksLoader when needed. This initialization happens through the `initSecurityEventCounter` method, which is called by TokenValidator and passes the SecurityEventCounter to the JwksLoader.
+The IssuerConfig follows a two-phase approach separating configuration validation from JwksLoader initialization:
 
-This approach provides several benefits:
+===== Phase 1: Configuration Validation (Built into Build Process)
 
-* Simplified configuration - no need to create JwksLoader instances separately
-* Consistent SecurityEventCounter usage across all components
-* Centralized management of JwksLoader initialization
-* Support for multiple JWKS source types (HTTP, file, in-memory)
-* Dynamic issuer identification through well-known discovery
+Configuration validation is automatically performed during the `build()` method via a custom builder:
 
-The TokenValidator manages multiple IssuerConfig instances, inspects JWT tokens, determines their issuer using the effective issuer identifier, and selects the appropriate configuration for validation.
+[source,java]
+----
+IssuerConfig config = IssuerConfig.builder()
+    .issuerIdentifier("https://my-issuer.com")
+    .jwksContent(jwksContent)
+    .build();  // ✅ Validation happens automatically during build
+----
+
+**Validation Rules (enforced during build):**
+
+* At least one JWKS loading method must be configured for enabled issuers
+* `issuerIdentifier` is required for file-based and in-memory JWKS loading
+* `issuerIdentifier` is optional for well-known discovery (extracted from discovery document)
+* `issuerIdentifier` is required for custom JwksLoaders unless they provide their own identifier
+
+===== Phase 2: JwksLoader Initialization  
+
+The `initSecurityEventCounter()` method handles pure initialization:
+
+[source,java]
+----
+// Later, when SecurityEventCounter is available
+config.initSecurityEventCounter(securityEventCounter);  // ✅ Pure initialization
+----
+
+**Initialization Process:**
+
+* Creates appropriate JwksLoader instances based on configuration
+* Passes the SecurityEventCounter to all JwksLoader implementations
+* Assumes configuration has already been validated during construction
+* Focuses solely on resource initialization, not validation
+
+This separation provides several benefits:
+
+* **Automatic Validation**: Configuration errors are caught immediately during object construction
+* **Clear Semantics**: Configuration validation is separate from resource initialization  
+* **Fail-Fast Behavior**: Invalid configurations are rejected before they can be used
+* **Better Developer Experience**: No need to remember to call separate validation methods
+* **Simplified Initialization**: The initialization method focuses only on creating JwksLoader instances
+
+The TokenValidator manages multiple IssuerConfig instances, ensures they are validated, initializes them with SecurityEventCounter, and selects the appropriate configuration for token validation.
 
 ==== Multi-Issuer Architecture
 

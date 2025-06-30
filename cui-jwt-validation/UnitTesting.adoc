@@ -239,11 +239,11 @@ void shouldRejectTokenWithMissingClaims() {
 
     // Create an IssuerConfig for validation
     IssuerConfig issuerConfig = IssuerConfig.builder()
-        .issuer(TestTokenHolder.TEST_ISSUER)
+        .issuerIdentifier(TestTokenHolder.TEST_ISSUER)
         .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
         .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
         .jwksContent(InMemoryJWKSFactory.createDefaultJwks())
-        .build();
+        .build(); // Validation happens automatically
 
     TokenValidator validator = new TokenValidator(issuerConfig);
 

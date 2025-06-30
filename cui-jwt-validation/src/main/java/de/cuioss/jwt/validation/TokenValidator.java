@@ -70,10 +70,10 @@ import static de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
  *
  * // Create an issuer configuration
  * IssuerConfig issuerConfig = IssuerConfig.builder()
- *     .issuer("https://example.com")
+ *     .issuerIdentifier("https://example.com")
  *     .expectedAudience("my-client")
  *     .httpJwksLoaderConfig(httpConfig)
- *     .build();
+ *     .build(); // Validation happens automatically
  *
  * // Create the token validator
  * // The validator creates a SecurityEventCounter internally and passes it to all components

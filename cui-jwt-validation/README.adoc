@@ -86,11 +86,11 @@ Flexible key source options:
 ----
 // Create issuer configuration
 IssuerConfig issuerConfig = IssuerConfig.builder()
-        .issuer("https://your-issuer.com")
+        .issuerIdentifier("https://your-issuer.com")
         .expectedAudience("target-Audience")
         .expectedClientId("client-id")
         .httpJwksLoaderConfig(httpJwksLoaderConfig)
-        .build();
+        .build(); // Validation happens automatically // Validate configuration
 
 // Create validator
 TokenValidator validator = new TokenValidator(issuerConfig);
@@ -112,20 +112,22 @@ HttpJwksLoaderConfig httpConfig = HttpJwksLoaderConfig.builder()
         .build();
 
 // Configure multiple issuers
+// HTTP-based JWKS (well-known discovery - issuerIdentifier optional)
 IssuerConfig issuerHttpConfig = IssuerConfig.builder()
-        .issuer("https://issuer1.com")
-        .httpJwksLoaderConfig(httpConfig)
-        .build();
+        .httpJwksLoaderConfig(httpConfig) // For well-known discovery
+        .build(); // Validation happens automatically
 
+// File-based JWKS (issuerIdentifier required)
 IssuerConfig issuerFileConfig = IssuerConfig.builder()
-        .issuer("https://issuer2.com")
+        .issuerIdentifier("https://issuer2.com")
         .jwksFilePath("/path/to/jwks.json")
-        .build();
+        .build(); // Validation happens automatically
 
+// In-memory JWKS (issuerIdentifier required)
 IssuerConfig issuerMemoryConfig = IssuerConfig.builder()
-        .issuer("https://issuer3.com")
+        .issuerIdentifier("https://issuer3.com")
         .jwksContent("{\"keys\":[{\"kty\":\"RSA\",\"kid\":\"key-id\",\"use\":\"sig\",\"alg\":\"RS256\",\"n\":\"...\",\"e\":\"...\"}]}")
-        .build();
+        .build(); // Validation happens automatically
 
 // Create validator supporting all issuers
 TokenValidator validator = new TokenValidator(
@@ -145,7 +147,7 @@ This library supports configuring the `HttpJwksLoaderConfig` (and subsequently t
 
 === Benefits
 
-* **Simplified Configuration**: Reduces the need to manually configure the `jwks_uri` and `issuer` if they are discoverable.
+* **Simplified Configuration**: Reduces the need to manually configure the `jwks_uri` and `issuerIdentifier` if they are discoverable via well-known endpoints.
 * **Dynamic Updates**: Although `HttpWellKnownResolver` itself performs a one-time fetch, the principle of discovery allows for more dynamic setups if the handler is re-initialized based on external triggers (not covered by default).
 * **Standard Compliance**: Aligns with OIDC standards for provider information retrieval.
 
@@ -204,7 +206,7 @@ HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
 
 ==== Configuring TokenValidator
 
-The `HttpJwksLoaderConfig` (configured via `HttpWellKnownResolver`) is then used with `IssuerConfig` to set up the `TokenValidator`. It's crucial to use the issuer identifier obtained from the `HttpWellKnownResolver` for the `expectedIssuer` in `IssuerConfig` to ensure consistency.
+The `HttpJwksLoaderConfig` (configured via `HttpWellKnownResolver`) is then used with `IssuerConfig` to set up the `TokenValidator`. For well-known discovery, the issuer identifier is automatically extracted from the discovery document, so you don't need to specify it explicitly.
 
 [source,java]
 ----
@@ -212,21 +214,18 @@ import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.IssuerConfig;
 
 // Assuming jwksConfig is configured using wellKnownResolver as shown above
-// And wellKnownResolver is available
 
-String expectedIssuerFromDiscovery = wellKnownResolver.getIssuer().getUrl().toString();
-
+// For well-known discovery, issuerIdentifier is automatically extracted
 IssuerConfig issuerConfig = IssuerConfig.builder()
-    .issuer(expectedIssuerFromDiscovery) // Use issuer from discovery
-    .addAudience("your-client-id")       // Set your expected audience(s)
-    // .expectedClientId("your-client-id") // If you need to check 'azp' or 'client_id' claims
-    .httpJwksLoaderConfig(jwksConfig)
-    .build();
+    .expectedAudience("your-client-id")     // Set your expected audience(s)
+    .expectedClientId("your-client-id")     // If you need to check 'azp' or 'client_id' claims
+    .httpJwksLoaderConfig(jwksConfig)       // Contains well-known resolver
+    .build(); // Validation happens automatically during build
 
 TokenValidator validator = new TokenValidator(issuerConfig);
 
-// Now the validator is ready to validate tokens against the dynamically discovered JWKS
-// and the discovered issuer.
+// The validator automatically uses the issuer identifier from the discovery document
+// for token validation - no manual configuration needed
 ----
 
 ==== Considerations
@@ -252,11 +251,11 @@ ClaimMapper roleMapper = new JsonCollectionMapper();
 
 // Add the custom mapper to the issuer configuration
 IssuerConfig issuerConfig = IssuerConfig.builder()
-        .issuer("https://issuer.com")
-        .jwksLoader(jwksLoader)
+        .issuerIdentifier("https://issuer.com")
+        .jwksContent(jwksContent) // or other JWKS configuration
         // Add custom claim mapper for "role" claim
         .claimMapper("role", roleMapper)
-        .build();
+        .build(); // Validation happens automatically
 
 // Create a validator with the configured issuer
 TokenValidator validator = new TokenValidator(issuerConfig);
@@ -380,11 +379,11 @@ StringSplitterMapper colonMapper = new StringSplitterMapper(':');
 
 // Configure the issuer to use the custom mappers
 IssuerConfig issuerConfig = IssuerConfig.builder()
-        .issuer("https://issuer.com")
-        .jwksLoader(jwksLoader)
+        .issuerIdentifier("https://issuer.com")
+        .jwksContent(jwksContent) // or other JWKS configuration
         .claimMapper("roles", commaMapper) // For comma-separated roles
         .claimMapper("groups", colonMapper) // For colon-separated groups
-        .build();
+        .build(); // Validation happens automatically
 ----
 
 The `StringSplitterMapper` is particularly useful for handling formats that the default `JsonCollectionMapper` doesn't support:

@@ -22,6 +22,7 @@ import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences;
+import de.cuioss.tools.base.Preconditions;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,14 +51,14 @@ import java.util.Set;
  * <p>
  * Usage example:
  * <pre>
- * // Create an issuer configuration with HTTP-based JWKS loading
+ * // Create an issuer configuration with HTTP-based JWKS loading (well-known discovery)
  * IssuerConfig issuerConfig = IssuerConfig.builder()
  *     .expectedAudience("my-client")
  *     .httpJwksLoaderConfig(HttpJwksLoaderConfig.builder()
  *         .wellKnownUrl("https://example.com/.well-known/openid-configuration")
  *         .refreshIntervalSeconds(60)
  *         .build())
- *     .build();
+ *     .build(); // Validation happens automatically during build()
  *
  * // Initialize the security event counter -> This is usually done by TokenValidator
  * issuerConfig.initSecurityEventCounter(new SecurityEventCounter());
@@ -97,6 +98,18 @@ public class IssuerConfig implements HealthStatusProvider {
     @Builder.Default
     boolean enabled = true;
 
+    /**
+     * The issuer identifier for token validation.
+     * <p>
+     * This field is required for all JWKS loading variants except well-known discovery.
+     * For well-known discovery, the issuer identifier is automatically extracted from
+     * the discovery document and this field is optional.
+     * </p>
+     * <p>
+     * This identifier must match the "iss" claim in validated tokens.
+     * </p>
+     */
+    String issuerIdentifier;
 
     /**
      * Set of expected audience values.
@@ -152,6 +165,7 @@ public class IssuerConfig implements HealthStatusProvider {
 
     /**
      * Initializes the JwksLoader if it's not already initialized and the issuer is enabled.
+     * <p>
      * This method should be called by TokenValidator before using the JwksLoader.
      * It will initialize the JwksLoader based on the first available configuration in the following order:
      * <ol>
@@ -163,10 +177,13 @@ public class IssuerConfig implements HealthStatusProvider {
      * If the issuer is disabled ({@link #enabled} is {@code false}), this method will not
      * initialize the JwksLoader and will leave it as {@code null}.
      * <p>
+     * <strong>Important:</strong> This method assumes the configuration has already been validated
+     * during construction via the {@link IssuerConfigBuilder#build()} method. It focuses solely on 
+     * initializing the JwksLoader instances with the provided SecurityEventCounter.
+     * <p>
      * This method is not thread-safe and should be called before the object is shared between threads.
      *
      * @param securityEventCounter the counter for security events, must not be null
-     * @throws IllegalStateException if no JwksLoader configuration is present for an enabled issuer
      * @throws NullPointerException if securityEventCounter is null
      */
     public void initSecurityEventCounter(@NonNull SecurityEventCounter securityEventCounter) {
@@ -175,47 +192,106 @@ public class IssuerConfig implements HealthStatusProvider {
             return;
         }
 
-        // Initialize JwksLoader based on the first available configuration
-        if (httpJwksLoaderConfig != null) {
-            jwksLoader = JwksLoaderFactory.createHttpLoader(httpJwksLoaderConfig, securityEventCounter);
-        } else if (jwksFilePath != null) {
-            jwksLoader = JwksLoaderFactory.createFileLoader(jwksFilePath, securityEventCounter);
-        } else if (jwksContent != null) {
-            jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
-        } else {
-            // Throw exception if no configuration is present for an enabled issuer
-            throw new IllegalStateException("No JwksLoader configuration is present for enabled issuer. One of httpJwksLoaderConfig, jwksFilePath, or jwksContent must be provided. " + "httpJwksLoaderConfig: " + (httpJwksLoaderConfig != null) + ", jwksFilePath: " + (jwksFilePath != null) + ", jwksContent: " + (jwksContent != null));
+        // Only initialize JwksLoader if one is not already set
+        if (jwksLoader == null) {
+            // Initialize JwksLoader based on the first available configuration
+            if (httpJwksLoaderConfig != null) {
+                jwksLoader = JwksLoaderFactory.createHttpLoader(httpJwksLoaderConfig, securityEventCounter);
+            } else if (jwksFilePath != null) {
+                jwksLoader = JwksLoaderFactory.createFileLoader(jwksFilePath, securityEventCounter);
+            } else if (jwksContent != null) {
+                jwksLoader = JwksLoaderFactory.createInMemoryLoader(jwksContent, securityEventCounter);
+            }
+        }
+    }
+
+    /**
+     * Post-construction validation method called internally by constructor.
+     * This ensures that all IssuerConfig instances are properly validated upon construction.
+     */
+    private void validateConfiguration() {
+        // Skip validation if the issuer is disabled
+        if (!enabled) {
+            return;
         }
 
+        // Validate that at least one JWKS loading method is configured
+        if (httpJwksLoaderConfig == null && jwksFilePath == null &&
+                jwksContent == null && jwksLoader == null) {
+            throw new IllegalStateException("No JwksLoader configuration is present for enabled issuer. " +
+                    "One of httpJwksLoaderConfig, jwksFilePath, jwksContent, or a custom jwksLoader must be provided.");
+        }
+
+        // Validate issuerIdentifier requirements based on JWKS loading method
+        if (jwksLoader != null) {
+            // For custom JwksLoaders, issuerIdentifier is required unless it's a well-known type
+            if (issuerIdentifier == null && !jwksLoader.getJwksType().providesIssuerIdentifier()) {
+                throw new IllegalStateException("issuerIdentifier is required for custom JwksLoader unless it provides its own issuer identifier");
+            }
+        } else {
+            // For built-in JWKS loading methods, validate issuerIdentifier requirements
+            if ((jwksFilePath != null || jwksContent != null) && issuerIdentifier == null) {
+                throw new IllegalStateException("issuerIdentifier is required for file-based and in-memory JWKS loading");
+            }
+            // For HTTP well-known discovery, issuerIdentifier is optional (will be extracted from discovery)
+        }
+    }
+
+    /**
+     * Custom constructor with validation.
+     * This is called by Lombok's generated constructor and ensures validation.
+     */
+    public IssuerConfig(boolean enabled, String issuerIdentifier, Set<String> expectedAudience,
+            Set<String> expectedClientId, HttpJwksLoaderConfig httpJwksLoaderConfig,
+            String jwksFilePath, String jwksContent, SignatureAlgorithmPreferences algorithmPreferences,
+            Map<String, ClaimMapper> claimMappers, JwksLoader jwksLoader) {
+        this.enabled = enabled;
+        this.issuerIdentifier = issuerIdentifier;
+        this.expectedAudience = expectedAudience;
+        this.expectedClientId = expectedClientId;
+        this.httpJwksLoaderConfig = httpJwksLoaderConfig;
+        this.jwksFilePath = jwksFilePath;
+        this.jwksContent = jwksContent;
+        this.algorithmPreferences = algorithmPreferences;
+        this.claimMappers = claimMappers;
+        this.jwksLoader = jwksLoader;
+
+        // Perform validation after all fields are set
+        validateConfiguration();
     }
 
     /**
      * Gets the issuer identifier for token validation.
      * <p>
      * This method provides the issuer identifier that should be used for token validation.
-     * For well-known discovery configurations, this method only returns an actual issuer
-     * identifier if the underlying {@link de.cuioss.jwt.validation.jwks.http.HttpJwksLoader#isHealthy()}
-     * returns a non-error response, ensuring that the issuer identifier is only available
-     * when the discovery process has completed successfully.
+     * The resolution logic prioritizes dynamic issuer identification (for well-known discovery)
+     * over static configuration:
      * </p>
      * <p>
      * The resolution logic is:
      * <ol>
-     *   <li>If the JwksLoader is initialized and healthy, delegate to its issuer identifier</li>
-     *   <li>Otherwise, return empty to indicate no issuer identifier is available</li>
+     *   <li>If the JwksLoader is initialized and healthy, delegate to its issuer identifier first</li>
+     *   <li>If the JwksLoader returns empty (for non-well-known cases), use the configured issuerIdentifier</li>
+     *   <li>If neither is available, return empty</li>
      * </ol>
      *
      * @return an Optional containing the issuer identifier if available, empty otherwise
      * @since 1.0
      */
     public Optional<String> getIssuerIdentifier() {
-        // Only return issuer identifier if JwksLoader is initialized and healthy
+        // First try to get issuer identifier from JwksLoader (for well-known discovery)
         if (jwksLoader != null && jwksLoader.isHealthy() == LoaderStatus.OK) {
-            return jwksLoader.getIssuerIdentifier();
+            Optional<String> jwksLoaderIssuer = jwksLoader.getIssuerIdentifier();
+            if (jwksLoaderIssuer.isPresent()) {
+                return jwksLoaderIssuer;
+            }
         }
 
-        // Return empty if JwksLoader is not healthy or not initialized
-        return Optional.empty();
+        // Fall back to configured issuer identifier (for file-based, in-memory, etc.)
+        Preconditions.checkState(issuerIdentifier != null,
+                "issuerIdentifier is null - this indicates a bug in validation logic. " +
+                        "Non-well-known JWKS loaders should have been validated to require issuerIdentifier during initialization.");
+        return Optional.of(issuerIdentifier);
     }
 
     /**

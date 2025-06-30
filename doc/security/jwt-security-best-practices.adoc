@@ -171,13 +171,14 @@ This section provides guidance on configuring the library for secure token valid
 
 ```java
 // Example configuration using the library
-TokenValidator validator = TokenValidator.builder()
-    .issuerConfig(IssuerConfig.builder()
-        .issuerUrl("https://idp.example.com")
-        .expectedAudience("my-client-id")
-        .expectedClientId("my-client-id")
-        .build())
-    .build();
+IssuerConfig issuerConfig = IssuerConfig.builder()
+    .issuerIdentifier("https://idp.example.com")
+    .expectedAudience("my-client-id")
+    .expectedClientId("my-client-id")
+    .jwksContent(jwksContent) // or other JWKS configuration
+    .build(); // Validation happens automatically
+
+TokenValidator validator = new TokenValidator(issuerConfig);
 ```
 
 === Algorithm Configuration
@@ -206,11 +207,15 @@ This section provides guidance on securely configuring JWT algorithms. For detai
 
 ```java
 // Example configuration specifying allowed algorithms
-TokenValidator validator = TokenValidator.builder()
+IssuerConfig issuerConfig = IssuerConfig.builder()
+    .issuerIdentifier("https://idp.example.com")
     .algorithmPreferences(SignatureAlgorithmPreferences.builder()
         .allowedAlgorithms(List.of("RS256"))
         .build())
-    .build();
+    .jwksContent(jwksContent) // or other JWKS configuration
+    .build(); // Validation happens automatically
+
+TokenValidator validator = new TokenValidator(issuerConfig);
 ```
 
 == Key Management Best Practices

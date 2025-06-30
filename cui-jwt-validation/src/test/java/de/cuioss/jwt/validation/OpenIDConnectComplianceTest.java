@@ -58,7 +58,7 @@ class OpenIDConnectComplianceTest {
 
         // Create issuer config
         IssuerConfig issuerConfig = IssuerConfig.builder()
-
+                .issuerIdentifier(TestTokenHolder.TEST_ISSUER)
                 .expectedAudience(TestTokenHolder.TEST_AUDIENCE)
                 .expectedClientId(TestTokenHolder.TEST_CLIENT_ID)
                 .jwksContent(jwksContent)

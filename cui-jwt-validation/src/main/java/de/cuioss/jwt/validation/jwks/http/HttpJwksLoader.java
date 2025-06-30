@@ -102,7 +102,12 @@ public class HttpJwksLoader implements JwksLoader {
 
     @Override
     public JwksType getJwksType() {
-        return JwksType.HTTP;
+        // Distinguish between direct HTTP and well-known discovery based on configuration
+        if (config.getWellKnownResolver() != null) {
+            return JwksType.WELL_KNOWN;
+        } else {
+            return JwksType.HTTP;
+        }
     }
 
     @Override
@@ -234,7 +239,7 @@ public class HttpJwksLoader implements JwksLoader {
         JWKSKeyLoader newLoader = JWKSKeyLoader.builder()
                 .jwksContent(result.content())
                 .securityEventCounter(securityEventCounter)
-                .jwksType(JwksType.HTTP)
+                .jwksType(getJwksType())
                 .build();
         keyLoader.set(newLoader);
         this.status = LoaderStatus.OK;
@@ -309,39 +314,40 @@ public class HttpJwksLoader implements JwksLoader {
             }
 
             try {
-                if (config.getHttpHandler() != null) {
-                    // Direct HTTP handler configuration
-                    LOGGER.debug("Creating ETagAwareHttpHandler from direct HTTP configuration for URI: %s",
-                            config.getHttpHandler().getUri());
-                    cache = new ETagAwareHttpHandler(config.getHttpHandler());
-                    httpCache.set(cache);
-                    return Optional.of(cache);
+                switch (getJwksType()) {
+                    case HTTP:
+                        // Direct HTTP handler configuration
+                        LOGGER.debug("Creating ETagAwareHttpHandler from direct HTTP configuration for URI: %s",
+                                config.getHttpHandler().getUri());
+                        cache = new ETagAwareHttpHandler(config.getHttpHandler());
+                        httpCache.set(cache);
+                        return Optional.of(cache);
 
-                } else if (config.getWellKnownResolver() != null) {
-                    // Well-known resolver configuration
-                    LOGGER.debug("Creating ETagAwareHttpHandler from WellKnownResolver");
+                    case WELL_KNOWN:
+                        // Well-known resolver configuration
+                        LOGGER.debug("Creating ETagAwareHttpHandler from WellKnownResolver");
 
-                    // Check if well-known resolver is healthy
-                    if (config.getWellKnownResolver().isHealthy() != LoaderStatus.OK) {
-                        LOGGER.debug("WellKnownResolver is not healthy, cannot create HTTP cache");
+                        // Check if well-known resolver is healthy
+                        if (config.getWellKnownResolver().isHealthy() != LoaderStatus.OK) {
+                            LOGGER.debug("WellKnownResolver is not healthy, cannot create HTTP cache");
+                            return Optional.empty();
+                        }
+
+                        // Extract JWKS URI from well-known resolver
+                        HttpHandler jwksHandler = config.getWellKnownResolver().getJwksUri();
+                        if (jwksHandler == null) {
+                            LOGGER.warn("WellKnownResolver did not provide JWKS URI");
+                            return Optional.empty();
+                        }
+
+                        LOGGER.info("Successfully resolved JWKS URI from well-known endpoint: %s", jwksHandler.getUri());
+                        cache = new ETagAwareHttpHandler(jwksHandler);
+                        httpCache.set(cache);
+                        return Optional.of(cache);
+
+                    default:
+                        LOGGER.error("Unsupported JwksType for HttpJwksLoader: %s", getJwksType());
                         return Optional.empty();
-                    }
-
-                    // Extract JWKS URI from well-known resolver
-                    HttpHandler jwksHandler = config.getWellKnownResolver().getJwksUri();
-                    if (jwksHandler == null) {
-                        LOGGER.warn("WellKnownResolver did not provide JWKS URI");
-                        return Optional.empty();
-                    }
-
-                    LOGGER.info("Successfully resolved JWKS URI from well-known endpoint: %s", jwksHandler.getUri());
-                    cache = new ETagAwareHttpHandler(jwksHandler);
-                    httpCache.set(cache);
-                    return Optional.of(cache);
-
-                } else {
-                    LOGGER.error("HttpJwksLoaderConfig has neither httpHandler nor wellKnownResolver configured.");
-                    return Optional.empty();
                 }
 
             } catch (NullPointerException e) {

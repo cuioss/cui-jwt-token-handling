@@ -233,7 +233,7 @@ public class TokenValidatorProducer {
      */
     private IssuerConfig createIssuerConfig(String issuerName, String issuerIdentifier) {
         try {
-            IssuerConfig.IssuerConfigBuilder builder = IssuerConfig.builder().issuer(issuerIdentifier);
+            IssuerConfig.IssuerConfigBuilder builder = IssuerConfig.builder().issuerIdentifier(issuerIdentifier);
 
             // Check for public key location
             String publicKeyLocation = config.getOptionalValue(JwtPropertyKeys.ISSUERS.BASE + "." + issuerName + ".public-key-location", String.class).orElse(null);
