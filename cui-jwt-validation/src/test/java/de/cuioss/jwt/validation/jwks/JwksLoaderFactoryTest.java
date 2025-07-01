@@ -103,16 +103,18 @@ class JwksLoaderFactoryTest {
     }
 
     @Test
-    @DisplayName("Should create file loader with fallback for non-existent file")
-    void shouldCreateFileLoaderWithFallbackForNonExistentFile() {
+    @DisplayName("Should fail fast when creating file loader for non-existent file")
+    void shouldFailFastForNonExistentFile() {
 
         String nonExistentFile = "non-existent-file.json";
-        JwksLoader loader = JwksLoaderFactory.createFileLoader(nonExistentFile);
-        loader.initJWKSLoader(securityEventCounter);
-        assertNotNull(loader, "Loader should not be null");
-        assertInstanceOf(JWKSKeyLoader.class, loader, "Loader should be an instance of JWKSKeyLoader");
-        assertEquals(JwksType.FILE, loader.getJwksType(), "Loader should have FILE type");
-        assertEquals(LoaderStatus.ERROR, loader.isHealthy(), "Loader should have ERROR status for non-existent file");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> JwksLoaderFactory.createFileLoader(nonExistentFile),
+                "Should throw IllegalArgumentException for non-existent file");
+
+        assertTrue(exception.getMessage().contains("Cannot read JWKS file"),
+                "Exception message should indicate file read failure");
+        assertTrue(exception.getMessage().contains(nonExistentFile),
+                "Exception message should contain the file name");
     }
 
     @Test

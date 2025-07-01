@@ -100,17 +100,18 @@ class FileJwksLoaderTest {
     }
 
     @Test
-    @DisplayName("Should handle file not found")
+    @DisplayName("Should fail fast for file not found")
     void shouldHandleFileNotFound() {
-        // Get initial count
-        long initialCount = securityEventCounter.getCount(SecurityEventCounter.EventType.FAILED_TO_READ_JWKS_FILE);
-        JwksLoader nonExistentFileLoader = JwksLoaderFactory.createFileLoader(tempDir.resolve("non-existent.json").toString());
-        nonExistentFileLoader.initJWKSLoader(securityEventCounter);
-        Optional<KeyInfo> keyInfo = nonExistentFileLoader.getKeyInfo(TEST_KID);
-        assertFalse(keyInfo.isPresent(), "Key info should not be present for missing file");
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Failed to read JWKS from file");
+        // File loading now fails fast at build time
+        String nonExistentFile = tempDir.resolve("non-existent.json").toString();
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> JwksLoaderFactory.createFileLoader(nonExistentFile),
+                "Should throw IllegalArgumentException for non-existent file");
 
-        assertEquals(initialCount + 1, securityEventCounter.getCount(SecurityEventCounter.EventType.FAILED_TO_READ_JWKS_FILE), "Security event counter should increment");
+        assertTrue(exception.getMessage().contains("Cannot read JWKS file"),
+                "Exception message should indicate file read failure");
+        assertTrue(exception.getMessage().contains(nonExistentFile),
+                "Exception message should contain the file name");
 
         // No cleanup needed
     }

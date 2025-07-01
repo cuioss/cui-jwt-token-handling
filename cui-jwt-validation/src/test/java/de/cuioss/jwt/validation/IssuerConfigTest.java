@@ -79,7 +79,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
 
             // Then
             assertNotNull(config.getJwksLoader());
-            assertEquals(TEST_ISSUER, config.getIssuerIdentifier().orElse(null));
+            assertEquals(TEST_ISSUER, config.getIssuerIdentifier());
             assertTrue(config.getExpectedAudience().isEmpty());
             assertTrue(config.getExpectedClientId().isEmpty());
             assertNotNull(config.getAlgorithmPreferences());

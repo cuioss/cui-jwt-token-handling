@@ -42,9 +42,11 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Implementation of {@link JwksLoader} that loads JWKS from a string content.
+ * Implementation of {@link JwksLoader} that loads JWKS from string content.
  * <p>
- * This implementation is useful when the JWKS content is already available as a string.
+ * This implementation processes JWKS content that is provided as a string. 
+ * If file-based JWKS loading is needed, the file content is resolved to string 
+ * at build time through the builder pattern.
  * <p>
  * This implementation supports cryptographic agility by handling multiple key types
  * and algorithms, including RSA, EC, and RSA-PSS.
@@ -79,9 +81,8 @@ public class JWKSKeyLoader implements JwksLoader {
     private volatile LoaderStatus status;
     private Map<String, KeyInfo> keyInfoMap;
 
-    // Fields for deferred initialization
+    // Field for deferred initialization
     private final String jwksContent;
-    private final String jwksFilePath;
     private volatile boolean initialized = false;
 
     /**
@@ -154,16 +155,44 @@ public class JWKSKeyLoader implements JwksLoader {
 
         /**
          * Builds a new JWKSKeyLoader with deferred initialization.
+         * If jwksFilePath is provided, it will be resolved to content at build time.
          * The SecurityEventCounter must be set via initJWKSLoader() before use.
          *
          * @return a new JWKSKeyLoader
+         * @throws IllegalArgumentException if neither jwksContent nor jwksFilePath is provided or if jwksFilePath cannot be read
          */
         @NonNull
         public JWKSKeyLoader build() {
             if (jwksContent == null && jwksFilePath == null) {
                 throw new IllegalArgumentException("Either jwksContent or jwksFilePath must be provided");
             }
-            return new JWKSKeyLoader(jwksContent, jwksFilePath, parserConfig, jwkAlgorithmPreferences, jwksType);
+
+            if (jwksContent != null) {
+                // Direct content provided
+                return new JWKSKeyLoader(jwksContent, parserConfig, jwkAlgorithmPreferences, jwksType);
+            } else {
+                // File path provided - resolve at build time and fail fast if unable to read
+                String resolvedContent = loadJwksFromFile(jwksFilePath);
+                return new JWKSKeyLoader(resolvedContent, parserConfig, jwkAlgorithmPreferences, jwksType);
+            }
+        }
+
+        /**
+         * Loads JWKS content from a file path.
+         * Fails fast if file cannot be read.
+         *
+         * @param filePath the path to the JWKS file
+         * @return the JWKS content as string
+         * @throws IllegalArgumentException if file cannot be read
+         */
+        private String loadJwksFromFile(String filePath) {
+            try {
+                String content = new String(Files.readAllBytes(Path.of(filePath)));
+                LOGGER.debug("Successfully read JWKS from file: %s", filePath);
+                return content;
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Cannot read JWKS file: " + filePath, e);
+            }
         }
     }
 
@@ -182,20 +211,17 @@ public class JWKSKeyLoader implements JwksLoader {
      * Creates a new JWKSKeyLoader with deferred initialization.
      * The SecurityEventCounter must be set via initJWKSLoader() before use.
      *
-     * @param jwksContent the JWKS content as a string, may be null if jwksFilePath is provided
-     * @param jwksFilePath the path to the JWKS file, may be null if jwksContent is provided
+     * @param jwksContent the JWKS content as a string, must not be null
      * @param parserConfig the configuration for parsing, may be null (defaults to a new instance)
      * @param jwkAlgorithmPreferences the JWK algorithm preferences for parsing validation, must not be null
      * @param jwksType the type of JWKS source, must not be null
      */
     public JWKSKeyLoader(
-            String jwksContent,
-            String jwksFilePath,
+            @NonNull String jwksContent,
             ParserConfig parserConfig,
             @NonNull JwkAlgorithmPreferences jwkAlgorithmPreferences,
             @NonNull JwksType jwksType) {
         this.jwksContent = jwksContent;
-        this.jwksFilePath = jwksFilePath;
         this.parserConfig = parserConfig != null ? parserConfig : ParserConfig.builder().build();
         this.jwkAlgorithmPreferences = jwkAlgorithmPreferences;
         this.jwksType = jwksType;
@@ -281,46 +307,13 @@ public class JWKSKeyLoader implements JwksLoader {
     }
 
     /**
-     * Initializes the JWKS keys by parsing the content or loading from file.
+     * Initializes the JWKS keys by parsing the content.
      */
     private void initializeKeys() {
         try {
-            String contentToProcess = loadJwksContent();
-            parseAndProcessKeys(contentToProcess);
+            parseAndProcessKeys(jwksContent);
         } catch (JsonException | IllegalArgumentException e) {
             handleParseError(e);
-        }
-    }
-
-    /**
-     * Loads JWKS content from either in-memory string or file.
-     *
-     * @return the JWKS content as string
-     */
-    private String loadJwksContent() {
-        if (jwksContent != null) {
-            return jwksContent;
-        } else if (jwksFilePath != null) {
-            return loadJwksFromFile();
-        } else {
-            throw new IllegalStateException("Neither jwksContent nor jwksFilePath is provided");
-        }
-    }
-
-    /**
-     * Loads JWKS content from a file.
-     *
-     * @return the JWKS content as string, or "{}" if file reading fails
-     */
-    private String loadJwksFromFile() {
-        try {
-            String content = new String(Files.readAllBytes(Path.of(jwksFilePath)));
-            LOGGER.debug("Successfully read JWKS from file: %s", jwksFilePath);
-            return content;
-        } catch (IOException e) {
-            LOGGER.warn(e, WARN.FAILED_TO_READ_JWKS_FILE.format(jwksFilePath));
-            securityEventCounter.increment(EventType.FAILED_TO_READ_JWKS_FILE);
-            return "{}"; // Empty JWKS
         }
     }
 
@@ -341,10 +334,7 @@ public class JWKSKeyLoader implements JwksLoader {
         Map<String, KeyInfo> keyMap = new ConcurrentHashMap<>();
         for (JsonObject jwk : jwkObjects) {
             var keyInfoOpt = processor.processKey(jwk);
-            if (keyInfoOpt.isPresent()) {
-                KeyInfo keyInfo = keyInfoOpt.get();
-                keyMap.put(keyInfo.keyId(), keyInfo);
-            }
+            keyInfoOpt.ifPresent(keyInfo -> keyMap.put(keyInfo.keyId(), keyInfo));
         }
 
         this.keyInfoMap = keyMap;

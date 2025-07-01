@@ -16,8 +16,10 @@
 package de.cuioss.jwt.validation.jwks.key;
 
 import de.cuioss.jwt.validation.ParserConfig;
+import de.cuioss.jwt.validation.security.JwkAlgorithmPreferences;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.test.InMemoryJWKSFactory;
+import de.cuioss.jwt.validation.test.InMemoryKeyMaterialHandler;
 import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 
 import static de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR.JWKS_CONTENT_SIZE_EXCEEDED;
@@ -36,15 +39,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class JWKSKeyLoaderTest {
 
     private static final String TEST_KID = InMemoryJWKSFactory.DEFAULT_KEY_ID;
-    private static final String TEST_ETAG = "\"test-etag\"";
     private JWKSKeyLoader keyLoader;
     private String jwksContent;
-    private SecurityEventCounter securityEventCounter;
 
     @BeforeEach
     void setUp() {
         jwksContent = InMemoryJWKSFactory.createDefaultJwks();
-        securityEventCounter = new SecurityEventCounter();
+        SecurityEventCounter securityEventCounter = new SecurityEventCounter();
         keyLoader = JWKSKeyLoader.builder()
                 .jwksContent(jwksContent)
 
@@ -199,5 +200,76 @@ class JWKSKeyLoaderTest {
             LogAsserts.assertLogMessagePresentContaining(TestLogLevel.ERROR, JWKS_CONTENT_SIZE_EXCEEDED.resolveIdentifierString());
         }
 
+    }
+
+    @Nested
+    @DisplayName("Algorithm Preferences")
+    class AlgorithmPreferencesTests {
+
+        @Test
+        @DisplayName("Should use default algorithm preferences when not specified")
+        void shouldUseDefaultAlgorithmPreferencesWhenNotSpecified() {
+            // Create a JWKS with a supported algorithm (RS256)
+            String jwksWithRS256 = InMemoryJWKSFactory.createValidJwksWithKeyId(InMemoryKeyMaterialHandler.Algorithm.RS256, "test-kid");
+
+            JWKSKeyLoader loader = JWKSKeyLoader.builder()
+                    .jwksContent(jwksWithRS256)
+                    .build();
+            loader.initJWKSLoader(new SecurityEventCounter());
+
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo("test-kid");
+            assertTrue(keyInfo.isPresent(), "Key should be loaded with default supported algorithm RS256");
+        }
+
+        @Test
+        @DisplayName("Should accept custom algorithm preferences")
+        void shouldAcceptCustomAlgorithmPreferences() {
+            // Create custom preferences that only allow ES256
+            JwkAlgorithmPreferences customPreferences = new JwkAlgorithmPreferences(List.of("ES256"));
+            String jwksWithES256 = InMemoryJWKSFactory.createValidJwksWithKeyId(InMemoryKeyMaterialHandler.Algorithm.ES256, "test-kid");
+
+            JWKSKeyLoader loader = JWKSKeyLoader.builder()
+                    .jwksContent(jwksWithES256)
+                    .jwkAlgorithmPreferences(customPreferences)
+                    .build();
+            loader.initJWKSLoader(new SecurityEventCounter());
+
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo("test-kid");
+            assertTrue(keyInfo.isPresent(), "Key should be loaded with custom supported algorithm ES256");
+        }
+
+        @Test
+        @DisplayName("Should reject keys with unsupported algorithms")
+        void shouldRejectKeysWithUnsupportedAlgorithms() {
+            // Create custom preferences that only allow ES256 (not RS256)
+            JwkAlgorithmPreferences restrictivePreferences = new JwkAlgorithmPreferences(List.of("ES256"));
+            String jwksWithRS256 = InMemoryJWKSFactory.createValidJwksWithKeyId(InMemoryKeyMaterialHandler.Algorithm.RS256, "test-kid");
+
+            JWKSKeyLoader loader = JWKSKeyLoader.builder()
+                    .jwksContent(jwksWithRS256)
+                    .jwkAlgorithmPreferences(restrictivePreferences)
+                    .build();
+            loader.initJWKSLoader(new SecurityEventCounter());
+
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo("test-kid");
+            assertFalse(keyInfo.isPresent(), "Key should be rejected with unsupported algorithm RS256");
+            LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Invalid or unsupported algorithm");
+        }
+
+        @Test
+        @DisplayName("Should handle null algorithm preferences gracefully")
+        void shouldHandleNullAlgorithmPreferencesGracefully() {
+            // Builder should handle null and use default
+            String jwksWithRS256 = InMemoryJWKSFactory.createValidJwksWithKeyId(InMemoryKeyMaterialHandler.Algorithm.RS256, "test-kid");
+
+            JWKSKeyLoader loader = JWKSKeyLoader.builder()
+                    .jwksContent(jwksWithRS256)
+                    .jwkAlgorithmPreferences(null)
+                    .build();
+            loader.initJWKSLoader(new SecurityEventCounter());
+
+            Optional<KeyInfo> keyInfo = loader.getKeyInfo("test-kid");
+            assertTrue(keyInfo.isPresent(), "Key should be loaded with default preferences when null is passed");
+        }
     }
 }

@@ -60,7 +60,7 @@ import java.util.*;
  * issuerConfig.initJWKSLoader(new SecurityEventCounter());
  *
  * // Issuer identifier is dynamically obtained from well-known discovery
- * Optional&lt;String&gt; issuer = issuerConfig.getIssuerIdentifier();
+ * String issuer = issuerConfig.getIssuerIdentifier();
  * </pre>
  * <p>
  * Implements requirements:
@@ -182,18 +182,19 @@ public class IssuerConfig implements HealthStatusProvider {
      * <ol>
      *   <li>If the JwksLoader is initialized and healthy, delegate to its issuer identifier first</li>
      *   <li>If the JwksLoader returns empty (for non-well-known cases), use the configured issuerIdentifier</li>
-     *   <li>If neither is available, return empty</li>
+     *   <li>Throws an exception if neither is available (validation ensures this never happens)</li>
      * </ol>
      *
-     * @return an Optional containing the issuer identifier if available, empty otherwise
+     * @return the issuer identifier, never null
      * @since 1.0
      */
-    public Optional<String> getIssuerIdentifier() {
+    @NonNull
+    public String getIssuerIdentifier() {
         // First try to get issuer identifier from JwksLoader (for well-known discovery)
         if (jwksLoader.isHealthy() == LoaderStatus.OK) {
             Optional<String> jwksLoaderIssuer = jwksLoader.getIssuerIdentifier();
             if (jwksLoaderIssuer.isPresent()) {
-                return jwksLoaderIssuer;
+                return jwksLoaderIssuer.get();
             }
         }
 
@@ -201,7 +202,7 @@ public class IssuerConfig implements HealthStatusProvider {
         Preconditions.checkState(issuerIdentifier != null,
                 "issuerIdentifier is null - this indicates a bug in validation logic. " +
                         "Non-well-known JWKS loaders should have been validated to require issuerIdentifier during initialization.");
-        return Optional.of(issuerIdentifier);
+        return issuerIdentifier;
     }
 
     /**
