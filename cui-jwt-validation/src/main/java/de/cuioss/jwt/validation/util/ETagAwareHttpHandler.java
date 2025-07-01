@@ -115,7 +115,6 @@ public class ETagAwareHttpHandler {
      *
      * @return LoadResult containing content and cache status, never null
      */
-    @NonNull
     public synchronized LoadResult load() {
         HttpFetchResult result = fetchJwksContentWithCache();
 
@@ -131,6 +130,24 @@ public class ETagAwareHttpHandler {
     }
 
     /**
+     * Forces a reload of HTTP content, optionally clearing cache completely.
+     *
+     * @param clearCache if true, clears all cached content; if false, only bypasses ETag validation
+     * @return LoadResult with fresh content or error state, never null
+     */
+    public synchronized LoadResult reload(boolean clearCache) {
+        if (clearCache) {
+            LOGGER.debug("Clearing HTTP cache and reloading from %s", httpHandler.getUrl());
+            this.cachedContent = null;
+        } else {
+            LOGGER.debug("Bypassing ETag validation and reloading from %s", httpHandler.getUrl());
+        }
+        this.cachedETag = null;
+
+        return load();
+    }
+
+    /**
      * Checks if we have both cached content and ETag available.
      */
     private boolean hasCachedContentWithETag() {
@@ -140,7 +157,6 @@ public class ETagAwareHttpHandler {
     /**
      * Handles error results by returning cached content if available.
      */
-    @NonNull
     private LoadResult handleErrorResult() {
         if (cachedContent != null) {
             return new LoadResult(cachedContent, LoadState.ERROR_WITH_CACHE);
@@ -152,7 +168,6 @@ public class ETagAwareHttpHandler {
     /**
      * Handles 304 Not Modified response by returning cached content.
      */
-    @NonNull
     private LoadResult handleNotModifiedResult() {
         LOGGER.debug("HTTP content not modified (304), using cached version");
         return new LoadResult(cachedContent, LoadState.CACHE_ETAG);
@@ -161,7 +176,6 @@ public class ETagAwareHttpHandler {
     /**
      * Handles successful response by checking for content changes and updating cache.
      */
-    @NonNull
     private LoadResult handleSuccessResult(HttpFetchResult result) {
         // Check if content actually changed despite new response
         if (cachedContent != null && cachedContent.equals(result.content)) {
@@ -188,7 +202,6 @@ public class ETagAwareHttpHandler {
      *
      * @return HttpFetchResult with error flag set if request fails
      */
-    @NonNull
     @SuppressWarnings("java:S2095") // owolff False positive for HttpResponse since it is closed automatically
     private HttpFetchResult fetchJwksContentWithCache() {
         // Build request with conditional headers
