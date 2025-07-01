@@ -91,7 +91,6 @@ public class HttpJwksLoader implements JwksLoader {
         // For cached loader, we consider it healthy if we can load keys
         // This will trigger lazy loading on first health check
         if (keyLoader.get() == null) {
-            LoaderStatus previousStatus = status;
             ensureLoaded();
             if (status == LoaderStatus.ERROR) {
                 LOGGER.debug("Health check failed during key loading");
