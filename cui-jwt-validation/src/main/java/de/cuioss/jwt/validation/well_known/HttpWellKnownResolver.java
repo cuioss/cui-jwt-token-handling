@@ -144,7 +144,6 @@ public class HttpWellKnownResolver implements WellKnownResolver {
         ETagAwareHttpHandler.LoadResult result = etagHandler.load();
         if (result.content() == null) {
             this.status = LoaderStatus.ERROR;
-            String errorMsg = "Failed to fetch discovery document from " + wellKnownUrl;
             LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
@@ -158,7 +157,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
 
         JsonObject discoveryDocument = parseResult.get();
         LOGGER.debug("Discovery document load state: %s", result.loadState());
-        LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
+        LOGGER.debug(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
 
         Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
 
@@ -167,7 +166,6 @@ public class HttpWellKnownResolver implements WellKnownResolver {
                 .orElse(null);
         if (issuerString == null) {
             this.status = LoaderStatus.ERROR;
-            String errorMsg = "Required field 'issuer' not found in discovery document from " + wellKnownUrl;
             LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }

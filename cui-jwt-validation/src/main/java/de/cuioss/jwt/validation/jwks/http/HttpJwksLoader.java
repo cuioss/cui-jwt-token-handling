@@ -104,8 +104,7 @@ public class HttpJwksLoader implements JwksLoader {
     @Override
     public Optional<String> getIssuerIdentifier() {
         // Return issuer identifier from well-known resolver if configured
-        if (config.getWellKnownResolver() != null) {
-            if (config.getWellKnownResolver().isHealthy() == LoaderStatus.OK) {
+        if (config.getWellKnownResolver() != null && config.getWellKnownResolver().isHealthy() == LoaderStatus.OK) {
                 Optional<HttpHandler> issuerResult = config.getWellKnownResolver().getIssuer();
                 if (issuerResult.isPresent()) {
                     return Optional.of(issuerResult.get().getUri().toString());
@@ -113,7 +112,7 @@ public class HttpJwksLoader implements JwksLoader {
                     LOGGER.debug("Failed to retrieve issuer identifier from well-known resolver: issuer not available");
                 }
             }
-        }
+
         return Optional.empty();
     }
 
@@ -174,12 +173,6 @@ public class HttpJwksLoader implements JwksLoader {
 
             ETagAwareHttpHandler.LoadResult result = cache.load();
 
-            // Handle error states appropriately
-            if (result.loadState() == ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE) {
-                this.status = LoaderStatus.ERROR;
-                throw new JwksLoadException("Failed to load JWKS and no cached content available");
-            }
-
             // Only update key loader if data has changed and we have content
             if (result.content() != null && (result.loadState().isDataChanged() || keyLoader.get() == null)) {
                 updateKeyLoader(result);
@@ -189,7 +182,7 @@ public class HttpJwksLoader implements JwksLoader {
                 startBackgroundRefreshIfNeeded();
             }
 
-            // Log appropriate message based on load state
+            // Log appropriate message based on load state and handle error states
             switch (result.loadState()) {
                 case LOADED_FROM_SERVER:
                     LOGGER.info(INFO.JWKS_HTTP_LOADED::format);
@@ -205,7 +198,8 @@ public class HttpJwksLoader implements JwksLoader {
                     break;
                 case ERROR_NO_CACHE:
                     LOGGER.warn(WARN.JWKS_LOAD_FAILED_NO_CACHE::format);
-                    break;
+                    this.status = LoaderStatus.ERROR;
+                    throw new JwksLoadException("Failed to load JWKS and no cached content available");
             }
 
         } catch (JwksLoadException e) {
