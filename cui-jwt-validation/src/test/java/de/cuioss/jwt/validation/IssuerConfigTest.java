@@ -179,10 +179,12 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         @Test
         @DisplayName("Should throw exception during build when no JwksLoader config (validation happens during construction)")
         void shouldThrowExceptionDuringBuildWhenNoJwksLoaderConfig() {
+            // Given
+            var builder = IssuerConfig.builder();
+
             // When/Then - build should now throw since validation happens during construction
             var exception = assertThrows(IllegalStateException.class, () ->
-                    IssuerConfig.builder()
-                            .build());
+                    builder.build());
 
             assertTrue(exception.getMessage().contains("No JwksLoader configuration is present"));
         }
@@ -237,33 +239,39 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         @Test
         @DisplayName("Should throw exception when no JWKS configuration is present")
         void shouldThrowExceptionWhenNoJwksConfigurationIsPresent() {
+            // Given
+            var builder = IssuerConfig.builder()
+                    .issuerIdentifier("test-issuer");
+
             // When/Then - should throw during build
             var exception = assertThrows(IllegalStateException.class, () ->
-                    IssuerConfig.builder()
-                            .issuerIdentifier("test-issuer")
-                            .build());
+                    builder.build());
             assertTrue(exception.getMessage().contains("No JwksLoader configuration is present"));
         }
 
         @Test
         @DisplayName("Should throw exception when issuerIdentifier missing for in-memory JWKS")
         void shouldThrowExceptionWhenIssuerIdentifierMissingForInMemoryJwks() {
+            // Given
+            var builder = IssuerConfig.builder()
+                    .jwksContent(TEST_JWKS_CONTENT);
+
             // When/Then - should throw during build
             var exception = assertThrows(IllegalStateException.class, () ->
-                    IssuerConfig.builder()
-                            .jwksContent(TEST_JWKS_CONTENT)
-                            .build());
+                    builder.build());
             assertTrue(exception.getMessage().contains("issuerIdentifier is required"));
         }
 
         @Test
         @DisplayName("Should throw exception when issuerIdentifier missing for file-based JWKS")
         void shouldThrowExceptionWhenIssuerIdentifierMissingForFileBasedJwks() {
+            // Given
+            var builder = IssuerConfig.builder()
+                    .jwksFilePath("/path/to/jwks.json");
+
             // When/Then - should throw during build
             var exception = assertThrows(IllegalStateException.class, () ->
-                    IssuerConfig.builder()
-                            .jwksFilePath("/path/to/jwks.json")
-                            .build());
+                    builder.build());
             assertTrue(exception.getMessage().contains("issuerIdentifier is required"));
         }
 

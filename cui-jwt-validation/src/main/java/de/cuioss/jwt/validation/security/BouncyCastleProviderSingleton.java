@@ -16,6 +16,7 @@
 package de.cuioss.jwt.validation.security;
 
 import de.cuioss.tools.logging.CuiLogger;
+import lombok.Getter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.Provider;
@@ -39,7 +40,7 @@ import java.security.Security;
  * <pre>
  * // Get the provider name
  * String providerName = BouncyCastleProviderSingleton.getInstance().getProviderName();
- * 
+ *
  * // Use the provider name with Signature.getInstance
  * Signature signature = Signature.getInstance(algorithm, providerName);
  * </pre>
@@ -58,6 +59,7 @@ public class BouncyCastleProviderSingleton {
 
     private static final CuiLogger LOGGER = new CuiLogger(BouncyCastleProviderSingleton.class);
 
+    @Getter
     private final Provider provider;
 
     /**
@@ -103,12 +105,4 @@ public class BouncyCastleProviderSingleton {
         return BouncyCastleProvider.PROVIDER_NAME;
     }
 
-    /**
-     * Gets the BouncyCastle provider instance.
-     *
-     * @return the provider instance
-     */
-    public Provider getProvider() {
-        return provider;
-    }
 }

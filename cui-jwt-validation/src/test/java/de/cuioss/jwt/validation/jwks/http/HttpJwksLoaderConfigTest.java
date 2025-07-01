@@ -357,7 +357,7 @@ class HttpJwksLoaderConfigTest {
     @DisplayName("Should throw exception for invalid URL that causes HttpHandler build failure")
     void shouldThrowExceptionForInvalidUrlCausingHttpHandlerFailure() {
         // Test with a malformed URL that would cause HttpHandler.build() to fail
-        assertThrows(IllegalArgumentException.class, () -> 
+        assertThrows(IllegalArgumentException.class, () ->
                 HttpJwksLoaderConfig.builder()
                         .jwksUrl("not-a-valid-url://invalid")
                         .refreshIntervalSeconds(REFRESH_INTERVAL)
@@ -377,7 +377,7 @@ class HttpJwksLoaderConfigTest {
         assertNull(config.getWellKnownResolver(), "WellKnownResolver should be null for HTTP configurations");
     }
 
-    @Test 
+    @Test
     @DisplayName("Should guarantee WellKnownResolver is non-null for well-known configurations")
     void shouldGuaranteeWellKnownResolverNonNullForWellKnownConfigurations() {
         HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()

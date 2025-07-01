@@ -285,54 +285,82 @@ public class JWKSKeyLoader implements JwksLoader {
      */
     private void initializeKeys() {
         try {
-            String contentToProcess;
-
-            // Determine the content to process
-            if (jwksContent != null) {
-                contentToProcess = jwksContent;
-            } else if (jwksFilePath != null) {
-                try {
-                    contentToProcess = new String(Files.readAllBytes(Path.of(jwksFilePath)));
-                    LOGGER.debug("Successfully read JWKS from file: %s", jwksFilePath);
-                } catch (IOException e) {
-                    LOGGER.warn(e, WARN.FAILED_TO_READ_JWKS_FILE.format(jwksFilePath));
-                    if (securityEventCounter != null) {
-                        securityEventCounter.increment(EventType.FAILED_TO_READ_JWKS_FILE);
-                    }
-                    contentToProcess = "{}"; // Empty JWKS
-                }
-            } else {
-                throw new IllegalStateException("Neither jwksContent nor jwksFilePath is provided");
-            }
-
-            // Parse JWKS content
-            JwksParser parser = new JwksParser(this.parserConfig, this.securityEventCounter);
-            KeyProcessor processor = new KeyProcessor(this.securityEventCounter, this.jwkAlgorithmPreferences);
-
-            // Parse JWKS content to get individual JWK objects (includes structure validation)
-            List<JsonObject> jwkObjects = parser.parse(contentToProcess);
-
-            // Process each key (includes key parameter validation)
-            Map<String, KeyInfo> keyMap = new ConcurrentHashMap<>();
-            for (JsonObject jwk : jwkObjects) {
-                var keyInfoOpt = processor.processKey(jwk);
-                if (keyInfoOpt.isPresent()) {
-                    KeyInfo keyInfo = keyInfoOpt.get();
-                    keyMap.put(keyInfo.keyId(), keyInfo);
-                }
-            }
-
-            this.keyInfoMap = keyMap;
-            this.status = keyMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
-            LOGGER.debug("Successfully loaded %s key(s)", keyMap.size());
-
+            String contentToProcess = loadJwksContent();
+            parseAndProcessKeys(contentToProcess);
         } catch (JsonException | IllegalArgumentException e) {
-            LOGGER.warn(e, WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
-            if (securityEventCounter != null) {
-                securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
-            }
-            this.keyInfoMap = new ConcurrentHashMap<>();
-            this.status = LoaderStatus.ERROR;
+            handleParseError(e);
         }
+    }
+
+    /**
+     * Loads JWKS content from either in-memory string or file.
+     *
+     * @return the JWKS content as string
+     */
+    private String loadJwksContent() {
+        if (jwksContent != null) {
+            return jwksContent;
+        } else if (jwksFilePath != null) {
+            return loadJwksFromFile();
+        } else {
+            throw new IllegalStateException("Neither jwksContent nor jwksFilePath is provided");
+        }
+    }
+
+    /**
+     * Loads JWKS content from a file.
+     *
+     * @return the JWKS content as string, or "{}" if file reading fails
+     */
+    private String loadJwksFromFile() {
+        try {
+            String content = new String(Files.readAllBytes(Path.of(jwksFilePath)));
+            LOGGER.debug("Successfully read JWKS from file: %s", jwksFilePath);
+            return content;
+        } catch (IOException e) {
+            LOGGER.warn(e, WARN.FAILED_TO_READ_JWKS_FILE.format(jwksFilePath));
+            securityEventCounter.increment(EventType.FAILED_TO_READ_JWKS_FILE);
+            return "{}"; // Empty JWKS
+        }
+    }
+
+    /**
+     * Parses and processes JWKS content into KeyInfo objects.
+     *
+     * @param contentToProcess the JWKS content to parse
+     */
+    private void parseAndProcessKeys(String contentToProcess) {
+        // Parse JWKS content
+        JwksParser parser = new JwksParser(this.parserConfig, this.securityEventCounter);
+        KeyProcessor processor = new KeyProcessor(this.securityEventCounter, this.jwkAlgorithmPreferences);
+
+        // Parse JWKS content to get individual JWK objects (includes structure validation)
+        List<JsonObject> jwkObjects = parser.parse(contentToProcess);
+
+        // Process each key (includes key parameter validation)
+        Map<String, KeyInfo> keyMap = new ConcurrentHashMap<>();
+        for (JsonObject jwk : jwkObjects) {
+            var keyInfoOpt = processor.processKey(jwk);
+            if (keyInfoOpt.isPresent()) {
+                KeyInfo keyInfo = keyInfoOpt.get();
+                keyMap.put(keyInfo.keyId(), keyInfo);
+            }
+        }
+
+        this.keyInfoMap = keyMap;
+        this.status = keyMap.isEmpty() ? LoaderStatus.ERROR : LoaderStatus.OK;
+        LOGGER.debug("Successfully loaded %s key(s)", keyMap.size());
+    }
+
+    /**
+     * Handles parse errors by logging and setting error state.
+     *
+     * @param e the exception that occurred during parsing
+     */
+    private void handleParseError(Exception e) {
+        LOGGER.warn(e, WARN.JWKS_JSON_PARSE_FAILED.format(e.getMessage()));
+        securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
+        this.keyInfoMap = new ConcurrentHashMap<>();
+        this.status = LoaderStatus.ERROR;
     }
 }

@@ -75,16 +75,20 @@ class WellKnownConfigTest {
     @Test
     @DisplayName("Should fail with invalid timeout values")
     void shouldFailWithInvalidTimeouts() {
-        assertThrows(IllegalArgumentException.class, () ->
-                WellKnownConfig.builder()
-                        .wellKnownUrl(TEST_WELL_KNOWN_URL)
-                        .connectTimeoutSeconds(0)
-                        .build());
+        // Test invalid connect timeout
+        var builderWithInvalidConnectTimeout = WellKnownConfig.builder()
+                .wellKnownUrl(TEST_WELL_KNOWN_URL)
+                .connectTimeoutSeconds(0);
 
         assertThrows(IllegalArgumentException.class, () ->
-                WellKnownConfig.builder()
-                        .wellKnownUrl(TEST_WELL_KNOWN_URL)
-                        .readTimeoutSeconds(-1)
-                        .build());
+                builderWithInvalidConnectTimeout.build());
+
+        // Test invalid read timeout
+        var builderWithInvalidReadTimeout = WellKnownConfig.builder()
+                .wellKnownUrl(TEST_WELL_KNOWN_URL)
+                .readTimeoutSeconds(-1);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                builderWithInvalidReadTimeout.build());
     }
 }
