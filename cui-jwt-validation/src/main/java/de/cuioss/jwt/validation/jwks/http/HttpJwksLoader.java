@@ -91,10 +91,10 @@ public class HttpJwksLoader implements JwksLoader {
         // For cached loader, we consider it healthy if we can load keys
         // This will trigger lazy loading on first health check
         if (keyLoader.get() == null) {
-            try {
-                ensureLoaded();
-            } catch (JwksLoadException e) {
-                LOGGER.debug("Health check failed during key loading: %s", e.getMessage());
+            LoaderStatus previousStatus = status;
+            ensureLoaded();
+            if (status == LoaderStatus.ERROR) {
+                LOGGER.debug("Health check failed during key loading");
                 return LoaderStatus.ERROR;
             }
         }
@@ -161,51 +161,46 @@ public class HttpJwksLoader implements JwksLoader {
     }
 
     private void loadKeys() {
-        try {
-            // Ensure we have a healthy ETagAwareHttpHandler
-            Optional<ETagAwareHttpHandler> cacheOpt = ensureHttpCache();
-            if (cacheOpt.isEmpty()) {
-                this.status = LoaderStatus.ERROR;
-                throw new JwksLoadException("Unable to establish healthy HTTP connection for JWKS loading");
-            }
-
-            ETagAwareHttpHandler cache = cacheOpt.get();
-
-            ETagAwareHttpHandler.LoadResult result = cache.load();
-
-            // Only update key loader if data has changed and we have content
-            if (result.content() != null && (result.loadState().isDataChanged() || keyLoader.get() == null)) {
-                updateKeyLoader(result);
-                LOGGER.info(INFO.JWKS_KEYS_UPDATED.format(result.loadState()));
-
-                // Start background refresh after first successful load
-                startBackgroundRefreshIfNeeded();
-            }
-
-            // Log appropriate message based on load state and handle error states
-            switch (result.loadState()) {
-                case LOADED_FROM_SERVER:
-                    LOGGER.info(INFO.JWKS_HTTP_LOADED::format);
-                    break;
-                case CACHE_ETAG:
-                    LOGGER.debug("JWKS content validated via ETag (304 Not Modified)");
-                    break;
-                case CACHE_CONTENT:
-                    LOGGER.debug("Using cached JWKS content");
-                    break;
-                case ERROR_WITH_CACHE:
-                    LOGGER.warn(WARN.JWKS_LOAD_FAILED_CACHED_CONTENT::format);
-                    break;
-                case ERROR_NO_CACHE:
-                    LOGGER.warn(WARN.JWKS_LOAD_FAILED_NO_CACHE::format);
-                    this.status = LoaderStatus.ERROR;
-                    throw new JwksLoadException("Failed to load JWKS and no cached content available");
-            }
-
-        } catch (JwksLoadException e) {
+        // Ensure we have a healthy ETagAwareHttpHandler
+        Optional<ETagAwareHttpHandler> cacheOpt = ensureHttpCache();
+        if (cacheOpt.isEmpty()) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(e, ERROR.JWKS_LOAD_FAILED::format);
-            throw e; // Re-throw specific exception
+            LOGGER.error(ERROR.JWKS_LOAD_FAILED.format("Unable to establish healthy HTTP connection for JWKS loading"));
+            return;
+        }
+
+        ETagAwareHttpHandler cache = cacheOpt.get();
+
+        ETagAwareHttpHandler.LoadResult result = cache.load();
+
+        // Only update key loader if data has changed and we have content
+        if (result.content() != null && (result.loadState().isDataChanged() || keyLoader.get() == null)) {
+            updateKeyLoader(result);
+            LOGGER.info(INFO.JWKS_KEYS_UPDATED.format(result.loadState()));
+
+            // Start background refresh after first successful load
+            startBackgroundRefreshIfNeeded();
+        }
+
+        // Log appropriate message based on load state and handle error states
+        switch (result.loadState()) {
+            case LOADED_FROM_SERVER:
+                LOGGER.info(INFO.JWKS_HTTP_LOADED::format);
+                break;
+            case CACHE_ETAG:
+                LOGGER.debug("JWKS content validated via ETag (304 Not Modified)");
+                break;
+            case CACHE_CONTENT:
+                LOGGER.debug("Using cached JWKS content");
+                break;
+            case ERROR_WITH_CACHE:
+                LOGGER.warn(WARN.JWKS_LOAD_FAILED_CACHED_CONTENT::format);
+                break;
+            case ERROR_NO_CACHE:
+                LOGGER.warn(WARN.JWKS_LOAD_FAILED_NO_CACHE::format);
+                this.status = LoaderStatus.ERROR;
+                LOGGER.error(ERROR.JWKS_LOAD_FAILED.format("Failed to load JWKS and no cached content available"));
+                break;
         }
     }
 

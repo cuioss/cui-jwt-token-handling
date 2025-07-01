@@ -305,13 +305,9 @@ class HttpJwksLoaderSchedulerTest {
         HttpJwksLoader loader = new HttpJwksLoader(config);
         loader.initJWKSLoader(securityEventCounter);
 
-        // Initial load should fail
-        try {
-            loader.getKeyInfo(TEST_KID);
-            fail("Expected JwksLoadException for failed initial load");
-        } catch (Exception e) {
-            // Expected
-        }
+        // Initial load should fail - getKeyInfo returns empty when loading fails
+        Optional<KeyInfo> keyInfo = loader.getKeyInfo(TEST_KID);
+        assertTrue(keyInfo.isEmpty(), "Expected empty result for failed initial load");
 
         // Scheduler should not be started after failed load
         assertFalse(loader.isBackgroundRefreshActive(), "Background refresh should not start after failed initial load");
