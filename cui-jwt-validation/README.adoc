@@ -414,11 +414,10 @@ The `ParserConfig` class provides important security settings for token processi
 // Create a TokenValidator with custom security settings
 ParserConfig config = ParserConfig.builder()
         .maxTokenSize(4 * 1024)        // Limit token size to 4KB (default is 8KB)
-        .maxPayloadSize(4 * 1024)      // Limit payload size to 4KB (default is 8KB)
-        .maxStringSize(2 * 1024)       // Limit JSON string size to 2KB (default is 4KB)
+        .maxPayloadSize(1 * 1024)      // Limit payload size to 1KB (default is 2KB)
+        .maxStringSize(512)            // Limit JSON string size to 512B (default is 1KB)
         .maxArraySize(32)              // Limit JSON array size to 32 elements (default is 64)
         .maxDepth(5)                   // Limit JSON parsing depth to 5 levels (default is 10)
-        .logWarningsOnDecodeFailure(true) // Log warnings when token decoding fails
         .build();
 
 TokenValidator validator = new TokenValidator(
@@ -426,11 +425,40 @@ TokenValidator validator = new TokenValidator(
         issuerConfig);
 ----
 
-These security settings help prevent various attacks:
+These security settings provide multiple layers of protection:
 
-* `maxTokenSize`: Prevents memory exhaustion attacks from oversized tokens
-* `maxPayloadSize`: Prevents memory exhaustion attacks from oversized payloads
-* `maxStringSize`, `maxArraySize`, `maxDepth`: Prevent JSON parsing attacks
+=== Security Layers and Size Relationships
+
+The parser configuration implements defense-in-depth with three distinct size limits:
+
+[cols="1,3,1,3"]
+|===
+|Setting |Purpose |Default |Applied When
+
+|`maxTokenSize`
+|Limits entire JWT token string
+|8KB
+|Before any processing, applied to the raw token string
+
+|`maxPayloadSize`
+|Limits each decoded JWT part
+|2KB
+|After Base64 decoding, applied to header and payload separately
+
+|`maxStringSize`
+|Limits individual JSON string values
+|1KB
+|During JSON parsing, applied to each string field
+|===
+
+*Size Logic:* Since Base64 encoding increases size by ~33%, an 8KB token yields ~6KB of decoded content. With 2KB limits per part, we can accommodate reasonable header and payload sizes while preventing oversized decoded content.
+
+*Attack Prevention:*
+
+* `maxTokenSize`: Prevents denial-of-service via extremely large token strings
+* `maxPayloadSize`: Prevents memory exhaustion from oversized decoded parts  
+* `maxStringSize`: Prevents JSON parsing attacks where individual fields contain massive strings
+* `maxArraySize`, `maxDepth`: Prevent JSON structure-based attacks
 
 == Configuration
 

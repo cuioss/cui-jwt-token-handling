@@ -93,7 +93,6 @@ import java.util.Base64;
  *     .maxStringSize(256)   // 256 bytes max string size
  *     .maxArraySize(10)     // 10 elements max array size
  *     .maxDepth(5)          // 5 levels max JSON depth
- *     .logWarningsOnDecodeFailure(false)  // suppress warnings
  *     .build();
  *
  * NonValidatingJwtParser customParser = NonValidatingJwtParser.builder()
@@ -151,13 +150,16 @@ public class NonValidatingJwtParser {
      *   <li>Implements size checks to prevent overflow attacks</li>
      *   <li>Uses standard Java Base64 decoder</li>
      * </ul>
+     * <p>
+     * This method logs warnings when decoding fails. Use {@link #decode(String, boolean)}
+     * to control warning logging behavior.
      *
      * @param token the JWT token string to parse
      * @return the DecodedJwt if parsing is successful
      * @throws TokenValidationException if the token is invalid or cannot be parsed
      */
     public DecodedJwt decode(String token) {
-        return decode(token, config.isLogWarningsOnDecodeFailure());
+        return decode(token, true);
     }
 
     /**

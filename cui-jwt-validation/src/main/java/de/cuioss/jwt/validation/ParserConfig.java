@@ -28,9 +28,28 @@ import java.util.Map;
  * Configuration class for the TokenValidator.
  * <p>
  * This class provides configuration options for the TokenValidator, such as
- * maximum token size, maximum payload size, and logging behavior.
+ * maximum token size and maximum payload size.
  * It also includes JSON parsing security settings like maximum string size,
  * maximum array size, and maximum depth.
+ * <p>
+ * <strong>Security Layers:</strong>
+ * The configuration provides multiple layers of protection against various attack vectors:
+ * <ul>
+ *   <li><strong>maxTokenSize</strong>: Limits the entire JWT token string before any processing.
+ *       This prevents oversized tokens from consuming memory or processing time.</li>
+ *   <li><strong>maxPayloadSize</strong>: Limits each decoded JWT part (header, payload) after Base64 decoding.
+ *       Since Base64 encoding increases size by ~33%, decoded parts are smaller than the original token.</li>
+ *   <li><strong>maxStringSize</strong>: Limits individual JSON string values within the decoded parts.
+ *       This prevents JSON parsing attacks where individual fields contain extremely large strings.</li>
+ * </ul>
+ * <p>
+ * <strong>Default Size Relationships:</strong>
+ * The defaults are designed with logical size relationships:
+ * <ul>
+ *   <li>maxTokenSize (8KB) - allows for OAuth 2.0 BCP recommended size</li>
+ *   <li>maxPayloadSize (2KB) - allows ~6KB total decoded content (considering Base64 overhead)</li>
+ *   <li>maxStringSize (1KB) - prevents individual fields from dominating the payload</li>
+ * </ul>
  * <p>
  * This class is immutable and thread-safe.
  * <p>
@@ -38,8 +57,8 @@ import java.util.Map;
  * <pre>
  * ParserConfig config = ParserConfig.builder()
  *     .maxTokenSize(16 * 1024)
- *     .maxPayloadSize(16 * 1024)
- *     .logWarningsOnDecodeFailure(false)
+ *     .maxPayloadSize(4 * 1024)
+ *     .maxStringSize(2 * 1024)
  *     .build();
  * </pre>
  * <p>
@@ -61,19 +80,25 @@ public class ParserConfig {
     /**
      * Default maximum size of a JWT token in bytes to prevent overflow attacks.
      * 8KB as recommended by OAuth 2.0 JWT BCP Section 3.11.
+     * This is the first line of defense, checking the entire token string before any processing.
      */
     public static final int DEFAULT_MAX_TOKEN_SIZE = 8 * 1024;
 
     /**
      * Default maximum size of decoded JSON payload in bytes.
-     * 8KB as recommended by OAuth 2.0 JWT BCP Section 3.11.
+     * 2KB per part allows for approximately 6KB of total decoded content when considering
+     * that Base64 encoding increases size by ~33%. This ensures decoded content fits
+     * within reasonable bounds relative to the original token size.
      */
-    public static final int DEFAULT_MAX_PAYLOAD_SIZE = 8 * 1024;
+    public static final int DEFAULT_MAX_PAYLOAD_SIZE = 2 * 1024;
 
     /**
-     * Default maximum string size for JSON parsing.
+     * Default maximum string size for individual JSON string values.
+     * 1KB prevents any single JSON string field from dominating the payload size,
+     * providing protection against JSON parsing attacks where individual fields
+     * contain extremely large strings.
      */
-    public static final int DEFAULT_MAX_STRING_SIZE = 4 * 1024;
+    public static final int DEFAULT_MAX_STRING_SIZE = 1024;
 
     /**
      * Default maximum array size for JSON parsing.
@@ -88,18 +113,24 @@ public class ParserConfig {
 
     /**
      * Maximum size of a JWT token in bytes to prevent overflow attacks.
+     * This limit is applied to the entire token string before any processing begins.
+     * Protects against denial-of-service attacks via extremely large token strings.
      */
     @Builder.Default
     int maxTokenSize = DEFAULT_MAX_TOKEN_SIZE;
 
     /**
      * Maximum size of decoded JSON payload in bytes.
+     * This limit is applied to each Base64-decoded JWT part (header, payload).
+     * Since Base64 encoding increases size by ~33%, decoded parts are smaller than the original token.
      */
     @Builder.Default
     int maxPayloadSize = DEFAULT_MAX_PAYLOAD_SIZE;
 
     /**
-     * Maximum string size for JSON parsing.
+     * Maximum string size for individual JSON string values during parsing.
+     * This limit is applied by the JSON parser to individual string fields within the JWT parts.
+     * Prevents JSON parsing attacks where individual fields contain extremely large strings.
      */
     @Builder.Default
     int maxStringSize = DEFAULT_MAX_STRING_SIZE;
@@ -115,12 +146,6 @@ public class ParserConfig {
      */
     @Builder.Default
     int maxDepth = DEFAULT_MAX_DEPTH;
-
-    /**
-     * Flag to control whether warnings are logged when decoding fails.
-     */
-    @Builder.Default
-    boolean logWarningsOnDecodeFailure = true;
 
 
     /**

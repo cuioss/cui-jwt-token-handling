@@ -46,7 +46,6 @@ class ParserConfigTest implements ShouldImplementEqualsAndHashCode<ParserConfig>
         assertEquals(ParserConfig.DEFAULT_MAX_STRING_SIZE, config.getMaxStringSize());
         assertEquals(ParserConfig.DEFAULT_MAX_ARRAY_SIZE, config.getMaxArraySize());
         assertEquals(ParserConfig.DEFAULT_MAX_DEPTH, config.getMaxDepth());
-        assertTrue(config.isLogWarningsOnDecodeFailure());
     }
 
     @Test
@@ -58,7 +57,6 @@ class ParserConfigTest implements ShouldImplementEqualsAndHashCode<ParserConfig>
                 .maxStringSize(8192)
                 .maxArraySize(128)
                 .maxDepth(20)
-                .logWarningsOnDecodeFailure(false)
                 .build();
 
         assertEquals(16384, config.getMaxTokenSize());
@@ -66,15 +64,14 @@ class ParserConfigTest implements ShouldImplementEqualsAndHashCode<ParserConfig>
         assertEquals(8192, config.getMaxStringSize());
         assertEquals(128, config.getMaxArraySize());
         assertEquals(20, config.getMaxDepth());
-        assertFalse(config.isLogWarningsOnDecodeFailure());
     }
 
     @Test
     @DisplayName("Should provide consistent default constants")
     void shouldProvideConsistentDefaults() {
         assertEquals(ParserConfig.DEFAULT_MAX_TOKEN_SIZE, 8 * 1024);
-        assertEquals(ParserConfig.DEFAULT_MAX_PAYLOAD_SIZE, 8 * 1024);
-        assertEquals(ParserConfig.DEFAULT_MAX_STRING_SIZE, 4 * 1024);
+        assertEquals(ParserConfig.DEFAULT_MAX_PAYLOAD_SIZE, 2 * 1024);
+        assertEquals(ParserConfig.DEFAULT_MAX_STRING_SIZE, 1 * 1024);
         assertEquals(64, ParserConfig.DEFAULT_MAX_ARRAY_SIZE);
         assertEquals(10, ParserConfig.DEFAULT_MAX_DEPTH);
     }
@@ -147,20 +144,6 @@ class ParserConfigTest implements ShouldImplementEqualsAndHashCode<ParserConfig>
         assertEquals(Integer.MAX_VALUE, config.getMaxStringSize());
         assertEquals(Integer.MAX_VALUE, config.getMaxArraySize());
         assertEquals(Integer.MAX_VALUE, config.getMaxDepth());
-    }
-
-    @Test
-    @DisplayName("Should toggle logging flag correctly")
-    void shouldToggleLoggingFlagCorrectly() {
-        var enabledConfig = ParserConfig.builder()
-                .logWarningsOnDecodeFailure(true)
-                .build();
-        assertTrue(enabledConfig.isLogWarningsOnDecodeFailure());
-
-        var disabledConfig = ParserConfig.builder()
-                .logWarningsOnDecodeFailure(false)
-                .build();
-        assertFalse(disabledConfig.isLogWarningsOnDecodeFailure());
     }
 
     @Test
