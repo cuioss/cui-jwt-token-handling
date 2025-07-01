@@ -33,6 +33,7 @@ import de.cuioss.test.generator.junit.EnableGeneratorController;
 import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
+import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -281,7 +282,7 @@ class TokenClaimValidatorEdgeCaseTest {
         }
 
         @Override
-        public Map<String, ClaimValue> getClaims() {
+        public @NonNull Map<String, ClaimValue> getClaims() {
             return customClaims;
         }
 

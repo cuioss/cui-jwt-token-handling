@@ -68,13 +68,10 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
         @Test
         @DisplayName("Should build with minimal configuration (requires issuerIdentifier)")
         void shouldBuildWithMinimalConfig() {
-            // Given
-            var jwksContent = TEST_JWKS_CONTENT;
-
             // When
             var config = IssuerConfig.builder()
                     .issuerIdentifier(TEST_ISSUER)  // Required for in-memory JWKS
-                    .jwksContent(jwksContent)
+                    .jwksContent(TEST_JWKS_CONTENT)
                     .build();
 
             // Then

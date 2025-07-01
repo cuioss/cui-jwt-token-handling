@@ -304,9 +304,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
             String rawToken = requestToken(parameterForScopedToken(SCOPES), TokenTypes.ACCESS);
 
             // Assert that validation fails with TokenValidationException (or a more specific one if applicable)
-            assertThrows(TokenValidationException.class, () -> {
-                validator.createAccessToken(rawToken);
-            }, "Validation should fail due to issuer mismatch");
+            assertThrows(TokenValidationException.class, () -> validator.createAccessToken(rawToken), "Validation should fail due to issuer mismatch");
         }
     }
 }
