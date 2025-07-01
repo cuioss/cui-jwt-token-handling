@@ -60,44 +60,38 @@ class WellKnownEndpointMapperTest {
     @Test
     @DisplayName("Should add HttpHandler to map for valid URL")
     void shouldAddHttpHandlerToMapForValidUrl() {
-        WellKnownResult<Void> result = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
+        boolean result = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
 
-        assertTrue(result.isSuccess());
+        assertTrue(result);
         assertTrue(endpointMap.containsKey(ENDPOINT_KEY));
         assertNotNull(endpointMap.get(ENDPOINT_KEY));
         assertEquals(VALID_URL, endpointMap.get(ENDPOINT_KEY).getUrl().toString());
     }
 
-    @ParameterizedTest(name = "URL: {0}, Required: {1}, Should throw: {2}, Exception message contains: {3}")
+    @ParameterizedTest(name = "URL: {0}, Required: {1}, Should fail: {2}")
     @CsvSource({
-            "'<null>', false, false, ''",
-            "'<null>', true, true, 'Required URL field'",
-            "'http://example.com/invalid path with spaces', true, true, 'Malformed URL for field'",
-            "'http://example.com/invalid path with spaces', false, true, 'Malformed URL for field'",
-            "'', true, true, 'Malformed URL for field'",
-            "'', false, true, 'Malformed URL for field'"
+            "'<null>', false, false",
+            "'<null>', true, true",
+            "'http://example.com/invalid path with spaces', true, true",
+            "'http://example.com/invalid path with spaces', false, true",
+            "'', true, true",
+            "'', false, true"
     })
     @DisplayName("Should handle various URL scenarios")
-    void shouldHandleVariousUrlScenarios(String urlInput, boolean required, boolean shouldThrow, String expectedMessagePart) {
+    void shouldHandleVariousUrlScenarios(String urlInput, boolean required, boolean shouldFail) {
         // Convert "<null>" string to actual null
         String url = "<null>".equals(urlInput) ? null : urlInput;
 
-        WellKnownResult<Void> result = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, url, wellKnownUrl, required);
+        boolean result = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, url, wellKnownUrl, required);
 
-        if (shouldThrow) {
-            assertTrue(result.isError());
-            assertTrue(result.errorMessage().contains(expectedMessagePart));
-            assertTrue(result.errorMessage().contains(ENDPOINT_KEY));
-            if (url != null) {
-                assertTrue(result.errorMessage().contains(url));
-            }
-            assertTrue(result.errorMessage().contains(wellKnownUrl.toString()));
+        if (shouldFail) {
+            assertFalse(result);
         } else {
-            assertTrue(result.isSuccess());
+            assertTrue(result);
         }
 
         // Check if endpoint was added based on success/failure and whether it was valid
-        if (result.isSuccess() && url != null && !url.isEmpty()) {
+        if (result && url != null && !url.isEmpty()) {
             assertTrue(endpointMap.containsKey(ENDPOINT_KEY));
         } else {
             assertFalse(endpointMap.containsKey(ENDPOINT_KEY));
@@ -110,11 +104,11 @@ class WellKnownEndpointMapperTest {
         String secondKey = "token_endpoint";
         String secondUrl = "https://example.com/token";
 
-        WellKnownResult<Void> result1 = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
-        WellKnownResult<Void> result2 = mapper.addHttpHandlerToMap(endpointMap, secondKey, secondUrl, wellKnownUrl, true);
+        boolean result1 = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
+        boolean result2 = mapper.addHttpHandlerToMap(endpointMap, secondKey, secondUrl, wellKnownUrl, true);
 
-        assertTrue(result1.isSuccess());
-        assertTrue(result2.isSuccess());
+        assertTrue(result1);
+        assertTrue(result2);
         assertEquals(2, endpointMap.size());
         assertTrue(endpointMap.containsKey(ENDPOINT_KEY));
         assertTrue(endpointMap.containsKey(secondKey));

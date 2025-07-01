@@ -44,39 +44,39 @@ public interface WellKnownResolver extends HealthStatusProvider {
      * Gets the JWKS URI endpoint handler.
      * This endpoint is required by the OpenID Connect Discovery specification.
      *
-     * @return WellKnownResult containing the JWKS URI HttpHandler or error details
+     * @return Optional containing the JWKS URI HttpHandler, empty if not available
      */
-    WellKnownResult<HttpHandler> getJwksUri();
+    Optional<HttpHandler> getJwksUri();
 
     /**
      * Gets the authorization endpoint handler.
      * This endpoint is required by the OpenID Connect Discovery specification.
      *
-     * @return WellKnownResult containing the authorization endpoint HttpHandler or error details
+     * @return Optional containing the authorization endpoint HttpHandler, empty if not available
      */
-    WellKnownResult<HttpHandler> getAuthorizationEndpoint();
+    Optional<HttpHandler> getAuthorizationEndpoint();
 
     /**
      * Gets the token endpoint handler.
      * This endpoint is required by the OpenID Connect Discovery specification.
      *
-     * @return WellKnownResult containing the token endpoint HttpHandler or error details
+     * @return Optional containing the token endpoint HttpHandler, empty if not available
      */
-    WellKnownResult<HttpHandler> getTokenEndpoint();
+    Optional<HttpHandler> getTokenEndpoint();
 
     /**
      * Gets the userinfo endpoint handler.
      * This endpoint is optional according to the OpenID Connect Discovery specification.
      *
-     * @return WellKnownResult containing an Optional with the userinfo endpoint HttpHandler or error details
+     * @return Optional containing the userinfo endpoint HttpHandler, empty if not available
      */
-    WellKnownResult<Optional<HttpHandler>> getUserinfoEndpoint();
+    Optional<HttpHandler> getUserinfoEndpoint();
 
     /**
      * Gets the issuer endpoint handler.
      * This represents the issuer identifier from the discovery document.
      *
-     * @return WellKnownResult containing the issuer HttpHandler or error details
+     * @return Optional containing the issuer HttpHandler, empty if not available
      */
-    WellKnownResult<HttpHandler> getIssuer();
+    Optional<HttpHandler> getIssuer();
 }

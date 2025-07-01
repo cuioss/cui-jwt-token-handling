@@ -22,7 +22,6 @@ import de.cuioss.jwt.validation.jwks.key.JWKSKeyLoader;
 import de.cuioss.jwt.validation.jwks.key.KeyInfo;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.jwt.validation.util.ETagAwareHttpHandler;
-import de.cuioss.jwt.validation.well_known.WellKnownResult;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import lombok.NonNull;
@@ -107,12 +106,11 @@ public class HttpJwksLoader implements JwksLoader {
         // Return issuer identifier from well-known resolver if configured
         if (config.getWellKnownResolver() != null) {
             if (config.getWellKnownResolver().isHealthy() == LoaderStatus.OK) {
-                WellKnownResult<HttpHandler> issuerResult = config.getWellKnownResolver().getIssuer();
-                if (issuerResult.isSuccess() && issuerResult.value() != null) {
-                    return Optional.of(issuerResult.value().getUri().toString());
+                Optional<HttpHandler> issuerResult = config.getWellKnownResolver().getIssuer();
+                if (issuerResult.isPresent()) {
+                    return Optional.of(issuerResult.get().getUri().toString());
                 } else {
-                    LOGGER.debug("Failed to retrieve issuer identifier from well-known resolver: %s",
-                            issuerResult.isError() ? issuerResult.errorMessage() : "issuer handler is null");
+                    LOGGER.debug("Failed to retrieve issuer identifier from well-known resolver: issuer not available");
                 }
             }
         }
@@ -317,17 +315,13 @@ public class HttpJwksLoader implements JwksLoader {
                         }
 
                         // Extract JWKS URI from well-known resolver
-                        WellKnownResult<HttpHandler> jwksResult = config.getWellKnownResolver().getJwksUri();
-                        if (jwksResult.isError()) {
-                            LOGGER.warn("Failed to resolve JWKS URI from well-known resolver: %s", jwksResult.errorMessage());
+                        Optional<HttpHandler> jwksResult = config.getWellKnownResolver().getJwksUri();
+                        if (jwksResult.isEmpty()) {
+                            LOGGER.warn("Failed to resolve JWKS URI from well-known resolver");
                             return Optional.empty();
                         }
 
-                        HttpHandler jwksHandler = jwksResult.value();
-                        if (jwksHandler == null) {
-                            LOGGER.warn("WellKnownResolver did not provide JWKS URI");
-                            return Optional.empty();
-                        }
+                        HttpHandler jwksHandler = jwksResult.get();
 
                         LOGGER.info("Successfully resolved JWKS URI from well-known endpoint: %s", jwksHandler.getUri());
                         cache = new ETagAwareHttpHandler(jwksHandler);
