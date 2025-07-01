@@ -74,7 +74,12 @@ public class HttpJwksLoaderConfig {
 
     /**
      * The HttpHandler used for HTTP requests.
-     * Will be null if using WellKnownResolver.
+     * <p>
+     * This field is guaranteed to be non-null when {@code getJwksType() == JwksType.HTTP}.
+     * It will be null only when using WellKnownResolver (i.e., {@code getJwksType() == JwksType.WELL_KNOWN}).
+     * <p>
+     * The non-null contract for HTTP configurations is enforced by the {@link HttpJwksLoaderConfigBuilder#build()}
+     * method, which validates that the HttpHandler was successfully created before constructing the config.
      */
     @Getter
     @EqualsAndHashCode.Exclude

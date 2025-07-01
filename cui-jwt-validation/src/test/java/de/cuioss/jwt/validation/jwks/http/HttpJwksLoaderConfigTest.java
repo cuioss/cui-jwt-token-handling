@@ -352,4 +352,41 @@ class HttpJwksLoaderConfigTest {
 
         assertEquals(URI.create("https://final.example.com/jwks.json"), config.getHttpHandler().getUri());
     }
+
+    @Test
+    @DisplayName("Should throw exception for invalid URL that causes HttpHandler build failure")
+    void shouldThrowExceptionForInvalidUrlCausingHttpHandlerFailure() {
+        // Test with a malformed URL that would cause HttpHandler.build() to fail
+        assertThrows(IllegalArgumentException.class, () -> 
+                HttpJwksLoaderConfig.builder()
+                        .jwksUrl("not-a-valid-url://invalid")
+                        .refreshIntervalSeconds(REFRESH_INTERVAL)
+                        .build());
+    }
+
+    @Test
+    @DisplayName("Should guarantee HttpHandler is non-null for HTTP configurations")
+    void shouldGuaranteeHttpHandlerNonNullForHttpConfigurations() {
+        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                .jwksUrl(VALID_URL)
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .build();
+
+        // Verify the contract: HttpHandler is guaranteed non-null for HTTP configurations
+        assertNotNull(config.getHttpHandler(), "HttpHandler must be non-null for HTTP configurations");
+        assertNull(config.getWellKnownResolver(), "WellKnownResolver should be null for HTTP configurations");
+    }
+
+    @Test 
+    @DisplayName("Should guarantee WellKnownResolver is non-null for well-known configurations")
+    void shouldGuaranteeWellKnownResolverNonNullForWellKnownConfigurations() {
+        HttpJwksLoaderConfig config = HttpJwksLoaderConfig.builder()
+                .wellKnownUrl("https://example.com/.well-known/openid-configuration")
+                .refreshIntervalSeconds(REFRESH_INTERVAL)
+                .build();
+
+        // Verify the contract: WellKnownResolver is guaranteed non-null for well-known configurations  
+        assertNotNull(config.getWellKnownResolver(), "WellKnownResolver must be non-null for well-known configurations");
+        assertNull(config.getHttpHandler(), "HttpHandler should be null for well-known configurations");
+    }
 }
