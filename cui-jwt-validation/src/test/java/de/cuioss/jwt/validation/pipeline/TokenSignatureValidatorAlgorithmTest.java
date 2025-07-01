@@ -44,7 +44,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
 @DisplayName("Tests TokenSignatureValidator with different algorithms")
 class TokenSignatureValidatorAlgorithmTest {
-    private static final String ISSUER = "Token-Test-testIssuer";
 
     private NonValidatingJwtParser jwtParser;
     private SecurityEventCounter securityEventCounter;

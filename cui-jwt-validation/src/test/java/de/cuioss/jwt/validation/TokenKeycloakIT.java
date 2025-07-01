@@ -22,6 +22,7 @@ import de.cuioss.jwt.validation.well_known.WellKnownConfig;
 import de.cuioss.test.keycloakit.KeycloakITBase;
 import de.cuioss.test.keycloakit.TestRealm;
 import de.cuioss.tools.logging.CuiLogger;
+import de.cuioss.tools.net.http.HttpHandler;
 import de.cuioss.tools.string.Splitter;
 import io.restassured.RestAssured;
 import io.restassured.config.SSLConfig;
@@ -238,8 +239,7 @@ public class TokenKeycloakIT extends KeycloakITBase {
 
             // 3. Configure HttpJwksLoaderConfig using direct JWKS URL
             // Note: WellKnownHandler integration simplified - using direct URL
-            String jwksUrl = jwksResult.isPresent() ?
-                    jwksResult.get().toString() : getJWKSUrl();
+            String jwksUrl = jwksResult.map(HttpHandler::toString).orElseGet(TokenKeycloakIT.this::getJWKSUrl);
             HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
                     .jwksUrl(jwksUrl)
                     .build();
@@ -287,14 +287,13 @@ public class TokenKeycloakIT extends KeycloakITBase {
             assertNotNull(wellKnownHandler.getIssuer(), "Issuer should be present in well-known config");
 
             // Use direct JWKS URL since WellKnownHandler integration is simplified
-            String jwksUrl = wellKnownHandler.getJwksUri() != null ?
+            String jwksUrl = wellKnownHandler.getJwksUri().isPresent() ?
                     wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
             HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
                     .jwksUrl(jwksUrl)
                     .build();
             // Note: SSL context handling moved to HttpHandler level in simplified implementation
 
-            String incorrectIssuer = "https://incorrect-issuer.com/auth/realms/cui-test";
             IssuerConfig issuerConfig = IssuerConfig.builder()
                     // Manually set incorrect issuer
                     .expectedAudience("account") // Access tokens have "account" audience

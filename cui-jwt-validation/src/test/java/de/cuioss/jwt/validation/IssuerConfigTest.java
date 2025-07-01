@@ -183,8 +183,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
             var builder = IssuerConfig.builder();
 
             // When/Then - build should now throw since validation happens during construction
-            var exception = assertThrows(IllegalStateException.class, () ->
-                    builder.build());
+            var exception = assertThrows(IllegalStateException.class, builder::build);
 
             assertTrue(exception.getMessage().contains("No JwksLoader configuration is present"));
         }
@@ -244,8 +243,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
                     .issuerIdentifier("test-issuer");
 
             // When/Then - should throw during build
-            var exception = assertThrows(IllegalStateException.class, () ->
-                    builder.build());
+            var exception = assertThrows(IllegalStateException.class, builder::build);
             assertTrue(exception.getMessage().contains("No JwksLoader configuration is present"));
         }
 
@@ -257,8 +255,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
                     .jwksContent(TEST_JWKS_CONTENT);
 
             // When/Then - should throw during build
-            var exception = assertThrows(IllegalStateException.class, () ->
-                    builder.build());
+            var exception = assertThrows(IllegalStateException.class, builder::build);
             assertTrue(exception.getMessage().contains("issuerIdentifier is required"));
         }
 
@@ -270,8 +267,7 @@ class IssuerConfigTest implements ShouldImplementToString<IssuerConfig>, ShouldI
                     .jwksFilePath("/path/to/jwks.json");
 
             // When/Then - should throw during build
-            var exception = assertThrows(IllegalStateException.class, () ->
-                    builder.build());
+            var exception = assertThrows(IllegalStateException.class, builder::build);
             assertTrue(exception.getMessage().contains("issuerIdentifier is required"));
         }
 

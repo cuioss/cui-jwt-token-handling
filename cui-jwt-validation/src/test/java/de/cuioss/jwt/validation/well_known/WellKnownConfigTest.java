@@ -80,15 +80,13 @@ class WellKnownConfigTest {
                 .wellKnownUrl(TEST_WELL_KNOWN_URL)
                 .connectTimeoutSeconds(0);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                builderWithInvalidConnectTimeout.build());
+        assertThrows(IllegalArgumentException.class, builderWithInvalidConnectTimeout::build);
 
         // Test invalid read timeout
         var builderWithInvalidReadTimeout = WellKnownConfig.builder()
                 .wellKnownUrl(TEST_WELL_KNOWN_URL)
                 .readTimeoutSeconds(-1);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                builderWithInvalidReadTimeout.build());
+        assertThrows(IllegalArgumentException.class, builderWithInvalidReadTimeout::build);
     }
 }
