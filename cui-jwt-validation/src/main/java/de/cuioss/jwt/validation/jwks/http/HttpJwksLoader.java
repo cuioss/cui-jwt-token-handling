@@ -283,48 +283,43 @@ public class HttpJwksLoader implements JwksLoader {
                 return Optional.of(cache);
             }
 
-            try {
-                switch (getJwksType()) {
-                    case HTTP:
-                        // Direct HTTP handler configuration
-                        LOGGER.debug("Creating ETagAwareHttpHandler from direct HTTP configuration for URI: %s",
-                                config.getHttpHandler().getUri());
-                        cache = new ETagAwareHttpHandler(config.getHttpHandler());
-                        httpCache.set(cache);
-                        return Optional.of(cache);
+            switch (getJwksType()) {
+                case HTTP:
+                    // Direct HTTP handler configuration
+                    // HttpHandler is guaranteed non-null by HttpJwksLoaderConfig.build() validation
+                    LOGGER.debug("Creating ETagAwareHttpHandler from direct HTTP configuration for URI: %s",
+                            config.getHttpHandler().getUri());
+                    cache = new ETagAwareHttpHandler(config.getHttpHandler());
+                    httpCache.set(cache);
+                    return Optional.of(cache);
 
-                    case WELL_KNOWN:
-                        // Well-known resolver configuration
-                        LOGGER.debug("Creating ETagAwareHttpHandler from WellKnownResolver");
+                case WELL_KNOWN:
+                    // Well-known resolver configuration
+                    LOGGER.debug("Creating ETagAwareHttpHandler from WellKnownResolver");
 
-                        // Check if well-known resolver is healthy
-                        if (config.getWellKnownResolver().isHealthy() != LoaderStatus.OK) {
-                            LOGGER.debug("WellKnownResolver is not healthy, cannot create HTTP cache");
-                            return Optional.empty();
-                        }
-
-                        // Extract JWKS URI from well-known resolver
-                        Optional<HttpHandler> jwksResult = config.getWellKnownResolver().getJwksUri();
-                        if (jwksResult.isEmpty()) {
-                            LOGGER.warn("Failed to resolve JWKS URI from well-known resolver");
-                            return Optional.empty();
-                        }
-
-                        HttpHandler jwksHandler = jwksResult.get();
-
-                        LOGGER.info("Successfully resolved JWKS URI from well-known endpoint: %s", jwksHandler.getUri());
-                        cache = new ETagAwareHttpHandler(jwksHandler);
-                        httpCache.set(cache);
-                        return Optional.of(cache);
-
-                    default:
-                        LOGGER.error("Unsupported JwksType for HttpJwksLoader: %s", getJwksType());
+                    // Check if well-known resolver is healthy
+                    if (config.getWellKnownResolver().isHealthy() != LoaderStatus.OK) {
+                        LOGGER.debug("WellKnownResolver is not healthy, cannot create HTTP cache");
                         return Optional.empty();
-                }
+                    }
 
-            } catch (NullPointerException e) {
-                LOGGER.error(e, "HttpHandler is null when creating ETagAwareHttpHandler: %s", e.getMessage());
-                return Optional.empty();
+                    // Extract JWKS URI from well-known resolver
+                    Optional<HttpHandler> jwksResult = config.getWellKnownResolver().getJwksUri();
+                    if (jwksResult.isEmpty()) {
+                        LOGGER.warn("Failed to resolve JWKS URI from well-known resolver");
+                        return Optional.empty();
+                    }
+
+                    HttpHandler jwksHandler = jwksResult.get();
+
+                    LOGGER.info("Successfully resolved JWKS URI from well-known endpoint: %s", jwksHandler.getUri());
+                    cache = new ETagAwareHttpHandler(jwksHandler);
+                    httpCache.set(cache);
+                    return Optional.of(cache);
+
+                default:
+                    LOGGER.error("Unsupported JwksType for HttpJwksLoader: %s", getJwksType());
+                    return Optional.empty();
             }
         }
     }

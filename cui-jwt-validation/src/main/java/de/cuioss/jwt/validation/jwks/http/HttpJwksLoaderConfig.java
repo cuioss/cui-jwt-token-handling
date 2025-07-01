@@ -350,9 +350,12 @@ public class HttpJwksLoaderConfig {
                 // Build the HttpHandler for direct URL/URI configuration
                 try {
                     jwksHttpHandler = httpHandlerBuilder.build();
+                    if (jwksHttpHandler == null) {
+                        throw new IllegalStateException("HttpHandler build() returned null - this indicates a programming error in the builder");
+                    }
                 } catch (IllegalArgumentException | IllegalStateException e) {
                     LOGGER.warn(WARN.INVALID_JWKS_URI::format);
-                    throw new IllegalArgumentException("Invalid URL", e);
+                    throw new IllegalArgumentException("Invalid URL or HttpHandler configuration", e);
                 }
             }
 
