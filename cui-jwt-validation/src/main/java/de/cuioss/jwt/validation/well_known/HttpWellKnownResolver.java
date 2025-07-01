@@ -82,128 +82,185 @@ public class HttpWellKnownResolver implements WellKnownResolver {
     }
 
     @Override
-    public HttpHandler getJwksUri() {
-        ensureLoaded();
-        return getEndpoint(JWKS_URI_KEY);
+    public WellKnownResult<HttpHandler> getJwksUri() {
+        WellKnownResult<Void> loadResult = ensureLoaded();
+        if (loadResult.isError()) {
+            return WellKnownResult.error(loadResult.errorMessage());
+        }
+        return getEndpointResult(JWKS_URI_KEY);
     }
 
     @Override
-    public HttpHandler getAuthorizationEndpoint() {
-        ensureLoaded();
-        return getEndpoint(AUTHORIZATION_ENDPOINT_KEY);
+    public WellKnownResult<HttpHandler> getAuthorizationEndpoint() {
+        WellKnownResult<Void> loadResult = ensureLoaded();
+        if (loadResult.isError()) {
+            return WellKnownResult.error(loadResult.errorMessage());
+        }
+        return getEndpointResult(AUTHORIZATION_ENDPOINT_KEY);
     }
 
     @Override
-    public HttpHandler getTokenEndpoint() {
-        ensureLoaded();
-        return getEndpoint(TOKEN_ENDPOINT_KEY);
+    public WellKnownResult<HttpHandler> getTokenEndpoint() {
+        WellKnownResult<Void> loadResult = ensureLoaded();
+        if (loadResult.isError()) {
+            return WellKnownResult.error(loadResult.errorMessage());
+        }
+        return getEndpointResult(TOKEN_ENDPOINT_KEY);
     }
 
     @Override
-    public Optional<HttpHandler> getUserinfoEndpoint() {
-        ensureLoaded();
-        return Optional.ofNullable(endpoints.get(USERINFO_ENDPOINT_KEY));
+    public WellKnownResult<Optional<HttpHandler>> getUserinfoEndpoint() {
+        WellKnownResult<Void> loadResult = ensureLoaded();
+        if (loadResult.isError()) {
+            return WellKnownResult.error(loadResult.errorMessage());
+        }
+        return WellKnownResult.success(Optional.ofNullable(endpoints.get(USERINFO_ENDPOINT_KEY)));
     }
 
     @Override
-    public HttpHandler getIssuer() {
-        ensureLoaded();
-        return getEndpoint(ISSUER_KEY);
+    public WellKnownResult<HttpHandler> getIssuer() {
+        WellKnownResult<Void> loadResult = ensureLoaded();
+        if (loadResult.isError()) {
+            return WellKnownResult.error(loadResult.errorMessage());
+        }
+        return getEndpointResult(ISSUER_KEY);
     }
 
     @Override
     public LoaderStatus isHealthy() {
         if (endpoints.isEmpty()) {
-            try {
-                ensureLoaded();
-            } catch (WellKnownDiscoveryException e) {
-                LOGGER.debug("Health check failed during endpoint loading: %s", e.getMessage());
+            WellKnownResult<Void> loadResult = ensureLoaded();
+            if (loadResult.isError()) {
+                LOGGER.debug("Health check failed during endpoint loading: %s", loadResult.errorMessage());
                 return LoaderStatus.ERROR;
             }
         }
         return status;
     }
 
-    private HttpHandler getEndpoint(String key) {
+    private WellKnownResult<HttpHandler> getEndpointResult(String key) {
         if (endpoints.isEmpty()) {
-            throw new WellKnownDiscoveryException("Endpoints not loaded");
+            return WellKnownResult.error("Endpoints not loaded");
         }
         HttpHandler handler = endpoints.get(key);
         if (handler == null) {
-            throw new WellKnownDiscoveryException("Endpoint not found: " + key);
+            return WellKnownResult.error("Endpoint not found: " + key);
         }
-        return handler;
+        return WellKnownResult.success(handler);
     }
 
-    private void ensureLoaded() {
+    private WellKnownResult<Void> ensureLoaded() {
         if (endpoints.isEmpty()) {
-            loadEndpointsIfNeeded();
+            return loadEndpointsIfNeeded();
         }
+        return WellKnownResult.success(null);
     }
 
-    private void loadEndpointsIfNeeded() {
+    private WellKnownResult<Void> loadEndpointsIfNeeded() {
         // Double-checked locking pattern with ConcurrentHashMap
         if (endpoints.isEmpty()) {
             synchronized (this) {
                 if (endpoints.isEmpty()) {
-                    loadEndpoints();
+                    return loadEndpoints();
                 }
             }
         }
+        return WellKnownResult.success(null);
     }
 
-    private void loadEndpoints() {
-        try {
-            LOGGER.debug("Loading well-known endpoints from %s", wellKnownUrl);
+    private WellKnownResult<Void> loadEndpoints() {
+        LOGGER.debug("Loading well-known endpoints from %s", wellKnownUrl);
 
-            // Fetch and parse discovery document
-            ETagAwareHttpHandler.LoadResult result = etagHandler.load();
-            if (result.content() == null) {
-                throw new WellKnownDiscoveryException("Failed to fetch discovery document from " + wellKnownUrl);
-            }
-            JsonObject discoveryDocument = parser.parseJsonResponse(result.content(), wellKnownUrl);
-
-            LOGGER.debug("Discovery document load state: %s", result.loadState());
-
-            LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
-
-            Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
-
-            // Parse all endpoints
-            String issuerString = parser.getString(discoveryDocument, ISSUER_KEY)
-                    .orElseThrow(() -> new WellKnownDiscoveryException(
-                            "Required field 'issuer' not found in discovery document from " + wellKnownUrl));
-            parser.validateIssuer(issuerString, wellKnownUrl);
-            mapper.addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, wellKnownUrl, true);
-
-            // JWKS URI (Required)
-            mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY,
-                    parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), wellKnownUrl, true);
-
-            // Required endpoints
-            mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY,
-                    parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
-            mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY,
-                    parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
-
-            // Optional endpoints
-            mapper.addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY,
-                    parser.getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), wellKnownUrl, false);
-
-            // Accessibility check for jwks_uri
-            mapper.performAccessibilityCheck(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY));
-
-            // Success - save the endpoints
-            this.endpoints.clear();
-            this.endpoints.putAll(parsedEndpoints);
-            this.status = LoaderStatus.OK;
-
-            LOGGER.info("Successfully loaded well-known endpoints from: %s", wellKnownUrl);
-
-        } catch (WellKnownDiscoveryException e) {
+        // Fetch and parse discovery document
+        ETagAwareHttpHandler.LoadResult result = etagHandler.load();
+        if (result.content() == null) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(e, ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
-            throw e;
+            String errorMsg = "Failed to fetch discovery document from " + wellKnownUrl;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return WellKnownResult.error(errorMsg);
         }
+
+        WellKnownResult<JsonObject> parseResult = parser.parseJsonResponse(result.content(), wellKnownUrl);
+        if (parseResult.isError()) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return WellKnownResult.error(parseResult.errorMessage());
+        }
+
+        JsonObject discoveryDocument = parseResult.value();
+        LOGGER.debug("Discovery document load state: %s", result.loadState());
+        LOGGER.trace(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
+
+        Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
+
+        // Parse all endpoints
+        String issuerString = parser.getString(discoveryDocument, ISSUER_KEY)
+                .orElse(null);
+        if (issuerString == null) {
+            this.status = LoaderStatus.ERROR;
+            String errorMsg = "Required field 'issuer' not found in discovery document from " + wellKnownUrl;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return WellKnownResult.error(errorMsg);
+        }
+
+        WellKnownResult<Void> issuerValidation = parser.validateIssuer(issuerString, wellKnownUrl);
+        if (issuerValidation.isError()) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return issuerValidation;
+        }
+
+        WellKnownResult<Void> mapResult = mapper.addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, wellKnownUrl, true);
+        if (mapResult.isError()) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return mapResult;
+        }
+
+        // JWKS URI (Required)
+        mapResult = mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY,
+                parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), wellKnownUrl, true);
+        if (mapResult.isError()) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return mapResult;
+        }
+
+        // Required endpoints
+        mapResult = mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY,
+                parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
+        if (mapResult.isError()) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return mapResult;
+        }
+
+        mapResult = mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY,
+                parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), wellKnownUrl, true);
+        if (mapResult.isError()) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return mapResult;
+        }
+
+        // Optional endpoints
+        mapResult = mapper.addHttpHandlerToMap(parsedEndpoints, USERINFO_ENDPOINT_KEY,
+                parser.getString(discoveryDocument, USERINFO_ENDPOINT_KEY).orElse(null), wellKnownUrl, false);
+        if (mapResult.isError()) {
+            this.status = LoaderStatus.ERROR;
+            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            return mapResult;
+        }
+
+        // Accessibility check for jwks_uri
+        mapper.performAccessibilityCheck(JWKS_URI_KEY, parsedEndpoints.get(JWKS_URI_KEY));
+
+        // Success - save the endpoints
+        this.endpoints.clear();
+        this.endpoints.putAll(parsedEndpoints);
+        this.status = LoaderStatus.OK;
+
+        LOGGER.info("Successfully loaded well-known endpoints from: %s", wellKnownUrl);
+        return WellKnownResult.success(null);
     }
 }

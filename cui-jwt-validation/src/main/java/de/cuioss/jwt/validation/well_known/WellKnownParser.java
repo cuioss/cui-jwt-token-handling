@@ -57,15 +57,15 @@ class WellKnownParser {
      *
      * @param responseBody The JSON response string to parse
      * @param wellKnownUrl The well-known URL (used for error messages)
-     * @return The parsed JsonObject
-     * @throws WellKnownDiscoveryException If parsing fails
+     * @return WellKnownResult containing the parsed JsonObject or error
      */
-    JsonObject parseJsonResponse(String responseBody, URL wellKnownUrl) {
+    WellKnownResult<JsonObject> parseJsonResponse(String responseBody, URL wellKnownUrl) {
         ParserConfig config = parserConfig != null ? parserConfig : ParserConfig.builder().build();
         try (JsonReader jsonReader = config.getJsonReaderFactory().createReader(new StringReader(responseBody))) {
-            return jsonReader.readObject();
+            JsonObject result = jsonReader.readObject();
+            return WellKnownResult.success(result);
         } catch (JsonException | IllegalStateException e) {
-            throw new WellKnownDiscoveryException("Failed to parse JSON from " + wellKnownUrl, e);
+            return WellKnownResult.error("Failed to parse JSON from " + wellKnownUrl + ": " + e.getMessage());
         }
     }
 
@@ -91,16 +91,16 @@ class WellKnownParser {
      *
      * @param issuerFromDocument The issuer from the discovery document
      * @param wellKnownUrl The well-known URL
-     * @throws WellKnownDiscoveryException if validation fails
+     * @return WellKnownResult indicating success or validation failure
      */
-    void validateIssuer(String issuerFromDocument, URL wellKnownUrl) {
+    WellKnownResult<Void> validateIssuer(String issuerFromDocument, URL wellKnownUrl) {
         LOGGER.debug(DEBUG.VALIDATING_ISSUER.format(issuerFromDocument, wellKnownUrl));
 
         URL issuerAsUrl;
         try {
             issuerAsUrl = URI.create(issuerFromDocument).toURL();
         } catch (MalformedURLException | IllegalArgumentException e) {
-            throw new WellKnownDiscoveryException("Issuer URL from discovery document is malformed: " + issuerFromDocument, e);
+            return WellKnownResult.error("Issuer URL from discovery document is malformed: " + issuerFromDocument + " - " + e.getMessage());
         }
 
         String expectedWellKnownPath = determineWellKnownPath(issuerAsUrl);
@@ -121,9 +121,10 @@ class WellKnownParser {
                     expectedWellKnownPath,
                     schemeMatch, hostMatch, portMatch, issuerPort, wellKnownPort, pathMatch, wellKnownUrl.getPath());
             LOGGER.error(errorMessage);
-            throw new WellKnownDiscoveryException(errorMessage);
+            return WellKnownResult.error(errorMessage);
         }
         LOGGER.debug(DEBUG.ISSUER_VALIDATION_SUCCESSFUL.format(issuerFromDocument));
+        return WellKnownResult.success(null);
     }
 
     private String determineWellKnownPath(URL issuerAsUrl) {

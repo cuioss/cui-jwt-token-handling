@@ -60,8 +60,9 @@ class WellKnownEndpointMapperTest {
     @Test
     @DisplayName("Should add HttpHandler to map for valid URL")
     void shouldAddHttpHandlerToMapForValidUrl() {
-        mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
+        WellKnownResult<Void> result = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
 
+        assertTrue(result.isSuccess());
         assertTrue(endpointMap.containsKey(ENDPOINT_KEY));
         assertNotNull(endpointMap.get(ENDPOINT_KEY));
         assertEquals(VALID_URL, endpointMap.get(ENDPOINT_KEY).getUrl().toString());
@@ -81,27 +82,26 @@ class WellKnownEndpointMapperTest {
         // Convert "<null>" string to actual null
         String url = "<null>".equals(urlInput) ? null : urlInput;
 
+        WellKnownResult<Void> result = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, url, wellKnownUrl, required);
+
         if (shouldThrow) {
-            WellKnownDiscoveryException exception = assertThrows(WellKnownDiscoveryException.class,
-                    () -> mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, url, wellKnownUrl, required));
-
-            assertTrue(exception.getMessage().contains(expectedMessagePart));
-            assertTrue(exception.getMessage().contains(ENDPOINT_KEY));
+            assertTrue(result.isError());
+            assertTrue(result.errorMessage().contains(expectedMessagePart));
+            assertTrue(result.errorMessage().contains(ENDPOINT_KEY));
             if (url != null) {
-                assertTrue(exception.getMessage().contains(url));
+                assertTrue(result.errorMessage().contains(url));
             }
-            assertTrue(exception.getMessage().contains(wellKnownUrl.toString()));
-
-            if (expectedMessagePart.contains("Malformed URL")) {
-                assertNotNull(exception.getCause());
-                assertInstanceOf(IllegalArgumentException.class, exception.getCause());
-            }
+            assertTrue(result.errorMessage().contains(wellKnownUrl.toString()));
         } else {
-            assertDoesNotThrow(() -> mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, url, wellKnownUrl, required));
+            assertTrue(result.isSuccess());
         }
 
-        // In all cases, the endpoint should not be added to the map
-        assertFalse(endpointMap.containsKey(ENDPOINT_KEY));
+        // Check if endpoint was added based on success/failure and whether it was valid
+        if (result.isSuccess() && url != null && !url.isEmpty()) {
+            assertTrue(endpointMap.containsKey(ENDPOINT_KEY));
+        } else {
+            assertFalse(endpointMap.containsKey(ENDPOINT_KEY));
+        }
     }
 
     @Test
@@ -110,9 +110,11 @@ class WellKnownEndpointMapperTest {
         String secondKey = "token_endpoint";
         String secondUrl = "https://example.com/token";
 
-        mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
-        mapper.addHttpHandlerToMap(endpointMap, secondKey, secondUrl, wellKnownUrl, true);
+        WellKnownResult<Void> result1 = mapper.addHttpHandlerToMap(endpointMap, ENDPOINT_KEY, VALID_URL, wellKnownUrl, true);
+        WellKnownResult<Void> result2 = mapper.addHttpHandlerToMap(endpointMap, secondKey, secondUrl, wellKnownUrl, true);
 
+        assertTrue(result1.isSuccess());
+        assertTrue(result2.isSuccess());
         assertEquals(2, endpointMap.size());
         assertTrue(endpointMap.containsKey(ENDPOINT_KEY));
         assertTrue(endpointMap.containsKey(secondKey));

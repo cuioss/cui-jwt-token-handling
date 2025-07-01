@@ -228,14 +228,18 @@ public class TokenKeycloakIT extends KeycloakITBase {
                     .sslContext(keycloakSslContext)
                     .build();
             HttpWellKnownResolver wellKnownHandler = new HttpWellKnownResolver(wellKnownConfig);
-            assertNotNull(wellKnownHandler.getJwksUri(), "JWKS URI should be present in well-known config");
-            assertNotNull(wellKnownHandler.getIssuer(), "Issuer should be present in well-known config");
-            URL keycloakIssuerUrl = wellKnownHandler.getIssuer().getUrl();
+            var jwksResult = wellKnownHandler.getJwksUri();
+            var issuerResult = wellKnownHandler.getIssuer();
+
+            assertTrue(jwksResult.isSuccess(), "JWKS URI should be present in well-known config");
+            assertTrue(issuerResult.isSuccess(), "Issuer should be present in well-known config");
+
+            URL keycloakIssuerUrl = issuerResult.value().getUrl();
 
             // 3. Configure HttpJwksLoaderConfig using direct JWKS URL
             // Note: WellKnownHandler integration simplified - using direct URL
-            String jwksUrl = wellKnownHandler.getJwksUri() != null ?
-                    wellKnownHandler.getJwksUri().toString() : getJWKSUrl();
+            String jwksUrl = jwksResult.isSuccess() && jwksResult.value() != null ?
+                    jwksResult.value().toString() : getJWKSUrl();
             HttpJwksLoaderConfig jwksConfig = HttpJwksLoaderConfig.builder()
                     .jwksUrl(jwksUrl)
                     .build();

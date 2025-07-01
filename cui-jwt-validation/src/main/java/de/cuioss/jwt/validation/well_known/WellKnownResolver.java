@@ -44,44 +44,39 @@ public interface WellKnownResolver extends HealthStatusProvider {
      * Gets the JWKS URI endpoint handler.
      * This endpoint is required by the OpenID Connect Discovery specification.
      *
-     * @return the JWKS URI HttpHandler
-     * @throws WellKnownDiscoveryException if discovery fails or endpoint is not available
+     * @return WellKnownResult containing the JWKS URI HttpHandler or error details
      */
-    HttpHandler getJwksUri();
+    WellKnownResult<HttpHandler> getJwksUri();
 
     /**
      * Gets the authorization endpoint handler.
      * This endpoint is required by the OpenID Connect Discovery specification.
      *
-     * @return the authorization endpoint HttpHandler
-     * @throws WellKnownDiscoveryException if discovery fails or endpoint is not available
+     * @return WellKnownResult containing the authorization endpoint HttpHandler or error details
      */
-    HttpHandler getAuthorizationEndpoint();
+    WellKnownResult<HttpHandler> getAuthorizationEndpoint();
 
     /**
      * Gets the token endpoint handler.
      * This endpoint is required by the OpenID Connect Discovery specification.
      *
-     * @return the token endpoint HttpHandler
-     * @throws WellKnownDiscoveryException if discovery fails or endpoint is not available
+     * @return WellKnownResult containing the token endpoint HttpHandler or error details
      */
-    HttpHandler getTokenEndpoint();
+    WellKnownResult<HttpHandler> getTokenEndpoint();
 
     /**
      * Gets the userinfo endpoint handler.
      * This endpoint is optional according to the OpenID Connect Discovery specification.
      *
-     * @return an Optional containing the userinfo endpoint HttpHandler, or empty if not available
-     * @throws WellKnownDiscoveryException if discovery fails
+     * @return WellKnownResult containing an Optional with the userinfo endpoint HttpHandler or error details
      */
-    Optional<HttpHandler> getUserinfoEndpoint();
+    WellKnownResult<Optional<HttpHandler>> getUserinfoEndpoint();
 
     /**
      * Gets the issuer endpoint handler.
      * This represents the issuer identifier from the discovery document.
      *
-     * @return the issuer HttpHandler
-     * @throws WellKnownDiscoveryException if discovery fails or issuer is not available
+     * @return WellKnownResult containing the issuer HttpHandler or error details
      */
-    HttpHandler getIssuer();
+    WellKnownResult<HttpHandler> getIssuer();
 }

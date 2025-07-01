@@ -53,23 +53,24 @@ class WellKnownEndpointMapper {
      * @param urlString The URL string to add
      * @param wellKnownUrl The well-known URL (used for error messages)
      * @param isRequired Whether this URL is required
+     * @return WellKnownResult indicating success or failure
      */
-    void addHttpHandlerToMap(Map<String, HttpHandler> map, String key, String urlString, URL wellKnownUrl, boolean isRequired) {
+    WellKnownResult<Void> addHttpHandlerToMap(Map<String, HttpHandler> map, String key, String urlString, URL wellKnownUrl, boolean isRequired) {
         if (urlString == null) {
             if (isRequired) {
-                throw new WellKnownDiscoveryException("Required URL field '" + key + "' is missing in discovery document from " + wellKnownUrl);
+                return WellKnownResult.error("Required URL field '" + key + "' is missing in discovery document from " + wellKnownUrl);
             }
             LOGGER.debug(DEBUG.OPTIONAL_URL_FIELD_MISSING.format(key, wellKnownUrl));
-            return;
+            return WellKnownResult.success(null);
         }
         try {
             HttpHandler handler = baseHandler.asBuilder()
                     .uri(urlString)
                     .build();
             map.put(key, handler);
+            return WellKnownResult.success(null);
         } catch (IllegalArgumentException e) {
-            throw new WellKnownDiscoveryException(
-                    "Malformed URL for field '" + key + "': " + urlString + " from " + wellKnownUrl, e);
+            return WellKnownResult.error("Malformed URL for field '" + key + "': " + urlString + " from " + wellKnownUrl + " - " + e.getMessage());
         }
     }
 
