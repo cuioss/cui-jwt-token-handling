@@ -66,6 +66,7 @@ public class JwksLoaderFactory {
      * @param config the configuration for the HTTP JWKS loader
      * @return an instance of JwksLoader
      */
+    @NonNull
     public static JwksLoader createHttpLoader(@NonNull HttpJwksLoaderConfig config) {
         return new HttpJwksLoader(config);
     }
@@ -78,6 +79,7 @@ public class JwksLoaderFactory {
      * @param filePath the path to the JWKS file
      * @return an instance of JwksLoader
      */
+    @NonNull
     public static JwksLoader createFileLoader(@NonNull String filePath) {
         LOGGER.debug("Resolving key loader for JWKS file: %s", filePath);
         return JWKSKeyLoader.builder()
@@ -93,6 +95,7 @@ public class JwksLoaderFactory {
      * @param jwksContent the JWKS content as a string
      * @return an instance of JwksLoader
      */
+    @NonNull
     public static JwksLoader createInMemoryLoader(@NonNull String jwksContent) {
         LOGGER.debug("Resolving key loader for in-memory JWKS data");
         return JWKSKeyLoader.builder()

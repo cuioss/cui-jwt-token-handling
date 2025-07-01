@@ -120,6 +120,7 @@ public class TokenValidator {
      * in a list and match them during token validation.
      */
     @Getter
+    @NonNull
     private final List<IssuerConfig> issuerConfigs;
 
     /**
@@ -133,6 +134,7 @@ public class TokenValidator {
      * This counter is thread-safe and can be accessed from outside to monitor security events.
      */
     @Getter
+    @NonNull
     private final SecurityEventCounter securityEventCounter;
 
     /**
@@ -190,6 +192,7 @@ public class TokenValidator {
      * @return The parsed access token
      * @throws TokenValidationException if the token is invalid
      */
+    @NonNull
     public AccessTokenContent createAccessToken(@NonNull String tokenString) {
         LOGGER.debug("Creating access token");
         AccessTokenContent result = processTokenPipeline(
@@ -210,6 +213,7 @@ public class TokenValidator {
      * @return The parsed ID token
      * @throws TokenValidationException if the token is invalid
      */
+    @NonNull
     public IdTokenContent createIdToken(@NonNull String tokenString) {
         LOGGER.debug("Creating ID token");
         IdTokenContent result = processTokenPipeline(
@@ -230,6 +234,7 @@ public class TokenValidator {
      * @return The parsed refresh token
      * @throws TokenValidationException if the token is invalid
      */
+    @NonNull
     @SuppressWarnings("java:S3655") //owolff: False Positive: isPresent is checked
     public RefreshTokenContent createRefreshToken(@NonNull String tokenString) {
         LOGGER.debug("Creating refresh token");

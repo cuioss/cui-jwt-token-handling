@@ -158,6 +158,7 @@ public class JWKSKeyLoader implements JwksLoader {
          *
          * @return a new JWKSKeyLoader
          */
+        @NonNull
         public JWKSKeyLoader build() {
             if (jwksContent == null && jwksFilePath == null) {
                 throw new IllegalArgumentException("Either jwksContent or jwksFilePath must be provided");
@@ -171,6 +172,7 @@ public class JWKSKeyLoader implements JwksLoader {
      *
      * @return a new builder
      */
+    @NonNull
     public static JWKSKeyLoaderBuilder builder() {
         return new JWKSKeyLoaderBuilder();
     }
