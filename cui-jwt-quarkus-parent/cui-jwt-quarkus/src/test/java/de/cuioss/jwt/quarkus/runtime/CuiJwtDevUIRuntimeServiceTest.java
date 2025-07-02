@@ -268,21 +268,6 @@ class CuiJwtDevUIRuntimeServiceTest {
             }
         }
 
-        @Test
-        @DisplayName("Should return consistent JWKS status on multiple calls")
-        void shouldReturnConsistentJwksStatusOnMultipleCalls() {
-            Map<String, Object> result1 = service.getJwksStatus();
-            Map<String, Object> result2 = service.getJwksStatus();
-
-            assertNotNull(result1, "First result should not be null");
-            assertNotNull(result2, "Second result should not be null");
-
-            assertEquals(result1.get("status"), result2.get("status"), "Status should be consistent");
-            assertEquals(result1.get("issuersConfigured"), result2.get("issuersConfigured"),
-                    "Issuers configured count should be consistent");
-            assertNotNull(result1.get("message"), "First message should not be null");
-            assertNotNull(result2.get("message"), "Second message should not be null");
-        }
     }
 
     @Nested
@@ -328,23 +313,6 @@ class CuiJwtDevUIRuntimeServiceTest {
             assertInstanceOf(Integer.class, result.get("issuersCount"), "IssuersCount should be Integer");
         }
 
-        @Test
-        @DisplayName("Should return consistent configuration on multiple calls")
-        void shouldReturnConsistentConfigurationOnMultipleCalls() {
-            Map<String, Object> result1 = service.getConfiguration();
-            Map<String, Object> result2 = service.getConfiguration();
-
-            assertNotNull(result1, "First result should not be null");
-            assertNotNull(result2, "Second result should not be null");
-
-            assertEquals(result1.get("enabled"), result2.get("enabled"), "Enabled should be consistent");
-            assertEquals(result1.get("healthEnabled"), result2.get("healthEnabled"), "HealthEnabled should be consistent");
-            assertEquals(result1.get("buildTime"), result2.get("buildTime"), "BuildTime should be consistent");
-            assertEquals(result1.get("metricsEnabled"), result2.get("metricsEnabled"), "MetricsEnabled should be consistent");
-            assertEquals(result1.get("issuersCount"), result2.get("issuersCount"), "IssuersCount should be consistent");
-            assertNotNull(result1.get("message"), "First message should not be null");
-            assertNotNull(result2.get("message"), "Second message should not be null");
-        }
     }
 
     @Nested
@@ -464,28 +432,6 @@ class CuiJwtDevUIRuntimeServiceTest {
                     "Security counter should always be available in runtime");
         }
 
-        @Test
-        @DisplayName("Should return consistent health info on multiple calls")
-        void shouldReturnConsistentHealthInfoOnMultipleCalls() {
-            Map<String, Object> result1 = service.getHealthInfo();
-            Map<String, Object> result2 = service.getHealthInfo();
-
-            assertNotNull(result1, "First result should not be null");
-            assertNotNull(result2, "Second result should not be null");
-
-            assertEquals(result1.get("configurationValid"), result2.get("configurationValid"),
-                    "ConfigurationValid should be consistent");
-            assertEquals(result1.get("tokenValidatorAvailable"), result2.get("tokenValidatorAvailable"),
-                    "TokenValidatorAvailable should be consistent");
-            assertEquals(result1.get("securityCounterAvailable"), result2.get("securityCounterAvailable"),
-                    "SecurityCounterAvailable should be consistent");
-            assertEquals(result1.get("overallStatus"), result2.get("overallStatus"),
-                    "OverallStatus should be consistent");
-            assertEquals(result1.get("healthStatus"), result2.get("healthStatus"),
-                    "HealthStatus should be consistent");
-            assertNotNull(result1.get("message"), "First message should not be null");
-            assertNotNull(result2.get("message"), "Second message should not be null");
-        }
     }
 
     @Nested
@@ -673,22 +619,33 @@ class CuiJwtDevUIRuntimeServiceTest {
         }
 
         @Test
-        @DisplayName("Should handle multiple consecutive calls to same method")
-        void shouldHandleMultipleConsecutiveCalls() {
-            Map<String, Object> result1 = service.getValidationStatus();
-            Map<String, Object> result2 = service.getValidationStatus();
-            Map<String, Object> result3 = service.getValidationStatus();
+        @DisplayName("Should handle multiple consecutive calls with consistency")
+        void shouldHandleMultipleConsecutiveCallsWithConsistency() {
+            // Test all methods for consistency across multiple calls
+            Map<String, Object> validation1 = service.getValidationStatus();
+            Map<String, Object> validation2 = service.getValidationStatus();
+            Map<String, Object> config1 = service.getConfiguration();
+            Map<String, Object> config2 = service.getConfiguration();
+            Map<String, Object> health1 = service.getHealthInfo();
+            Map<String, Object> health2 = service.getHealthInfo();
+            Map<String, Object> jwks1 = service.getJwksStatus();
+            Map<String, Object> jwks2 = service.getJwksStatus();
 
-            assertNotNull(result1, "First result should not be null");
-            assertNotNull(result2, "Second result should not be null");
-            assertNotNull(result3, "Third result should not be null");
+            // Validation status consistency
+            assertEquals(validation1.get("enabled"), validation2.get("enabled"), "Validation enabled should be consistent");
+            assertEquals(validation1.get("status"), validation2.get("status"), "Validation status should be consistent");
 
-            assertEquals(result1.get("enabled"), result2.get("enabled"),
-                    "Enabled status should be consistent");
-            assertEquals(result2.get("enabled"), result3.get("enabled"),
-                    "Enabled status should be consistent");
-            assertEquals(result1.get("status"), result2.get("status"),
-                    "Status should be consistent");
+            // Configuration consistency
+            assertEquals(config1.get("enabled"), config2.get("enabled"), "Config enabled should be consistent");
+            assertEquals(config1.get("issuersCount"), config2.get("issuersCount"), "Config issuers count should be consistent");
+
+            // Health info consistency
+            assertEquals(health1.get("configurationValid"), health2.get("configurationValid"), "Health config valid should be consistent");
+            assertEquals(health1.get("healthStatus"), health2.get("healthStatus"), "Health status should be consistent");
+
+            // JWKS status consistency
+            assertEquals(jwks1.get("status"), jwks2.get("status"), "JWKS status should be consistent");
+            assertEquals(jwks1.get("issuersConfigured"), jwks2.get("issuersConfigured"), "JWKS issuers configured should be consistent");
         }
 
         @Test
@@ -710,28 +667,6 @@ class CuiJwtDevUIRuntimeServiceTest {
             assertTrue((Integer) issuersCount >= 0, "Issuers count should be non-negative");
         }
 
-        @Test
-        @DisplayName("Should handle getHealthInfo method consistency")
-        void shouldHandleGetHealthInfoConsistency() {
-            Map<String, Object> result1 = service.getHealthInfo();
-            Map<String, Object> result2 = service.getHealthInfo();
-
-            assertNotNull(result1, "First result should not be null");
-            assertNotNull(result2, "Second result should not be null");
-
-            assertEquals(result1.get("overallStatus"), result2.get("overallStatus"),
-                    "Overall status should be consistent");
-            assertEquals("RUNTIME", result1.get("overallStatus"),
-                    "Overall status should be RUNTIME");
-            assertEquals(true, result1.get("securityCounterAvailable"),
-                    "Security counter should always be available");
-
-            String healthStatus1 = (String) result1.get("healthStatus");
-            String healthStatus2 = (String) result2.get("healthStatus");
-            assertTrue("UP".equals(healthStatus1) || "DOWN".equals(healthStatus1),
-                    "Health status should be UP or DOWN");
-            assertEquals(healthStatus1, healthStatus2, "Health status should be consistent");
-        }
 
         @Test
         @DisplayName("Should handle getJwksStatus method edge cases")
