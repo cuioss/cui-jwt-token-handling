@@ -16,7 +16,6 @@
 package de.cuioss.jwt.quarkus.metrics;
 
 import de.cuioss.jwt.quarkus.config.JwtPropertyKeys;
-import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.security.EventCategory;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.tools.logging.CuiLogger;
@@ -39,7 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * exposes them as Micrometer metrics.
  * <p>
  * This collector registers counters for each security event type and automatically
- * updates them when events are triggered.
+ * updates them when events are triggered. It only needs access to the
+ * SecurityEventCounter to perform its job.
  * <p>
  * All metrics follow Micrometer naming conventions and include appropriate tags
  * for filtering:
@@ -69,7 +69,7 @@ public class JwtMetricsCollector {
     private static final String RESULT_FAILURE = "failure";
 
     private final MeterRegistry registry;
-    private final TokenValidator tokenValidator;
+    private final SecurityEventCounter securityEventCounter;
 
     // Caching of counters to avoid lookups
     private final Map<String, Counter> counters = new ConcurrentHashMap<>();
@@ -78,15 +78,15 @@ public class JwtMetricsCollector {
     private final Map<SecurityEventCounter.EventType, Long> lastKnownCounts = new ConcurrentHashMap<>();
 
     /**
-     * Creates a new JwtMetricsCollector with the given MeterRegistry and TokenValidator.
+     * Creates a new JwtMetricsCollector with the given MeterRegistry and SecurityEventCounter.
      *
      * @param registry the Micrometer registry
-     * @param tokenValidator the token validator
+     * @param securityEventCounter the security event counter
      */
     @Inject
-    public JwtMetricsCollector(MeterRegistry registry, TokenValidator tokenValidator) {
+    public JwtMetricsCollector(MeterRegistry registry, SecurityEventCounter securityEventCounter) {
         this.registry = registry;
-        this.tokenValidator = tokenValidator;
+        this.securityEventCounter = securityEventCounter;
     }
 
     /**
@@ -103,7 +103,6 @@ public class JwtMetricsCollector {
      * Initializes all metrics.
      */
     private void initializeMetrics() {
-        SecurityEventCounter securityEventCounter = tokenValidator.getSecurityEventCounter();
         if (securityEventCounter == null) {
             LOGGER.warn("SecurityEventCounter not available, metrics will not be collected");
             return;
@@ -158,7 +157,6 @@ public class JwtMetricsCollector {
      */
     @Scheduled(every = "10s")
     public void updateCounters() {
-        SecurityEventCounter securityEventCounter = tokenValidator.getSecurityEventCounter();
         if (securityEventCounter == null) {
             return;
         }

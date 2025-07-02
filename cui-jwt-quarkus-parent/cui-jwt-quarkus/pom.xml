@@ -13,11 +13,14 @@
     <artifactId>cui-jwt-quarkus</artifactId>
     <packaging>jar</packaging>
     <name>JWT Token Validation Quarkus Integration - Runtime</name>
-    <description>Runtime module for Quarkus integration for JWT token validation, providing configuration, producers, and integration from SecurityEvents to Micrometer</description>
+    <description>Runtime module for Quarkus integration for JWT token validation, providing configuration, producers,
+        and integration from SecurityEvents to Micrometer
+    </description>
 
     <properties>
         <maven.jar.plugin.automatic.module.name>de.cuioss.jwt.quarkus</maven.jar.plugin.automatic.module.name>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <dependencies>
@@ -78,6 +81,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jacoco</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

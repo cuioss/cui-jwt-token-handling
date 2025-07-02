@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.quarkus.runtime;
 
+import de.cuioss.jwt.quarkus.config.JwtPropertyKeys;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.MinimalTokenContent;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
@@ -267,7 +268,7 @@ public class CuiJwtDevUIRuntimeService {
     private int countEnabledIssuers() {
         try {
             int count = 0;
-            String prefix = "cui.jwt.issuers.";
+            String prefix = JwtPropertyKeys.ISSUERS.BASE + ".";
 
             for (String propertyName : config.getPropertyNames()) {
                 if (propertyName.startsWith(prefix) && propertyName.endsWith(".enabled")) {

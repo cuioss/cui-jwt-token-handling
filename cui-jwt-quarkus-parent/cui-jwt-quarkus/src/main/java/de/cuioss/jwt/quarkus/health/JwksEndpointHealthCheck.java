@@ -15,11 +15,8 @@
  */
 package de.cuioss.jwt.quarkus.health;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import de.cuioss.jwt.quarkus.config.JwtPropertyKeys;
 import de.cuioss.jwt.validation.IssuerConfig;
-import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
@@ -32,12 +29,17 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Readiness;
 
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Health check for JWKS endpoint connectivity.
+ * <p>
  * This class implements the SmallRye Health check interface to provide
- * readiness status for JWT validation JWKS endpoints.
+ * readiness status for JWT validation JWKS endpoints. It only needs access
+ * to the issuer configurations to check the health of their JWKS loaders.
+ * </p>
  */
 @ApplicationScoped
 @Readiness // Marks this as a readiness check
@@ -51,14 +53,14 @@ public class JwksEndpointHealthCheck implements HealthCheck {
     private static final String STATUS_UP = "UP";
     private static final String STATUS_DOWN = "DOWN";
 
-    private final TokenValidator tokenValidator;
+    private final List<IssuerConfig> issuerConfigs;
     private final ConcurrentHashMap<String, CachedResponse> healthCheckCache = new ConcurrentHashMap<>();
     private final long cacheTimeoutMillis;
 
     @Inject
-    public JwksEndpointHealthCheck(TokenValidator tokenValidator,
+    public JwksEndpointHealthCheck(List<IssuerConfig> issuerConfigs,
             @ConfigProperty(name = JwtPropertyKeys.HEALTH.JWKS.CACHE_SECONDS, defaultValue = DEFAULT_CACHE_SECONDS) int cacheSeconds) {
-        this.tokenValidator = tokenValidator;
+        this.issuerConfigs = issuerConfigs;
         this.cacheTimeoutMillis = TimeUnit.SECONDS.toMillis(cacheSeconds);
     }
 
@@ -69,7 +71,7 @@ public class JwksEndpointHealthCheck implements HealthCheck {
         if (cached != null && !cached.isExpired()) {
             return cached.response;
         }
-        
+
         HealthCheckResponse response = performHealthCheck();
         healthCheckCache.put(HEALTHCHECK_NAME, new CachedResponse(response, System.currentTimeMillis() + cacheTimeoutMillis));
         return response;
@@ -81,15 +83,14 @@ public class JwksEndpointHealthCheck implements HealthCheck {
      * @return the health check response
      */
     private HealthCheckResponse performHealthCheck() {
-        var issuerConfigMap = tokenValidator.getIssuerConfigMap();
-        if (issuerConfigMap.isEmpty()) {
+        if (issuerConfigs.isEmpty()) {
             return createErrorResponse(ERROR_NO_ISSUER_CONFIGS);
         }
 
         var responseBuilder = HealthCheckResponse.named(HEALTHCHECK_NAME).up();
 
-        var results = issuerConfigMap.entrySet().stream()
-                .map(entry -> EndpointResult.fromIssuerConfig(entry.getKey(), entry.getValue()))
+        var results = issuerConfigs.stream()
+                .map(issuerConfig -> EndpointResult.fromIssuerConfig(issuerConfig.getIssuerIdentifier(), issuerConfig))
                 .toList();
 
         // Add all endpoint data to response

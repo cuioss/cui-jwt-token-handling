@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.quarkus.runtime;
 
+import de.cuioss.jwt.quarkus.config.JwtPropertyKeys;
 import de.cuioss.jwt.quarkus.config.JwtTestProfile;
 import de.cuioss.jwt.quarkus.test.TestConfig;
 import de.cuioss.jwt.quarkus.test.TestConfigurations;
@@ -72,27 +73,21 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should return validation status with current configuration")
         void shouldReturnValidationStatusWithCurrentConfiguration() {
-            // Act
             Map<String, Object> result = service.getValidationStatus();
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertNotNull(result.get("enabled"), "Enabled status should be present");
             assertNotNull(result.get("validatorPresent"), "Validator present status should be present");
             assertEquals("RUNTIME", result.get("status"), "Status should be RUNTIME");
             assertNotNull(result.get("statusMessage"), "Status message should be present");
 
-            // The actual values depend on the test configuration
             boolean enabled = (Boolean) result.get("enabled");
             String statusMessage = (String) result.get("statusMessage");
 
-            if (enabled) {
-                assertEquals("JWT validation is active and ready", statusMessage,
-                        "Status message should indicate active validation when enabled");
-            } else {
-                assertEquals("JWT validation is disabled", statusMessage,
-                        "Status message should indicate disabled validation when disabled");
-            }
+            // Based on the current test configuration, validation is disabled
+            assertFalse(enabled, "JWT validation should be disabled with current test configuration");
+            assertEquals("JWT validation is disabled", statusMessage,
+                    "Status message should indicate disabled validation when disabled");
         }
     }
 
@@ -103,16 +98,13 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should return JWKS status with current configuration")
         void shouldReturnJwksStatusWithCurrentConfiguration() {
-            // Act
             Map<String, Object> result = service.getJwksStatus();
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertEquals("RUNTIME", result.get("status"), "Status should be RUNTIME");
             assertNotNull(result.get("message"), "Message should be present");
             assertNotNull(result.get("issuersConfigured"), "Issuers configured count should be present");
 
-            // Verify the issuer count matches the configuration
             int issuersConfigured = (Integer) result.get("issuersConfigured");
             assertTrue(issuersConfigured >= 0, "Issuers configured should be non-negative");
         }
@@ -125,10 +117,8 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should return configuration information")
         void shouldReturnConfigurationInformation() {
-            // Act
             Map<String, Object> result = service.getConfiguration();
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertNotNull(result.get("enabled"), "Enabled status should be present");
             assertEquals(true, result.get("healthEnabled"), "Health should always be enabled");
@@ -149,10 +139,8 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should return error for null token")
         void shouldReturnErrorForNullToken() {
-            // Act
             Map<String, Object> result = service.validateToken(null);
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertEquals(false, result.get("valid"), "Should be invalid");
             assertEquals("Token is empty or null", result.get("error"), "Should have correct error message");
@@ -161,10 +149,8 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should return error for empty token")
         void shouldReturnErrorForEmptyToken() {
-            // Act
             Map<String, Object> result = service.validateToken("   ");
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertEquals(false, result.get("valid"), "Should be invalid");
             assertEquals("Token is empty or null", result.get("error"), "Should have correct error message");
@@ -173,30 +159,18 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should handle token validation attempts")
         void shouldHandleTokenValidationAttempts() {
-            // Test with a token that might be processed as different token types
-            // Act
             Map<String, Object> result = service.validateToken("not.a.valid.jwt");
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertNotNull(result.get("valid"), "Valid status should be present");
 
-            // The service tries access token, ID token, and refresh token validation
-            // Depending on the token format, it might succeed as one of these types
             boolean isValid = (Boolean) result.get("valid");
 
-            if (isValid) {
-                // If validation succeeded, check that we have the expected fields
-                assertNotNull(result.get("tokenType"), "Token type should be present for valid tokens");
-                String tokenType = (String) result.get("tokenType");
-                assertTrue("ACCESS_TOKEN".equals(tokenType) || "ID_TOKEN".equals(tokenType) || "REFRESH_TOKEN".equals(tokenType),
-                        "Token type should be one of the expected types");
-            } else {
-                // If validation failed, check that we have an error message
-                assertNotNull(result.get("error"), "Should have error message for invalid tokens");
-                String error = (String) result.get("error");
-                assertFalse(error.isEmpty(), "Error message should not be empty");
-            }
+            // "not.a.valid.jwt" is clearly not a valid JWT token, so it should be invalid
+            assertFalse(isValid, "Invalid JWT token should be rejected");
+            assertNotNull(result.get("error"), "Should have error message for invalid tokens");
+            String error = (String) result.get("error");
+            assertFalse(error.isEmpty(), "Error message should not be empty");
         }
     }
 
@@ -207,10 +181,8 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should return health information")
         void shouldReturnHealthInformation() {
-            // Act
             Map<String, Object> result = service.getHealthInfo();
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertNotNull(result.get("configurationValid"), "Configuration valid status should be present");
             assertNotNull(result.get("tokenValidatorAvailable"), "Token validator available status should be present");
@@ -258,40 +230,28 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should handle validateToken with very long token")
         void shouldHandleVeryLongToken() {
-            // Given - Create a very long token string
+            Map<String, Object> result = service.validateToken("a".repeat(10000));
 
-            // Act
-            Map<String, Object> result = service.validateToken("a".repeat(10000)
-            // Act
-            );
-
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertNotNull(result.get("valid"), "Valid status should be present");
-            // The result can be either valid or invalid depending on the actual validation logic
         }
 
         @Test
         @DisplayName("Should handle validateToken with special characters")
         void shouldHandleTokenWithSpecialCharacters() {
-            // Act
             Map<String, Object> result = service.validateToken("!@#$%^&*()_+-=[]{}|;':\",./<>?");
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertNotNull(result.get("valid"), "Valid status should be present");
-            // The result can be either valid or invalid depending on the actual validation logic
         }
 
         @Test
         @DisplayName("Should handle multiple consecutive calls to same method")
         void shouldHandleMultipleConsecutiveCalls() {
-            // Act - Call the same method multiple times
             Map<String, Object> result1 = service.getValidationStatus();
             Map<String, Object> result2 = service.getValidationStatus();
             Map<String, Object> result3 = service.getValidationStatus();
 
-            // Assert - All results should be consistent
             assertNotNull(result1, "First result should not be null");
             assertNotNull(result2, "Second result should not be null");
             assertNotNull(result3, "Third result should not be null");
@@ -307,10 +267,8 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should handle getConfiguration method edge cases")
         void shouldHandleGetConfigurationEdgeCases() {
-            // Act
             Map<String, Object> result = service.getConfiguration();
 
-            // Assert - Test specific edge case values
             assertNotNull(result, "Result should not be null");
             assertEquals(true, result.get("healthEnabled"),
                     "Health should always be enabled in runtime");
@@ -319,7 +277,6 @@ class CuiJwtDevUIRuntimeServiceTest {
             assertEquals(true, result.get("metricsEnabled"),
                     "Metrics should always be enabled in runtime");
 
-            // Test that issuersCount is always non-negative
             Object issuersCount = result.get("issuersCount");
             assertNotNull(issuersCount, "Issuers count should not be null");
             assertInstanceOf(Integer.class, issuersCount, "Issuers count should be Integer");
@@ -329,11 +286,9 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should handle getHealthInfo method consistency")
         void shouldHandleGetHealthInfoConsistency() {
-            // Act - Call multiple times
             Map<String, Object> result1 = service.getHealthInfo();
             Map<String, Object> result2 = service.getHealthInfo();
 
-            // Assert - Results should be consistent
             assertNotNull(result1, "First result should not be null");
             assertNotNull(result2, "Second result should not be null");
 
@@ -344,7 +299,6 @@ class CuiJwtDevUIRuntimeServiceTest {
             assertEquals(true, result1.get("securityCounterAvailable"),
                     "Security counter should always be available");
 
-            // Health status should be UP or DOWN
             String healthStatus1 = (String) result1.get("healthStatus");
             String healthStatus2 = (String) result2.get("healthStatus");
             assertTrue("UP".equals(healthStatus1) || "DOWN".equals(healthStatus1),
@@ -355,16 +309,13 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should handle getJwksStatus method edge cases")
         void shouldHandleGetJwksStatusEdgeCases() {
-            // Act
             Map<String, Object> result = service.getJwksStatus();
 
-            // Assert
             assertNotNull(result, "Result should not be null");
             assertEquals("RUNTIME", result.get("status"), "Status should be RUNTIME");
             assertNotNull(result.get("message"), "Message should not be null");
             assertNotNull(result.get("issuersConfigured"), "Issuers configured should not be null");
 
-            // Test that issuersConfigured is always non-negative
             Object issuersConfigured = result.get("issuersConfigured");
             assertInstanceOf(Integer.class, issuersConfigured, "Issuers configured should be Integer");
             assertTrue((Integer) issuersConfigured >= 0, "Issuers configured should be non-negative");
@@ -379,13 +330,10 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage for empty configurations")
         void shouldDemonstrateTestConfigUsageForEmptyConfigurations() {
-            // Arrange
             Config emptyConfig = TestConfigurations.empty();
-
-            // Act & Assert - Test that TestConfig works properly for missing properties
             assertFalse(emptyConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).isPresent(),
                     "Empty config should not have any issuer properties");
-            assertFalse(emptyConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent(),
+            assertFalse(emptyConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).isPresent(),
                     "Empty config should not have any parser properties");
 
             // Test that getValue throws for missing properties
@@ -397,38 +345,29 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage for disabled issuers")
         void shouldDemonstrateTestConfigUsageForDisabledIssuers() {
-            // Arrange
             Config configWithDisabledIssuers = TestConfigurations.noEnabledIssuers();
-
-            // Act & Assert - Test that TestConfig provides disabled issuer config
             assertEquals(false, configWithDisabledIssuers.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(true),
                     "Should have disabled issuer configuration");
-            assertTrue(configWithDisabledIssuers.getOptionalValue("cui.jwt.issuers.test.identifier", String.class).isPresent(),
+            assertTrue(configWithDisabledIssuers.getOptionalValue("cui.jwt.issuers.test.issuer-identifier", String.class).isPresent(),
                     "Should have issuer identifier even when disabled");
         }
 
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage for minimal valid setup")
         void shouldDemonstrateTestConfigUsageForMinimalValidSetup() {
-            // Arrange
             Config minimalConfig = TestConfigurations.minimalValid();
-
-            // Act & Assert - Test that TestConfig provides minimal valid configuration
             assertEquals(true, minimalConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(false),
                     "Should have enabled issuer");
-            assertEquals("https://test.example.com", minimalConfig.getOptionalValue("cui.jwt.issuers.test.identifier", String.class).orElse(null),
+            assertEquals("https://test.example.com", minimalConfig.getOptionalValue("cui.jwt.issuers.test.issuer-identifier", String.class).orElse(null),
                     "Should have correct issuer identifier");
-            assertEquals("classpath:jwt-test.key", minimalConfig.getOptionalValue("cui.jwt.issuers.test.public-key-location", String.class).orElse(null),
+            assertEquals("classpath:keys/test_public_key.jwks", minimalConfig.getOptionalValue("cui.jwt.issuers.test.jwks.file-path", String.class).orElse(null),
                     "Should have public key location");
         }
 
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage for multiple issuers")
         void shouldDemonstrateTestConfigUsageForMultipleIssuers() {
-            // Arrange
             Config multipleIssuersConfig = TestConfigurations.multipleIssuers();
-
-            // Act & Assert - Test that TestConfig provides multiple issuer configuration
             assertEquals(true, multipleIssuersConfig.getOptionalValue("cui.jwt.issuers.primary.enabled", Boolean.class).orElse(false),
                     "Primary issuer should be enabled");
             assertEquals(true, multipleIssuersConfig.getOptionalValue("cui.jwt.issuers.secondary.enabled", Boolean.class).orElse(false),
@@ -440,7 +379,6 @@ class CuiJwtDevUIRuntimeServiceTest {
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage with builder pattern")
         void shouldDemonstrateTestConfigUsageWithBuilderPattern() {
-            // Arrange & Act
             Config customConfig = TestConfigurations.builder()
                     .withIssuer("custom")
                     .enabled(true)
@@ -449,42 +387,38 @@ class CuiJwtDevUIRuntimeServiceTest {
                     .jwksRefreshInterval(300)
                     .and()
                     .withParser()
-                    .maxTokenSizeBytes(4096)
-                    .leewaySeconds(60)
-                    .validateExpiration(true)
-                    .allowedAlgorithms("RS256,ES256")
+                    .maxTokenSize(4096)
+                    .maxPayloadSize(4096)
+                    .maxStringSize(2048)
+                    .maxArraySize(64)
+                    .maxDepth(10)
                     .build();
 
-            // Assert - Test that builder pattern creates proper configuration
             assertEquals(true, customConfig.getOptionalValue("cui.jwt.issuers.custom.enabled", Boolean.class).orElse(false),
                     "Custom issuer should be enabled");
-            assertEquals("https://custom.example.com", customConfig.getOptionalValue("cui.jwt.issuers.custom.identifier", String.class).orElse(null),
+            assertEquals("https://custom.example.com", customConfig.getOptionalValue("cui.jwt.issuers.custom.issuer-identifier", String.class).orElse(null),
                     "Should have custom issuer identifier");
-            assertEquals(300, customConfig.getOptionalValue("cui.jwt.issuers.custom.jwks.refresh-interval-seconds", Integer.class).orElse(0),
+            assertEquals(300, customConfig.getOptionalValue("cui.jwt.issuers.custom.jwks.http.refresh-interval-seconds", Integer.class).orElse(0),
                     "Should have custom JWKS refresh interval");
-            assertEquals(4096, customConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0),
+            assertEquals(4096, customConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).orElse(0),
                     "Should have custom parser max token size");
-            assertEquals("RS256,ES256", customConfig.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse(null),
-                    "Should have custom allowed algorithms");
         }
 
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage for malformed properties")
         void shouldDemonstrateTestConfigUsageForMalformedProperties() {
-            // Arrange - Create config with malformed properties
             Config malformedConfig = new TestConfig(Map.of(
                     "cui.jwt.issuers.test.enabled", "not-a-boolean",
-                    "cui.jwt.parser.max-token-size-bytes", "invalid-number",
-                    "cui.jwt.parser.leeway-seconds", "",
+                    JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, "invalid-number",
+                    JwtPropertyKeys.PARSER.MAX_PAYLOAD_SIZE, "",
                     "valid.property", "test-value"
             ));
 
-            // Act & Assert - Test that TestConfig handles malformed values gracefully
             assertEquals(false, malformedConfig.getOptionalValue("cui.jwt.issuers.test.enabled", Boolean.class).orElse(true),
                     "Should return false for non-'true' boolean strings (Boolean.valueOf behavior)");
-            assertFalse(malformedConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).isPresent(),
+            assertFalse(malformedConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).isPresent(),
                     "Should return empty Optional for invalid integer");
-            assertFalse(malformedConfig.getOptionalValue("cui.jwt.parser.leeway-seconds", Integer.class).isPresent(),
+            assertFalse(malformedConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_PAYLOAD_SIZE, Integer.class).isPresent(),
                     "Should return empty Optional for empty integer");
             assertEquals("test-value", malformedConfig.getOptionalValue("valid.property", String.class).orElse(null),
                     "Should handle valid string properties correctly");
@@ -495,26 +429,24 @@ class CuiJwtDevUIRuntimeServiceTest {
         void shouldDemonstrateTestConfigPredefinedConfigurations() {
             // Test invalid parser configuration
             Config invalidParserConfig = TestConfigurations.invalidParser();
-            assertEquals(-1, invalidParserConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0),
+            assertEquals(-1, invalidParserConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).orElse(0),
                     "Invalid parser config should have negative max token size");
 
             // Test JWKS URL configuration
             Config jwksConfig = TestConfigurations.withJwksUrl();
-            assertEquals("https://test.example.com/jwks", jwksConfig.getOptionalValue("cui.jwt.issuers.test.jwks.url", String.class).orElse(null),
+            assertEquals("https://test.example.com/jwks", jwksConfig.getOptionalValue("cui.jwt.issuers.test.jwks.http.url", String.class).orElse(null),
                     "JWKS config should have JWKS URL");
 
             // Test well-known URL configuration
             Config wellKnownConfig = TestConfigurations.withWellKnownUrl();
             assertEquals("https://test.example.com/.well-known/openid_configuration",
-                    wellKnownConfig.getOptionalValue("cui.jwt.issuers.test.well-known-url", String.class).orElse(null),
+                    wellKnownConfig.getOptionalValue("cui.jwt.issuers.test.jwks.http.well-known-url", String.class).orElse(null),
                     "Well-known config should have well-known URL");
 
             // Test custom parser configuration
             Config customParserConfig = TestConfigurations.customParser();
-            assertEquals(16384, customParserConfig.getOptionalValue("cui.jwt.parser.max-token-size-bytes", Integer.class).orElse(0),
+            assertEquals(16384, customParserConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).orElse(0),
                     "Custom parser config should have custom max token size");
-            assertEquals("RS256,ES256", customParserConfig.getOptionalValue("cui.jwt.parser.allowed-algorithms", String.class).orElse(null),
-                    "Custom parser config should have custom allowed algorithms");
         }
     }
 }
