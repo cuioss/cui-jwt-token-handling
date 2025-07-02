@@ -127,10 +127,10 @@ public final class TestConfigurations {
         return new TestConfig(Map.of(
                 JwtPropertyKeys.ISSUERS.ENABLED.formatted("primary"), "true",
                 JwtPropertyKeys.ISSUERS.ISSUER_IDENTIFIER.formatted("primary"), "https://primary.example.com",
-                JwtPropertyKeys.ISSUERS.JWKS_FILE_PATH.formatted("primary"), "classpath:keys/test_public_key.jwks",
+                JwtPropertyKeys.ISSUERS.JWKS_URL.formatted("primary"), "https://primary.example.com/jwks",
                 JwtPropertyKeys.ISSUERS.ENABLED.formatted("secondary"), "true",
                 JwtPropertyKeys.ISSUERS.ISSUER_IDENTIFIER.formatted("secondary"), "https://secondary.example.com",
-                JwtPropertyKeys.ISSUERS.JWKS_FILE_PATH.formatted("secondary"), "classpath:keys/test_public_key.jwks",
+                JwtPropertyKeys.ISSUERS.JWKS_URL.formatted("secondary"), "https://secondary.example.com/jwks",
                 JwtPropertyKeys.ISSUERS.ENABLED.formatted("disabled"), "false",
                 JwtPropertyKeys.ISSUERS.ISSUER_IDENTIFIER.formatted("disabled"), "https://disabled.example.com"
         ));

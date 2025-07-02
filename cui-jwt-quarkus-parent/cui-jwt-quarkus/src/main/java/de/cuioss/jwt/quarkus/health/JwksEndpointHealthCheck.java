@@ -21,8 +21,8 @@ import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.tools.logging.CuiLogger;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.NonNull;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
@@ -32,6 +32,9 @@ import org.eclipse.microprofile.health.Readiness;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Health check for JWKS endpoint connectivity.
@@ -65,6 +68,7 @@ public class JwksEndpointHealthCheck implements HealthCheck {
     }
 
     @Override
+    @NonNull
     public HealthCheckResponse call() {
         // Use cache to prevent excessive network calls
         CachedResponse cached = healthCheckCache.get(HEALTHCHECK_NAME);
@@ -149,7 +153,7 @@ public class JwksEndpointHealthCheck implements HealthCheck {
                 LOGGER.debug("JWKS loader status for issuer %s: %s", issuer, status);
 
                 return new EndpointResult(issuer, jwksLoader.getJwksType().toString(), status);
-            } catch (Exception e) {
+            } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
                 LOGGER.warn(e, "Error checking JWKS loader for issuer %s: %s", issuer, e.getMessage());
                 return new EndpointResult(issuer, JwksType.NONE.toString(), LoaderStatus.ERROR);
             }

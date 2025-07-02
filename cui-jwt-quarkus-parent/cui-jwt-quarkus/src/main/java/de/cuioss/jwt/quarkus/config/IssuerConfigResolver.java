@@ -23,6 +23,7 @@ import lombok.NonNull;
 import org.eclipse.microprofile.config.Config;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Resolver for creating {@link IssuerConfig} instances from Quarkus configuration properties.
@@ -76,6 +77,7 @@ public class IssuerConfigResolver {
      * @return list of valid, enabled IssuerConfig instances
      * @throws IllegalStateException if no enabled issuers are found or configuration is invalid
      */
+    @NonNull
     public List<IssuerConfig> resolveIssuerConfigs() {
         LOGGER.info("Resolving issuer configurations from properties");
 
@@ -202,8 +204,10 @@ public class IssuerConfigResolver {
         );
 
         if (audienceString.isPresent()) {
-            Set<String> audiences = new HashSet<>(Arrays.asList(audienceString.get().split(",")));
-            audiences.forEach(audience -> builder.expectedAudience(audience.trim()));
+            Set<String> audiences = Arrays.stream(audienceString.get().split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toSet());
+            audiences.forEach(builder::expectedAudience);
             LOGGER.debug("Set expected audiences for %s: %s", issuerName, audiences);
         }
     }
@@ -218,8 +222,10 @@ public class IssuerConfigResolver {
         );
 
         if (clientIdString.isPresent()) {
-            Set<String> clientIds = new HashSet<>(Arrays.asList(clientIdString.get().split(",")));
-            clientIds.forEach(clientId -> builder.expectedClientId(clientId.trim()));
+            Set<String> clientIds = Arrays.stream(clientIdString.get().split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toSet());
+            clientIds.forEach(builder::expectedClientId);
             LOGGER.debug("Set expected client IDs for %s: %s", issuerName, clientIds);
         }
     }
