@@ -33,6 +33,7 @@ import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildI
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
+import lombok.NonNull;
 import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
@@ -62,6 +63,7 @@ public class CuiJwtProcessor {
      * @return A {@link FeatureBuildItem} for the CUI JWT feature
      */
     @BuildStep
+    @NonNull
     public FeatureBuildItem feature() {
         LOGGER.infof("CUI JWT feature registered");
         return new FeatureBuildItem(FEATURE);
@@ -74,6 +76,7 @@ public class CuiJwtProcessor {
      * @return A {@link ReflectiveClassBuildItem} for the JWT validation classes
      */
     @BuildStep
+    @NonNull
     public ReflectiveClassBuildItem registerJwtValidationClassesForReflection() {
         return ReflectiveClassBuildItem.builder(
                 TokenValidator.class,
@@ -95,6 +98,7 @@ public class CuiJwtProcessor {
      * @return A {@link RuntimeInitializedClassBuildItem} for classes that need runtime initialization
      */
     @BuildStep
+    @NonNull
     public RuntimeInitializedClassBuildItem runtimeInitializedClasses() {
         return new RuntimeInitializedClassBuildItem(HttpJwksLoader.class.getName());
     }
@@ -106,6 +110,7 @@ public class CuiJwtProcessor {
      * @return A {@link AdditionalBeanBuildItem} for CDI beans that need explicit registration
      */
     @BuildStep
+    @NonNull
     public AdditionalBeanBuildItem additionalBeans() {
         return AdditionalBeanBuildItem.builder()
                 .addBeanClass(TokenValidatorProducer.class)
@@ -140,6 +145,7 @@ public class CuiJwtProcessor {
      * @return A {@link CardPageBuildItem} for the JWT DevUI card
      */
     @BuildStep(onlyIf = IsDevelopment.class)
+    @NonNull
     public CardPageBuildItem createJwtDevUICard() {
         CardPageBuildItem cardPageBuildItem = new CardPageBuildItem();
 
@@ -180,6 +186,7 @@ public class CuiJwtProcessor {
      * @return A {@link JsonRPCProvidersBuildItem} for JWT DevUI JSON-RPC methods
      */
     @BuildStep(onlyIf = IsDevelopment.class)
+    @NonNull
     public JsonRPCProvidersBuildItem createJwtDevUIJsonRPCService() {
         return new JsonRPCProvidersBuildItem("CuiJwtDevUI", CuiJwtDevUIJsonRPCService.class);
     }
