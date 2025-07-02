@@ -76,6 +76,24 @@ cui-jwt-quarkus-integration-tests/
     └── stop-integration-container.sh
 ----
 
+=== Maven Clean Integration
+
+The module integrates Docker cleanup with Maven's clean phase to prevent file lock issues during native builds:
+
+[source,bash]
+----
+# Standard clean command now stops Docker containers first
+mvn clean
+
+# What happens:
+# 1. Executes stop-integration-container.sh --clean (pre-clean phase)
+# 2. Stops and removes all Docker containers
+# 3. Cleans Docker images and volumes
+# 4. Deletes target directory (standard clean)
+----
+
+This ensures reliable cleanup of native executables and build artifacts without "file in use" errors.
+
 == Test Structure
 
 == Test Categories

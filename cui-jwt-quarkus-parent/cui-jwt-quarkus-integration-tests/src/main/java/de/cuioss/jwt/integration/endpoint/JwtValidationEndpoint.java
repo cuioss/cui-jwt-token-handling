@@ -17,11 +17,8 @@ package de.cuioss.jwt.integration.endpoint;
 
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.tools.logging.CuiLogger;
-import io.quarkus.runtime.StartupEvent;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -41,29 +38,12 @@ public class JwtValidationEndpoint {
 
     private static final CuiLogger LOGGER = new CuiLogger(JwtValidationEndpoint.class);
 
+    private final TokenValidator tokenValidator;
+
     @Inject
-    TokenValidator tokenValidator;
-
-    @PostConstruct
-    void init() {
-        LOGGER.info("JwtValidationEndpoint initialized with TokenValidator: " + (tokenValidator != null));
-    }
-
-    void onStart(@Observes StartupEvent ev) {
-        LOGGER.info("JwtValidationEndpoint started and ready at /jwt/validate");
-        LOGGER.info("TokenValidator injected: " + (tokenValidator != null));
-    }
-
-    /**
-     * Health check endpoint to verify the service is running.
-     *
-     * @return Simple OK response
-     */
-    @GET
-    @Path("/health")
-    public Response health() {
-        return Response.ok(new ValidationResponse(true, "JWT validation endpoint is healthy"))
-                .build();
+    public JwtValidationEndpoint(TokenValidator tokenValidator) {
+        this.tokenValidator = tokenValidator;
+        LOGGER.info("JwtValidationEndpoint initialized with TokenValidator: %s", (tokenValidator != null));
     }
 
     /**

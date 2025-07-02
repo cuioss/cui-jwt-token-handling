@@ -11,6 +11,7 @@ services:
       - --import-realm
     ports:
       - "10080:8080"  # External port for Keycloak admin
+      - "10090:9000"  # External port for Keycloak management (health checks)
     volumes:
       - ./src/main/docker/keycloak:/opt/keycloak/data/import:ro
     environment:
@@ -22,7 +23,7 @@ services:
     networks:
       - jwt-integration
     healthcheck:
-      test: ["CMD", "/bin/sh", "-c", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
+      test: ["CMD", "/bin/sh", "-c", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
       interval: 30s
       timeout: 10s
       retries: 5
