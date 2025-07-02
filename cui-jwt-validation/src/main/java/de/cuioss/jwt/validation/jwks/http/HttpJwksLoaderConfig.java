@@ -153,7 +153,7 @@ public class HttpJwksLoaderConfig {
          *
          * @param jwksUri the URI of the JWKS endpoint. Must not be null.
          * @return this builder instance
-         * @throws IllegalStateException if another endpoint configuration method was already used
+         * @throws IllegalArgumentException if another endpoint configuration method was already used
          */
         public HttpJwksLoaderConfigBuilder jwksUri(@NonNull URI jwksUri) {
             validateEndpointExclusivity(EndpointSource.JWKS_URI);
@@ -171,7 +171,7 @@ public class HttpJwksLoaderConfig {
          *
          * @param jwksUrl the URL string of the JWKS endpoint. Must not be null.
          * @return this builder instance
-         * @throws IllegalStateException if another endpoint configuration method was already used
+         * @throws IllegalArgumentException if another endpoint configuration method was already used
          */
         public HttpJwksLoaderConfigBuilder jwksUrl(@NonNull String jwksUrl) {
             validateEndpointExclusivity(EndpointSource.JWKS_URL);
@@ -193,7 +193,7 @@ public class HttpJwksLoaderConfig {
          *
          * @param wellKnownUrl The well-known discovery endpoint URL string. Must not be null.
          * @return this builder instance
-         * @throws IllegalStateException if another endpoint configuration method was already used
+         * @throws IllegalArgumentException if another endpoint configuration method was already used
          * @throws IllegalArgumentException if {@code wellKnownUrl} is null or invalid
          */
         public HttpJwksLoaderConfigBuilder wellKnownUrl(@NonNull String wellKnownUrl) {
@@ -218,7 +218,7 @@ public class HttpJwksLoaderConfig {
          *
          * @param wellKnownUri The well-known discovery endpoint URI. Must not be null.
          * @return this builder instance
-         * @throws IllegalStateException if another endpoint configuration method was already used
+         * @throws IllegalArgumentException if another endpoint configuration method was already used
          * @throws IllegalArgumentException if {@code wellKnownUri} is null
          */
         public HttpJwksLoaderConfigBuilder wellKnownUri(@NonNull URI wellKnownUri) {
@@ -318,11 +318,11 @@ public class HttpJwksLoaderConfig {
          * </p>
          *
          * @param proposedSource the endpoint source that is being configured
-         * @throws IllegalStateException if another endpoint configuration method was already used
+         * @throws IllegalArgumentException if another endpoint configuration method was already used
          */
         private void validateEndpointExclusivity(EndpointSource proposedSource) {
             if (endpointSource != null && endpointSource != proposedSource) {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         ("Cannot use %s endpoint configuration when %s was already configured. " +
                                 "Methods jwksUri(), jwksUrl(), wellKnownUrl(), and wellKnownUri() are mutually exclusive. " +
                                 "When using well-known discovery, the issuer identifier is automatically provided by the discovery document.")
@@ -336,12 +336,12 @@ public class HttpJwksLoaderConfig {
          *
          * @return a new HttpJwksLoaderConfig instance
          * @throws IllegalArgumentException if any parameter is invalid
-         * @throws IllegalStateException if no endpoint was configured
+         * @throws IllegalArgumentException if no endpoint was configured
          */
         public HttpJwksLoaderConfig build() {
             // Ensure at least one endpoint configuration method was used
             if (endpointSource == null) {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         "No JWKS endpoint configured. Must call one of: jwksUri(), jwksUrl(), wellKnownUrl(), or wellKnownUri()");
             }
 
@@ -356,7 +356,7 @@ public class HttpJwksLoaderConfig {
                 try {
                     jwksHttpHandler = httpHandlerBuilder.build();
                     if (jwksHttpHandler == null) {
-                        throw new IllegalStateException("HttpHandler build() returned null - this indicates a programming error in the builder");
+                        throw new IllegalArgumentException("HttpHandler build() returned null - this indicates a programming error in the builder");
                     }
                 } catch (IllegalArgumentException | IllegalStateException e) {
                     LOGGER.warn(WARN.INVALID_JWKS_URI::format);

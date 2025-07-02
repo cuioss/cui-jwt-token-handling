@@ -107,7 +107,7 @@ class HttpJwksLoaderConfigTest {
     @DisplayName("Should throw exception for missing JWKS URL")
     void shouldThrowExceptionForMissingJwksUrl() {
 
-        assertThrows(IllegalStateException.class, () -> HttpJwksLoaderConfig.builder()
+        assertThrows(IllegalArgumentException.class, () -> HttpJwksLoaderConfig.builder()
                 .refreshIntervalSeconds(REFRESH_INTERVAL)
                 .build());
     }
@@ -299,7 +299,7 @@ class HttpJwksLoaderConfigTest {
     @Test
     @DisplayName("Should throw exception when no endpoint configuration is provided")
     void shouldThrowExceptionWhenNoEndpointConfigured() {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 HttpJwksLoaderConfig.builder()
                         .refreshIntervalSeconds(REFRESH_INTERVAL)
                         .build());
@@ -314,7 +314,7 @@ class HttpJwksLoaderConfigTest {
         HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
                 .jwksUri(URI.create(VALID_URL));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 builder.jwksUrl("https://another.example.com/jwks.json"));
 
         String message = exception.getMessage();
@@ -330,7 +330,7 @@ class HttpJwksLoaderConfigTest {
         HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
                 .jwksUrl(VALID_URL);
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 builder.jwksUri(URI.create("https://another.example.com/jwks.json")));
 
         String message = exception.getMessage();

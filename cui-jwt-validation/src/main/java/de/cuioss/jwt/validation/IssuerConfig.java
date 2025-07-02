@@ -675,7 +675,7 @@ public class IssuerConfig implements HealthStatusProvider {
          * </p>
          *
          * @return a fully configured and validated {@link IssuerConfig} instance
-         * @throws IllegalStateException if the configuration is invalid or incomplete
+         * @throws IllegalArgumentException if the configuration is invalid or incomplete
          */
         public IssuerConfig build() {
             // If enabled, validate and create JwksLoader if needed
@@ -692,7 +692,7 @@ public class IssuerConfig implements HealthStatusProvider {
             // Validate that at least one JWKS loading method is configured
             if (httpJwksLoaderConfig == null && jwksFilePath == null &&
                     jwksContent == null && jwksLoader == null) {
-                throw new IllegalStateException("No JwksLoader configuration is present for enabled issuer. " +
+                throw new IllegalArgumentException("No JwksLoader configuration is present for enabled issuer. " +
                         "One of httpJwksLoaderConfig, jwksFilePath, jwksContent, or a custom jwksLoader must be provided.");
             }
 
@@ -700,12 +700,12 @@ public class IssuerConfig implements HealthStatusProvider {
             if (jwksLoader != null) {
                 // For custom JwksLoaders, issuerIdentifier is required unless it's a well-known type
                 if (issuerIdentifier == null && !jwksLoader.getJwksType().providesIssuerIdentifier()) {
-                    throw new IllegalStateException("issuerIdentifier is required for custom JwksLoader unless it provides its own issuer identifier");
+                    throw new IllegalArgumentException("issuerIdentifier is required for custom JwksLoader unless it provides its own issuer identifier");
                 }
             } else {
                 // For built-in JWKS loading methods, validate issuerIdentifier requirements
                 if ((jwksFilePath != null || jwksContent != null) && issuerIdentifier == null) {
-                    throw new IllegalStateException("issuerIdentifier is required for file-based and in-memory JWKS loading");
+                    throw new IllegalArgumentException("issuerIdentifier is required for file-based and in-memory JWKS loading");
                 }
                 // For HTTP well-known discovery, issuerIdentifier is optional (will be extracted from discovery)
             }

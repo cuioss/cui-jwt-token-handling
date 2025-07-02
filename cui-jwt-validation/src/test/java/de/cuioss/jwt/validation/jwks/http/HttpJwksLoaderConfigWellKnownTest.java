@@ -57,8 +57,20 @@ class HttpJwksLoaderConfigWellKnownTest {
         HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
                 .jwksUrl(TEST_JWKS_URL);
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 builder.wellKnownUrl(TEST_WELL_KNOWN_URL));
+
+        assertTrue(exception.getMessage().contains("mutually exclusive"));
+    }
+
+    @Test
+    @DisplayName("Should enforce mutual exclusivity between well-known URL and JWKS URL")
+    void shouldEnforceMutualExclusivityWellKnownAndJwks() {
+        HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
+                .wellKnownUrl(TEST_WELL_KNOWN_URL);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                builder.jwksUrl(TEST_JWKS_URL));
 
         assertTrue(exception.getMessage().contains("mutually exclusive"));
     }
@@ -69,7 +81,7 @@ class HttpJwksLoaderConfigWellKnownTest {
         HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder()
                 .wellKnownUrl(TEST_WELL_KNOWN_URL);
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 builder.wellKnownUri(TEST_WELL_KNOWN_URI));
 
         assertTrue(exception.getMessage().contains("mutually exclusive"));
@@ -80,7 +92,7 @@ class HttpJwksLoaderConfigWellKnownTest {
     void shouldFailWhenNoEndpointConfigured() {
         HttpJwksLoaderConfig.HttpJwksLoaderConfigBuilder builder = HttpJwksLoaderConfig.builder();
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, builder::build);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
         assertTrue(exception.getMessage().contains("No JWKS endpoint configured"));
         assertTrue(exception.getMessage().contains("wellKnownUrl()"));
         assertTrue(exception.getMessage().contains("wellKnownUri()"));
