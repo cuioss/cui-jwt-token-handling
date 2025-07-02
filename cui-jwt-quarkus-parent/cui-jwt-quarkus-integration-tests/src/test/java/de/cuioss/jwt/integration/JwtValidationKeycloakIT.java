@@ -36,8 +36,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class JwtValidationKeycloakIT extends BaseIntegrationTest {
 
-    private static final String KEYCLOAK_BASE_URL = "http://localhost:10080";
-    private static final String KEYCLOAK_MANAGEMENT_URL = "http://localhost:10090";
+    private static final String KEYCLOAK_BASE_URL = "http://localhost:1080";
+    private static final String KEYCLOAK_MANAGEMENT_URL = "http://localhost:1090";
 
     private String validJwtToken;
 
@@ -47,7 +47,7 @@ class JwtValidationKeycloakIT extends BaseIntegrationTest {
     void httpsConfigurationAndEndpointAvailability() {
         // Test HTTPS configuration and JWT validation endpoint availability
         // This verifies: HTTPS setup, SSL certificates, and basic endpoint functionality
-        
+
         // Test JWT validation endpoint returns proper error for missing token (proves HTTPS works)
         given()
                 .contentType("application/json")

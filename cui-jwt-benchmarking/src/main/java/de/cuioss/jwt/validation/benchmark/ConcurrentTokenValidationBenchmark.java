@@ -105,6 +105,7 @@ public class ConcurrentTokenValidationBenchmark {
      */
     @Benchmark
     @Threads(Threads.MAX)
+    @SuppressWarnings({"cui-jwt-quarkus-deployment", "java:S112"}) // ok for testing
     public AccessTokenContent validateAccessTokenConcurrently() {
         try {
             return tokenValidator.createAccessToken(validAccessToken);

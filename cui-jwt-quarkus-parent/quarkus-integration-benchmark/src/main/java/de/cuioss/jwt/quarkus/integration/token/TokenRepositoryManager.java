@@ -24,6 +24,7 @@ import lombok.Getter;
  * Ensures that tokens are loaded once and shared across all benchmark classes
  * to avoid impacting performance measurements.
  */
+@SuppressWarnings("java:S6548") // owolff: Singleton os ok for testing
 public class TokenRepositoryManager {
 
     private static final CuiLogger LOGGER = new CuiLogger(TokenRepositoryManager.class);

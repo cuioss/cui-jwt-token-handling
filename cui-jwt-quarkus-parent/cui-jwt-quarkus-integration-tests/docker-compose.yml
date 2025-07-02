@@ -10,16 +10,20 @@ services:
       - start-dev
       - --import-realm
     ports:
-      - "10080:8080"  # External port for Keycloak admin
-      - "10090:9000"  # External port for Keycloak management (health checks)
+      - "1080:8080"  # External port for Keycloak admin
+      - "1090:9000"  # External port for Keycloak management (health checks)
     volumes:
       - ./src/main/docker/keycloak:/opt/keycloak/data/import:ro
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
       - KC_LOG_LEVEL=INFO
+      # Hostname configuration v2 for well-known discovery endpoint (research-based)
+      - KC_HOSTNAME_STRICT=false
+      - KC_HTTP_ENABLED=true
+      # External hostname for Docker container well-known discovery
     networks:
       - jwt-integration
     healthcheck:

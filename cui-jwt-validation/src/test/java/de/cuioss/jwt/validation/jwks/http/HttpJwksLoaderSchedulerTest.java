@@ -111,7 +111,7 @@ class HttpJwksLoaderSchedulerTest {
 
     @Test
     @DisplayName("Should start scheduler after first successful load")
-    void shouldStartSchedulerAfterFirstLoad(URIBuilder uriBuilder) throws InterruptedException {
+    void shouldStartSchedulerAfterFirstLoad(URIBuilder uriBuilder) {
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         // Ensure dispatcher is in normal mode
@@ -150,7 +150,7 @@ class HttpJwksLoaderSchedulerTest {
 
     @Test
     @DisplayName("Should perform background refresh and detect changes")
-    void shouldPerformBackgroundRefresh(URIBuilder uriBuilder) throws InterruptedException {
+    void shouldPerformBackgroundRefresh(URIBuilder uriBuilder) {
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         // Ensure dispatcher is in normal mode
@@ -183,7 +183,7 @@ class HttpJwksLoaderSchedulerTest {
 
     @Test
     @DisplayName("Should handle background refresh errors gracefully")
-    void shouldHandleBackgroundRefreshErrors(URIBuilder uriBuilder) throws InterruptedException {
+    void shouldHandleBackgroundRefreshErrors(URIBuilder uriBuilder) {
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         // Ensure dispatcher is in normal mode
@@ -224,7 +224,7 @@ class HttpJwksLoaderSchedulerTest {
 
     @Test
     @DisplayName("Should only start scheduler once")
-    void shouldStartSchedulerOnlyOnce(URIBuilder uriBuilder) throws InterruptedException {
+    void shouldStartSchedulerOnlyOnce(URIBuilder uriBuilder) {
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         // Ensure dispatcher is in normal mode
@@ -259,7 +259,7 @@ class HttpJwksLoaderSchedulerTest {
 
     @Test
     @DisplayName("Should shutdown scheduler cleanly")
-    void shouldShutdownSchedulerCleanly(URIBuilder uriBuilder) throws InterruptedException {
+    void shouldShutdownSchedulerCleanly(URIBuilder uriBuilder) {
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         // Ensure dispatcher is in normal mode
@@ -318,7 +318,7 @@ class HttpJwksLoaderSchedulerTest {
 
     @Test
     @DisplayName("Should handle background refresh correctly")
-    void shouldHandleBackgroundRefreshCorrectly(URIBuilder uriBuilder) throws InterruptedException {
+    void shouldHandleBackgroundRefreshCorrectly(URIBuilder uriBuilder) {
         String jwksEndpoint = uriBuilder.addPathSegment(JwksResolveDispatcher.LOCAL_PATH).buildAsString();
 
         // Ensure dispatcher is in normal mode

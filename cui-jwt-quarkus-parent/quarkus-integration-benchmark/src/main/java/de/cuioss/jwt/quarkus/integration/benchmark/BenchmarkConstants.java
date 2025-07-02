@@ -26,6 +26,7 @@ public class BenchmarkConstants {
 
     // REST endpoint paths
     public static final String JWT_VALIDATE_PATH = "/jwt/validate";
+    @SuppressWarnings("java:S1075") // ok for benchmark testing
     public static final String HEALTH_CHECK_PATH = "/q/health/live";
 
     // HTTP headers

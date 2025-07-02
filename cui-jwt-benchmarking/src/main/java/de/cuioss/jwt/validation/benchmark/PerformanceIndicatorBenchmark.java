@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(value = 1, warmups = 1)
 @Warmup(iterations = 3, time = 1)
 @Measurement(iterations = 5, time = 1)
+@SuppressWarnings("java:S112")
 public class PerformanceIndicatorBenchmark {
 
     private TokenValidator tokenValidator;

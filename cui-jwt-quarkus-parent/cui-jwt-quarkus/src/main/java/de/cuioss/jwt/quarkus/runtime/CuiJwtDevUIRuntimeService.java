@@ -19,7 +19,6 @@ import de.cuioss.jwt.validation.IssuerConfig;
 import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.domain.token.TokenContent;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
-import de.cuioss.tools.logging.CuiLogger;
 import jakarta.inject.Inject;
 import jakarta.json.JsonException;
 import lombok.NonNull;
@@ -41,8 +40,6 @@ import jakarta.enterprise.context.ApplicationScoped;
  */
 @ApplicationScoped
 public class CuiJwtDevUIRuntimeService {
-
-    private static final CuiLogger LOGGER = new CuiLogger(CuiJwtDevUIRuntimeService.class);
 
     // String constants for commonly used literals
     private static final String RUNTIME = "RUNTIME";
