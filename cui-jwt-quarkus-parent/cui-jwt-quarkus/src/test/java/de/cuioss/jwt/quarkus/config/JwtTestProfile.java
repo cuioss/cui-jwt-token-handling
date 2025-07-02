@@ -61,9 +61,9 @@ public class JwtTestProfile implements QuarkusTestProfile {
         config.put(JwtPropertyKeys.PARSER.MAX_DEPTH, "10");
 
         // Health check configuration
-        config.put("cui.jwt.health.enabled", "true");
-        config.put("cui.jwt.health.jwks.cache-seconds", "30");
-        config.put("cui.jwt.health.jwks.timeout-seconds", "5");
+        config.put(JwtPropertyKeys.HEALTH.ENABLED, "true");
+        config.put(JwtPropertyKeys.HEALTH.JWKS.CACHE_SECONDS, "30");
+        config.put(JwtPropertyKeys.HEALTH.JWKS.TIMEOUT_SECONDS, "5");
 
         return config;
     }

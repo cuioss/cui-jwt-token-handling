@@ -26,12 +26,14 @@ import io.micrometer.core.instrument.Tags;
 import io.quarkus.arc.Unremovable;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.scheduler.Scheduled;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 /**
  * Collects security event metrics from the {@link SecurityEventCounter} and

@@ -68,6 +68,7 @@ public class ParserConfigResolver {
      * @return a ParserConfig instance configured from properties
      * @throws IllegalArgumentException if parser configuration is invalid (from builder)
      */
+    @NonNull
     public ParserConfig resolveParserConfig() {
         LOGGER.debug("Resolving ParserConfig from properties");
 

@@ -335,6 +335,11 @@ public final class JwtPropertyKeys {
              */
             public static final String CACHE_SECONDS = BASE + ".cache-seconds";
 
+            /**
+             * The timeout in seconds for health check requests.
+             */
+            public static final String TIMEOUT_SECONDS = BASE + ".timeout-seconds";
+
         }
     }
 

@@ -48,6 +48,35 @@ class IssuerConfigResolverTest {
             assertThrows(NullPointerException.class, () -> new IssuerConfigResolver(null),
                     "Should reject null config");
         }
+
+        @Test
+        void shouldAcceptValidConfig() {
+            TestConfig config = new TestConfig(Map.of(
+                    JwtPropertyKeys.ISSUERS.ENABLED.formatted(TEST_ISSUER), "true",
+                    JwtPropertyKeys.ISSUERS.JWKS_URL.formatted(TEST_ISSUER), "https://example.com/jwks"
+            ));
+
+            assertDoesNotThrow(() -> new IssuerConfigResolver(config),
+                    "Should accept valid config");
+
+            IssuerConfigResolver resolver = new IssuerConfigResolver(config);
+            assertNotNull(resolver, "Resolver should be created successfully");
+        }
+
+        @Test
+        void shouldAcceptEmptyConfig() {
+            TestConfig emptyConfig = new TestConfig(Map.of());
+
+            assertDoesNotThrow(() -> new IssuerConfigResolver(emptyConfig),
+                    "Should accept empty config without throwing during construction");
+
+            IssuerConfigResolver resolver = new IssuerConfigResolver(emptyConfig);
+            assertNotNull(resolver, "Resolver should be created successfully with empty config");
+
+            // Note: The resolver will throw when trying to resolve configs, but construction should succeed
+            assertThrows(IllegalStateException.class, resolver::resolveIssuerConfigs,
+                    "Should throw when trying to resolve with empty config");
+        }
     }
 
     @Nested
@@ -321,6 +350,22 @@ class IssuerConfigResolverTest {
             resolver.resolveIssuerConfigs();
 
             assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Configured HTTP JWKS URL for " + TEST_ISSUER);
+        }
+
+        @Test
+        void shouldLogDisabledIssuerSkipping() {
+            TestConfig config = new TestConfig(Map.of(
+                    JwtPropertyKeys.ISSUERS.ENABLED.formatted(TEST_ISSUER), "true",
+                    JwtPropertyKeys.ISSUERS.JWKS_URL.formatted(TEST_ISSUER), "https://example.com/jwks",
+                    JwtPropertyKeys.ISSUERS.ENABLED.formatted(ANOTHER_ISSUER), "false",
+                    JwtPropertyKeys.ISSUERS.JWKS_URL.formatted(ANOTHER_ISSUER), "https://other.com/jwks"
+            ));
+            IssuerConfigResolver resolver = new IssuerConfigResolver(config);
+
+            resolver.resolveIssuerConfigs();
+
+            assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping disabled issuer: " + ANOTHER_ISSUER);
+            assertLogMessagePresentContaining(TestLogLevel.INFO, "Resolved issuer configuration: " + TEST_ISSUER);
         }
     }
 }
