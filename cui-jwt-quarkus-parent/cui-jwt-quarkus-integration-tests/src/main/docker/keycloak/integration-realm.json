@@ -1,22 +1,19 @@
 {
-  "realm": "benchmark",
+  "realm": "integration",
   "enabled": true,
-  "displayName": "JWT Benchmark Realm",
-  "displayNameHtml": "<strong>JWT Benchmark</strong>",
+  "displayName": "JWT Integration Realm",
+  "displayNameHtml": "<strong>JWT Integration</strong>",
   "accessTokenLifespan": 300,
   "accessTokenLifespanForImplicitFlow": 900,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
   "offlineSessionIdleTimeout": 2592000,
-  "attributes": {
-    "frontendUrl": "http://keycloak:8080"
-  },
   "clients": [
     {
-      "clientId": "benchmark-client",
+      "clientId": "integration-client",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "benchmark-secret",
+      "secret": "integration-secret",
       "redirectUris": ["*"],
       "webOrigins": ["*"],
       "protocol": "openid-connect",
@@ -29,15 +26,15 @@
   ],
   "users": [
     {
-      "username": "benchmark-user",
+      "username": "integration-user",
       "enabled": true,
-      "firstName": "Benchmark",
+      "firstName": "Integration",
       "lastName": "User",
-      "email": "benchmark@example.com",
+      "email": "integration@example.com",
       "credentials": [
         {
           "type": "password",
-          "value": "benchmark-password",
+          "value": "integration-password",
           "temporary": false
         }
       ],
@@ -48,7 +45,7 @@
     "realm": [
       {
         "name": "user",
-        "description": "Standard user role for benchmarking"
+        "description": "Standard user role for integration testing"
       }
     ]
   }

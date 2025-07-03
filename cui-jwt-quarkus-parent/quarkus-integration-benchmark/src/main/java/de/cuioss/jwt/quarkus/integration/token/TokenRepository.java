@@ -16,6 +16,7 @@
 package de.cuioss.jwt.quarkus.integration.token;
 
 import de.cuioss.jwt.quarkus.integration.config.BenchmarkConfiguration;
+import de.cuioss.jwt.quarkus.integration.config.RealmConfig;
 import de.cuioss.tools.logging.CuiLogger;
 import io.restassured.RestAssured;
 import io.restassured.path.json.exception.JsonPathException;
@@ -28,9 +29,53 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Repository for managing pre-loaded JWT tokens from Keycloak.
+ * Repository for managing pre-loaded JWT tokens from multiple Keycloak realms.
  * This class fetches real tokens upfront to avoid impacting benchmark performance
  * during actual measurements.
+ * 
+ * <h2>Multi-Realm Design Rationale</h2>
+ * 
+ * <p>This implementation has been enhanced to support multiple Keycloak realms
+ * without code duplication. The key design decisions are:</p>
+ * 
+ * <h3>1. Realm Configuration Abstraction</h3>
+ * <ul>
+ *   <li>{@link RealmConfig} encapsulates realm-specific settings (client ID, credentials, etc.)</li>
+ *   <li>Eliminates hardcoded realm values and enables parameterized token fetching</li>
+ *   <li>Supports both public and confidential OAuth2 clients</li>
+ * </ul>
+ * 
+ * <h3>2. Token Distribution Strategy</h3>
+ * <ul>
+ *   <li>Tokens are distributed evenly across all configured realms</li>
+ *   <li>If tokenPoolSize=100 and 2 realms, each realm provides ~50 tokens</li>
+ *   <li>Remainder tokens are distributed to ensure exact total count</li>
+ * </ul>
+ * 
+ * <h3>3. Testing Benefits</h3>
+ * <ul>
+ *   <li>Benchmark realm: Tests well-known discovery configuration</li>
+ *   <li>Integration realm: Tests direct JWKS URL configuration</li>
+ *   <li>Validates both JWT validation pathways in a single benchmark run</li>
+ * </ul>
+ * 
+ * <h3>4. Backward Compatibility</h3>
+ * <ul>
+ *   <li>Legacy single-realm constructor remains for existing code</li>
+ *   <li>Deprecated methods guide migration to multi-realm approach</li>
+ *   <li>Default behavior unchanged when using old constructor</li>
+ * </ul>
+ * 
+ * <h3>5. Code Reuse vs Duplication</h3>
+ * <p>Alternative approaches considered:</p>
+ * <ul>
+ *   <li><strong>Strategy Pattern:</strong> Would add complexity for minimal benefit</li>
+ *   <li><strong>Separate Repositories:</strong> Would duplicate the complex retry/error handling logic</li>
+ *   <li><strong>Configuration Objects (Chosen):</strong> Provides clean parameterization without duplication</li>
+ * </ul>
+ * 
+ * @see RealmConfig
+ * @see BenchmarkConfiguration#getRealmConfigurations()
  */
 @SuppressWarnings("java:S2245") // owolff: ok for testing
 public class TokenRepository {
@@ -47,21 +92,41 @@ public class TokenRepository {
     private final List<String> invalidTokens;
     private final String keycloakUrl;
     private final int tokenPoolSize;
+    private final List<RealmConfig> realmConfigs;
 
     /**
-     * Creates a new token repository.
+     * Creates a new token repository with multi-realm support.
+     * 
+     * Design Note: This constructor enables fetching tokens from multiple realms
+     * to test different JWT validation configurations without code duplication.
+     * Tokens are distributed evenly across the provided realms.
      *
      * @param keycloakUrl URL of the Keycloak server
      * @param tokenPoolSize Number of tokens to pre-load for each type
+     * @param realmConfigs List of realm configurations to fetch tokens from
      */
-    public TokenRepository(String keycloakUrl, int tokenPoolSize) {
+    public TokenRepository(String keycloakUrl, int tokenPoolSize, List<RealmConfig> realmConfigs) {
         this.keycloakUrl = keycloakUrl;
         this.tokenPoolSize = tokenPoolSize;
+        this.realmConfigs = new ArrayList<>(realmConfigs);
         this.validTokens = new ArrayList<>();
         this.validIdTokens = new ArrayList<>();
         this.validRefreshTokens = new ArrayList<>();
         this.expiredTokens = new ArrayList<>();
         this.invalidTokens = new ArrayList<>();
+    }
+
+    /**
+     * Creates a new token repository (legacy single-realm constructor).
+     * This constructor maintains backward compatibility by using the benchmark realm.
+     *
+     * @param keycloakUrl URL of the Keycloak server
+     * @param tokenPoolSize Number of tokens to pre-load for each type
+     * @deprecated Use the multi-realm constructor for better test coverage
+     */
+    @Deprecated
+    public TokenRepository(String keycloakUrl, int tokenPoolSize) {
+        this(keycloakUrl, tokenPoolSize, List.of(BenchmarkConfiguration.getBenchmarkRealmConfig()));
     }
 
     /**
@@ -190,35 +255,49 @@ public class TokenRepository {
     }
 
     private void loadValidTokens() {
-        LOGGER.info("🔄 Loading %s valid tokens from Keycloak...", tokenPoolSize);
+        LOGGER.info("🔄 Loading %s valid tokens from %s realm(s)...", tokenPoolSize, realmConfigs.size());
+        
+        // Distribute tokens evenly across realms
+        int tokensPerRealm = tokenPoolSize / realmConfigs.size();
+        int remainingTokens = tokenPoolSize % realmConfigs.size();
+        
+        for (int realmIndex = 0; realmIndex < realmConfigs.size(); realmIndex++) {
+            RealmConfig realmConfig = realmConfigs.get(realmIndex);
+            
+            // Calculate tokens for this realm (distribute remainder evenly)
+            int tokensForThisRealm = tokensPerRealm + (realmIndex < remainingTokens ? 1 : 0);
+            
+            LOGGER.info("🌍 Loading %s tokens from realm: %s", tokensForThisRealm, realmConfig.getEffectiveDisplayName());
+            
+            for (int i = 0; i < tokensForThisRealm; i++) {
+                try {
+                    Map<String, String> tokens = fetchAllTokensFromKeycloak(realmConfig);
 
-        for (int i = 0; i < tokenPoolSize; i++) {
-            try {
-                Map<String, String> tokens = fetchAllTokensFromKeycloak();
+                    String accessToken = tokens.get(ACCESS_TOKEN);
+                    String idToken = tokens.get(ID_TOKEN);
+                    String refreshToken = tokens.get(REFRESH_TOKEN);
 
-                String accessToken = tokens.get(ACCESS_TOKEN);
-                String idToken = tokens.get(ID_TOKEN);
-                String refreshToken = tokens.get(REFRESH_TOKEN);
+                    if (accessToken != null && !accessToken.isEmpty()) {
+                        validTokens.add(accessToken);
+                    }
+                    if (idToken != null && !idToken.isEmpty()) {
+                        validIdTokens.add(idToken);
+                    }
+                    if (refreshToken != null && !refreshToken.isEmpty()) {
+                        validRefreshTokens.add(refreshToken);
+                    }
 
-                if (accessToken != null && !accessToken.isEmpty()) {
-                    validTokens.add(accessToken);
+                    if ((i + 1) % 10 == 0) {
+                        LOGGER.debug("Loaded %s token sets from %s...", i + 1, realmConfig.getRealmName());
+                    }
+                } catch (TokenFetchException e) {
+                    LOGGER.warn("Error loading valid token #%s from %s: %s", i + 1, realmConfig.getRealmName(), e.getMessage());
                 }
-                if (idToken != null && !idToken.isEmpty()) {
-                    validIdTokens.add(idToken);
-                }
-                if (refreshToken != null && !refreshToken.isEmpty()) {
-                    validRefreshTokens.add(refreshToken);
-                }
-
-                if ((i + 1) % 10 == 0) {
-                    LOGGER.debug("Loaded %s token sets...", i + 1);
-                }
-            } catch (TokenFetchException e) {
-                LOGGER.warn("Error loading valid token #%s: %s", i + 1, e.getMessage());
             }
         }
 
-        LOGGER.info("✅ Loaded %s valid tokens", validTokens.size());
+        LOGGER.info("✅ Loaded %s valid tokens across %s realms", validTokens.size(), realmConfigs.size());
+        logRealmDistribution();
     }
 
     private void loadExpiredTokens() {
@@ -231,9 +310,12 @@ public class TokenRepository {
 
         // For now, we'll fetch normal tokens and let them expire naturally
         // In a real scenario, you might want to configure Keycloak with very short token lifetimes
-        for (int i = 0; i < Math.min(tokenPoolSize, 20); i++) { // Limit expired tokens for now
+        int expiredTokenLimit = Math.min(tokenPoolSize, 20); // Limit expired tokens for now
+        RealmConfig firstRealm = realmConfigs.get(0); // Use first realm for expired tokens
+        
+        for (int i = 0; i < expiredTokenLimit; i++) {
             try {
-                String token = fetchTokenFromKeycloak();
+                String token = fetchTokenFromKeycloak(firstRealm);
                 if (token != null && !token.isEmpty()) {
                     expiredTokens.add(token);
                 }
@@ -243,6 +325,19 @@ public class TokenRepository {
         }
 
         LOGGER.info("✅ Loaded %s expired tokens", expiredTokens.size());
+    }
+    
+    /**
+     * Logs the distribution of tokens across realms for debugging purposes.
+     */
+    private void logRealmDistribution() {
+        if (realmConfigs.size() > 1) {
+            LOGGER.debug("📊 Token distribution summary:");
+            LOGGER.debug("  Expected tokens per realm: ~%s", tokenPoolSize / realmConfigs.size());
+            LOGGER.debug("  Actual total tokens loaded: %s", validTokens.size());
+            LOGGER.debug("  Token types: Access=%s, ID=%s, Refresh=%s", 
+                    validTokens.size(), validIdTokens.size(), validRefreshTokens.size());
+        }
     }
 
     private void generateInvalidTokens() {
@@ -272,17 +367,17 @@ public class TokenRepository {
         LOGGER.info("✅ Generated %s invalid tokens", invalidTokens.size());
     }
 
-    private Map<String, String> fetchAllTokensFromKeycloak() throws TokenFetchException {
+    private Map<String, String> fetchAllTokensFromKeycloak(RealmConfig realmConfig) throws TokenFetchException {
         int maxRetries = BenchmarkConfiguration.getMaxTokenFetchRetries();
         int retryDelay = BenchmarkConfiguration.getTokenFetchRetryDelay();
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                Map<String, String> tokens = attemptAllTokensFetch();
+                Map<String, String> tokens = attemptAllTokensFetch(realmConfig);
                 if (!tokens.isEmpty()) {
                     return tokens;
                 }
-                logTokenFetchFailure(attempt, maxRetries, "Empty or null token response received");
+                logTokenFetchFailure(attempt, maxRetries, "Empty or null token response received from " + realmConfig.getRealmName());
             } catch (JsonPathException e) {
                 handleJsonParsingError(attempt, maxRetries, e);
             } catch (RuntimeException e) {
@@ -292,32 +387,57 @@ public class TokenRepository {
             waitBeforeRetry(attempt, maxRetries, retryDelay);
         }
 
-        throw new TokenFetchException("Failed to fetch tokens from Keycloak after " + maxRetries + " attempts - no successful response");
+        throw new TokenFetchException("Failed to fetch tokens from " + realmConfig.getRealmName() + " after " + maxRetries + " attempts - no successful response");
     }
 
-    private String fetchTokenFromKeycloak() throws TokenFetchException {
-        Map<String, String> tokens = fetchAllTokensFromKeycloak();
+    private String fetchTokenFromKeycloak(RealmConfig realmConfig) throws TokenFetchException {
+        Map<String, String> tokens = fetchAllTokensFromKeycloak(realmConfig);
         return tokens.get(ACCESS_TOKEN);
     }
 
-    private Map<String, String> attemptAllTokensFetch() {
-        Response response = createTokenRequest();
+    /**
+     * Legacy method for backward compatibility.
+     * @deprecated Use the realm-specific version
+     */
+    @Deprecated
+    private Map<String, String> fetchAllTokensFromKeycloak() throws TokenFetchException {
+        return fetchAllTokensFromKeycloak(realmConfigs.get(0));
+    }
+
+    private Map<String, String> attemptAllTokensFetch(RealmConfig realmConfig) {
+        Response response = createTokenRequest(realmConfig);
         return extractAllTokensFromResponse(response);
     }
 
-    private Response createTokenRequest() {
-        String tokenUrl = keycloakUrl + "/realms/" + BenchmarkConfiguration.getKeycloakRealm() + "/protocol/openid-connect/token";
+    private Response createTokenRequest(RealmConfig realmConfig) {
+        String tokenUrl = realmConfig.buildTokenUrl(keycloakUrl);
 
-        return RestAssured
+        var requestSpec = RestAssured
                 .given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("client_id", BenchmarkConfiguration.getKeycloakClientId())
-                .formParam("username", BenchmarkConfiguration.getKeycloakUsername())
-                .formParam("password", BenchmarkConfiguration.getKeycloakPassword())
+                .formParam("client_id", realmConfig.getClientId())
+                .formParam("username", realmConfig.getUsername())
+                .formParam("password", realmConfig.getPassword())
                 .formParam("grant_type", "password")
-                .formParam("scope", "openid profile email")
+                .formParam("scope", "openid profile email");
+
+        // Add client secret if present (for confidential clients)
+        if (realmConfig.getClientSecret() != null && !realmConfig.getClientSecret().isEmpty()) {
+            requestSpec.formParam("client_secret", realmConfig.getClientSecret());
+        }
+
+        return requestSpec
                 .when()
                 .post(tokenUrl);
+    }
+
+    /**
+     * Legacy method for backward compatibility.
+     * @deprecated Use the realm-specific version
+     */
+    @Deprecated
+    private Map<String, String> attemptAllTokensFetch() {
+        return attemptAllTokensFetch(realmConfigs.get(0));
     }
 
     private Map<String, String> extractAllTokensFromResponse(Response response) {

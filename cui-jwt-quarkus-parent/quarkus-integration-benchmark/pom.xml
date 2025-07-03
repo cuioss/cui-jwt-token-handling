@@ -23,7 +23,7 @@
 
         <!-- HTTPS configuration for testing (reuse integration tests ports) -->
         <test.https.port>10443</test.https.port>
-        <test.keycloak.port>10080</test.keycloak.port>
+        <test.keycloak.port>1080</test.keycloak.port>
 
         <!-- JMH Configuration Properties -->
         <jmh.result.format>JSON</jmh.result.format>

@@ -68,7 +68,8 @@ public class TokenRepositoryManager {
             String keycloakUrl = BenchmarkConfiguration.getKeycloakUrl();
             int tokenPoolSize = BenchmarkConfiguration.getTokenPoolSize();
 
-            tokenRepository = new TokenRepository(keycloakUrl, tokenPoolSize);
+            // Use multi-realm configuration for better test coverage
+            tokenRepository = new TokenRepository(keycloakUrl, tokenPoolSize, BenchmarkConfiguration.getRealmConfigurations());
             tokenRepository.initialize();
 
             initialized = true;
