@@ -28,6 +28,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.util.List;
 import java.util.Map;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.INFO;
+import static de.cuioss.test.juli.LogAsserts.assertLogMessagePresent;
 import static de.cuioss.test.juli.LogAsserts.assertLogMessagePresentContaining;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -334,10 +336,10 @@ class IssuerConfigResolverTest {
 
             resolver.resolveIssuerConfigs();
 
-            assertLogMessagePresentContaining(TestLogLevel.INFO, "Resolving issuer configurations from properties");
+            assertLogMessagePresent(TestLogLevel.INFO, INFO.RESOLVING_ISSUER_CONFIGURATIONS.format());
             assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Discovered issuer names:");
-            assertLogMessagePresentContaining(TestLogLevel.INFO, "Resolved issuer configuration: " + TEST_ISSUER);
-            assertLogMessagePresentContaining(TestLogLevel.INFO, "Resolved %d enabled issuer configurations");
+            assertLogMessagePresent(TestLogLevel.INFO, INFO.RESOLVED_ISSUER_CONFIGURATION.format(TEST_ISSUER));
+            assertLogMessagePresent(TestLogLevel.INFO, INFO.RESOLVED_ENABLED_ISSUER_CONFIGURATIONS.format("1"));
         }
 
         @Test
@@ -365,7 +367,7 @@ class IssuerConfigResolverTest {
             resolver.resolveIssuerConfigs();
 
             assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping disabled issuer: " + ANOTHER_ISSUER);
-            assertLogMessagePresentContaining(TestLogLevel.INFO, "Resolved issuer configuration: " + TEST_ISSUER);
+            assertLogMessagePresent(TestLogLevel.INFO, INFO.RESOLVED_ISSUER_CONFIGURATION.format(TEST_ISSUER));
         }
     }
 }

@@ -31,6 +31,8 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.INFO;
+
 /**
  * CDI producer for JWT validation related instances.
  * <p>
@@ -85,7 +87,7 @@ public class TokenValidatorProducer {
      */
     @PostConstruct
     void init() {
-        LOGGER.info("Initializing JWT validation components from configuration");
+        LOGGER.info(INFO.INITIALIZING_JWT_VALIDATION_COMPONENTS::format);
 
         // Resolve issuer configurations using the dedicated resolver
         IssuerConfigResolver issuerConfigResolver = new IssuerConfigResolver(config);
@@ -101,7 +103,7 @@ public class TokenValidatorProducer {
         // Extract SecurityEventCounter from the TokenValidator
         securityEventCounter = tokenValidator.getSecurityEventCounter();
 
-        LOGGER.info("JWT validation components initialized successfully with %d issuers", issuerConfigs.size());
+        LOGGER.info(INFO.JWT_VALIDATION_COMPONENTS_INITIALIZED.format(issuerConfigs.size()));
     }
 
 }

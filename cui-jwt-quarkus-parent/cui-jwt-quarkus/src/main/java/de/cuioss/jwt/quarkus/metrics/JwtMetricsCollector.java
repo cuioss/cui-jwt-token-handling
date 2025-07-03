@@ -35,6 +35,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.INFO;
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.WARN;
+
 /**
  * Collects security event metrics from the {@link SecurityEventCounter} and
  * exposes them as Micrometer metrics.
@@ -97,7 +100,7 @@ public class JwtMetricsCollector {
      * @param event the startup event
      */
     void onStart(@Observes StartupEvent event) {
-        LOGGER.info("Initializing JwtMetricsCollector");
+        LOGGER.info(INFO.INITIALIZING_JWT_METRICS_COLLECTOR::format);
         initializeMetrics();
     }
 
@@ -106,7 +109,7 @@ public class JwtMetricsCollector {
      */
     private void initializeMetrics() {
         if (securityEventCounter == null) {
-            LOGGER.warn("SecurityEventCounter not available, metrics will not be collected");
+            LOGGER.warn(WARN.SECURITY_EVENT_COUNTER_NOT_AVAILABLE::format);
             return;
         }
 
@@ -117,7 +120,7 @@ public class JwtMetricsCollector {
         Map<SecurityEventCounter.EventType, Long> currentCounts = securityEventCounter.getCounters();
         lastKnownCounts.putAll(currentCounts);
 
-        LOGGER.info("JwtMetricsCollector initialized with %s event types", counters.size());
+        LOGGER.info(INFO.JWT_METRICS_COLLECTOR_INITIALIZED.format(counters.size()));
     }
 
     /**

@@ -25,6 +25,8 @@ import org.eclipse.microprofile.config.Config;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.INFO;
+
 /**
  * Resolver for creating {@link IssuerConfig} instances from Quarkus configuration properties.
  * <p>
@@ -79,7 +81,7 @@ public class IssuerConfigResolver {
      */
     @NonNull
     public List<IssuerConfig> resolveIssuerConfigs() {
-        LOGGER.info("Resolving issuer configurations from properties");
+        LOGGER.info(INFO.RESOLVING_ISSUER_CONFIGURATIONS::format);
 
         Set<String> issuerNames = discoverIssuerNames();
         if (issuerNames.isEmpty()) {
@@ -92,7 +94,7 @@ public class IssuerConfigResolver {
             if (isIssuerEnabled(issuerName)) {
                 IssuerConfig issuerConfig = createIssuerConfig(issuerName);
                 enabledIssuers.add(issuerConfig);
-                LOGGER.info("Resolved issuer configuration: %s", issuerName);
+                LOGGER.info(INFO.RESOLVED_ISSUER_CONFIGURATION.format(issuerName));
             } else {
                 LOGGER.debug("Skipping disabled issuer: %s", issuerName);
             }
@@ -102,7 +104,7 @@ public class IssuerConfigResolver {
             throw new IllegalStateException("No enabled issuer configurations found");
         }
 
-        LOGGER.info("Resolved %d enabled issuer configurations", enabledIssuers.size());
+        LOGGER.info(INFO.RESOLVED_ENABLED_ISSUER_CONFIGURATIONS.format(enabledIssuers.size()));
         return enabledIssuers;
     }
 

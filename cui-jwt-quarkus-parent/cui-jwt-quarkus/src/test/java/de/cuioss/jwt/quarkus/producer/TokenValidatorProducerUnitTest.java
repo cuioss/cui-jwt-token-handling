@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.INFO;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -52,8 +53,8 @@ class TokenValidatorProducerUnitTest {
         assertNotNull(producer.tokenValidator, "Should create TokenValidator");
         assertNotNull(producer.issuerConfigs, "Should create issuer configs");
         assertFalse(producer.issuerConfigs.isEmpty(), "Should have at least one issuer config");
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO, "Initializing JWT validation components from configuration");
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO, "JWT validation components initialized successfully");
+        LogAsserts.assertLogMessagePresent(TestLogLevel.INFO, INFO.INITIALIZING_JWT_VALIDATION_COMPONENTS.format());
+        LogAsserts.assertLogMessagePresent(TestLogLevel.INFO, INFO.JWT_VALIDATION_COMPONENTS_INITIALIZED.format("1"));
     }
 
     @Test

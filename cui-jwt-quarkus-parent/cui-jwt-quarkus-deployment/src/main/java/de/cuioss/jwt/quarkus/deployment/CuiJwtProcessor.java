@@ -22,6 +22,7 @@ import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoader;
 import de.cuioss.jwt.validation.jwks.http.HttpJwksLoaderConfig;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
+import de.cuioss.tools.logging.CuiLogger;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.IsDevelopment;
@@ -35,7 +36,8 @@ import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 import lombok.NonNull;
 import org.jboss.jandex.DotName;
-import org.jboss.logging.Logger;
+
+import static de.cuioss.jwt.quarkus.deployment.CuiJwtQuarkusDeploymentLogMessages.INFO;
 
 /**
  * Processor for the CUI JWT Quarkus extension.
@@ -55,7 +57,7 @@ public class CuiJwtProcessor {
     /**
      * Logger for build-time processing.
      */
-    private static final Logger LOGGER = Logger.getLogger(CuiJwtProcessor.class);
+    private static final CuiLogger LOGGER = new CuiLogger(CuiJwtProcessor.class);
 
     /**
      * Register the CUI JWT feature.
@@ -65,7 +67,7 @@ public class CuiJwtProcessor {
     @BuildStep
     @NonNull
     public FeatureBuildItem feature() {
-        LOGGER.infof("CUI JWT feature registered");
+        LOGGER.info(INFO.CUI_JWT_FEATURE_REGISTERED::format);
         return new FeatureBuildItem(FEATURE);
     }
 

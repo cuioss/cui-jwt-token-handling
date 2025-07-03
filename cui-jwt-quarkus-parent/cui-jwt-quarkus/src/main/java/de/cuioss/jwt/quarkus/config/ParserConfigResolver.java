@@ -20,6 +20,8 @@ import de.cuioss.tools.logging.CuiLogger;
 import lombok.NonNull;
 import org.eclipse.microprofile.config.Config;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.INFO;
+
 /**
  * Resolver for creating {@link ParserConfig} instances from Quarkus configuration properties.
  * <p>
@@ -108,9 +110,9 @@ public class ParserConfigResolver {
         // Let the builder validate and create the instance
         ParserConfig result = builder.build();
 
-        LOGGER.info("Resolved ParserConfig: maxTokenSize=%d bytes, maxPayloadSize=%d bytes, maxStringSize=%d, maxArraySize=%d, maxDepth=%d",
+        LOGGER.info(INFO.RESOLVED_PARSER_CONFIG.format(
                 result.getMaxTokenSize(), result.getMaxPayloadSize(), result.getMaxStringSize(),
-                result.getMaxArraySize(), result.getMaxDepth());
+                result.getMaxArraySize(), result.getMaxDepth()));
 
         return result;
     }

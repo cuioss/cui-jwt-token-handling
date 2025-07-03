@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.INFO;
+import static de.cuioss.test.juli.LogAsserts.assertLogMessagePresent;
 import static de.cuioss.test.juli.LogAsserts.assertLogMessagePresentContaining;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -67,7 +69,8 @@ class ParserConfigResolverTest {
         resolver.resolveParserConfig();
 
         assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Set maxTokenSize from configuration");
-        assertLogMessagePresentContaining(TestLogLevel.INFO, "Resolved ParserConfig");
+        assertLogMessagePresent(TestLogLevel.INFO, INFO.RESOLVED_PARSER_CONFIG.format(
+                String.valueOf(tokenSize), "8192", "1024", "64", "10"));
     }
 
     @Test
@@ -106,6 +109,11 @@ class ParserConfigResolverTest {
         assertEquals(ParserConfig.DEFAULT_MAX_ARRAY_SIZE, result.getMaxArraySize(), "Should use default array size");
         assertEquals(ParserConfig.DEFAULT_MAX_DEPTH, result.getMaxDepth(), "Should use default depth");
         assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Resolving ParserConfig from properties");
-        assertLogMessagePresentContaining(TestLogLevel.INFO, "Resolved ParserConfig");
+        assertLogMessagePresent(TestLogLevel.INFO, INFO.RESOLVED_PARSER_CONFIG.format(
+                String.valueOf(ParserConfig.DEFAULT_MAX_TOKEN_SIZE),
+                String.valueOf(ParserConfig.DEFAULT_MAX_PAYLOAD_SIZE),
+                String.valueOf(ParserConfig.DEFAULT_MAX_STRING_SIZE),
+                String.valueOf(ParserConfig.DEFAULT_MAX_ARRAY_SIZE),
+                String.valueOf(ParserConfig.DEFAULT_MAX_DEPTH)));
     }
 }

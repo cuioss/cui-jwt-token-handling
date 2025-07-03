@@ -79,6 +79,9 @@ class QuarkusTokenValidatorProducerTest {
         assertTrue(issuerConfigs.stream()
                         .anyMatch(issuer -> "https://example.com/auth".equals(issuer.getIssuerIdentifier())),
                 "Should load default issuer from JwtTestProfile");
+
+        // Note: Log assertions are skipped in Quarkus test environment 
+        // as logs during CDI initialization may not be captured by test logger
     }
 
     @Test

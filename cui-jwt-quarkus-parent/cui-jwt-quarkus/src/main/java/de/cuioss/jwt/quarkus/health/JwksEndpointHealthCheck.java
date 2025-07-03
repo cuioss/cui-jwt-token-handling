@@ -36,6 +36,8 @@ import java.util.concurrent.TimeUnit;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import static de.cuioss.jwt.quarkus.CuiJwtQuarkusLogMessages.WARN;
+
 /**
  * Health check for JWKS endpoint connectivity.
  * <p>
@@ -150,7 +152,7 @@ public class JwksEndpointHealthCheck implements HealthCheck {
 
                 return new EndpointResult(issuer, jwksLoader.getJwksType().toString(), status);
             } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
-                LOGGER.warn(e, "Error checking JWKS loader for issuer %s: %s", issuer, e.getMessage());
+                LOGGER.warn(e, WARN.ERROR_CHECKING_JWKS_LOADER.format(issuer, e.getMessage()));
                 return new EndpointResult(issuer, JwksType.NONE.toString(), LoaderStatus.ERROR);
             }
         }
