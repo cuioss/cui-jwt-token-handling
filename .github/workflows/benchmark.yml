@@ -56,15 +56,8 @@ jobs:
           # Create directory for benchmark results
           mkdir -p benchmark-results
 
-          # Run micro benchmarks with JSON output format, skipping tests to avoid duplicate runs
-          # Configure JMH parameters for CI environment: fewer iterations for faster execution
-          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-benchmarking -Dskip.benchmark=false -DskipTests \
-            -Djmh.result.format=JSON \
-            -Djmh.result.filePrefix=benchmark-results/micro-benchmark-result \
-            -Djmh.iterations=3 \
-            -Djmh.warmupIterations=2 \
-            -Djmh.forks=1 \
-            -Djmh.threads=2
+          # Run micro benchmarks using configuration from pom.xml
+          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-benchmarking -Dskip.benchmark=false -DskipTests
 
           # Move micro benchmark results to expected location for upload
           if [ -d "cui-jwt-benchmarking/benchmark-results" ]; then
@@ -81,15 +74,9 @@ jobs:
           echo "🔨 Building native image for integration tests..."
           ./mvnw --no-transfer-progress clean package -Pintegration-tests -pl cui-jwt-quarkus-parent/cui-jwt-quarkus-integration-tests -DskipTests
           
-          # Run integration benchmarks with native image
+          # Run integration benchmarks with native image using configuration from pom.xml
           echo "🚀 Running integration benchmarks with native Quarkus..."
-          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-quarkus-parent/quarkus-integration-benchmark -Dskip.benchmark=false -DskipTests \
-            -Djmh.result.format=JSON \
-            -Djmh.result.filePrefix=benchmark-results/integration-benchmark-result \
-            -Djmh.iterations=3 \
-            -Djmh.warmupIterations=2 \
-            -Djmh.forks=1 \
-            -Djmh.threads=2
+          ./mvnw --no-transfer-progress clean verify -pl cui-jwt-quarkus-parent/quarkus-integration-benchmark -Dskip.benchmark=false -DskipTests
 
           # Move integration benchmark results to expected location for upload
           if [ -d "cui-jwt-quarkus-parent/quarkus-integration-benchmark/benchmark-results" ]; then

@@ -28,8 +28,8 @@
         <!-- JMH Configuration Properties -->
         <jmh.result.format>JSON</jmh.result.format>
         <jmh.result.filePrefix>benchmark-results/integration-benchmark-result</jmh.result.filePrefix>
-        <jmh.iterations>1</jmh.iterations>
-        <jmh.warmupIterations>0</jmh.warmupIterations>
+        <jmh.iterations>3</jmh.iterations>
+        <jmh.warmupIterations>2</jmh.warmupIterations>
         <jmh.forks>1</jmh.forks>
         <jmh.threads>2</jmh.threads>
         
