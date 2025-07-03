@@ -230,9 +230,9 @@ public class BenchmarkConfiguration {
         LOGGER.info("  Max Retries: %s", getMaxTokenFetchRetries());
         LOGGER.info("  Retry Delay: %s ms", getTokenFetchRetryDelay());
         LOGGER.info("  Available Realms: %s", getRealmConfigurations().size());
-        
+
         // Log realm details
-        getRealmConfigurations().forEach(realm -> 
-            LOGGER.info("    - %s: %s", realm.getEffectiveDisplayName(), realm.getRealmName()));
+        getRealmConfigurations().forEach(realm ->
+                LOGGER.info("    - %s: %s", realm.getEffectiveDisplayName(), realm.getRealmName()));
     }
 }

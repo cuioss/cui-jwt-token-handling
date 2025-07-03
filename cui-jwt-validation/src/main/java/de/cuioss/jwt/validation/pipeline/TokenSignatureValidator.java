@@ -18,7 +18,6 @@ package de.cuioss.jwt.validation.pipeline;
 import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
-import de.cuioss.jwt.validation.security.BouncyCastleProviderSingleton;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.tools.logging.CuiLogger;
 import jakarta.annotation.Nonnull;
@@ -27,6 +26,8 @@ import lombok.NonNull;
 
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.PSSParameterSpec;
 import java.util.Base64;
 
 /**
@@ -38,22 +39,16 @@ import java.util.Base64;
  * It assumes that header validation (algorithm, issuer) has already been
  * performed by {@link TokenHeaderValidator}.
  * <p>
- * This class uses Bouncy Castle (bcprov-jdk18on) for cryptographic operations, specifically:
- * <ul>
- *   <li>{@link org.bouncycastle.jce.provider.BouncyCastleProvider} - As the security provider for signature verification</li>
- * </ul>
- * <p>
- * Bouncy Castle is registered as a security provider in the static initializer block to ensure
- * it's available for all signature verification operations. The class uses Bouncy Castle to support
- * a wide range of signature algorithms:
+ * This class uses standard JDK cryptographic providers for signature verification, supporting
+ * all standard JOSE algorithms as defined in RFC 7518:
  * <ul>
  *   <li>RSA signatures: RS256, RS384, RS512</li>
  *   <li>ECDSA signatures: ES256, ES384, ES512</li>
  *   <li>RSA-PSS signatures: PS256, PS384, PS512</li>
  * </ul>
  * <p>
- * Using Bouncy Castle ensures consistent cryptographic operations across different JVM implementations
- * and provides support for modern cryptographic algorithms that may not be available in all JVM versions.
+ * All algorithms are supported by the standard JDK cryptographic providers in Java 11+,
+ * ensuring excellent compatibility with GraalVM native image compilation and optimal performance.
  * <p>
  * For more details on signature validation, see the
  * <a href="https://github.com/cuioss/cui-jwt/tree/main/doc/specification/technical-components.adoc#token-validation-pipeline">Token Validation Pipeline</a>
@@ -208,7 +203,7 @@ public class TokenSignatureValidator {
                         "Invalid signature"
                 );
             }
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException | SignatureException e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException | SignatureException | InvalidAlgorithmParameterException e) {
             LOGGER.warn(e, JWTValidationLogMessages.ERROR.SIGNATURE_VALIDATION_FAILED.format(e.getMessage()));
             securityEventCounter.increment(SecurityEventCounter.EventType.SIGNATURE_VALIDATION_FAILED);
             throw new TokenValidationException(
@@ -226,20 +221,32 @@ public class TokenSignatureValidator {
      * @return a Signature verifier
      * @throws IllegalArgumentException if the algorithm is not supported
      */
-    private Signature getSignatureVerifier(String algorithm) throws NoSuchAlgorithmException, NoSuchProviderException {
-        String jcaAlgorithm = switch (algorithm) {
-            case "RS256" -> "SHA256withRSA";
-            case "RS384" -> "SHA384withRSA";
-            case "RS512" -> "SHA512withRSA";
-            case "ES256" -> "SHA256withECDSA";
-            case "ES384" -> "SHA384withECDSA";
-            case "ES512" -> "SHA512withECDSA";
-            case "PS256" -> "SHA256withRSAandMGF1";
-            case "PS384" -> "SHA384withRSAandMGF1";
-            case "PS512" -> "SHA512withRSAandMGF1";
+    private Signature getSignatureVerifier(String algorithm) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        Signature signature;
+
+        switch (algorithm) {
+            case "RS256" -> signature = Signature.getInstance("SHA256withRSA");
+            case "RS384" -> signature = Signature.getInstance("SHA384withRSA");
+            case "RS512" -> signature = Signature.getInstance("SHA512withRSA");
+            case "ES256" -> signature = Signature.getInstance("SHA256withECDSA");
+            case "ES384" -> signature = Signature.getInstance("SHA384withECDSA");
+            case "ES512" -> signature = Signature.getInstance("SHA512withECDSA");
+            case "PS256" -> {
+                signature = Signature.getInstance("RSASSA-PSS");
+                signature.setParameter(new PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1));
+            }
+            case "PS384" -> {
+                signature = Signature.getInstance("RSASSA-PSS");
+                signature.setParameter(new PSSParameterSpec("SHA-384", "MGF1", MGF1ParameterSpec.SHA384, 48, 1));
+            }
+            case "PS512" -> {
+                signature = Signature.getInstance("RSASSA-PSS");
+                signature.setParameter(new PSSParameterSpec("SHA-512", "MGF1", MGF1ParameterSpec.SHA512, 64, 1));
+            }
             default -> throw new IllegalArgumentException("Unsupported algorithm: %s".formatted(algorithm));
-        };
-        return Signature.getInstance(jcaAlgorithm, BouncyCastleProviderSingleton.getInstance().getProviderName());
+        }
+
+        return signature;
     }
 
     /**

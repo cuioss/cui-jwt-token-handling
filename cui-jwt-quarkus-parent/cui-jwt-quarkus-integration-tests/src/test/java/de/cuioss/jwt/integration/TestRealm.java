@@ -119,7 +119,7 @@ public class TestRealm {
                 .formParam("grant_type", "password")
                 .formParam("scope", "openid profile email")
                 .when()
-                .post(String.format(TOKEN_ENDPOINT_TEMPLATE, realmIdentifier));
+                .post(TOKEN_ENDPOINT_TEMPLATE.formatted(realmIdentifier));
 
         assertEquals(200, tokenResponse.statusCode(),
                 "Should be able to obtain tokens from " + realmIdentifier + " realm. Response: " + tokenResponse.body().asString());
@@ -148,11 +148,11 @@ public class TestRealm {
             Response response = given()
                     .baseUri(KEYCLOAK_BASE_URL)
                     .when()
-                    .get(String.format(WELL_KNOWN_ENDPOINT_TEMPLATE, realmIdentifier));
+                    .get(WELL_KNOWN_ENDPOINT_TEMPLATE.formatted(realmIdentifier));
 
             return response.statusCode() == 200 &&
-                   response.body().asString().contains("\"issuer\"") &&
-                   response.body().asString().contains("\"jwks_uri\"");
+                    response.body().asString().contains("\"issuer\"") &&
+                    response.body().asString().contains("\"jwks_uri\"");
         } catch (Exception e) {
             return false;
         }
@@ -168,7 +168,7 @@ public class TestRealm {
             Response response = given()
                     .baseUri(KEYCLOAK_BASE_URL)
                     .when()
-                    .get(String.format(CERTS_ENDPOINT_TEMPLATE, realmIdentifier));
+                    .get(CERTS_ENDPOINT_TEMPLATE.formatted(realmIdentifier));
 
             return response.statusCode() == 200 && response.body().asString().contains("\"keys\"");
         } catch (Exception e) {

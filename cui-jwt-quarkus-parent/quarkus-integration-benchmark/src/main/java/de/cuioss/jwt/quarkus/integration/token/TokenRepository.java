@@ -256,19 +256,19 @@ public class TokenRepository {
 
     private void loadValidTokens() {
         LOGGER.info("🔄 Loading %s valid tokens from %s realm(s)...", tokenPoolSize, realmConfigs.size());
-        
+
         // Distribute tokens evenly across realms
         int tokensPerRealm = tokenPoolSize / realmConfigs.size();
         int remainingTokens = tokenPoolSize % realmConfigs.size();
-        
+
         for (int realmIndex = 0; realmIndex < realmConfigs.size(); realmIndex++) {
             RealmConfig realmConfig = realmConfigs.get(realmIndex);
-            
+
             // Calculate tokens for this realm (distribute remainder evenly)
             int tokensForThisRealm = tokensPerRealm + (realmIndex < remainingTokens ? 1 : 0);
-            
+
             LOGGER.info("🌍 Loading %s tokens from realm: %s", tokensForThisRealm, realmConfig.getEffectiveDisplayName());
-            
+
             for (int i = 0; i < tokensForThisRealm; i++) {
                 try {
                     Map<String, String> tokens = fetchAllTokensFromKeycloak(realmConfig);
@@ -326,7 +326,7 @@ public class TokenRepository {
 
         LOGGER.info("✅ Loaded %s expired tokens", expiredTokens.size());
     }
-    
+
     /**
      * Logs the distribution of tokens across realms for debugging purposes.
      */
@@ -335,7 +335,7 @@ public class TokenRepository {
             LOGGER.debug("📊 Token distribution summary:");
             LOGGER.debug("  Expected tokens per realm: ~%s", tokenPoolSize / realmConfigs.size());
             LOGGER.debug("  Actual total tokens loaded: %s", validTokens.size());
-            LOGGER.debug("  Token types: Access=%s, ID=%s, Refresh=%s", 
+            LOGGER.debug("  Token types: Access=%s, ID=%s, Refresh=%s",
                     validTokens.size(), validIdTokens.size(), validRefreshTokens.size());
         }
     }

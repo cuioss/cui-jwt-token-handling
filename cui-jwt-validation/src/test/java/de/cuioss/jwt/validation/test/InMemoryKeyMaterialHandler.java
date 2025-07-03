@@ -17,7 +17,6 @@ package de.cuioss.jwt.validation.test;
 
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksLoaderFactory;
-import de.cuioss.jwt.validation.security.BouncyCastleProviderSingleton;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.tools.logging.CuiLogger;
 import io.jsonwebtoken.Jwts;
@@ -42,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>Creates keys on the fly</li>
  *   <li>Stores keys in static fields instead of the filesystem</li>
  *   <li>Supports multiple algorithms (RS256, RS384, RS512)</li>
- *   <li>Uses BouncyCastle for key material generation</li>
+ *   <li>Uses standard JDK providers for key material generation</li>
  * </ul>
  * <p>
  * All access to key materials should be through this class.
@@ -90,10 +89,8 @@ public class InMemoryKeyMaterialHandler {
     // Static maps to store key pairs for different algorithms
     private static final Map<Algorithm, Map<String, KeyPair>> KEY_PAIRS = new ConcurrentHashMap<>();
 
-    // Static initializer to ensure BouncyCastle provider is registered
+    // Static initializer
     static {
-        // Ensure BouncyCastle provider is registered
-        BouncyCastleProviderSingleton.getInstance();
 
         // Initialize key pair maps for each algorithm
         for (Algorithm alg : Algorithm.values()) {

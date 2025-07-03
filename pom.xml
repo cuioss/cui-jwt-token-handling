@@ -16,7 +16,7 @@
     <name>JWT Token Validation Parent</name>
     <description>A comprehensive framework for validating JWT tokens in multi-issuer environments.
         The module provides robust token parsing, validation, and management capabilities
-        with a focus on security and ease of use, using Bouncy Castle for cryptographic operations.
+        with a focus on security and ease of use, leveraging standard JDK cryptographic providers.
     </description>
 
     <url>https://github.com/cuioss/cui-jwt/</url>
@@ -35,6 +35,8 @@
         <system>GitHub Issues</system>
     </issueManagement>
     <properties>
+        <!-- Java baseline version -->
+        <maven.compiler-plugin.release>21</maven.compiler-plugin.release>
         <!-- Frontend Maven Plugin -->
         <frontend.node.version>v20.19.2</frontend.node.version>
         <frontend.npm.version>10.5.0</frontend.npm.version>

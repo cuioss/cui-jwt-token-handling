@@ -45,11 +45,6 @@
             <artifactId>jakarta.json-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- BouncyCastle for cryptographic operations -->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-        </dependency>
 
         <!-- Unit testing -->
         <dependency>

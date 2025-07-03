@@ -34,37 +34,37 @@ import lombok.ToString;
 @Builder
 @ToString
 public class RealmConfig {
-    
+
     /**
      * The realm name (e.g., "benchmark", "integration")
      */
     private final String realmName;
-    
+
     /**
      * The client ID for this realm
      */
     private final String clientId;
-    
+
     /**
      * The client secret for this realm (if using confidential clients)
      */
     private final String clientSecret;
-    
+
     /**
      * Username for token requests
      */
     private final String username;
-    
+
     /**
      * Password for token requests
      */
     private final String password;
-    
+
     /**
      * Optional display name for logging purposes
      */
     private final String displayName;
-    
+
     /**
      * Builds the token endpoint URL for this realm.
      * 
@@ -74,7 +74,7 @@ public class RealmConfig {
     public String buildTokenUrl(String keycloakBaseUrl) {
         return keycloakBaseUrl + "/realms/" + realmName + "/protocol/openid-connect/token";
     }
-    
+
     /**
      * Gets a display name for logging purposes.
      * Falls back to realm name if display name is not set.

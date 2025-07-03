@@ -22,7 +22,8 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Abstract base test class for testing JwtValidationEndpoint endpoints.
@@ -56,7 +57,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
     @Test
     @Order(1)
     @DisplayName("Verify Keycloak health and token obtaining functionality")
-    void testKeycloakHealthiness() {
+    void keycloakHealthiness() {
         // First test: Healthiness including resolving of tokens using TestRealm#isKeycloakHealthy
         assertTrue(getTestRealm().isKeycloakHealthy(), "Keycloak should be healthy and accessible");
 
@@ -75,7 +76,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(2)
         @DisplayName("Validate access token via Authorization header")
-        void testValidateAccessTokenEndpoint_Positive() {
+        void validateAccessTokenEndpointPositive() {
             // Obtain tokens locally for this test
             TestRealm.TokenResponse tokenResponse = getTestRealm().obtainValidToken();
             String validAccessToken = tokenResponse.accessToken();
@@ -95,7 +96,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(3)
         @DisplayName("Validate ID token via request body")
-        void testValidateIdTokenEndpoint_Positive() {
+        void validateIdTokenEndpointPositive() {
             // Obtain tokens locally for this test
             TestRealm.TokenResponse tokenResponse = getTestRealm().obtainValidToken();
             String validIdToken = tokenResponse.idToken();
@@ -115,7 +116,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(4)
         @DisplayName("Validate refresh token via request body")
-        void testValidateRefreshTokenEndpoint_Positive() {
+        void validateRefreshTokenEndpointPositive() {
             // Obtain tokens locally for this test
             TestRealm.TokenResponse tokenResponse = getTestRealm().obtainValidToken();
             String validRefreshToken = tokenResponse.refreshToken();
@@ -135,7 +136,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(14)
         @DisplayName("Validate access token with multiple consecutive requests")
-        void testValidateAccessTokenEndpoint_MultipleRequests() {
+        void validateAccessTokenEndpointMultipleRequests() {
             // Obtain tokens locally for this test
             TestRealm.TokenResponse tokenResponse = getTestRealm().obtainValidToken();
             String validAccessToken = tokenResponse.accessToken();
@@ -163,7 +164,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(5)
         @DisplayName("Access token validation with missing Authorization header")
-        void testValidateAccessTokenEndpoint_MissingAuthorizationHeader() {
+        void validateAccessTokenEndpointMissingAuthorizationHeader() {
             // Test negative case: missing Authorization header
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -178,7 +179,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(6)
         @DisplayName("Access token validation with invalid Authorization header format")
-        void testValidateAccessTokenEndpoint_InvalidAuthorizationHeader() {
+        void validateAccessTokenEndpointInvalidAuthorizationHeader() {
             // Test negative case: invalid Authorization header format
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -194,7 +195,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(7)
         @DisplayName("Access token validation with invalid token")
-        void testValidateAccessTokenEndpoint_InvalidToken() {
+        void validateAccessTokenEndpointInvalidToken() {
             // Test negative case: invalid access token
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -210,7 +211,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(8)
         @DisplayName("ID token validation with missing request body")
-        void testValidateIdTokenEndpoint_MissingRequestBody() {
+        void validateIdTokenEndpointMissingRequestBody() {
             // Test negative case: missing request body
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -225,7 +226,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(9)
         @DisplayName("ID token validation with empty token")
-        void testValidateIdTokenEndpoint_EmptyToken() {
+        void validateIdTokenEndpointEmptyToken() {
             // Test negative case: empty token in request body
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -241,7 +242,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(10)
         @DisplayName("ID token validation with invalid token")
-        void testValidateIdTokenEndpoint_InvalidToken() {
+        void validateIdTokenEndpointInvalidToken() {
             // Test negative case: invalid ID token
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -257,7 +258,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(11)
         @DisplayName("Refresh token validation with missing request body")
-        void testValidateRefreshTokenEndpoint_MissingRequestBody() {
+        void validateRefreshTokenEndpointMissingRequestBody() {
             // Test negative case: missing request body
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -272,7 +273,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(12)
         @DisplayName("Refresh token validation with empty token")
-        void testValidateRefreshTokenEndpoint_EmptyToken() {
+        void validateRefreshTokenEndpointEmptyToken() {
             // Test negative case: empty token in request body
             given()
                     .contentType(CONTENT_TYPE_JSON)
@@ -288,7 +289,7 @@ public abstract class AbstractJwtValidationEndpointTest extends BaseIntegrationT
         @Test
         @Order(13)
         @DisplayName("Refresh token validation with invalid token")
-        void testValidateRefreshTokenEndpoint_InvalidToken() {
+        void validateRefreshTokenEndpointInvalidToken() {
             // Test negative case: Will result in a positive result, because Refresh-token are opaquely invalid
             given()
                     .contentType(CONTENT_TYPE_JSON)
