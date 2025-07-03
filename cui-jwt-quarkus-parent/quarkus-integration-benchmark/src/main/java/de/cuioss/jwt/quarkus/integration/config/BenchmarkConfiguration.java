@@ -31,7 +31,7 @@ public class BenchmarkConfiguration {
 
     // Token Repository Configuration
     public static final int DEFAULT_TOKEN_POOL_SIZE = 100;
-    public static final String DEFAULT_KEYCLOAK_URL = "http://localhost:1080";
+    public static final String DEFAULT_KEYCLOAK_URL = "http://keycloak:8080";
 
     // Legacy Keycloak Configuration (kept for backward compatibility)
     public static final String KEYCLOAK_REALM = "benchmark";

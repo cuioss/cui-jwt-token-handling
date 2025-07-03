@@ -68,7 +68,7 @@ public class RealmConfig {
     /**
      * Builds the token endpoint URL for this realm.
      * 
-     * @param keycloakBaseUrl The base Keycloak URL (e.g., "http://localhost:1080")
+     * @param keycloakBaseUrl The base Keycloak URL (e.g., "http://keycloak:8080")
      * @return The complete token endpoint URL
      */
     public String buildTokenUrl(String keycloakBaseUrl) {
