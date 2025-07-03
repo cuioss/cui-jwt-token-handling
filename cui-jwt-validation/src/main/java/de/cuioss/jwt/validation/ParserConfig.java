@@ -48,7 +48,7 @@ import java.util.Map;
  * <ul>
  *   <li>maxTokenSize (8KB) - allows for OAuth 2.0 BCP recommended size</li>
  *   <li>maxPayloadSize (2KB) - allows ~6KB total decoded content (considering Base64 overhead)</li>
- *   <li>maxStringSize (1KB) - prevents individual fields from dominating the payload</li>
+ *   <li>maxStringSize (4KB) - prevents individual fields from dominating the payload</li>
  * </ul>
  * <p>
  * This class is immutable and thread-safe.
@@ -94,11 +94,11 @@ public class ParserConfig {
 
     /**
      * Default maximum string size for individual JSON string values.
-     * 1KB prevents any single JSON string field from dominating the payload size,
+     * 4KB prevents any single JSON string field from dominating the payload size,
      * providing protection against JSON parsing attacks where individual fields
      * contain extremely large strings.
      */
-    public static final int DEFAULT_MAX_STRING_SIZE = 1024;
+    public static final int DEFAULT_MAX_STRING_SIZE = 4 * 1024;
 
     /**
      * Default maximum array size for JSON parsing.
