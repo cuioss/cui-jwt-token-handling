@@ -190,7 +190,7 @@ public class TokenRepository {
         return invalidTokens.size();
     }
 
-    private void loadValidTokens() throws TokenFetchException {
+    private void loadValidTokens() {
         LOGGER.info("🔄 Loading %s valid tokens from Keycloak...", tokenPoolSize);
 
         for (int i = 0; i < tokenPoolSize; i++) {
@@ -222,7 +222,7 @@ public class TokenRepository {
         LOGGER.info("✅ Loaded %s valid tokens", validTokens.size());
     }
 
-    private void loadExpiredTokens() throws TokenFetchException {
+    private void loadExpiredTokens() {
         LOGGER.info("🔄 Loading %s expired tokens from Keycloak...", tokenPoolSize);
 
         // For expired tokens, we can either:
@@ -280,7 +280,7 @@ public class TokenRepository {
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 Map<String, String> tokens = attemptAllTokensFetch();
-                if (tokens != null && !tokens.isEmpty()) {
+                if (!tokens.isEmpty()) {
                     return tokens;
                 }
                 logTokenFetchFailure(attempt, maxRetries, "Empty or null token response received");
