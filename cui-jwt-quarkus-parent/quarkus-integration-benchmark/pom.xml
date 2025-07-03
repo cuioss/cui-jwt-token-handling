@@ -32,6 +32,9 @@
         <jmh.warmupIterations>0</jmh.warmupIterations>
         <jmh.forks>1</jmh.forks>
         <jmh.threads>2</jmh.threads>
+        
+        <!-- Benchmark Configuration Properties -->
+        <benchmark.keycloak.url>http://localhost:1080</benchmark.keycloak.url>
     </properties>
 
     <dependencyManagement>
@@ -143,6 +146,7 @@
                                 <argument>-Djmh.threads=${jmh.threads}</argument>
                                 <argument>-Dtest.https.port=${test.https.port}</argument>
                                 <argument>-Dtest.keycloak.port=${test.keycloak.port}</argument>
+                                <argument>-Dbenchmark.keycloak.url=${benchmark.keycloak.url}</argument>
                                 <argument>de.cuioss.jwt.quarkus.integration.benchmark.IntegrationBenchmarkRunner</argument>
                             </arguments>
                         </configuration>
