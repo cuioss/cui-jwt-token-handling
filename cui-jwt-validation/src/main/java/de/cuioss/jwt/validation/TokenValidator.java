@@ -296,8 +296,8 @@ public class TokenValidator {
 
         validateTokenHeader(decodedJwt, issuerConfig);
         validateTokenSignature(decodedJwt, issuerConfig);
-        Optional<T> token = buildToken(decodedJwt, issuerConfig, tokenBuilder);
-        T validatedToken = validateTokenClaims(token.get(), issuerConfig);
+        T token = buildToken(decodedJwt, issuerConfig, tokenBuilder);
+        T validatedToken = validateTokenClaims(token, issuerConfig);
 
         LOGGER.debug("Token successfully validated");
         return validatedToken;
@@ -398,7 +398,8 @@ public class TokenValidator {
         signatureValidator.validateSignature(decodedJwt);
     }
 
-    private <T extends TokenContent> Optional<T> buildToken(
+    @NonNull
+    private <T extends TokenContent> T buildToken(
             DecodedJwt decodedJwt,
             IssuerConfig issuerConfig,
             TokenBuilderFunction<T> tokenBuilder) {
@@ -410,7 +411,7 @@ public class TokenValidator {
                     "Failed to build token from decoded JWT"
             );
         }
-        return token;
+        return token.get();
     }
 
     @SuppressWarnings("unchecked")

@@ -114,7 +114,7 @@ public class IntegrationTokenValidationBenchmark {
                 String warmupIdToken = tokenManager.getValidIdToken();
                 RestAssured.given()
                         .contentType(APPLICATION_JSON)
-                        .body(String.format(TOKEN_TEMPLATE, warmupIdToken))
+                        .body(TOKEN_TEMPLATE.formatted(warmupIdToken))
                         .when()
                         .post("/jwt/validate/id-token");
 
@@ -122,7 +122,7 @@ public class IntegrationTokenValidationBenchmark {
                 String warmupRefreshToken = tokenManager.getValidRefreshToken();
                 RestAssured.given()
                         .contentType(APPLICATION_JSON)
-                        .body(String.format(TOKEN_TEMPLATE, warmupRefreshToken))
+                        .body(TOKEN_TEMPLATE.formatted(warmupRefreshToken))
                         .when()
                         .post("/jwt/validate/refresh-token");
             } catch (Exception e) {
@@ -217,7 +217,7 @@ public class IntegrationTokenValidationBenchmark {
         String idToken = tokenManager.getValidIdToken();
         return RestAssured.given()
                 .contentType(APPLICATION_JSON)
-                .body(String.format(TOKEN_TEMPLATE, idToken))
+                .body(TOKEN_TEMPLATE.formatted(idToken))
                 .when()
                 .post(JWT_VALIDATE_ID_TOKEN_PATH);
     }
@@ -233,7 +233,7 @@ public class IntegrationTokenValidationBenchmark {
         String refreshToken = tokenManager.getValidRefreshToken();
         return RestAssured.given()
                 .contentType(APPLICATION_JSON)
-                .body(String.format(TOKEN_TEMPLATE, refreshToken))
+                .body(TOKEN_TEMPLATE.formatted(refreshToken))
                 .when()
                 .post(JWT_VALIDATE_REFRESH_TOKEN_PATH);
     }
@@ -249,7 +249,7 @@ public class IntegrationTokenValidationBenchmark {
         String idToken = tokenManager.getValidIdToken();
         return RestAssured.given()
                 .contentType(APPLICATION_JSON)
-                .body(String.format(TOKEN_TEMPLATE, idToken))
+                .body(TOKEN_TEMPLATE.formatted(idToken))
                 .when()
                 .post(JWT_VALIDATE_ID_TOKEN_PATH);
     }
@@ -265,7 +265,7 @@ public class IntegrationTokenValidationBenchmark {
         String refreshToken = tokenManager.getValidRefreshToken();
         return RestAssured.given()
                 .contentType(APPLICATION_JSON)
-                .body(String.format(TOKEN_TEMPLATE, refreshToken))
+                .body(TOKEN_TEMPLATE.formatted(refreshToken))
                 .when()
                 .post(JWT_VALIDATE_REFRESH_TOKEN_PATH);
     }

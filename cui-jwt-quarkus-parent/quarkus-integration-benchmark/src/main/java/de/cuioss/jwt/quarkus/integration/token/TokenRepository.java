@@ -68,9 +68,8 @@ public class TokenRepository {
      * Initializes the token repository by fetching tokens from Keycloak.
      * This method should be called once before benchmark execution.
      *
-     * @throws TokenFetchException if token loading fails
      */
-    public void initialize() throws TokenFetchException {
+    public void initialize() {
         LOGGER.info("🔑 Initializing token repository with %s tokens per type...", tokenPoolSize);
 
         // Load valid tokens (access, ID, and refresh)
