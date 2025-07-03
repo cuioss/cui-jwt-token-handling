@@ -176,7 +176,7 @@ public class TokenValidator {
                 enabledCount++;
                 LOGGER.debug("Added enabled issuer configuration");
             } else {
-                LOGGER.info("Skipping disabled issuer configuration %s", issuerConfig);
+                LOGGER.info(JWTValidationLogMessages.INFO.ISSUER_CONFIG_SKIPPED.format(issuerConfig));
             }
         }
         this.issuerConfigs = enabledConfigs;
@@ -364,7 +364,7 @@ public class TokenValidator {
                 iterator.remove(); // Thread-safe removal during iteration
                 LOGGER.debug("Found healthy issuer config, cached and removed from queue for: %s", issuer);
             } else {
-                LOGGER.warn("Found unhealthy issuer config: %s", issuer);
+                LOGGER.warn(JWTValidationLogMessages.WARN.ISSUER_CONFIG_UNHEALTHY.format(issuer));
             }
         }
 

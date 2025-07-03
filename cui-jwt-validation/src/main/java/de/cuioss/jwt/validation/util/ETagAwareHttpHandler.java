@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.util;
 
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import de.cuioss.tools.net.http.HttpStatusFamily;
@@ -187,7 +188,7 @@ public class ETagAwareHttpHandler {
         this.cachedContent = result.content;
         this.cachedETag = result.etag; // May be null if server doesn't support ETags
 
-        LOGGER.info("Loaded fresh HTTP content from %s", httpHandler.getUrl());
+        LOGGER.info(JWTValidationLogMessages.INFO.HTTP_CONTENT_LOADED.format(httpHandler.getUrl()));
         return new LoadResult(result.content, LoadState.LOADED_FROM_SERVER);
     }
 
@@ -232,16 +233,16 @@ public class ETagAwareHttpHandler {
                 LOGGER.debug("Received %s %s from %s with ETag: %s", response.statusCode(), statusFamily, httpHandler.getUrl(), etag);
                 return new HttpFetchResult(content, etag, false, false);
             } else {
-                LOGGER.warn("HTTP %s (%s) from %s", response.statusCode(), statusFamily, httpHandler.getUrl());
+                LOGGER.warn(JWTValidationLogMessages.WARN.HTTP_STATUS_WARNING.format(response.statusCode(), statusFamily, httpHandler.getUrl()));
                 return new HttpFetchResult(null, null, false, true);
             }
 
         } catch (IOException e) {
-            LOGGER.warn(e, "Failed to fetch HTTP content from %s", httpHandler.getUrl());
+            LOGGER.warn(e, JWTValidationLogMessages.WARN.HTTP_FETCH_FAILED.format(httpHandler.getUrl()));
             return new HttpFetchResult(null, null, false, true);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            LOGGER.warn("Interrupted while fetching HTTP content from %s", httpHandler.getUrl());
+            LOGGER.warn(JWTValidationLogMessages.WARN.HTTP_FETCH_INTERRUPTED.format(httpHandler.getUrl()));
             return new HttpFetchResult(null, null, false, true);
         }
     }

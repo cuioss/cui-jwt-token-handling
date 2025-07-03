@@ -15,8 +15,7 @@
  */
 package de.cuioss.jwt.validation.well_known;
 
-import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
-import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.tools.net.http.HttpHandler;
 import de.cuioss.tools.net.http.HttpStatusFamily;
@@ -58,10 +57,10 @@ class WellKnownEndpointMapper {
     boolean addHttpHandlerToMap(Map<String, HttpHandler> map, String key, String urlString, URL wellKnownUrl, boolean isRequired) {
         if (urlString == null) {
             if (isRequired) {
-                LOGGER.error("Required URL field '%s' is missing in discovery document from %s", key, wellKnownUrl);
+                LOGGER.error(JWTValidationLogMessages.ERROR.REQUIRED_URL_FIELD_MISSING.format(key, wellKnownUrl));
                 return false;
             }
-            LOGGER.debug(DEBUG.OPTIONAL_URL_FIELD_MISSING.format(key, wellKnownUrl));
+            LOGGER.debug(JWTValidationLogMessages.DEBUG.OPTIONAL_URL_FIELD_MISSING.format(key, wellKnownUrl));
             return true;
         }
         try {
@@ -71,7 +70,7 @@ class WellKnownEndpointMapper {
             map.put(key, handler);
             return true;
         } catch (IllegalArgumentException e) {
-            LOGGER.error("Malformed URL for field '%s': %s from %s - %s", key, urlString, wellKnownUrl, e.getMessage());
+            LOGGER.error(e, JWTValidationLogMessages.ERROR.MALFORMED_URL_FIELD.format(key, urlString, wellKnownUrl, e.getMessage()));
             return false;
         }
     }
@@ -86,9 +85,9 @@ class WellKnownEndpointMapper {
         if (handler != null) {
             HttpStatusFamily statusFamily = handler.pingHead();
             if (statusFamily != HttpStatusFamily.SUCCESS) {
-                LOGGER.warn(WARN.ACCESSIBILITY_CHECK_HTTP_ERROR.format(endpointName, handler.getUrl(), statusFamily));
+                LOGGER.warn(JWTValidationLogMessages.WARN.ACCESSIBILITY_CHECK_HTTP_ERROR.format(endpointName, handler.getUrl(), statusFamily));
             } else {
-                LOGGER.debug(DEBUG.ACCESSIBILITY_CHECK_SUCCESSFUL.format(endpointName, handler.getUrl(), statusFamily));
+                LOGGER.debug(JWTValidationLogMessages.DEBUG.ACCESSIBILITY_CHECK_SUCCESSFUL.format(endpointName, handler.getUrl(), statusFamily));
             }
         }
     }

@@ -31,17 +31,17 @@ class JWTValidationLogMessagesTest {
 
     @Test
     void shouldProvideDebugLogRecords() {
-        assertNotNull(JWTValidationLogMessages.DEBUG.JWKS_URL_MISSING_SCHEME);
-        assertLogRecordProperties(JWTValidationLogMessages.DEBUG.JWKS_URL_MISSING_SCHEME,
-                "JWTValidation", 1, "JWKS URL '%s' seems to be missing a scheme, prepending 'https://'");
+        assertNotNull(JWTValidationLogMessages.DEBUG.ACCESS_TOKEN_CREATED);
+        assertLogRecordProperties(JWTValidationLogMessages.DEBUG.ACCESS_TOKEN_CREATED,
+                "JWTValidation", 500, "Successfully created access token");
 
-        assertNotNull(JWTValidationLogMessages.DEBUG.JWKS_URI_CREATED);
-        assertLogRecordProperties(JWTValidationLogMessages.DEBUG.JWKS_URI_CREATED,
-                "JWTValidation", 2, "Created JWKS URI '%s' from URL string '%s'");
+        assertNotNull(JWTValidationLogMessages.DEBUG.ID_TOKEN_CREATED);
+        assertLogRecordProperties(JWTValidationLogMessages.DEBUG.ID_TOKEN_CREATED,
+                "JWTValidation", 501, "Successfully created ID-Token");
 
-        assertNotNull(JWTValidationLogMessages.DEBUG.INITIALIZED_JWKS_LOADER);
-        assertLogRecordProperties(JWTValidationLogMessages.DEBUG.INITIALIZED_JWKS_LOADER,
-                "JWTValidation", 3, "Initialized HttpJwksLoader with URL: %s, refresh interval: %s seconds");
+        assertNotNull(JWTValidationLogMessages.DEBUG.OPTIONAL_URL_FIELD_MISSING);
+        assertLogRecordProperties(JWTValidationLogMessages.DEBUG.OPTIONAL_URL_FIELD_MISSING,
+                "JWTValidation", 503, "Optional URL field '%s' is missing in discovery document from %s");
     }
 
     @Test
@@ -65,13 +65,13 @@ class JWTValidationLogMessagesTest {
         assertLogRecordProperties(JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED,
                 "JWTValidation", 1, "TokenValidator initialized with %s issuer configurations");
 
-        assertNotNull(JWTValidationLogMessages.INFO.JWKS_LOADED);
-        assertLogRecordProperties(JWTValidationLogMessages.INFO.JWKS_LOADED,
-                "JWTValidation", 2, "Successfully loaded and parsed JWKS from %s with %s keys");
+        assertNotNull(JWTValidationLogMessages.INFO.JWKS_KEYS_UPDATED);
+        assertLogRecordProperties(JWTValidationLogMessages.INFO.JWKS_KEYS_UPDATED,
+                "JWTValidation", 2, "Keys updated due to data change - load state: %s");
 
-        assertNotNull(JWTValidationLogMessages.INFO.ISSUER_RECOVERED);
-        assertLogRecordProperties(JWTValidationLogMessages.INFO.ISSUER_RECOVERED,
-                "JWTValidation", 25, "Issuer %s recovered and moved to healthy state");
+        assertNotNull(JWTValidationLogMessages.INFO.ISSUER_CONFIG_SKIPPED);
+        assertLogRecordProperties(JWTValidationLogMessages.INFO.ISSUER_CONFIG_SKIPPED,
+                "JWTValidation", 6, "Skipping disabled issuer configuration %s");
     }
 
     @Test
@@ -84,16 +84,20 @@ class JWTValidationLogMessagesTest {
         assertLogRecordProperties(JWTValidationLogMessages.WARN.TOKEN_IS_EMPTY,
                 "JWTValidation", 101, "The given validation was empty, request will be rejected");
 
-        assertNotNull(JWTValidationLogMessages.WARN.JWKS_LOADER_NOT_HEALTHY);
-        assertLogRecordProperties(JWTValidationLogMessages.WARN.JWKS_LOADER_NOT_HEALTHY,
-                "JWTValidation", 151, "Delegate JWKS loader initialized but not healthy for: %s");
+        assertNotNull(JWTValidationLogMessages.WARN.KEY_NOT_FOUND);
+        assertLogRecordProperties(JWTValidationLogMessages.WARN.KEY_NOT_FOUND,
+                "JWTValidation", 102, "No key found with ID: %s");
     }
 
     @Test
     void shouldUseConsistentIdentifierRanges() {
-        // DEBUG: 1-99
-        assertTrue(JWTValidationLogMessages.DEBUG.JWKS_URL_MISSING_SCHEME.getIdentifier() >= 1);
-        assertTrue(JWTValidationLogMessages.DEBUG.JWKS_URL_MISSING_SCHEME.getIdentifier() < 100);
+        // DEBUG: 500-599
+        assertTrue(JWTValidationLogMessages.DEBUG.ACCESS_TOKEN_CREATED.getIdentifier() >= 500);
+        assertTrue(JWTValidationLogMessages.DEBUG.ACCESS_TOKEN_CREATED.getIdentifier() < 600);
+
+        // INFO: 1-99  
+        assertTrue(JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED.getIdentifier() >= 1);
+        assertTrue(JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED.getIdentifier() < 100);
 
         // WARN: 100-199
         assertTrue(JWTValidationLogMessages.WARN.TOKEN_SIZE_EXCEEDED.getIdentifier() >= 100);
@@ -106,7 +110,7 @@ class JWTValidationLogMessagesTest {
 
     @Test
     void shouldHaveConsistentPrefixAcrossAllRecords() {
-        assertEquals("JWTValidation", JWTValidationLogMessages.DEBUG.JWKS_URL_MISSING_SCHEME.getPrefix());
+        assertEquals("JWTValidation", JWTValidationLogMessages.DEBUG.ACCESS_TOKEN_CREATED.getPrefix());
         assertEquals("JWTValidation", JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED.getPrefix());
         assertEquals("JWTValidation", JWTValidationLogMessages.WARN.TOKEN_SIZE_EXCEEDED.getPrefix());
         assertEquals("JWTValidation", JWTValidationLogMessages.ERROR.SIGNATURE_VALIDATION_FAILED.getPrefix());
@@ -114,7 +118,7 @@ class JWTValidationLogMessagesTest {
 
     @Test
     void shouldProvideNonEmptyTemplatesForAllRecords() {
-        assertFalse(JWTValidationLogMessages.DEBUG.JWKS_URL_MISSING_SCHEME.getTemplate().isEmpty());
+        assertFalse(JWTValidationLogMessages.DEBUG.ACCESS_TOKEN_CREATED.getTemplate().isEmpty());
         assertFalse(JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED.getTemplate().isEmpty());
         assertFalse(JWTValidationLogMessages.WARN.TOKEN_SIZE_EXCEEDED.getTemplate().isEmpty());
         assertFalse(JWTValidationLogMessages.ERROR.SIGNATURE_VALIDATION_FAILED.getTemplate().isEmpty());
@@ -123,8 +127,8 @@ class JWTValidationLogMessagesTest {
     @Test
     void shouldHaveUniqueIdentifiersWithinCategory() {
         // Test a few key identifiers to ensure they're unique within their range
-        assertNotEquals(JWTValidationLogMessages.DEBUG.JWKS_URL_MISSING_SCHEME.getIdentifier(),
-                JWTValidationLogMessages.DEBUG.JWKS_URI_CREATED.getIdentifier());
+        assertNotEquals(JWTValidationLogMessages.DEBUG.ACCESS_TOKEN_CREATED.getIdentifier(),
+                JWTValidationLogMessages.DEBUG.ID_TOKEN_CREATED.getIdentifier());
 
         assertNotEquals(JWTValidationLogMessages.WARN.TOKEN_SIZE_EXCEEDED.getIdentifier(),
                 JWTValidationLogMessages.WARN.TOKEN_IS_EMPTY.getIdentifier());

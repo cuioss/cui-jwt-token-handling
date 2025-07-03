@@ -15,6 +15,7 @@
  */
 package de.cuioss.jwt.validation.jwks.http;
 
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.jwks.JwksType;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
@@ -164,7 +165,7 @@ public class HttpJwksLoader implements JwksLoader {
         Optional<ETagAwareHttpHandler> cacheOpt = ensureHttpCache();
         if (cacheOpt.isEmpty()) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.JWKS_LOAD_FAILED.format("Unable to establish healthy HTTP connection for JWKS loading"));
+            LOGGER.error(JWTValidationLogMessages.ERROR.JWKS_LOAD_FAILED.format("Unable to establish healthy HTTP connection for JWKS loading"));
             return;
         }
 
@@ -198,7 +199,7 @@ public class HttpJwksLoader implements JwksLoader {
             case ERROR_NO_CACHE:
                 LOGGER.warn(WARN.JWKS_LOAD_FAILED_NO_CACHE::format);
                 this.status = LoaderStatus.ERROR;
-                LOGGER.error(ERROR.JWKS_LOAD_FAILED.format("Failed to load JWKS and no cached content available"));
+                LOGGER.error(JWTValidationLogMessages.ERROR.JWKS_LOAD_FAILED.format("Failed to load JWKS and no cached content available"));
                 break;
         }
     }
@@ -236,7 +237,7 @@ public class HttpJwksLoader implements JwksLoader {
         LOGGER.debug("Starting background JWKS refresh");
         Optional<ETagAwareHttpHandler> cacheOpt = Optional.ofNullable(httpCache.get());
         if (cacheOpt.isEmpty()) {
-            LOGGER.warn("Background refresh skipped - no HTTP cache available");
+            LOGGER.warn(JWTValidationLogMessages.WARN.BACKGROUND_REFRESH_SKIPPED::format);
             return;
         }
 
@@ -247,7 +248,7 @@ public class HttpJwksLoader implements JwksLoader {
         // Handle error states
         if (result.loadState() == ETagAwareHttpHandler.LoadState.ERROR_WITH_CACHE ||
                 result.loadState() == ETagAwareHttpHandler.LoadState.ERROR_NO_CACHE) {
-            LOGGER.warn("Background JWKS refresh failed: %s", result.loadState());
+            LOGGER.warn(JWTValidationLogMessages.WARN.BACKGROUND_REFRESH_FAILED.format(result.loadState()));
             return;
         }
 
@@ -305,19 +306,19 @@ public class HttpJwksLoader implements JwksLoader {
                     // Extract JWKS URI from well-known resolver
                     Optional<HttpHandler> jwksResult = config.getWellKnownResolver().getJwksUri();
                     if (jwksResult.isEmpty()) {
-                        LOGGER.warn("Failed to resolve JWKS URI from well-known resolver");
+                        LOGGER.warn(JWTValidationLogMessages.WARN.JWKS_URI_RESOLUTION_FAILED::format);
                         return Optional.empty();
                     }
 
                     HttpHandler jwksHandler = jwksResult.get();
 
-                    LOGGER.info("Successfully resolved JWKS URI from well-known endpoint: %s", jwksHandler.getUri());
+                    LOGGER.info(JWTValidationLogMessages.INFO.JWKS_URI_RESOLVED.format(jwksHandler.getUri()));
                     cache = new ETagAwareHttpHandler(jwksHandler);
                     httpCache.set(cache);
                     return Optional.of(cache);
 
                 default:
-                    LOGGER.error("Unsupported JwksType for HttpJwksLoader: %s", getJwksType());
+                    LOGGER.error(JWTValidationLogMessages.ERROR.UNSUPPORTED_JWKS_TYPE.format(getJwksType()));
                     return Optional.empty();
             }
         }

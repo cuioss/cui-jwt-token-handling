@@ -15,8 +15,7 @@
  */
 package de.cuioss.jwt.validation.well_known;
 
-import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
-import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.tools.logging.CuiLogger;
 import jakarta.json.JsonException;
@@ -65,7 +64,7 @@ class WellKnownParser {
             JsonObject result = jsonReader.readObject();
             return Optional.of(result);
         } catch (JsonException | IllegalStateException e) {
-            LOGGER.error("Failed to parse JSON from %s: %s", wellKnownUrl, e.getMessage());
+            LOGGER.error(e, JWTValidationLogMessages.ERROR.JSON_PARSE_FAILED.format(wellKnownUrl, e.getMessage()));
             return Optional.empty();
         }
     }
@@ -95,13 +94,13 @@ class WellKnownParser {
      * @return true if validation passes, false otherwise
      */
     boolean validateIssuer(String issuerFromDocument, URL wellKnownUrl) {
-        LOGGER.debug(DEBUG.VALIDATING_ISSUER.format(issuerFromDocument, wellKnownUrl));
+        LOGGER.debug(JWTValidationLogMessages.DEBUG.VALIDATING_ISSUER.format(issuerFromDocument, wellKnownUrl));
 
         URL issuerAsUrl;
         try {
             issuerAsUrl = URI.create(issuerFromDocument).toURL();
         } catch (MalformedURLException | IllegalArgumentException e) {
-            LOGGER.error("Issuer URL from discovery document is malformed: %s - %s", issuerFromDocument, e.getMessage());
+            LOGGER.error(e, JWTValidationLogMessages.ERROR.ISSUER_URL_MALFORMED.format(issuerFromDocument, e.getMessage()));
             return false;
         }
 
@@ -115,17 +114,16 @@ class WellKnownParser {
         boolean pathMatch = wellKnownUrl.getPath().equals(expectedWellKnownPath);
 
         if (!(schemeMatch && hostMatch && portMatch && pathMatch)) {
-            String errorMessage = ERROR.ISSUER_VALIDATION_FAILED.format(
+            LOGGER.error(JWTValidationLogMessages.ERROR.ISSUER_VALIDATION_FAILED.format(
                     issuerFromDocument, issuerAsUrl.getProtocol(), issuerAsUrl.getHost(),
                     (issuerAsUrl.getPort() != -1 ? ":" + issuerAsUrl.getPort() : ""),
                     (issuerAsUrl.getPath() == null ? "" : issuerAsUrl.getPath()),
                     wellKnownUrl.toString(),
                     expectedWellKnownPath,
-                    schemeMatch, hostMatch, portMatch, issuerPort, wellKnownPort, pathMatch, wellKnownUrl.getPath());
-            LOGGER.error(errorMessage);
+                    schemeMatch, hostMatch, portMatch, issuerPort, wellKnownPort, pathMatch, wellKnownUrl.getPath()));
             return false;
         }
-        LOGGER.debug(DEBUG.ISSUER_VALIDATION_SUCCESSFUL.format(issuerFromDocument));
+        LOGGER.debug(JWTValidationLogMessages.DEBUG.ISSUER_VALIDATION_SUCCESSFUL.format(issuerFromDocument));
         return true;
     }
 

@@ -15,8 +15,7 @@
  */
 package de.cuioss.jwt.validation.well_known;
 
-import de.cuioss.jwt.validation.JWTValidationLogMessages.DEBUG;
-import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.jwks.LoaderStatus;
 import de.cuioss.jwt.validation.util.ETagAwareHttpHandler;
 import de.cuioss.tools.logging.CuiLogger;
@@ -144,20 +143,20 @@ public class HttpWellKnownResolver implements WellKnownResolver {
         ETagAwareHttpHandler.LoadResult result = etagHandler.load();
         if (result.content() == null) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
         Optional<JsonObject> parseResult = parser.parseJsonResponse(result.content(), wellKnownUrl);
         if (parseResult.isEmpty()) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
         JsonObject discoveryDocument = parseResult.get();
         LOGGER.debug("Discovery document load state: %s", result.loadState());
-        LOGGER.debug(DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
+        LOGGER.debug(JWTValidationLogMessages.DEBUG.DISCOVERY_DOCUMENT_FETCHED.format(discoveryDocument));
 
         Map<String, HttpHandler> parsedEndpoints = new HashMap<>();
 
@@ -166,19 +165,19 @@ public class HttpWellKnownResolver implements WellKnownResolver {
                 .orElse(null);
         if (issuerString == null) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
         if (!parser.validateIssuer(issuerString, wellKnownUrl)) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
         if (!mapper.addHttpHandlerToMap(parsedEndpoints, ISSUER_KEY, issuerString, wellKnownUrl, true)) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
@@ -186,7 +185,7 @@ public class HttpWellKnownResolver implements WellKnownResolver {
         if (!mapper.addHttpHandlerToMap(parsedEndpoints, JWKS_URI_KEY,
                 parser.getString(discoveryDocument, JWKS_URI_KEY).orElse(null), wellKnownUrl, true)) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
@@ -194,14 +193,14 @@ public class HttpWellKnownResolver implements WellKnownResolver {
         if (!mapper.addHttpHandlerToMap(parsedEndpoints, AUTHORIZATION_ENDPOINT_KEY,
                 parser.getString(discoveryDocument, AUTHORIZATION_ENDPOINT_KEY).orElse(null), wellKnownUrl, true)) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
         if (!mapper.addHttpHandlerToMap(parsedEndpoints, TOKEN_ENDPOINT_KEY,
                 parser.getString(discoveryDocument, TOKEN_ENDPOINT_KEY).orElse(null), wellKnownUrl, true)) {
             this.status = LoaderStatus.ERROR;
-            LOGGER.error(ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
+            LOGGER.error(JWTValidationLogMessages.ERROR.WELL_KNOWN_LOAD_FAILED.format(wellKnownUrl, 1));
             return;
         }
 
@@ -217,6 +216,6 @@ public class HttpWellKnownResolver implements WellKnownResolver {
         this.endpoints.putAll(parsedEndpoints);
         this.status = LoaderStatus.OK;
 
-        LOGGER.info("Successfully loaded well-known endpoints from: %s", wellKnownUrl);
+        LOGGER.info(JWTValidationLogMessages.INFO.WELL_KNOWN_ENDPOINTS_LOADED.format(wellKnownUrl));
     }
 }

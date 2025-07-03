@@ -15,8 +15,7 @@
  */
 package de.cuioss.jwt.validation.jwks.parser;
 
-import de.cuioss.jwt.validation.JWTValidationLogMessages.ERROR;
-import de.cuioss.jwt.validation.JWTValidationLogMessages.WARN;
+import de.cuioss.jwt.validation.JWTValidationLogMessages;
 import de.cuioss.jwt.validation.ParserConfig;
 import de.cuioss.jwt.validation.jwks.key.JwkKeyConstants;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
@@ -79,7 +78,7 @@ public class JwksParser {
             }
         } catch (JsonException e) {
             // Handle invalid JSON format
-            LOGGER.error(e, ERROR.JWKS_INVALID_JSON.format(e.getMessage()));
+            LOGGER.error(e, JWTValidationLogMessages.ERROR.JWKS_INVALID_JSON.format(e.getMessage()));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
         }
 
@@ -97,7 +96,7 @@ public class JwksParser {
         int upperLimit = parserConfig.getMaxPayloadSize();
 
         if (actualSize > upperLimit) {
-            LOGGER.error(ERROR.JWKS_CONTENT_SIZE_EXCEEDED.format(upperLimit, actualSize));
+            LOGGER.error(JWTValidationLogMessages.ERROR.JWKS_CONTENT_SIZE_EXCEEDED.format(upperLimit, actualSize));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
@@ -125,7 +124,7 @@ public class JwksParser {
             // This is a single key object
             result.add(jwks);
         } else {
-            LOGGER.warn(WARN.JWKS_MISSING_KEYS::format);
+            LOGGER.warn(JWTValidationLogMessages.WARN.JWKS_MISSING_KEYS::format);
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
         }
     }
@@ -139,14 +138,14 @@ public class JwksParser {
     private boolean validateJwksStructure(JsonObject jwks) {
         // Basic null check
         if (jwks == null) {
-            LOGGER.warn("JWKS object is null");
+            LOGGER.warn(JWTValidationLogMessages.WARN.JWKS_OBJECT_NULL::format);
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
 
         // Check for excessive number of top-level properties
         if (jwks.size() > 10) {
-            LOGGER.warn("JWKS object has excessive number of properties: {}", jwks.size());
+            LOGGER.warn(JWTValidationLogMessages.WARN.JWKS_EXCESSIVE_PROPERTIES.format(jwks.size()));
             securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
             return false;
         }
@@ -157,13 +156,13 @@ public class JwksParser {
 
             // Check array size limits
             if (keysArray.size() > 50) {
-                LOGGER.warn("JWKS keys array exceeds maximum size: {}", keysArray.size());
+                LOGGER.warn(JWTValidationLogMessages.WARN.JWKS_KEYS_ARRAY_TOO_LARGE.format(keysArray.size()));
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
                 return false;
             }
 
             if (keysArray.isEmpty()) {
-                LOGGER.warn("JWKS keys array is empty");
+                LOGGER.warn(JWTValidationLogMessages.WARN.JWKS_KEYS_ARRAY_EMPTY::format);
                 securityEventCounter.increment(EventType.JWKS_JSON_PARSE_FAILED);
                 return false;
             }

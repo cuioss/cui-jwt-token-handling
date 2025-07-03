@@ -175,7 +175,7 @@ public class TokenSignatureValidator {
             securityEventCounter.increment(SecurityEventCounter.EventType.INVALID_JWT_FORMAT);
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.INVALID_JWT_FORMAT,
-                    "Invalid JWT format: expected 3 parts but found %d".formatted(parts.length)
+                    "Invalid JWT format: expected 3 parts but found %s".formatted(parts.length)
             );
         }
 

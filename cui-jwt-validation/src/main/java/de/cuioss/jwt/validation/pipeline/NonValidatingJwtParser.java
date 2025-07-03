@@ -63,9 +63,9 @@ import java.util.Base64;
  * // Access decoded JWT information using convenience methods
  * decodedJwt.ifPresent(jwt -> {
  *     // Access common JWT fields with convenience methods
- *     jwt.getAlg().ifPresent(alg -> LOGGER.info("Algorithm: %s", alg));
- *     jwt.getIssuer().ifPresent(issuer -> LOGGER.info("Issuer: %s", issuer));
- *     jwt.getKid().ifPresent(kid -> LOGGER.info("Key ID: %s", kid));
+ *     jwt.getAlg().ifPresent(alg -> LOGGER.debug("Algorithm: %s", alg));
+ *     jwt.getIssuer().ifPresent(issuer -> LOGGER.debug("Issuer: %s", issuer));
+ *     jwt.getKid().ifPresent(kid -> LOGGER.debug("Key ID: %s", kid));
  *     
  *     // Access the raw token
  *     String rawToken = jwt.getRawToken();
@@ -201,7 +201,7 @@ public class NonValidatingJwtParser {
             }
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.TOKEN_SIZE_EXCEEDED,
-                    "Token size exceeds maximum allowed size of %d bytes".formatted(config.getMaxTokenSize())
+                    JWTValidationLogMessages.WARN.TOKEN_SIZE_EXCEEDED.format(config.getMaxTokenSize())
             );
         }
 
@@ -214,7 +214,7 @@ public class NonValidatingJwtParser {
             }
             throw new TokenValidationException(
                     SecurityEventCounter.EventType.INVALID_JWT_FORMAT,
-                    "Invalid JWT format: expected 3 parts but found %d".formatted(parts.length)
+                    JWTValidationLogMessages.WARN.INVALID_JWT_FORMAT.format(parts.length)
             );
         }
 
@@ -280,7 +280,7 @@ public class NonValidatingJwtParser {
                 }
                 throw new TokenValidationException(
                         SecurityEventCounter.EventType.DECODED_PART_SIZE_EXCEEDED,
-                        "Decoded part size exceeds maximum allowed size of %d bytes".formatted(config.getMaxPayloadSize())
+                        JWTValidationLogMessages.WARN.DECODED_PART_SIZE_EXCEEDED.format(config.getMaxPayloadSize())
                 );
             }
 
