@@ -75,10 +75,11 @@
             <scope>test</scope>
         </dependency>
         <!-- Implementation of jakarta.json-api-->
+        <!-- The concrete is up to the integration-->
         <dependency>
             <groupId>org.eclipse.parsson</groupId>
             <artifactId>parsson</artifactId>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
