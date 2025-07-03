@@ -24,8 +24,7 @@
  * <ul>
  *   <li>{@link de.cuioss.jwt.validation.security.SignatureAlgorithmPreferences} - Manages algorithm preferences for JWT signature validation</li>
  *   <li>{@link de.cuioss.jwt.validation.security.JwkAlgorithmPreferences} - Manages algorithm preferences for JWK parsing</li>
- *   <li>{@link de.cuioss.jwt.validation.security.BouncyCastleProviderSingleton} - Provides consistent cryptographic services</li>
- *    <li>{@link de.cuioss.jwt.validation.security.SecurityEventCounter} - Tracks security-relevant events for monitoring</li>
+ *   <li>{@link de.cuioss.jwt.validation.security.SecurityEventCounter} - Tracks security-relevant events for monitoring</li>
  * </ul>
  * <p>
  * The classes in this package implement security best practices, including:

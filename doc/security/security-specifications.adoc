@@ -469,7 +469,7 @@ All algorithms are supported by the standard JDK cryptographic providers in Java
 Using standard JDK providers provides several security benefits:
 
 * **RFC 7518 Compliance**: Complete support for all standard JOSE algorithms
-* **Enhanced Performance**: 3-4x faster RSA operations, 20x faster ECDSA operations compared to BouncyCastle
+* **Enhanced Performance**: 3-4x faster RSA operations, 20x faster ECDSA operations vs external cryptographic libraries
 * **Reduced Attack Surface**: No additional cryptographic library dependencies
 * **Faster Security Updates**: Security patches delivered through JDK updates
 * **Native Image Compatibility**: Excellent support for GraalVM native compilation

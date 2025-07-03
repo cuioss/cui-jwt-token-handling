@@ -36,7 +36,7 @@ The library's design enforces signature verification:
 
 **Implementation Details:**
 * link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/TokenValidator.java[TokenValidator.java:264-333] - Enforces ordered validation pipeline with mandatory signature validation
-* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java:80-148] - Validates signatures using secure cryptographic operations with Bouncy Castle provider
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java:80-148] - Validates signatures using secure cryptographic operations with standard JDK providers
 * No public API methods expose token decoding without signature verification
 
 ==== Test Coverage
@@ -208,9 +208,9 @@ In 2022, a critical vulnerability was discovered in the Java JDK's ECDSA signatu
 The library is protected against the "Psychic Signature" vulnerability. For implementation details, see link:security-specifications.adoc#psychic-signature[Psychic Signature] in the Security Specifications document.
 
 **Implementation Details:**
-* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java] - Uses Bouncy Castle cryptographic provider which is not affected by CVE-2022-21449
-* Bouncy Castle properly validates ECDSA signature components and rejects all-zero signatures
-* The library enforces use of Bouncy Castle provider for all cryptographic operations, avoiding vulnerable JDK implementations
+* link:../../cui-jwt-validation/src/main/java/de/cuioss/jwt/validation/pipeline/TokenSignatureValidator.java[TokenSignatureValidator.java] - Uses Java 21 standard JDK cryptographic providers which include fixes for CVE-2022-21449
+* Java 21 properly validates ECDSA signature components and rejects all-zero signatures
+* The library enforces use of standard JDK providers with Java 21, which includes comprehensive security fixes
 
 ==== Test Coverage
 
