@@ -8,6 +8,9 @@
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
   "offlineSessionIdleTimeout": 2592000,
+  "attributes": {
+    "frontendUrl": "http://keycloak:8080"
+  },
   "clients": [
     {
       "clientId": "integration-client",
