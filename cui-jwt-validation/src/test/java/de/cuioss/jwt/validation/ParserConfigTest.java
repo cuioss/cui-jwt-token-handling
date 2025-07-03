@@ -70,7 +70,7 @@ class ParserConfigTest implements ShouldImplementEqualsAndHashCode<ParserConfig>
     @DisplayName("Should provide consistent default constants")
     void shouldProvideConsistentDefaults() {
         assertEquals(ParserConfig.DEFAULT_MAX_TOKEN_SIZE, 8 * 1024);
-        assertEquals(ParserConfig.DEFAULT_MAX_PAYLOAD_SIZE, 2 * 1024);
+        assertEquals(ParserConfig.DEFAULT_MAX_PAYLOAD_SIZE, 8 * 1024);
         assertEquals(ParserConfig.DEFAULT_MAX_STRING_SIZE, 4 * 1024);
         assertEquals(64, ParserConfig.DEFAULT_MAX_ARRAY_SIZE);
         assertEquals(10, ParserConfig.DEFAULT_MAX_DEPTH);

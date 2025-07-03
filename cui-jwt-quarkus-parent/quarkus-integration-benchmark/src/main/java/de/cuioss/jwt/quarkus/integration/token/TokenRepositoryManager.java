@@ -93,12 +93,30 @@ public class TokenRepositoryManager {
     }
 
     /**
-     * Gets a random valid token.
+     * Gets a random valid access token.
      *
-     * @return A valid JWT token
+     * @return A valid JWT access token
      */
     public String getValidToken() {
         return getTokenRepository().getValidToken();
+    }
+
+    /**
+     * Gets a random valid ID token.
+     *
+     * @return A valid JWT ID token
+     */
+    public String getValidIdToken() {
+        return getTokenRepository().getValidIdToken();
+    }
+
+    /**
+     * Gets a random valid refresh token.
+     *
+     * @return A valid JWT refresh token
+     */
+    public String getValidRefreshToken() {
+        return getTokenRepository().getValidRefreshToken();
     }
 
     /**

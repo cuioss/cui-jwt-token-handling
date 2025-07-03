@@ -88,6 +88,7 @@ public class IssuerConfigResolver {
 
         List<IssuerConfig> enabledIssuers = new ArrayList<>();
         for (String issuerName : issuerNames) {
+            LOGGER.debug("Resolving issuer configuration for %s", issuerName);
             if (isIssuerEnabled(issuerName)) {
                 IssuerConfig issuerConfig = createIssuerConfig(issuerName);
                 enabledIssuers.add(issuerConfig);

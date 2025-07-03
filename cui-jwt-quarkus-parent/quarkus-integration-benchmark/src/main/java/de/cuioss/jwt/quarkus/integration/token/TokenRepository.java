@@ -22,6 +22,7 @@ import io.restassured.path.json.exception.JsonPathException;
 import io.restassured.response.Response;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -35,8 +36,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class TokenRepository {
 
     private static final CuiLogger LOGGER = new CuiLogger(TokenRepository.class);
+    public static final String ACCESS_TOKEN = "access_token";
+    public static final String ID_TOKEN = "id_token";
+    public static final String REFRESH_TOKEN = "refresh_token";
 
     private final List<String> validTokens;
+    private final List<String> validIdTokens;
+    private final List<String> validRefreshTokens;
     private final List<String> expiredTokens;
     private final List<String> invalidTokens;
     private final String keycloakUrl;
@@ -52,6 +58,8 @@ public class TokenRepository {
         this.keycloakUrl = keycloakUrl;
         this.tokenPoolSize = tokenPoolSize;
         this.validTokens = new ArrayList<>();
+        this.validIdTokens = new ArrayList<>();
+        this.validRefreshTokens = new ArrayList<>();
         this.expiredTokens = new ArrayList<>();
         this.invalidTokens = new ArrayList<>();
     }
@@ -65,7 +73,7 @@ public class TokenRepository {
     public void initialize() throws TokenFetchException {
         LOGGER.info("🔑 Initializing token repository with %s tokens per type...", tokenPoolSize);
 
-        // Load valid tokens
+        // Load valid tokens (access, ID, and refresh)
         loadValidTokens();
 
         // Generate expired tokens (simulate by using very short-lived tokens)
@@ -75,20 +83,45 @@ public class TokenRepository {
         generateInvalidTokens();
 
         LOGGER.info("✅ Token repository initialized successfully");
-        LOGGER.info("📊 Token counts - Valid: %s, Expired: %s, Invalid: %s",
-                validTokens.size(), expiredTokens.size(), invalidTokens.size());
+        LOGGER.info("📊 Token counts - Access: %s, ID: %s, Refresh: %s, Expired: %s, Invalid: %s",
+                validTokens.size(), validIdTokens.size(), validRefreshTokens.size(),
+                expiredTokens.size(), invalidTokens.size());
     }
 
     /**
-     * Gets a random valid token from the repository.
+     * Gets a random valid access token from the repository.
      *
-     * @return A valid JWT token
+     * @return A valid JWT access token
      */
     public String getValidToken() {
         if (validTokens.isEmpty()) {
-            throw new IllegalStateException("No valid tokens available. Call initialize() first.");
+            throw new IllegalStateException("No valid access tokens available. Call initialize() first.");
         }
         return validTokens.get(ThreadLocalRandom.current().nextInt(validTokens.size()));
+    }
+
+    /**
+     * Gets a random valid ID token from the repository.
+     *
+     * @return A valid JWT ID token
+     */
+    public String getValidIdToken() {
+        if (validIdTokens.isEmpty()) {
+            throw new IllegalStateException("No valid ID tokens available. Call initialize() first.");
+        }
+        return validIdTokens.get(ThreadLocalRandom.current().nextInt(validIdTokens.size()));
+    }
+
+    /**
+     * Gets a random valid refresh token from the repository.
+     *
+     * @return A valid JWT refresh token
+     */
+    public String getValidRefreshToken() {
+        if (validRefreshTokens.isEmpty()) {
+            throw new IllegalStateException("No valid refresh tokens available. Call initialize() first.");
+        }
+        return validRefreshTokens.get(ThreadLocalRandom.current().nextInt(validRefreshTokens.size()));
     }
 
     /**
@@ -162,14 +195,24 @@ public class TokenRepository {
 
         for (int i = 0; i < tokenPoolSize; i++) {
             try {
-                String token = fetchTokenFromKeycloak();
-                if (token != null && !token.isEmpty()) {
-                    validTokens.add(token);
-                    if ((i + 1) % 10 == 0) {
-                        LOGGER.debug("Loaded %s valid tokens...", i + 1);
-                    }
-                } else {
-                    LOGGER.warn("Failed to load valid token #%s", i + 1);
+                Map<String, String> tokens = fetchAllTokensFromKeycloak();
+
+                String accessToken = tokens.get(ACCESS_TOKEN);
+                String idToken = tokens.get(ID_TOKEN);
+                String refreshToken = tokens.get(REFRESH_TOKEN);
+
+                if (accessToken != null && !accessToken.isEmpty()) {
+                    validTokens.add(accessToken);
+                }
+                if (idToken != null && !idToken.isEmpty()) {
+                    validIdTokens.add(idToken);
+                }
+                if (refreshToken != null && !refreshToken.isEmpty()) {
+                    validRefreshTokens.add(refreshToken);
+                }
+
+                if ((i + 1) % 10 == 0) {
+                    LOGGER.debug("Loaded %s token sets...", i + 1);
                 }
             } catch (TokenFetchException e) {
                 LOGGER.warn("Error loading valid token #%s: %s", i + 1, e.getMessage());
@@ -230,17 +273,17 @@ public class TokenRepository {
         LOGGER.info("✅ Generated %s invalid tokens", invalidTokens.size());
     }
 
-    private String fetchTokenFromKeycloak() throws TokenFetchException {
+    private Map<String, String> fetchAllTokensFromKeycloak() throws TokenFetchException {
         int maxRetries = BenchmarkConfiguration.getMaxTokenFetchRetries();
         int retryDelay = BenchmarkConfiguration.getTokenFetchRetryDelay();
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                String token = attemptTokenFetch();
-                if (isValidToken(token)) {
-                    return token;
+                Map<String, String> tokens = attemptAllTokensFetch();
+                if (tokens != null && !tokens.isEmpty()) {
+                    return tokens;
                 }
-                logTokenFetchFailure(attempt, maxRetries, "Empty or null token received");
+                logTokenFetchFailure(attempt, maxRetries, "Empty or null token response received");
             } catch (JsonPathException e) {
                 handleJsonParsingError(attempt, maxRetries, e);
             } catch (RuntimeException e) {
@@ -250,17 +293,22 @@ public class TokenRepository {
             waitBeforeRetry(attempt, maxRetries, retryDelay);
         }
 
-        throw new TokenFetchException("Failed to fetch token from Keycloak after " + maxRetries + " attempts - no successful response");
+        throw new TokenFetchException("Failed to fetch tokens from Keycloak after " + maxRetries + " attempts - no successful response");
     }
 
-    private String attemptTokenFetch() {
+    private String fetchTokenFromKeycloak() throws TokenFetchException {
+        Map<String, String> tokens = fetchAllTokensFromKeycloak();
+        return tokens.get(ACCESS_TOKEN);
+    }
+
+    private Map<String, String> attemptAllTokensFetch() {
         Response response = createTokenRequest();
-        return extractTokenFromResponse(response);
+        return extractAllTokensFromResponse(response);
     }
 
     private Response createTokenRequest() {
         String tokenUrl = keycloakUrl + "/realms/" + BenchmarkConfiguration.getKeycloakRealm() + "/protocol/openid-connect/token";
-        
+
         return RestAssured
                 .given()
                 .contentType("application/x-www-form-urlencoded")
@@ -268,23 +316,32 @@ public class TokenRepository {
                 .formParam("username", BenchmarkConfiguration.getKeycloakUsername())
                 .formParam("password", BenchmarkConfiguration.getKeycloakPassword())
                 .formParam("grant_type", "password")
+                .formParam("scope", "openid profile email")
                 .when()
                 .post(tokenUrl);
     }
 
-    private String extractTokenFromResponse(Response response) {
+    private Map<String, String> extractAllTokensFromResponse(Response response) {
         if (response.statusCode() != 200) {
             LOGGER.debug("Non-200 response from Keycloak. Status: %s, Response: %s",
                     response.statusCode(), response.body().asString());
-            return null;
+            return Map.of();
         }
 
         Map<String, Object> tokenResponse = response.jsonPath().getMap("");
-        return (String) tokenResponse.get("access_token");
-    }
+        Map<String, String> tokens = new HashMap<>();
 
-    private boolean isValidToken(String token) {
-        return token != null && !token.isEmpty();
+        if (tokenResponse.get(ACCESS_TOKEN) != null) {
+            tokens.put(ACCESS_TOKEN, (String) tokenResponse.get(ACCESS_TOKEN));
+        }
+        if (tokenResponse.get(ID_TOKEN) != null) {
+            tokens.put(ID_TOKEN, (String) tokenResponse.get(ID_TOKEN));
+        }
+        if (tokenResponse.get(REFRESH_TOKEN) != null) {
+            tokens.put(REFRESH_TOKEN, (String) tokenResponse.get(REFRESH_TOKEN));
+        }
+
+        return tokens;
     }
 
     private void logTokenFetchFailure(int attempt, int maxRetries, String reason) {

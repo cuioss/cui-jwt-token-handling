@@ -47,7 +47,7 @@ import java.util.Map;
  * The defaults are designed with logical size relationships:
  * <ul>
  *   <li>maxTokenSize (8KB) - allows for OAuth 2.0 BCP recommended size</li>
- *   <li>maxPayloadSize (2KB) - allows ~6KB total decoded content (considering Base64 overhead)</li>
+ *   <li>maxPayloadSize (8KB) - allows for larger JWT payloads with extensive claims</li>
  *   <li>maxStringSize (4KB) - prevents individual fields from dominating the payload</li>
  * </ul>
  * <p>
@@ -86,11 +86,11 @@ public class ParserConfig {
 
     /**
      * Default maximum size of decoded JSON payload in bytes.
-     * 2KB per part allows for approximately 6KB of total decoded content when considering
-     * that Base64 encoding increases size by ~33%. This ensures decoded content fits
-     * within reasonable bounds relative to the original token size.
+     * 8KB per part allows for larger JWT payloads while still providing
+     * protection against memory exhaustion attacks. This accommodates tokens
+     * with extensive claims or embedded data.
      */
-    public static final int DEFAULT_MAX_PAYLOAD_SIZE = 2 * 1024;
+    public static final int DEFAULT_MAX_PAYLOAD_SIZE = 8 * 1024;
 
     /**
      * Default maximum string size for individual JSON string values.

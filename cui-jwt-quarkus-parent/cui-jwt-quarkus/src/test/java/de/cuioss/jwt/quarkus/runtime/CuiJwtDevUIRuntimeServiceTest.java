@@ -1,12 +1,12 @@
 /**
  * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,7 +93,7 @@ class CuiJwtDevUIRuntimeServiceTest {
             // Based on the current test configuration (JwtTestProfile), validation is enabled
             assertTrue(enabled, "JWT validation should be enabled with current test configuration");
             assertEquals("JWT validation is active and ready", statusMessage,
-                "Status message should indicate active validation when enabled");
+                    "Status message should indicate active validation when enabled");
         }
 
         @Test
@@ -109,7 +109,7 @@ class CuiJwtDevUIRuntimeServiceTest {
 
             String statusMessage = (String) result.get("statusMessage");
             assertEquals("JWT validation is active and ready", statusMessage,
-                "Status message should indicate active validation when enabled");
+                    "Status message should indicate active validation when enabled");
             assertTrue(Boolean.parseBoolean(result.get("validatorPresent").toString()), "Validator present status should be reported");
         }
 
@@ -177,7 +177,7 @@ class CuiJwtDevUIRuntimeServiceTest {
             assertNotNull(message, "Message should be present");
 
             assertTrue(message.contains("configured"),
-                "Message should mention issuers or configuration");
+                    "Message should mention issuers or configuration");
 
         }
 
@@ -307,7 +307,7 @@ class CuiJwtDevUIRuntimeServiceTest {
 
             String healthStatus = (String) result.get("healthStatus");
             assertTrue("UP".equals(healthStatus) || "DOWN".equals(healthStatus),
-                "Health status should be either UP or DOWN");
+                    "Health status should be either UP or DOWN");
         }
 
         @Test
@@ -326,20 +326,20 @@ class CuiJwtDevUIRuntimeServiceTest {
             if (configValid && validatorAvailable) {
                 assertEquals("UP", healthStatus, "Health should be UP when config is valid and validator is available");
                 assertTrue(message.contains("healthy") || message.contains("operational"),
-                    "Message should indicate healthy state");
+                        "Message should indicate healthy state");
             } else if (configValid) {
                 assertEquals("DOWN", healthStatus, "Health should be DOWN when config is valid but validator unavailable");
                 assertTrue(message.contains("validator") && message.contains("not available"),
-                    "Message should indicate validator unavailability");
+                        "Message should indicate validator unavailability");
             } else {
                 assertEquals("DOWN", healthStatus, "Health should be DOWN when config is invalid");
                 assertTrue(message.contains("disabled") || message.contains("misconfigured"),
-                    "Message should indicate configuration issues");
+                        "Message should indicate configuration issues");
             }
 
             // Security counter should always be available in runtime
             assertEquals(true, result.get("securityCounterAvailable"),
-                "Security counter should always be available in runtime");
+                    "Security counter should always be available in runtime");
         }
 
     }
@@ -454,7 +454,7 @@ class CuiJwtDevUIRuntimeServiceTest {
         void shouldCreateServiceWithMinimalDependencies() {
             // This tests the constructor's robustness with empty issuer configs
             assertDoesNotThrow(() -> new CuiJwtDevUIRuntimeService(null, List.of()),
-                "Constructor should not throw exception with null tokenValidator and empty issuerConfigs");
+                    "Constructor should not throw exception with null tokenValidator and empty issuerConfigs");
         }
 
         @Test
@@ -466,9 +466,9 @@ class CuiJwtDevUIRuntimeServiceTest {
 
             // Verify the service can perform basic operations
             assertDoesNotThrow(testService::getValidationStatus,
-                "Service should be able to get validation status");
+                    "Service should be able to get validation status");
             assertDoesNotThrow(testService::getConfiguration,
-                "Service should be able to get configuration");
+                    "Service should be able to get configuration");
         }
 
         @Test
@@ -476,11 +476,11 @@ class CuiJwtDevUIRuntimeServiceTest {
         void shouldHandleMixedNullAndValidDependencies() {
             // Test with null tokenValidator but valid issuerConfigs
             assertDoesNotThrow(() -> new CuiJwtDevUIRuntimeService(null, List.of()),
-                "Constructor should handle null tokenValidator with empty issuerConfigs");
+                    "Constructor should handle null tokenValidator with empty issuerConfigs");
 
             // Test with valid tokenValidator and empty issuerConfigs
             assertDoesNotThrow(() -> new CuiJwtDevUIRuntimeService(tokenValidator, List.of()),
-                "Constructor should handle valid tokenValidator with empty issuerConfigs");
+                    "Constructor should handle valid tokenValidator with empty issuerConfigs");
 
             // Verify services can be created in both scenarios
             CuiJwtDevUIRuntimeService service1 = new CuiJwtDevUIRuntimeService(null, List.of());
@@ -505,7 +505,7 @@ class CuiJwtDevUIRuntimeServiceTest {
             assertNotNull(result, "Result should not be null");
             assertEquals(false, result.get("valid"), "Should be invalid");
             assertEquals("Token is empty or null", result.get("error"),
-                "Should have correct error message for whitespace-only token");
+                    "Should have correct error message for whitespace-only token");
         }
 
         @Test
@@ -563,11 +563,11 @@ class CuiJwtDevUIRuntimeServiceTest {
 
             assertNotNull(result, "Result should not be null");
             assertEquals(true, result.get("healthEnabled"),
-                "Health should always be enabled in runtime");
+                    "Health should always be enabled in runtime");
             assertEquals(false, result.get("buildTime"),
-                "Should not be build time in runtime");
+                    "Should not be build time in runtime");
             assertEquals(true, result.get("metricsEnabled"),
-                "Metrics should always be enabled in runtime");
+                    "Metrics should always be enabled in runtime");
 
             Object issuersCount = result.get("issuersCount");
             assertNotNull(issuersCount, "Issuers count should not be null");
@@ -607,14 +607,14 @@ class CuiJwtDevUIRuntimeServiceTest {
             Config emptyConfig = TestConfigurations.empty();
             String testEnabledKey = JwtPropertyKeys.ISSUERS.ENABLED.formatted("test");
             assertFalse(emptyConfig.getOptionalValue(testEnabledKey, Boolean.class).isPresent(),
-                "Empty config should not have any issuer properties");
+                    "Empty config should not have any issuer properties");
             assertFalse(emptyConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).isPresent(),
-                "Empty config should not have any parser properties");
+                    "Empty config should not have any parser properties");
 
             // Test that getValue throws for missing properties
             assertThrows(NoSuchElementException.class,
-                () -> emptyConfig.getValue(testEnabledKey, Boolean.class),
-                "getValue should throw for missing properties");
+                    () -> emptyConfig.getValue(testEnabledKey, Boolean.class),
+                    "getValue should throw for missing properties");
         }
 
         @Test
@@ -622,9 +622,9 @@ class CuiJwtDevUIRuntimeServiceTest {
         void shouldDemonstrateTestConfigUsageForDisabledIssuers() {
             Config configWithDisabledIssuers = TestConfigurations.noEnabledIssuers();
             assertEquals(false, configWithDisabledIssuers.getOptionalValue(JwtPropertyKeys.ISSUERS.ENABLED.formatted("test"), Boolean.class).orElse(true),
-                "Should have disabled issuer configuration");
+                    "Should have disabled issuer configuration");
             assertTrue(configWithDisabledIssuers.getOptionalValue(JwtPropertyKeys.ISSUERS.ISSUER_IDENTIFIER.formatted("test"), String.class).isPresent(),
-                "Should have issuer identifier even when disabled");
+                    "Should have issuer identifier even when disabled");
         }
 
         @Test
@@ -632,11 +632,11 @@ class CuiJwtDevUIRuntimeServiceTest {
         void shouldDemonstrateTestConfigUsageForMinimalValidSetup() {
             Config minimalConfig = TestConfigurations.minimalValid();
             assertEquals(true, minimalConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ENABLED.formatted("test"), Boolean.class).orElse(false),
-                "Should have enabled issuer");
+                    "Should have enabled issuer");
             assertEquals("https://test.example.com", minimalConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ISSUER_IDENTIFIER.formatted("test"), String.class).orElse(null),
-                "Should have correct issuer identifier");
+                    "Should have correct issuer identifier");
             assertEquals("classpath:keys/test_public_key.jwks", minimalConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.JWKS_FILE_PATH.formatted("test"), String.class).orElse(null),
-                "Should have public key location");
+                    "Should have public key location");
         }
 
         @Test
@@ -644,59 +644,59 @@ class CuiJwtDevUIRuntimeServiceTest {
         void shouldDemonstrateTestConfigUsageForMultipleIssuers() {
             Config multipleIssuersConfig = TestConfigurations.multipleIssuers();
             assertEquals(true, multipleIssuersConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ENABLED.formatted("primary"), Boolean.class).orElse(false),
-                "Primary issuer should be enabled");
+                    "Primary issuer should be enabled");
             assertEquals(true, multipleIssuersConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ENABLED.formatted("secondary"), Boolean.class).orElse(false),
-                "Secondary issuer should be enabled");
+                    "Secondary issuer should be enabled");
             assertEquals(false, multipleIssuersConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ENABLED.formatted("disabled"), Boolean.class).orElse(true),
-                "Disabled issuer should be disabled");
+                    "Disabled issuer should be disabled");
         }
 
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage with builder pattern")
         void shouldDemonstrateTestConfigUsageWithBuilderPattern() {
             Config customConfig = TestConfigurations.builder()
-                .withIssuer("custom")
-                .enabled(true)
-                .identifier("https://custom.example.com")
-                .publicKeyLocation("classpath:custom.key")
-                .jwksRefreshInterval(300)
-                .and()
-                .withParser()
-                .maxTokenSize(4096)
-                .maxPayloadSize(4096)
-                .maxStringSize(2048)
-                .maxArraySize(64)
-                .maxDepth(10)
-                .build();
+                    .withIssuer("custom")
+                    .enabled(true)
+                    .identifier("https://custom.example.com")
+                    .publicKeyLocation("classpath:custom.key")
+                    .jwksRefreshInterval(300)
+                    .and()
+                    .withParser()
+                    .maxTokenSize(4096)
+                    .maxPayloadSize(4096)
+                    .maxStringSize(2048)
+                    .maxArraySize(64)
+                    .maxDepth(10)
+                    .build();
 
             assertEquals(true, customConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ENABLED.formatted("custom"), Boolean.class).orElse(false),
-                "Custom issuer should be enabled");
+                    "Custom issuer should be enabled");
             assertEquals("https://custom.example.com", customConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ISSUER_IDENTIFIER.formatted("custom"), String.class).orElse(null),
-                "Should have custom issuer identifier");
+                    "Should have custom issuer identifier");
             assertEquals(300, customConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.REFRESH_INTERVAL_SECONDS.formatted("custom"), Integer.class).orElse(0),
-                "Should have custom JWKS refresh interval");
+                    "Should have custom JWKS refresh interval");
             assertEquals(4096, customConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).orElse(0),
-                "Should have custom parser max token size");
+                    "Should have custom parser max token size");
         }
 
         @Test
         @DisplayName("Should demonstrate TestConfig utility usage for malformed properties")
         void shouldDemonstrateTestConfigUsageForMalformedProperties() {
             Config malformedConfig = new TestConfig(Map.of(
-                JwtPropertyKeys.ISSUERS.ENABLED.formatted("test"), "not-a-boolean",
-                JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, "invalid-number",
-                JwtPropertyKeys.PARSER.MAX_PAYLOAD_SIZE, "",
-                "valid.property", "test-value"
+                    JwtPropertyKeys.ISSUERS.ENABLED.formatted("test"), "not-a-boolean",
+                    JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, "invalid-number",
+                    JwtPropertyKeys.PARSER.MAX_PAYLOAD_SIZE, "",
+                    "valid.property", "test-value"
             ));
 
             assertEquals(false, malformedConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.ENABLED.formatted("test"), Boolean.class).orElse(true),
-                "Should return false for non-'true' boolean strings (Boolean.valueOf behavior)");
+                    "Should return false for non-'true' boolean strings (Boolean.valueOf behavior)");
             assertFalse(malformedConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).isPresent(),
-                "Should return empty Optional for invalid integer");
+                    "Should return empty Optional for invalid integer");
             assertFalse(malformedConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_PAYLOAD_SIZE, Integer.class).isPresent(),
-                "Should return empty Optional for empty integer");
+                    "Should return empty Optional for empty integer");
             assertEquals("test-value", malformedConfig.getOptionalValue("valid.property", String.class).orElse(null),
-                "Should handle valid string properties correctly");
+                    "Should handle valid string properties correctly");
         }
 
         @Test
@@ -705,23 +705,23 @@ class CuiJwtDevUIRuntimeServiceTest {
             // Test invalid parser configuration
             Config invalidParserConfig = TestConfigurations.invalidParser();
             assertEquals(-1, invalidParserConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).orElse(0),
-                "Invalid parser config should have negative max token size");
+                    "Invalid parser config should have negative max token size");
 
             // Test JWKS URL configuration
             Config jwksConfig = TestConfigurations.withJwksUrl();
             assertEquals("https://test.example.com/jwks", jwksConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.JWKS_URL.formatted("test"), String.class).orElse(null),
-                "JWKS config should have JWKS URL");
+                    "JWKS config should have JWKS URL");
 
             // Test well-known URL configuration
             Config wellKnownConfig = TestConfigurations.withWellKnownUrl();
             assertEquals("https://test.example.com/.well-known/openid_configuration",
-                wellKnownConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.WELL_KNOWN_URL.formatted("test"), String.class).orElse(null),
-                "Well-known config should have well-known URL");
+                    wellKnownConfig.getOptionalValue(JwtPropertyKeys.ISSUERS.WELL_KNOWN_URL.formatted("test"), String.class).orElse(null),
+                    "Well-known config should have well-known URL");
 
             // Test custom parser configuration
             Config customParserConfig = TestConfigurations.customParser();
             assertEquals(16384, customParserConfig.getOptionalValue(JwtPropertyKeys.PARSER.MAX_TOKEN_SIZE, Integer.class).orElse(0),
-                "Custom parser config should have custom max token size");
+                    "Custom parser config should have custom max token size");
         }
     }
 }

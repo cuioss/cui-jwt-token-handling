@@ -158,17 +158,13 @@ public class TokenValidator {
      * @param issuerConfigs varargs of issuer configurations, must not be null and must contain at least one configuration
      */
     public TokenValidator(@NonNull ParserConfig config, @NonNull IssuerConfig... issuerConfigs) {
-
-        // Initialize security event counter
+        LOGGER.debug("Initialize token validator with %s and %s issuer configurations", config, issuerConfigs.length);
         this.securityEventCounter = new SecurityEventCounter();
-
-        // Initialize NonValidatingJwtParser with configuration
         this.jwtParser = NonValidatingJwtParser.builder()
                 .config(config)
                 .securityEventCounter(securityEventCounter)
                 .build();
 
-        // Initialize queue with enabled issuers only
         ConcurrentLinkedQueue<IssuerConfig> enabledConfigs = new ConcurrentLinkedQueue<>();
         int enabledCount = 0;
         for (IssuerConfig issuerConfig : issuerConfigs) {
@@ -185,7 +181,7 @@ public class TokenValidator {
         }
         this.issuerConfigs = enabledConfigs;
 
-        LOGGER.debug("Created TokenValidator with %d enabled issuer configurations (%d total)", enabledCount, issuerConfigs.length);
+        LOGGER.debug("Created TokenValidator with %s enabled issuer configurations (%s total)", enabledCount, issuerConfigs.length);
         LOGGER.info(JWTValidationLogMessages.INFO.TOKEN_FACTORY_INITIALIZED.format(enabledCount));
     }
 
