@@ -70,7 +70,7 @@ class ParserConfigResolverTest {
 
         assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Set maxTokenSize from configuration");
         assertLogMessagePresent(TestLogLevel.INFO, INFO.RESOLVED_PARSER_CONFIG.format(
-                String.valueOf(tokenSize), "8192", "1024", "64", "10"));
+                String.valueOf(tokenSize), "8192", "4096", "64", "10"));
     }
 
     @Test

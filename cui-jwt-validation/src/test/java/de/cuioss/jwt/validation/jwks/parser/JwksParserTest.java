@@ -61,7 +61,7 @@ class JwksParserTest {
             assertFalse(result.isEmpty(), "Should parse at least one key");
             assertEquals(1, result.size(), "Should parse exactly one key from default JWKS");
 
-            JsonObject jwk = result.get(0);
+            JsonObject jwk = result.getFirst();
             assertTrue(jwk.containsKey("kty"), "Parsed JWK should contain key type");
             assertTrue(jwk.containsKey("kid"), "Parsed JWK should contain key ID");
         }
@@ -86,7 +86,7 @@ class JwksParserTest {
 
             // Then parsing should succeed
             assertEquals(1, result.size(), "Should parse single JWK");
-            JsonObject jwk = result.get(0);
+            JsonObject jwk = result.getFirst();
             assertEquals("RSA", jwk.getString("kty"));
             assertEquals("test-key", jwk.getString("kid"));
         }

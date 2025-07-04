@@ -19,11 +19,12 @@ import de.cuioss.jwt.validation.TokenValidator;
 import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.tools.logging.CuiLogger;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * REST endpoint for JWT validation operations.

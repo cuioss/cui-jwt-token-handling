@@ -119,7 +119,7 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size(), "Should find one issuer");
-            assertTrue(result.get(0).isEnabled(), "Should be enabled");
+            assertTrue(result.getFirst().isEnabled(), "Should be enabled");
         }
 
         @Test
@@ -173,7 +173,7 @@ class IssuerConfigResolverTest {
             if (expectedEnabled) {
                 List<IssuerConfig> result = resolver.resolveIssuerConfigs();
                 assertEquals(1, result.size());
-                assertEquals(expectedEnabled, result.get(0).isEnabled());
+                assertEquals(expectedEnabled, result.getFirst().isEnabled());
             } else {
                 assertThrows(IllegalStateException.class, resolver::resolveIssuerConfigs);
             }
@@ -189,7 +189,7 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size(), "Should find issuer");
-            assertTrue(result.get(0).isEnabled(), "Should default to enabled");
+            assertTrue(result.getFirst().isEnabled(), "Should default to enabled");
         }
     }
 
@@ -208,7 +208,7 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size());
-            IssuerConfig issuer = result.get(0);
+            IssuerConfig issuer = result.getFirst();
             assertNotNull(issuer.getJwksLoader(), "Should have JWKS loader");
         }
 
@@ -223,7 +223,7 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size());
-            IssuerConfig issuer = result.get(0);
+            IssuerConfig issuer = result.getFirst();
             assertNotNull(issuer.getJwksLoader(), "Should have JWKS loader");
         }
 
@@ -260,7 +260,7 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size());
-            assertNotNull(result.get(0).getJwksLoader(), "Should have JWKS loader");
+            assertNotNull(result.getFirst().getJwksLoader(), "Should have JWKS loader");
         }
 
         @Test
@@ -275,7 +275,7 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size());
-            IssuerConfig issuer = result.get(0);
+            IssuerConfig issuer = result.getFirst();
             assertEquals(3, issuer.getExpectedAudience().size(), "Should have three audiences");
             assertTrue(issuer.getExpectedAudience().contains("client1"), "Should contain client1");
             assertTrue(issuer.getExpectedAudience().contains("client2"), "Should contain client2");
@@ -294,7 +294,7 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size());
-            IssuerConfig issuer = result.get(0);
+            IssuerConfig issuer = result.getFirst();
             assertEquals(3, issuer.getExpectedClientId().size(), "Should have three client IDs");
             assertTrue(issuer.getExpectedClientId().contains("id1"), "Should contain id1");
             assertTrue(issuer.getExpectedClientId().contains("id2"), "Should contain id2");
@@ -313,12 +313,12 @@ class IssuerConfigResolverTest {
             List<IssuerConfig> result = resolver.resolveIssuerConfigs();
 
             assertEquals(1, result.size());
-            IssuerConfig issuer = result.get(0);
+            IssuerConfig issuer = result.getFirst();
             assertNotNull(issuer.getAlgorithmPreferences(), "Should have algorithm preferences");
             SignatureAlgorithmPreferences preferences = issuer.getAlgorithmPreferences();
             List<String> preferredAlgorithms = preferences.getPreferredAlgorithms();
             assertEquals(3, preferredAlgorithms.size(), "Should have three algorithms");
-            assertEquals("RS256", preferredAlgorithms.get(0), "First should be RS256");
+            assertEquals("RS256", preferredAlgorithms.getFirst(), "First should be RS256");
             assertEquals("ES256", preferredAlgorithms.get(1), "Second should be ES256");
             assertEquals("PS256", preferredAlgorithms.get(2), "Third should be PS256");
         }

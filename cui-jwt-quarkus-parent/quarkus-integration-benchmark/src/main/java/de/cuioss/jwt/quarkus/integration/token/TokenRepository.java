@@ -311,7 +311,7 @@ public class TokenRepository {
         // For now, we'll fetch normal tokens and let them expire naturally
         // In a real scenario, you might want to configure Keycloak with very short token lifetimes
         int expiredTokenLimit = Math.min(tokenPoolSize, 20); // Limit expired tokens for now
-        RealmConfig firstRealm = realmConfigs.get(0); // Use first realm for expired tokens
+        RealmConfig firstRealm = realmConfigs.getFirst(); // Use first realm for expired tokens
         
         for (int i = 0; i < expiredTokenLimit; i++) {
             try {
@@ -401,7 +401,7 @@ public class TokenRepository {
      */
     @Deprecated
     private Map<String, String> fetchAllTokensFromKeycloak() throws TokenFetchException {
-        return fetchAllTokensFromKeycloak(realmConfigs.get(0));
+        return fetchAllTokensFromKeycloak(realmConfigs.getFirst());
     }
 
     private Map<String, String> attemptAllTokensFetch(RealmConfig realmConfig) {
@@ -437,7 +437,7 @@ public class TokenRepository {
      */
     @Deprecated
     private Map<String, String> attemptAllTokensFetch() {
-        return attemptAllTokensFetch(realmConfigs.get(0));
+        return attemptAllTokensFetch(realmConfigs.getFirst());
     }
 
     private Map<String, String> extractAllTokensFromResponse(Response response) {
