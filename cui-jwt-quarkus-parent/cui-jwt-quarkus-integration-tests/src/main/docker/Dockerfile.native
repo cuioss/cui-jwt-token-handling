@@ -51,5 +51,5 @@ HEALTHCHECK --interval=15s --timeout=5s --retries=3 --start-period=10s \
 USER nonroot
 
 # Use exec form for better signal handling and security
-# SSL system properties for native image HTTPS client functionality
+# SSL system properties for native image HTTPS client functionality (GraalVM best practice)
 ENTRYPOINT ["/app/application", "-Djavax.net.ssl.trustStore=/app/certificates/localhost-truststore.p12", "-Djavax.net.ssl.trustStorePassword=localhost-trust", "-Djavax.net.ssl.trustStoreType=PKCS12"]
