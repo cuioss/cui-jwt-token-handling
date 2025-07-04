@@ -23,7 +23,7 @@
 
         <!-- HTTPS configuration for testing (reuse integration tests ports) -->
         <test.https.port>10443</test.https.port>
-        <test.keycloak.port>1080</test.keycloak.port>
+        <test.keycloak.port>1443</test.keycloak.port>
 
         <!-- JMH Configuration Properties -->
         <jmh.result.format>JSON</jmh.result.format>
@@ -34,7 +34,7 @@
         <jmh.threads>2</jmh.threads>
         
         <!-- Benchmark Configuration Properties -->
-        <benchmark.keycloak.url>http://localhost:1080</benchmark.keycloak.url>
+        <benchmark.keycloak.url>https://localhost:1443</benchmark.keycloak.url>
     </properties>
 
     <dependencyManagement>

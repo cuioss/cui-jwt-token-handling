@@ -31,11 +31,12 @@ public class BenchmarkConfiguration {
 
     // Token Repository Configuration
     public static final int DEFAULT_TOKEN_POOL_SIZE = 100;
-    public static final String DEFAULT_KEYCLOAK_URL = "http://keycloak:8080";
+    public static final String DEFAULT_KEYCLOAK_URL = "https://keycloak:8443";
 
-    // Legacy Keycloak Configuration (kept for backward compatibility)
+    // Benchmark Realm Configuration
     public static final String KEYCLOAK_REALM = "benchmark";
     public static final String KEYCLOAK_CLIENT_ID = "benchmark-client";
+    public static final String KEYCLOAK_CLIENT_SECRET = "benchmark-secret";
     public static final String KEYCLOAK_USERNAME = "benchmark-user";
     public static final String KEYCLOAK_PASSWORD = "benchmark-password";
 
@@ -110,6 +111,15 @@ public class BenchmarkConfiguration {
     }
 
     /**
+     * Gets the Keycloak client secret for token requests.
+     *
+     * @return Keycloak client secret
+     */
+    public static String getKeycloakClientSecret() {
+        return System.getProperty("benchmark.keycloak.client.secret", KEYCLOAK_CLIENT_SECRET);
+    }
+
+    /**
      * Gets the Keycloak username for token requests.
      *
      * @return Keycloak username
@@ -169,6 +179,7 @@ public class BenchmarkConfiguration {
         RealmConfig benchmarkRealm = RealmConfig.builder()
                 .realmName(getKeycloakRealm())
                 .clientId(getKeycloakClientId())
+                .clientSecret(getKeycloakClientSecret())
                 .username(getKeycloakUsername())
                 .password(getKeycloakPassword())
                 .displayName("Benchmark Realm (Well-Known Discovery)")
@@ -195,6 +206,7 @@ public class BenchmarkConfiguration {
         return RealmConfig.builder()
                 .realmName(getKeycloakRealm())
                 .clientId(getKeycloakClientId())
+                .clientSecret(getKeycloakClientSecret())
                 .username(getKeycloakUsername())
                 .password(getKeycloakPassword())
                 .displayName("Benchmark Realm")
