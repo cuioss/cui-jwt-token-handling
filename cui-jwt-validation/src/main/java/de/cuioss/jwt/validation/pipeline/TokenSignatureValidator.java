@@ -20,7 +20,6 @@ import de.cuioss.jwt.validation.exception.TokenValidationException;
 import de.cuioss.jwt.validation.jwks.JwksLoader;
 import de.cuioss.jwt.validation.security.SecurityEventCounter;
 import de.cuioss.tools.logging.CuiLogger;
-import jakarta.annotation.Nonnull;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -60,6 +59,7 @@ import java.util.Base64;
 public class TokenSignatureValidator {
 
     private static final CuiLogger LOGGER = new CuiLogger(TokenSignatureValidator.class);
+    public static final String RSASSA_PSS = "RSASSA-PSS";
 
     @Getter
     @NonNull
@@ -86,7 +86,7 @@ public class TokenSignatureValidator {
      * @throws TokenValidationException if the signature is invalid
      */
     @SuppressWarnings("java:S3655") // owolff: False Positive: isPresent is checked before calling get()
-    public void validateSignature(@Nonnull DecodedJwt decodedJwt) {
+    public void validateSignature(@NonNull DecodedJwt decodedJwt) {
         LOGGER.debug("Validating validation signature");
 
         // Get the kid from the validation header
@@ -203,7 +203,7 @@ public class TokenSignatureValidator {
                         "Invalid signature"
                 );
             }
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException | SignatureException | InvalidAlgorithmParameterException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | InvalidAlgorithmParameterException e) {
             LOGGER.warn(e, JWTValidationLogMessages.ERROR.SIGNATURE_VALIDATION_FAILED.format(e.getMessage()));
             securityEventCounter.increment(SecurityEventCounter.EventType.SIGNATURE_VALIDATION_FAILED);
             throw new TokenValidationException(
@@ -221,7 +221,7 @@ public class TokenSignatureValidator {
      * @return a Signature verifier
      * @throws IllegalArgumentException if the algorithm is not supported
      */
-    private Signature getSignatureVerifier(String algorithm) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+    private Signature getSignatureVerifier(String algorithm) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         Signature signature;
 
         switch (algorithm) {
@@ -232,15 +232,15 @@ public class TokenSignatureValidator {
             case "ES384" -> signature = Signature.getInstance("SHA384withECDSA");
             case "ES512" -> signature = Signature.getInstance("SHA512withECDSA");
             case "PS256" -> {
-                signature = Signature.getInstance("RSASSA-PSS");
+                signature = Signature.getInstance(RSASSA_PSS);
                 signature.setParameter(new PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1));
             }
             case "PS384" -> {
-                signature = Signature.getInstance("RSASSA-PSS");
+                signature = Signature.getInstance(RSASSA_PSS);
                 signature.setParameter(new PSSParameterSpec("SHA-384", "MGF1", MGF1ParameterSpec.SHA384, 48, 1));
             }
             case "PS512" -> {
-                signature = Signature.getInstance("RSASSA-PSS");
+                signature = Signature.getInstance(RSASSA_PSS);
                 signature.setParameter(new PSSParameterSpec("SHA-512", "MGF1", MGF1ParameterSpec.SHA512, 64, 1));
             }
             default -> throw new IllegalArgumentException("Unsupported algorithm: %s".formatted(algorithm));
