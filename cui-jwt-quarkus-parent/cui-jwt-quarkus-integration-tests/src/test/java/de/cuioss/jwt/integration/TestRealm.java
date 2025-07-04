@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TestRealm {
 
-    private static final String KEYCLOAK_BASE_URL = "http://localhost:1080";
-    private static final String KEYCLOAK_MANAGEMENT_URL = "http://localhost:1090";
+    private static final String KEYCLOAK_BASE_URL = "https://localhost:1443";
+    private static final String KEYCLOAK_MANAGEMENT_URL = "https://localhost:1090";
 
     private static final String TOKEN_ENDPOINT_TEMPLATE = "/realms/%s/protocol/openid-connect/token";
     private static final String CERTS_ENDPOINT_TEMPLATE = "/realms/%s/protocol/openid-connect/certs";

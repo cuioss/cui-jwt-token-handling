@@ -9,11 +9,15 @@ services:
     command:
       - start-dev
       - --import-realm
+      - --https-certificate-file=/opt/keycloak/certificates/localhost.crt
+      - --https-certificate-key-file=/opt/keycloak/certificates/localhost.key
+      - --https-port=8443
     ports:
-      - "1080:8080"  # External port for Keycloak admin
+      - "1443:8443"  # External HTTPS port for Keycloak admin
       - "1090:9000"  # External port for Keycloak management (health checks)
     volumes:
       - ./src/main/docker/keycloak:/opt/keycloak/data/import:ro
+      - ./src/main/docker/certificates:/opt/keycloak/certificates:ro
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
@@ -22,16 +26,12 @@ services:
       - KC_LOG_LEVEL=INFO
       # Hostname configuration v2 for well-known discovery endpoint (research-based)
       - KC_HOSTNAME_STRICT=false
-      - KC_HTTP_ENABLED=true
+      - KC_HTTP_ENABLED=false
+      - KC_HTTPS_PORT=8443
+      - KC_HOSTNAME=localhost
       # External hostname for Docker container well-known discovery
     networks:
       - jwt-integration
-    healthcheck:
-      test: ["CMD", "/bin/sh", "-c", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   cui-jwt-integration-tests:
     build:
@@ -48,8 +48,7 @@ services:
       - "10443:8443"  # External test port for integration tests
 
     depends_on:
-      keycloak:
-        condition: service_healthy
+      - keycloak
 
     volumes:
       # Read-only certificate mount (production pattern)
